@@ -1,0 +1,21 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Local datasets and model artifacts are never committed.
+data/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Raw experiment runs stay local. Curated summaries and small qualitative
+# examples may be committed explicitly.
+outputs/
+wandb/
+phase*/results/runs/
+phase*/results/raw/
+phase*/reports/*.local.json

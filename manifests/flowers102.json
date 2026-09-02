@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "dataset": "Oxford Flowers-102",
+  "official_page": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/",
+  "source_paper": "https://www.robots.ox.ac.uk/~men/papers/nilsback_icvgip08.pdf",
+  "assets": [
+    {
+      "name": "102flowers.tgz",
+      "url": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz",
+      "size_bytes": 344862509,
+      "sha256": "2d01ecc807db462958cfe3d92f57a8c252b4abd240eb955770201e45f783b246"
+    },
+    {
+      "name": "102segmentations.tgz",
+      "url": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102segmentations.tgz",
+      "size_bytes": 203577493,
+      "sha256": "6808f69f3cdb4cd38cb54b9fdbcb126856cff40c50d519ce811ffd31936ef8c6"
+    },
+    {
+      "name": "imagelabels.mat",
+      "url": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat",
+      "size_bytes": 502,
+      "sha256": "4903e94206bac23bf772aadf06451916df56b58fc483a62db32a97b82656651d"
+    },
+    {
+      "name": "setid.mat",
+      "url": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/setid.mat",
+      "size_bytes": 14989,
+      "sha256": "46b8678f91fd95d3c8f4feab80d271a6c834a1dd896fe29fd3e6ad9ce5c8dccd"
+    }
+  ],
+  "expected": {
+    "images": 8189,
+    "masks": 8189,
+    "classes": 102,
+    "train_ids": 1020,
+    "val_ids": 1020,
+    "test_ids": 6149
+  },
+  "notes": [
+    "The source paper describes these files as automatic segmentations used for flower classification, not exhaustive human-annotated semantic-segmentation ground truth.",
+    "The files are JPEG blue-screen composites; exact RGB equality is not a valid binary conversion because of compression artifacts.",
+    "The classification encoders may have seen official train and validation images as train+val classification data. This must be disclosed in Phase 1."
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "audit": "flowers102_official_data_contract_summary",
+  "audited_on": "2026-09-02",
+  "data_contract_status": "pass",
+  "semantic_segmentation_ground_truth_status": "fail",
+  "phase_gate": "hold",
+  "counts": {
+    "images": 8189,
+    "masks": 8189,
+    "labels": 8189,
+    "classes": 102,
+    "train": 1020,
+    "validation": 1020,
+    "test": 6149
+  },
+  "structural_checks": {
+    "canonical_ids": true,
+    "one_to_one_image_mask_pairing": true,
+    "split_disjoint_and_complete": true,
+    "all_files_decode": true,
+    "all_image_mask_dimensions_match": true
+  },
+  "mask_conversion": {
+    "source_format": "JPEG blue-screen composite",
+    "background_rgb": [0, 0, 255],
+    "method": "least-squares alpha recovery from original and composite",
+    "foreground_threshold": 0.5
+  },
+  "mask_quality": {
+    "all_background": {
+      "count": 220,
+      "fraction": 0.026865307119306386,
+      "by_split": {"train": 28, "validation": 36, "test": 156}
+    },
+    "less_than_0p5_percent_background": {
+      "count": 22,
+      "fraction": 0.0026865307119306385,
+      "by_split": {"train": 2, "validation": 5, "test": 15}
+    },
+    "foreground_fraction_quantiles": {
+      "0.00": 0.0,
+      "0.01": 0.0,
+      "0.05": 0.11152659574468085,
+      "0.50": 0.34201799100449776,
+      "0.95": 0.6553338670196225,
+      "0.99": 0.8157363106944929,
+      "1.00": 1.0
+    },
+    "visually_checked_all_background_ids": {
+      "train": 36,
+      "validation": 38,
+      "test": 45
+    },
+    "visually_checked_effectively_all_foreground_ids": {
+      "train": 1270,
+      "validation": 4246,
+      "test": 568
+    }
+  },
+  "assets": [
+    {
+      "name": "102flowers.tgz",
+      "size_bytes": 344862509,
+      "sha256": "2d01ecc807db462958cfe3d92f57a8c252b4abd240eb955770201e45f783b246"
+    },
+    {
+      "name": "102segmentations.tgz",
+      "size_bytes": 203577493,
+      "sha256": "6808f69f3cdb4cd38cb54b9fdbcb126856cff40c50d519ce811ffd31936ef8c6"
+    },
+    {
+      "name": "imagelabels.mat",
+      "size_bytes": 502,
+      "sha256": "4903e94206bac23bf772aadf06451916df56b58fc483a62db32a97b82656651d"
+    },
+    {
+      "name": "setid.mat",
+      "size_bytes": 14989,
+      "sha256": "46b8678f91fd95d3c8f4feab80d271a6c834a1dd896fe29fd3e6ad9ce5c8dccd"
+    }
+  ]
+}

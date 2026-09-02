@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "description": "Flowers-102 Phase 1A pseudo-mask diagnostic encoders. Ours/ALG are the primary matched pair; KD is exploratory only.",
+  "checkpoints": [
+    {
+      "id": "flowers102_ours_researcher_sync_v1_seed1",
+      "role": "primary_matched",
+      "method": "Ours",
+      "protocol_family": "researcher_sync_v1_300ep_b64",
+      "relative_path": "results/Ours/flowers102/researcher_sync_v1_300ep_seed1/student_best.pt",
+      "sha256": "4a566d907c6e8a4db6ffccba6a6f699ef674bcdcda8a98c8f3ebccbf66b24a26",
+      "size_bytes": 22491511,
+      "expected": {
+        "dataset": "flowers102",
+        "student": "deit_ti",
+        "timm_model": "deit_tiny_patch16_224",
+        "num_classes": 102,
+        "seed": 1,
+        "batch_size": 64,
+        "best_accuracy": 74.80891201821434,
+        "teacher_sha256": "2b082bc98176f19ebdd62eccc1384aacfdd26d84f97e58d0ec2ddaed68c7c5a4"
+      },
+      "required_keys": ["method", "dataset", "student", "num_classes", "model", "teacher", "args", "ours"]
+    },
+    {
+      "id": "flowers102_alg_researcher_sync_v1_seed1",
+      "role": "primary_matched",
+      "method": "ALG",
+      "protocol_family": "researcher_sync_v1_300ep_b64",
+      "relative_path": "results/ALG/flowers102/researcher_sync_v1_300ep_seed1/student_best.pt",
+      "sha256": "63d57a2ef7b300ed40d4ffc1848237e620b37fc304118c3813f4636288e8389a",
+      "size_bytes": 22363363,
+      "expected": {
+        "dataset": "flowers102",
+        "student": "deit_ti",
+        "timm_model": "deit_tiny_patch16_224",
+        "num_classes": 102,
+        "seed": 1,
+        "batch_size": 64,
+        "best_accuracy": 75.0203285087006,
+        "teacher_sha256": "2b082bc98176f19ebdd62eccc1384aacfdd26d84f97e58d0ec2ddaed68c7c5a4"
+      },
+      "required_keys": ["method", "dataset", "student", "num_classes", "model", "teacher", "args"]
+    },
+    {
+      "id": "flowers102_kd_generic_epoch_only_seed42",
+      "role": "exploratory_unmatched",
+      "method": "KD",
+      "protocol_family": "generic_kd_300ep_epoch_only_v1_b64",
+      "relative_path": "results/KD/flowers102/generic_kd_300ep_epoch_only_v1_seed42/student_best.pt",
+      "sha256": "6892317841a77028c90d7f62618ba4981b46656843dc8a6f844dceba2036f715",
+      "size_bytes": 22238143,
+      "expected": {
+        "dataset": "flowers102",
+        "student": "deit_ti",
+        "timm_model": "deit_tiny_patch16_224",
+        "num_classes": 102,
+        "seed": 42,
+        "batch_size": 64,
+        "best_accuracy": 48.95104895104895,
+        "teacher_sha256": "2b082bc98176f19ebdd62eccc1384aacfdd26d84f97e58d0ec2ddaed68c7c5a4"
+      },
+      "required_keys": ["method", "dataset", "student", "num_classes", "model", "teacher", "args"]
+    }
+  ]
+}

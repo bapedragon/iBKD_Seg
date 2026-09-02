@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "audit": "flowers102_checkpoint_contract_summary",
+  "audited_on": "2026-09-02",
+  "status": "pass",
+  "runtime": {
+    "python": "3.13.1",
+    "torch": "2.11.0",
+    "torchvision": "0.26.0",
+    "timm": "1.0.27"
+  },
+  "feature_contract": {
+    "intermediate_feature_count": 12,
+    "final_feature_shape": [1, 192, 14, 14],
+    "probe": "Conv2d(192, 2, 1)",
+    "probe_parameter_count": 386,
+    "encoder_trainable_parameter_count": 0,
+    "encoder_gradient_tensor_count_after_probe_backward": 0,
+    "probe_gradient_tensor_count_after_backward": 2
+  },
+  "checkpoints": [
+    {
+      "method": "Ours",
+      "role": "primary_matched",
+      "seed": 1,
+      "batch_size": 64,
+      "best_top1": 74.80891201821434,
+      "size_bytes": 22491511,
+      "sha256": "4a566d907c6e8a4db6ffccba6a6f699ef674bcdcda8a98c8f3ebccbf66b24a26",
+      "strict_load": "pass"
+    },
+    {
+      "method": "ALG",
+      "role": "primary_matched",
+      "seed": 1,
+      "batch_size": 64,
+      "best_top1": 75.0203285087006,
+      "size_bytes": 22363363,
+      "sha256": "63d57a2ef7b300ed40d4ffc1848237e620b37fc304118c3813f4636288e8389a",
+      "strict_load": "pass"
+    },
+    {
+      "method": "KD",
+      "role": "exploratory_unmatched",
+      "seed": 42,
+      "batch_size": 64,
+      "best_top1": 48.95104895104895,
+      "size_bytes": 22238143,
+      "sha256": "6892317841a77028c90d7f62618ba4981b46656843dc8a6f844dceba2036f715",
+      "strict_load": "pass"
+    }
+  ]
+}
