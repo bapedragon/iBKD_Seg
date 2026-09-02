@@ -1,4 +1,4 @@
-"""Resumable multi-range downloader for slow official dataset servers."""
+"""느린 공식 데이터 서버를 위한 재개 가능한 multi-range downloader."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def download_file(
             f"existing file is larger than expected: {prefix_size} > {expected_size}"
         )
     if prefix_size == expected_size:
-        print(f"Already verified by size: {output}")
+        print(f"파일 크기 검증 완료, 다운로드 생략: {output}")
         return
 
     ranges = plan_ranges(prefix_size, expected_size, connections)
@@ -136,7 +136,7 @@ def download_file(
         start, end = byte_range
         part_path = parts_root / f"{start:012d}-{end:012d}.part"
         _download_range(url, part_path, start, end, retries, timeout)
-        print(f"Downloaded bytes {start}-{end} for {output.name}")
+        print(f"{output.name}: byte {start}-{end} 다운로드 완료")
         return byte_range
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(ranges)) as executor:
@@ -162,7 +162,7 @@ def download_file(
     for part_path in parts_root.iterdir():
         part_path.unlink()
     parts_root.rmdir()
-    print(f"Completed: {output} ({expected_size} bytes)")
+    print(f"다운로드 완료: {output} ({expected_size} bytes)")
 
 
 def main(argv: list[str] | None = None) -> int:

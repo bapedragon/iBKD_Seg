@@ -1,4 +1,4 @@
-"""Audit extracted Oxford Flowers-102 images, masks, labels, and split IDs."""
+"""압축 해제한 Oxford Flowers-102 이미지, 마스크, 라벨, split ID를 감사한다."""
 
 from __future__ import annotations
 

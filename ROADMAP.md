@@ -1,62 +1,57 @@
-# Research Roadmap
+# 연구 로드맵
 
-## Phase 0 — Sanity and protocol lock
+## Phase 0 — 기초 검증 및 프로토콜 확정
 
-Validate official Flowers-102 assets, image-mask pairing, official splits,
-checkpoint provenance, strict model loading, the frozen feature contract, and
-segmentation metrics.
+Flowers-102 공식 파일, 이미지–마스크 대응 관계, 공식 split, 체크포인트 출처,
+strict model loading, frozen feature 계약, 세그멘테이션 metric을 검증합니다.
 
-**Recorded outcome (2026-09-02):** the implementation and input contracts pass,
-but the Flowers automatic masks fail the ground-truth quality gate. Phase 1A is
-limited to a pseudo-mask pipeline diagnostic; scientific Phase 1B remains on
-hold until a genuine-ground-truth route is locked. See
-`phase0_sanity/DECISION.md`.
+**2026-09-02 결론:** 구현과 입력 계약은 통과했지만 Flowers 자동 마스크는
+ground-truth 품질 gate를 통과하지 못했습니다. Phase 1A는 pseudo-mask 기반
+파이프라인 진단으로 제한하고, 과학적 검증인 Phase 1B는 신뢰할 수 있는 GT
+경로를 확정할 때까지 보류합니다. 근거는 `phase0/DECISION.md`에 있습니다.
 
 ## Phase 1 — Frozen spatial probe
 
-Freeze each DeiT-Ti encoder and train the same `Conv2d(192, 2, 1)` head on the
-final `14 x 14` feature grid. The matched Ours/ALG pair is primary; KD is an
-exploratory, protocol-mismatched baseline. Run three probe-head seeds and report
-flower IoU, background IoU, two-class mIoU, and flower Dice.
+각 DeiT-Ti encoder를 고정하고 최종 `14 x 14` feature grid 위에 동일한
+`Conv2d(192, 2, 1)` head를 학습합니다. 조건이 일치하는 Ours/ALG 쌍을 주 비교로
+사용하고, 프로토콜이 다른 KD는 탐색 결과로만 다룹니다. Probe head seed 3개를
+실행하고 flower IoU, background IoU, 2-class mIoU, flower Dice를 보고합니다.
 
-The distributed Flowers-102 segmentations are outputs of an automatic
-segmentation method used by the original classification pipeline, not complete
-human ground truth. Consequently Phase 1 is split into two internal steps:
+Flowers-102에서 배포한 segmentation은 원 분류 파이프라인이 만든 자동 결과이며
+완전한 human ground truth가 아닙니다. 이에 따라 Phase 1을 두 단계로 나눕니다.
 
-- **Phase 1A — Flowers pseudo-mask diagnostic:** reuse the preserved Flowers
-  checkpoints to validate the end-to-end probe pipeline and obtain only a
-  historical automatic-mask decodability result.
-- **Phase 1B — genuine-ground-truth probe:** use a selected ground-truth route
-  (recommended: Oxford-IIIT Pet trimaps; alternatives are a manually verified
-  Flowers subset or a standard semantic-segmentation benchmark) for the actual
-  scientific feasibility result.
+- **Phase 1A — Flowers pseudo-mask 진단:** 기존 Flowers 체크포인트로 전체 probe
+  파이프라인을 검증합니다. 결과는 자동 마스크에 대한 공간 표현 복원성으로만
+  해석합니다.
+- **Phase 1B — 신뢰 가능한 GT probe:** 실제 확장 가능성 판단에는 별도의
+  pixel-level GT를 사용합니다. 현재 권장안은 Oxford-IIIT Pet trimap이며,
+  대안은 사람이 검수한 Flowers subset 또는 표준 세그멘테이션 benchmark입니다.
 
-**Exit:** a written Go/Hold/No-Go decision based on matched Ours versus ALG,
-non-image baselines, qualitative masks, and evidence from genuine pixel-level
-ground truth.
+**종료 조건:** 조건이 일치하는 Ours–ALG 비교, 비영상 baseline, 정성 mask,
+신뢰 가능한 pixel GT 결과를 함께 검토하여 Go/Hold/No-Go를 기록합니다.
 
-## Phase 2 — Spatial controls
+## Phase 2 — 공간적 대조 실험
 
-Add mean-mask/center-prior, translation, fixed grid permutation, layer-wise
-probes, paired bootstrap confidence intervals, and multiple encoder seeds.
+Mean-mask/center-prior, translation, 고정 grid permutation, layer별 probe,
+paired bootstrap confidence interval, 여러 encoder seed를 추가합니다.
 
-**Exit:** determine whether the Phase 1 signal is spatially meaningful and
-reproducible rather than a classifier-quality or dataset-position effect.
+**종료 조건:** Phase 1의 차이가 단순 분류 성능이나 데이터 위치 편향이 아니라
+공간적으로 유의미하고 재현 가능한 신호인지 판단합니다.
 
-## Phase 3 — Shared decoder
+## Phase 3 — 공통 decoder
 
-Use an identical lightweight decoder for every encoder. Separate frozen,
-partial-fine-tuning, and full-fine-tuning regimes. Add boundary evaluation only
-after the output resolution is sufficiently high.
+모든 encoder에 동일한 경량 decoder를 사용합니다. Frozen, partial fine-tuning,
+full fine-tuning 조건을 분리합니다. 출력 해상도가 충분히 높아진 뒤에만 boundary
+평가를 추가합니다.
 
-## Phase 4 — Standard semantic segmentation
+## Phase 4 — 표준 semantic segmentation
 
-Move to a multi-class benchmark, starting with PASCAL VOC under explicit
-data-scarce fractions. Compare matched Vanilla, KD, LG, ALG, iBKD, and selected
-segmentation-specific KD baselines.
+명시적인 data-scarce 비율을 적용한 PASCAL VOC부터 multi-class benchmark로
+확장합니다. 조건을 맞춘 Vanilla, KD, LG, ALG, iBKD와 선별한 segmentation KD
+baseline을 비교합니다.
 
 ## Phase 5 — Dense iBKD
 
-Only if earlier phases justify it, design a dense-task-specific method such as
-multi-scale grid alignment, boundary-aware guidance, or encoder-decoder feature
-transfer. This phase is a new method contribution, not merely an analysis.
+앞선 Phase에서 확장 가능성이 확인된 경우에만 multi-scale grid alignment,
+boundary-aware guidance, encoder–decoder feature transfer 같은 dense task 전용
+방법을 설계합니다. 이 단계는 단순 분석이 아니라 새로운 방법론 기여입니다.

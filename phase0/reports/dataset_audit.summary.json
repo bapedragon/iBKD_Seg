@@ -5,6 +5,7 @@
   "data_contract_status": "pass",
   "semantic_segmentation_ground_truth_status": "fail",
   "phase_gate": "hold",
+  "summary_ko": "공식 파일 구조는 정상이지만 자동 마스크 품질 문제로 semantic-segmentation ground truth 사용은 보류한다.",
   "counts": {
     "images": 8189,
     "masks": 8189,
@@ -24,7 +25,7 @@
   "mask_conversion": {
     "source_format": "JPEG blue-screen composite",
     "background_rgb": [0, 0, 255],
-    "method": "least-squares alpha recovery from original and composite",
+    "method": "원본 이미지와 composite를 이용한 least-squares alpha 복원",
     "foreground_threshold": 0.5
   },
   "mask_quality": {

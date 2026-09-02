@@ -1,44 +1,47 @@
-# iBKD Segmentation Extension
+# iBKD 세그멘테이션 확장성 검증
 
-This repository tests whether the spatial representations learned by iBKD
-extend from data-scarce image classification to dense prediction.
+이 저장소는 데이터가 부족한 이미지 분류 환경에서 iBKD가 학습한 공간
+표현이 세그멘테이션과 같은 dense prediction 문제에도 유효한지 단계적으로
+검증합니다.
 
-The project uses explicit phase gates. A later phase starts only after the
-current phase has produced its required artifacts and a written decision.
+실험은 Phase별 gate 방식으로 진행합니다. 현재 Phase의 결과와 판단 근거가
+문서로 확정된 뒤에만 다음 Phase로 넘어갑니다.
 
-## Current status
+## 현재 상태
 
-**Phase 0 audited — HOLD on using Flowers masks as scientific ground truth.**
+**Phase 0 감사 완료 — Flowers 자동 마스크의 과학적 GT 사용은 보류(HOLD).**
 
-The code, checkpoints, official files, splits, shapes, and metrics are valid.
-The data audit nevertheless found 220 all-background and 22 effectively
-all-foreground automatic Flowers masks. Phase 1A may use these masks only as a
-labelled pipeline diagnostic; Phase 1B must use genuine pixel ground truth for
-the scientific frozen spatial probe.
+코드, 체크포인트, 공식 파일, split, feature shape, metric 구현은 정상입니다.
+하지만 전체 데이터 감사에서 전경이 없는 마스크 220개와 배경이 사실상 없는
+마스크 22개를 확인했습니다. 따라서 Phase 1A에서는 파이프라인 진단용으로만
+Flowers 자동 마스크를 사용하고, 실제 확장성 판단인 Phase 1B에서는 신뢰할 수
+있는 pixel-level ground truth를 사용해야 합니다.
 
-| Phase | Question | Status |
+| Phase | 핵심 질문 | 상태 |
 |---|---|---|
-| 0 | Are the inputs and evaluation contracts trustworthy? | Audited / Hold |
-| 1 | Is a dense mask more decodable from frozen iBKD features? | Pending |
-| 2 | Is any gain robust to spatial controls and encoder seeds? | Pending |
-| 3 | Does the signal survive a stronger shared decoder and fine-tuning? | Pending |
-| 4 | Does it generalize to multi-class semantic segmentation? | Pending |
-| 5 | Is a dense-task-specific iBKD extension justified? | Pending |
+| 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 / 보류 |
+| 1 | 고정된 iBKD feature에서 dense mask가 더 잘 복원되는가? | 대기 |
+| 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 대기 |
+| 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
+| 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
+| 5 | dense task 전용 iBKD 확장이 필요한가? | 대기 |
 
-See [ROADMAP.md](ROADMAP.md) for the complete gates.
+전체 단계와 gate 조건은 [ROADMAP.md](ROADMAP.md)에 정리되어 있습니다.
 
-## Repository policy
+## 저장소 구성 원칙
 
-- `src/` contains implementation shared by multiple phases.
-- Each `phase*_*/` directory owns its protocol, commands, reports, and gate.
-- Dataset archives, extracted data, checkpoints, and raw runs are not tracked.
-- Every consumed checkpoint is identified by SHA-256 and expected metadata.
-- Paper table values and checkpoint reproduction values are never mixed.
+- `phase0/`, `phase1/`처럼 Phase 단위의 최상위 폴더를 사용합니다.
+- 각 Phase 폴더에는 해당 단계의 절차, 명령어, 보고서, 결정문을 둡니다.
+- 여러 Phase가 공유하는 구현은 `src/`에 둡니다.
+- 데이터셋, 체크포인트, 원시 실행 결과는 Git에 올리지 않습니다.
+- 사용하는 체크포인트와 공식 데이터 파일은 SHA-256으로 식별합니다.
+- 논문 표의 수치와 로컬 재현 체크포인트의 수치를 구분하여 기록합니다.
+- README, 로드맵, 결정문 등 사용자용 문서는 한국어로 작성합니다.
 
-## Phase 0 quick start
+## Phase 0 빠른 시작
 
-The reference model environment is Python 3.10+, PyTorch 2.11.0,
-torchvision 0.26.0, and timm 1.0.27.
+기준 환경은 Python 3.10 이상, PyTorch 2.11.0, torchvision 0.26.0,
+timm 1.0.27입니다.
 
 ```bash
 python -m venv .venv
@@ -46,24 +49,22 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Run repository unit tests:
+단위 테스트 실행:
 
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-Audit the locally preserved Flowers-102 checkpoints:
+보존된 Flowers-102 체크포인트 감사:
 
 ```bash
 PYTHONPATH=src python -m ibkd_seg.phase0.checkpoints \
   --manifest manifests/checkpoints.json \
   --source-root /path/to/IBAM_KD_H200_V2 \
-  --output phase0_sanity/reports/checkpoint_audit.local.json
+  --output phase0/reports/checkpoint_audit.local.json
 ```
 
-Dataset preparation and audit commands are documented in
-[phase0_sanity/README.md](phase0_sanity/README.md).
-The local-versus-H200 split is recorded in
-[phase0_sanity/COMPUTE_PLAN.md](phase0_sanity/COMPUTE_PLAN.md).
-The evidence-backed gate decision is in
-[phase0_sanity/DECISION.md](phase0_sanity/DECISION.md).
+데이터 준비와 전체 감사 절차는 [phase0/README.md](phase0/README.md)에
+정리되어 있습니다. 로컬과 H200의 역할 분리는
+[phase0/COMPUTE_PLAN.md](phase0/COMPUTE_PLAN.md), 최종 gate 판단은
+[phase0/DECISION.md](phase0/DECISION.md)에서 확인할 수 있습니다.

@@ -38,8 +38,8 @@
     "test_ids": 6149
   },
   "notes": [
-    "The source paper describes these files as automatic segmentations used for flower classification, not exhaustive human-annotated semantic-segmentation ground truth.",
-    "The files are JPEG blue-screen composites; exact RGB equality is not a valid binary conversion because of compression artifacts.",
-    "The classification encoders may have seen official train and validation images as train+val classification data. This must be disclosed in Phase 1."
+    "원 논문은 이 파일을 꽃 분류에 사용한 자동 segmentation으로 설명한다. 사람이 빠짐없이 표시한 semantic-segmentation ground truth가 아니다.",
+    "파일 형식은 JPEG blue-screen composite이므로 압축 artifact 때문에 RGB 완전 일치 방식으로 binary mask를 만들면 안 된다.",
+    "분류 encoder는 공식 train과 validation 이미지를 train+val 분류 데이터로 보았을 수 있다. Phase 1에서 반드시 이를 공개해야 한다."
   ]
 }

@@ -13,18 +13,18 @@ PYTHONPATH=src "${python_bin}" -m unittest discover -s tests -v
 PYTHONPATH=src "${python_bin}" -m ibkd_seg.phase0.checkpoints \
   --manifest manifests/checkpoints.json \
   --source-root "${source_root}" \
-  --output phase0_sanity/reports/checkpoint_audit.local.json
+  --output phase0/reports/checkpoint_audit.local.json
 if PYTHONPATH=src "${python_bin}" -m ibkd_seg.phase0.flowers_data \
   --data-root "${dataset_root}" \
   --manifest manifests/flowers102.json \
-  --output phase0_sanity/reports/dataset_audit.local.json; then
-  echo "Phase 0 audits passed. Review phase0_sanity/reports/*.local.json."
+  --output phase0/reports/dataset_audit.local.json; then
+  echo "Phase 0 감사 통과: phase0/reports/*.local.json을 확인하세요."
 else
   dataset_status="$?"
   if [[ "${dataset_status}" -eq 1 ]]; then
-    echo "Phase 0 data-quality gate returned HOLD. Review phase0_sanity/DECISION.md."
+    echo "Phase 0 데이터 품질 gate는 보류(HOLD)입니다. phase0/DECISION.md를 확인하세요."
   else
-    echo "Phase 0 dataset audit could not complete (status ${dataset_status})."
+    echo "Phase 0 데이터셋 감사를 완료하지 못했습니다(종료 코드 ${dataset_status})."
   fi
   exit "${dataset_status}"
 fi

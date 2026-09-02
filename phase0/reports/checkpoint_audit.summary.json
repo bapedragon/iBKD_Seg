@@ -3,6 +3,7 @@
   "audit": "flowers102_checkpoint_contract_summary",
   "audited_on": "2026-09-02",
   "status": "pass",
+  "summary_ko": "체크포인트 3개와 frozen-feature 및 probe gradient 계약이 모두 검증을 통과했다.",
   "runtime": {
     "python": "3.13.1",
     "torch": "2.11.0",

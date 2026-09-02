@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ibkd-seg"
 version = "0.1.0"
-description = "Phase-gated evaluation of iBKD representations for segmentation"
+description = "iBKD 표현의 세그멘테이션 확장성을 단계별로 검증하는 연구 저장소"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

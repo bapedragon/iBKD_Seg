@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Flowers-102 Phase 1A pseudo-mask diagnostic encoders. Ours/ALG are the primary matched pair; KD is exploratory only.",
+  "description": "Flowers-102 Phase 1A pseudo-mask 진단용 encoder. Ours/ALG는 조건이 일치하는 주 비교군이며 KD는 탐색용으로만 사용한다.",
   "checkpoints": [
     {
       "id": "flowers102_ours_researcher_sync_v1_seed1",

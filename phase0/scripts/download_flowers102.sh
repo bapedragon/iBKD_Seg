@@ -42,4 +42,4 @@ download \
 tar -xzf "${raw_root}/102flowers.tgz" -C "${extracted_root}"
 tar -xzf "${raw_root}/102segmentations.tgz" -C "${extracted_root}"
 
-echo "Flowers-102 extracted under ${extracted_root}"
+echo "Flowers-102 압축 해제 완료: ${extracted_root}"

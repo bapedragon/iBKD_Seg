@@ -1,4 +1,4 @@
-"""Verify checkpoint bytes, metadata, strict loading, and feature-grid shape."""
+"""체크포인트 byte, metadata, strict loading, feature-grid shape을 검증한다."""
 
 from __future__ import annotations
 
