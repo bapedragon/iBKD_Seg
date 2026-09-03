@@ -13,9 +13,10 @@ ground-truth 품질 gate를 통과하지 못했습니다. Phase 1A는 pseudo-mas
 ## Phase 1 — Frozen spatial probe
 
 각 DeiT-Ti encoder를 고정하고 최종 `14 x 14` feature grid 위에 동일한
-`Conv2d(192, 2, 1)` head를 학습합니다. 조건이 일치하는 Ours/ALG 쌍을 주 비교로
-사용하고, 프로토콜이 다른 KD는 탐색 결과로만 다룹니다. Probe head seed 3개를
-실행하고 flower IoU, background IoU, 2-class mIoU, flower Dice를 보고합니다.
+`Conv2d(192, 2, 1)` head를 학습합니다. Phase 1A는 기존 Flowers 체크포인트로
+작동만 검사하고, Phase 1B는 조건이 일치하는 Pet 분류 encoder를 새로 학습합니다.
+Probe와 encoder seed를 구분해 반복하고 foreground IoU, background IoU,
+2-class mIoU, Dice를 보고합니다.
 
 Flowers-102에서 배포한 segmentation은 원 분류 파이프라인이 만든 자동 결과이며
 완전한 human ground truth가 아닙니다. 이에 따라 Phase 1을 두 단계로 나눕니다.
@@ -23,11 +24,12 @@ Flowers-102에서 배포한 segmentation은 원 분류 파이프라인이 만든
 - **Phase 1A — Flowers pseudo-mask 진단:** 기존 Flowers 체크포인트로 전체 probe
   파이프라인을 검증합니다. 결과는 자동 마스크에 대한 공간 표현 복원성으로만
   해석합니다.
-- **Phase 1B — 신뢰 가능한 GT probe:** 실제 확장 가능성 판단에는 별도의
-  pixel-level GT를 사용합니다. 현재 권장안은 Oxford-IIIT Pet trimap이며,
-  대안은 사람이 검수한 Flowers subset 또는 표준 세그멘테이션 benchmark입니다.
+- **Phase 1B — Pet GT probe:** Oxford-IIIT Pet의 품종 라벨만으로 조건이 일치하는
+  Vanilla, KD, LG, ALG, iBKD 분류 encoder를 학습합니다. 이후 encoder를 고정하고
+  공식 trimap으로 동일한 작은 probe만 학습하여 위치와 형태 정보의 복원성을
+  비교합니다. 자세한 목적과 절차는 `phase1/README.md`에 정리합니다.
 
-**종료 조건:** 조건이 일치하는 Ours–ALG 비교, 비영상 baseline, 정성 mask,
+**종료 조건:** 조건이 일치하는 iBKD–ALG 비교, 비영상 baseline, 정성 mask,
 신뢰 가능한 pixel GT 결과를 함께 검토하여 Go/Hold/No-Go를 기록합니다.
 
 ## Phase 2 — 공간적 대조 실험
