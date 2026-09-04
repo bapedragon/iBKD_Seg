@@ -1,0 +1,460 @@
+{
+  "schema_version": 1,
+  "protocol_id": "oxford_iiit_pet_phase1_frozen_spatial_probe_v1",
+  "status": "draft_pending_batch_and_ibkd_lambda_after_timing_2026-09-05",
+  "research_question": "classification_only_ibkd_encoder_has_more_linearly_decodable_pet_spatial_information_than_matched_baselines",
+  "method_provenance": {
+    "ibkd_track": "two_prespecified_historical_configurations",
+    "source_of_truth": "AAAI_ours_submission_and_IBKD_AAAI-27",
+    "continuity_reference": "iBKD_Seg_phase0.5_matched_Ours_checkpoint",
+    "candidate_provenance": {
+      "lambda_0.5_batch_64": "AAAI_ours_submission_and_phase0.5_matched_checkpoint_lineage",
+      "lambda_0.25_batch_128": "IBKD_AAAI-27_public_release_defaults",
+      "timing_factorial": "all_six_variants_crossed_with_batch_64_and_128_for_runtime_and_memory_only"
+    }
+  },
+  "data_access_policy": {
+    "classification_encoder_may_use": ["rgb_image", "breed_label"],
+    "classification_encoder_must_not_use": ["trimap", "head_roi"],
+    "probe_may_use": ["rgb_image", "trimap"],
+    "official_test_used_for_training_or_selection": false,
+    "official_test_evaluation": "once_per_prespecified_selected_model"
+  },
+  "dataset": {
+    "name": "Oxford-IIIT Pet",
+    "num_classes": 37,
+    "official_split_counts": {
+      "trainval": 3680,
+      "test": 3669,
+      "total": 7349
+    },
+    "archives": {
+      "images": {
+        "url": "https://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz",
+        "expected_bytes": 791918971,
+        "expected_md5": "5c4f3ee8e5d25df40f4fd59a7f44e54c",
+        "sha256": null,
+        "sha256_required_before_full_run": true
+      },
+      "annotations": {
+        "url": "https://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz",
+        "expected_bytes": 19173078,
+        "expected_md5": "95a8c909bbe2e81eed6a22bccdf3f68f",
+        "sha256": "52425fb6de5c424942b7626b428656fcbd798db970a937df61750c0f1d358e91"
+      }
+    },
+    "official_annotation_hashes": {
+      "annotations/list.txt_sha256": "6a54ab256e22f7a33c6f17a7669e58ea5f6f9c7a080ec2622c205aefd4b354da",
+      "annotations/trainval.txt_sha256": "408f3f609481b939c94634169e6413414b733a3faeba440cbdcc5c02142eebdc",
+      "annotations/test.txt_sha256": "a5454003774ffe01f4f322756d3ba5495bae21cb30bb217ab285dbfa2bef245c"
+    },
+    "included_samples": "only_ids_listed_in_official_trainval_or_test_files",
+    "integrity_gate": {
+      "require_unique_ids": true,
+      "require_disjoint_trainval_and_test": true,
+      "require_image_breed_trimap_one_to_one": true,
+      "require_rgb_decode": true,
+      "require_trimap_values": [1, 2, 3],
+      "reject_posthoc_sample_exclusion": true
+    },
+    "split": {
+      "source_train_pool": "official_trainval_3680",
+      "source_test": "official_test_3669",
+      "strategy": "fixed_class_stratified_holdout",
+      "validation_per_class": 20,
+      "split_seed": 2027,
+      "ranking_key": "sha256(f'{split_seed}:{image_id}')_then_image_id",
+      "expected_counts": {
+        "train": 2940,
+        "validation": 740,
+        "test": 3669
+      },
+      "manifest_required": true,
+      "validation_id_list_sha256_required": true,
+      "shared_by": ["teacher", "all_students", "all_probes"]
+    }
+  },
+  "classification": {
+    "task": "37_way_breed_classification",
+    "teacher": {
+      "architecture": "cifar_style_resnet56_6n_plus_2_n9",
+      "initialization": "scratch",
+      "input_size": 32,
+      "seed": 1,
+      "epochs": 300,
+      "train_batch_size": 128,
+      "eval_batch_size": 200,
+      "optimizer": {
+        "name": "sgd",
+        "learning_rate": 0.1,
+        "momentum": 0.9,
+        "nesterov": true,
+        "weight_decay": 0.0005,
+        "weight_decay_exclusions": ["bias", "normalization_parameters"]
+      },
+      "scheduler": {
+        "name": "cosine",
+        "minimum_learning_rate": 0.0,
+        "warmup_epochs": 0
+      },
+      "label_smoothing": 0.0,
+      "mixup": false,
+      "cutmix": false,
+      "precision": "float32",
+      "selection_metric": "validation_macro_top1",
+      "selection_tie_break": "earlier_epoch",
+      "test_policy": "once_after_validation_selection",
+      "one_fixed_checkpoint_shared_by_all_distillation_methods": true
+    },
+    "student": {
+      "architecture": "deit_tiny_patch16_224",
+      "initialization": "scratch",
+      "external_pretraining": false,
+      "input_size": 224,
+      "encoder_seeds": [1, 2, 3],
+      "same_initial_student_state_per_seed_across_methods": true,
+      "shared_initial_state_hash_required": true,
+      "epochs": 300,
+      "train_batch_size": null,
+      "candidate_train_batch_sizes": [64, 128],
+      "main_batch_size_status": "not_locked_before_timing",
+      "eval_batch_size": 200,
+      "optimizer": {
+        "name": "adamw",
+        "learning_rate": 0.0005,
+        "minimum_learning_rate": 0.000005,
+        "betas": [0.9, 0.999],
+        "epsilon": 1e-8,
+        "weight_decay": 0.05,
+        "common_weight_decay_exclusions": []
+      },
+      "scheduler": {
+        "name": "cosine",
+        "warmup_epochs": 20,
+        "warmup_factor": 0.001
+      },
+      "regularization": {
+        "label_smoothing": 0.0,
+        "drop_path_rate": 0.1,
+        "dropout_rate": 0.0,
+        "mixup": false,
+        "cutmix": false,
+        "model_ema": false,
+        "gradient_clipping": null
+      },
+      "precision": {
+        "mode": "float32",
+        "gradient_scaler": false
+      },
+      "train_loader": {
+        "shuffle": true,
+        "drop_last": true,
+        "paired_seeded_worker_rng": true
+      },
+      "selection_metric": "validation_macro_top1",
+      "selection_tie_break": "earlier_epoch",
+      "test_policy": "once_after_validation_selection",
+      "checkpoint_forwarded_to_probe": "best_validation_classification_checkpoint"
+    },
+    "input_pipeline": {
+      "shared_random_geometry_between_student_and_teacher": true,
+      "train": {
+        "random_resized_crop": {
+          "size": 224,
+          "scale": [0.08, 1.0],
+          "ratio": [0.75, 1.3333333333333333],
+          "interpolation": "bicubic"
+        },
+        "horizontal_flip_probability": 0.5,
+        "color_jitter_argument": 0.4,
+        "auto_augment": "rand-m9-mstd0.5-inc1",
+        "random_erasing": {
+          "probability": 0.25,
+          "mode": "pixel",
+          "count": 1
+        },
+        "student_normalization_mean": [0.485, 0.456, 0.406],
+        "student_normalization_std": [0.229, 0.224, 0.225],
+        "teacher_view": "same_augmented_rgb_view_bilinear_resize_to_32_then_imagenet_normalize"
+      },
+      "evaluation": {
+        "resize": "direct_square_224",
+        "interpolation": "bilinear",
+        "center_crop": false,
+        "test_time_augmentation": false,
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225]
+      }
+    },
+    "methods": {
+      "vanilla": {
+        "loss": "cross_entropy"
+      },
+      "kd": {
+        "loss": "(1-alpha)*CE+alpha*T^2*KL(student/T,teacher/T)",
+        "temperature": 4.0,
+        "alpha": 0.9,
+        "transfer": "teacher_class_logits"
+      },
+      "lg": {
+        "loss": "CE+beta*sum_stage_mean_MSE",
+        "beta": 2.5,
+        "student_blocks": [0, 6, 11],
+        "teacher_stages": [0, 1, 2],
+        "projection": "learned_stagewise_1x1",
+        "grid_alignment": "bilinear_to_larger_grid",
+        "guidance_schedule": "all_300_epochs"
+      },
+      "alg": {
+        "base": "lg",
+        "beta_on": 2.5,
+        "threshold": -0.02,
+        "loss_smoothing_window": 50,
+        "derivative_smoothing_window": 50,
+        "controller_warmup_epochs": 0,
+        "stop_boundary": "smoothed_derivative_greater_than_or_equal_to_threshold",
+        "stop_is_permanent": true
+      },
+      "ibkd": {
+        "loss": "CE+beta(e)*(lambda*L_fuse+(1-lambda)*L_align)",
+        "fusion_ratio_lambda": null,
+        "candidate_fusion_ratio_lambdas": [0.25, 0.5],
+        "main_lambda_status": "not_locked_before_timing",
+        "student_blocks": "all_12",
+        "teacher_stages": [0, 1, 2],
+        "grid_resize_mode": "bilinear_to_larger_of_student_or_teacher_grid_per_stage",
+        "stage_projection": "learned_1x1",
+        "deformable_spatial_attention_kernel": 5,
+        "convolutional_cross_attention_heads": 4,
+        "qkv_kernel": 1,
+        "beta_on": 2.5,
+        "threshold": -0.02,
+        "loss_smoothing_window": 50,
+        "derivative_smoothing_window": 50,
+        "controller_warmup_epochs": 20,
+        "stop_boundary": "smoothed_derivative_strictly_greater_than_threshold",
+        "stop_is_permanent": true
+      }
+    },
+    "method_equality_contract": {
+      "must_be_identical": [
+        "dataset_and_split",
+        "student_architecture",
+        "student_initial_state_for_each_seed",
+        "input_pipeline",
+        "epochs",
+        "batch_size",
+        "optimizer_and_parameter_grouping",
+        "learning_rate_schedule",
+        "label_smoothing",
+        "drop_path",
+        "precision",
+        "checkpoint_selection",
+        "test_policy"
+      ],
+      "may_differ_only": [
+        "teacher_usage",
+        "distillation_objective",
+        "required_feature_adapter",
+        "documented_method_controller"
+      ],
+      "pet_specific_method_hyperparameter_search": false,
+      "timing_matrix_is_not_a_performance_search": true,
+      "timing_metrics_must_not_select_batch_lambda_method_or_checkpoint": true,
+      "primary_scientific_comparison_requires_one_shared_batch_size": true
+    },
+    "report": {
+      "primary_metric": "test_macro_top1",
+      "secondary_metrics": ["test_overall_top1", "test_top5"],
+      "seed_summary": "mean_and_sample_standard_deviation_over_encoder_seeds",
+      "report_each_seed": true,
+      "primary_paired_comparison": "ibkd_minus_alg_by_encoder_seed",
+      "equivalence_claim_policy": "with_three_encoder_seeds_do_not_claim_statistical_equivalence_from_a_nonsignificant_difference; describe_only_as_comparable_within_observed_seed_variability"
+    }
+  },
+  "frozen_spatial_probe": {
+    "splits": "same_fixed_2940_740_3669_partition_as_classification",
+    "image_input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "antialias": true,
+      "normalization_mean": [0.485, 0.456, 0.406],
+      "normalization_std": [0.229, 0.224, 0.225],
+      "random_augmentation": false
+    },
+    "mask": {
+      "raw_values": {
+        "1": "foreground_pet",
+        "2": "background",
+        "3": "ambiguous_boundary_or_accessory"
+      },
+      "mapped_values": {
+        "foreground_pet": 1,
+        "background": 0,
+        "ambiguous_boundary_or_accessory": 255
+      },
+      "ignore_index": 255,
+      "postprocessing": "none",
+      "posthoc_exclusion": "none"
+    },
+    "encoder": {
+      "checkpoint": "classification_best_validation_checkpoint",
+      "strict_load": true,
+      "frozen": true,
+      "eval_mode": true,
+      "feature": {
+        "block_index": 11,
+        "norm": false,
+        "exclude_cls_token": true,
+        "output_format": "NCHW",
+        "channels": 192,
+        "height": 14,
+        "width": 14,
+        "cache_dtype": "float32",
+        "amp_during_cache": false
+      }
+    },
+    "probe": {
+      "architecture": "Conv2d(192,2,1,bias=True)",
+      "parameter_count": 386,
+      "initialization": {
+        "weight": "normal",
+        "weight_std": 0.01,
+        "bias": 0.0
+      },
+      "target": {
+        "grid_height": 14,
+        "grid_width": 14,
+        "foreground_occupancy_denominator": "valid_non_boundary_pixels_only",
+        "foreground_threshold": 0.5,
+        "all_boundary_patch": "ignore"
+      },
+      "loss": {
+        "name": "cross_entropy",
+        "ignore_index": 255,
+        "class_weighting": "none"
+      },
+      "optimizer": {
+        "name": "sgd",
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "nesterov": false
+      },
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 100,
+      "batch_size": 64,
+      "scheduler": {
+        "name": "cosine",
+        "minimum_learning_rate": 0.0
+      },
+      "probe_seeds": [1, 2, 3, 4, 5],
+      "same_initial_probe_state_and_batch_order_per_seed_across_all_encoders": true
+    },
+    "selection": {
+      "split": "validation",
+      "metric": "grid_14x14_two_class_mean_iou",
+      "direction": "maximize",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"],
+      "test_policy": "once_after_validation_selection"
+    },
+    "evaluation": {
+      "prediction": "bilinear_upsample_logits_14x14_to_224x224_then_argmax",
+      "ignore_boundary_pixels": true,
+      "aggregation": "global_confusion_matrix",
+      "primary_metric": "input_224_two_class_mean_iou",
+      "secondary_metrics": [
+        "foreground_iou",
+        "background_iou",
+        "foreground_dice",
+        "pixel_accuracy",
+        "grid_14x14_two_class_mean_iou"
+      ],
+      "baselines": {
+        "all_background": "predict_background_at_every_valid_pixel",
+        "train_mean_mask": "compute_per_14x14_cell_foreground_frequency_from_valid_train_patch_targets; use_zero_if_no_valid_target; bilinear_upsample_frequency_to_224x224_and_predict_foreground_at_probability_greater_than_or_equal_to_0.5"
+      }
+    },
+    "qualitative": {
+      "encoder_seed": 1,
+      "probe_seed": 1,
+      "test_image_ids": [
+        "Abyssinian_201",
+        "Bengal_33",
+        "chihuahua_67",
+        "great_pyrenees_91",
+        "miniature_pinscher_23",
+        "Ragdoll_37",
+        "shiba_inu_68",
+        "yorkshire_terrier_9"
+      ],
+      "selection_rule": "eight_fixed_near_equal_quantiles_of_official_test_file_order_before_results",
+      "panel_order": ["input", "ground_truth", "vanilla", "kd", "lg", "alg", "ibkd"]
+    }
+  },
+  "statistics": {
+    "independent_unit": "encoder_training_seed",
+    "probe_seed_is_not_an_independent_encoder_replication": true,
+    "within_encoder_summary": "mean_and_sample_standard_deviation_over_five_probe_seeds",
+    "primary_method_summary": "mean_and_sample_standard_deviation_of_encoder_seed_means",
+    "report_all_raw_values": true,
+    "formal_p_value_with_three_encoder_seeds": false,
+    "primary_paired_contrast": "ibkd_minus_alg_for_each_matched_encoder_seed"
+  },
+  "gates": {
+    "before_implementation": [
+      "timing_protocol_and_machine_readable_candidate_matrix_committed"
+    ],
+    "before_h200_full_training": [
+      "image_archive_sha256_recorded",
+      "dataset_and_split_audit_passed",
+      "method_contract_tests_passed",
+      "two_epoch_full_data_timing_run_passed",
+      "estimated_job_duration_fits_h200_request_limit",
+      "batch_lambda_and_primary_reporting_rule_locked_without_using_timing_accuracy"
+    ],
+    "before_probe": [
+      "all_prespecified_student_runs_complete",
+      "classification_best_checkpoints_strict_load",
+      "checkpoint_and_summary_hashes_recorded",
+      "official_test_was_not_used_for_selection"
+    ],
+    "after_results": {
+      "protocol_change_policy": "create_v2_and_rerun_every_compared_method",
+      "never_change_exclusions_or_metrics_in_place": true
+    }
+  },
+  "runtime": {
+    "reference_environment": {
+      "python": "3.10.12",
+      "torch": "2.11.0",
+      "torchvision": "0.26.0",
+      "timm": "1.0.27"
+    },
+    "classification_num_workers": 4,
+    "probe_feature_batch_size": 32,
+    "probe_num_workers": 4,
+    "device": "single_cuda_gpu"
+  },
+  "smoke": {
+    "purpose": "runtime_memory_oom_and_job_partitioning_only",
+    "scientific_result": false,
+    "selection_from_smoke_metrics_forbidden": true,
+    "official_test_accessed": false,
+    "classification_variants": ["vanilla", "kd", "lg", "alg", "ibkd_lambda_0.25", "ibkd_lambda_0.5"],
+    "train_batch_sizes": [64, 128],
+    "student_task_count": 12,
+    "separate_timing_only_teacher_task_count": 1,
+    "encoder_seeds": [1],
+    "samples": {
+      "train": 2940,
+      "validation": 740,
+      "test": 0
+    },
+    "epochs": 2,
+    "planned_epoch_extrapolation": 300,
+    "record": ["epoch_seconds_including_validation", "peak_cuda_memory", "oom_or_success"],
+    "timing_teacher_checkpoint_reusable_for_full_training": false
+  }
+}

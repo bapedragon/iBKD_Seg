@@ -26,6 +26,14 @@ ground-truth 품질 gate를 통과하지 못했습니다. Flowers 실행은 Phas
 
 ## Phase 1 — Oxford-IIIT Pet GT frozen spatial probe
 
+**2026-09-05 상태:** 데이터·평가 초안과 12-way timing 계약을 기록했습니다.
+student batch `64/128`과 iBKD λ `0.25/0.5`는 아직 본 실험 값으로 고정하지
+않았습니다. 먼저 모든 여섯 variant × 두 batch의 full-data 2-epoch timing으로
+시간·메모리·OOM 여부를 측정합니다. 본 학습 전에는 공식 이미지 SHA-256, 데이터
+대응 감사, 고정 split manifest, method contract test와 최종 protocol lock이
+필요합니다. 상세 계약은
+[phase1/PROTOCOL.md](phase1/PROTOCOL.md)에 있습니다.
+
 Oxford-IIIT Pet의 품종 라벨만 사용해 조건이 일치하는 Vanilla, KD, LG, ALG,
 iBKD 분류 encoder를 학습합니다. 이후 모든 encoder를 고정하고 공식 trimap에
 동일한 작은 probe만 학습하여 위치와 형태 정보의 선형 복원성을 비교합니다.

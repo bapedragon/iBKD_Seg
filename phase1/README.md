@@ -1,6 +1,11 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **본 실험 프로토콜 준비 중**
+상태: **12-way H200 timing 준비 — 본 실험 batch/λ 미확정**
+
+현재 합의한 초안과 timing 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
+있는 후보 설정은
+[`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)에
+있습니다.
 
 ## 핵심 질문
 
@@ -31,7 +36,22 @@ Vanilla / KD / LG / ALG / iBKD encoder
 iBKD 결과가 여러 encoder seed에서 일관되게 높다면, 분류만 학습했는데도 iBKD
 feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 남았다는 근거가 됩니다.
 
-## 본 실험 전에 고정할 계약
+## 현재 고정한 것과 아직 고정하지 않은 것
+
+데이터 split, test-once, 모델 구조, metric과 probe 방식은 유지합니다. 다만 student
+batch `64/128`과 iBKD λ `0.25/0.5`는 아직 main 값으로 고정하지 않았습니다.
+역사적으로 LG/ALG는 batch 128, 제출 Ours 계보는 λ 0.5·batch 64, 공개 iBKD 계보는
+λ 0.25·batch 128이므로 다음 12개를 동일한 timing 조건에서 먼저 측정합니다.
+
+```text
+(Vanilla, KD, LG, ALG, iBKD-0.25, iBKD-0.5) × (batch 64, batch 128)
+```
+
+이 실행은 전체 train/validation에서 2 epoch를 수행하지만 오직 시간, peak memory,
+OOM 여부와 H200 작업 분할을 보기 위한 것입니다. smoke accuracy는 어떤 선택에도
+사용하지 않으며 official test는 접근하지 않습니다.
+
+## 본 실험 초안에 포함된 공통 계약
 
 1. 공식 이미지, 품종 label, trimap과 split의 byte size·SHA-256 및 1:1 대응
 2. trimap의 동물/배경 정의와 애매한 경계 픽셀 ignore 규칙
@@ -42,8 +62,14 @@ feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 
 7. 공통 probe 초기화, LR grid, epoch, seed와 validation 선택 규칙
 8. foreground/background IoU, 2-class mIoU, Dice와 비영상 baseline
 
-결과를 바꿀 수 있는 항목이 남아 있으면 본 실험을 시작하지 않습니다. 모든 항목을
-문서와 v1 config로 고정하고 smoke gate를 통과한 뒤 H200 실행으로 넘어갑니다.
+위 항목 중 batch와 λ를 제외한 초안은 2026-09-05에 기록했습니다. 공식 `trainval` 3,680장은 품종별
+20장의 고정 validation을 떼어 `train/validation=2,940/740`으로 사용하고, 공식
+test 3,669장은 최종 평가 전까지 선택 과정에서 사용하지 않습니다. 분류 encoder는
+seed `[1,2,3]`, probe는 각 encoder마다 seed `[1,2,3,4,5]`를 사용합니다.
+
+full-data timing smoke 뒤 runtime만 보고 H200 작업을 나눕니다. 본 학습을 시작하기
+전에는 batch·λ·primary reporting rule을 별도로 LOCK하고, 이미지 archive SHA-256,
+image-label-trimap 대응, split manifest와 method contract test도 통과해야 합니다.
 
 ## 비교가 뜻하는 것
 
@@ -67,4 +93,4 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 ## 계산 자원
 
 - 로컬: Pet 데이터 감사, 단위 테스트, smoke probe와 정성 확인
-- H200: 공통 teacher, 다섯 분류 encoder의 multi-seed 학습과 전체 probe 반복
+- H200: 12-way timing, 이후 확정할 공통 teacher·분류 encoder 학습과 전체 probe 반복
