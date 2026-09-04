@@ -54,9 +54,6 @@ batch의 student 18회로 구성합니다. timing 환산 기준 예상시간은 
 39분과 8시간 20분입니다. 결과가 좋은 batch나 λ만 골라 main 결과로 바꾸지 않고
 두 profile을 별도 표로 모두 남깁니다.
 
-사용자가 직접 등록할 두 이슈 문안은
-[batch 64](H200_FULL_B64_ISSUE.md), [batch 128](H200_FULL_B128_ISSUE.md)에 있습니다.
-
 ## 본 실험 초안에 포함된 공통 계약
 
 1. 공식 이미지, 품종 label, trimap과 split의 byte size·SHA-256 및 1:1 대응
