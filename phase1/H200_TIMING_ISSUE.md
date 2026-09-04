@@ -23,7 +23,7 @@ https://github.com/bapedragon/iBKD_Seg.git
 ## 고정 commit
 
 ```text
-COMMIT_SHA_AFTER_PUSH
+6107bc68b67442f61c466d8efc68d1caf20684a5
 ```
 
 ## 코드 실행 명령어
