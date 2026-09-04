@@ -1,9 +1,9 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **12-way H200 timing 준비 — 본 실험 batch/λ 미확정**
+상태: **12-way timing 완료 — batch 64/128 full classification 실행 준비**
 
-현재 합의한 초안과 timing 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
-있는 후보 설정은
+현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
+있는 설정은
 [`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)에
 있습니다.
 
@@ -36,20 +36,23 @@ Vanilla / KD / LG / ALG / iBKD encoder
 iBKD 결과가 여러 encoder seed에서 일관되게 높다면, 분류만 학습했는데도 iBKD
 feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 남았다는 근거가 됩니다.
 
-## 현재 고정한 것과 아직 고정하지 않은 것
+## 고정한 full classification matrix
 
-데이터 split, test-once, 모델 구조, metric과 probe 방식은 유지합니다. 다만 student
-batch `64/128`과 iBKD λ `0.25/0.5`는 아직 main 값으로 고정하지 않았습니다.
-역사적으로 LG/ALG는 batch 128, 제출 Ours 계보는 λ 0.5·batch 64, 공개 iBKD 계보는
-λ 0.25·batch 128이므로 다음 12개를 동일한 timing 조건에서 먼저 측정합니다.
+데이터 split, test-once, 모델 구조, metric과 probe 방식을 유지합니다. timing
+결과에서 12개 조합 모두 OOM 없이 실행되고 batch 64/128의 시간이 비슷했으므로,
+성능 수치를 보기 전에 다음 두 batch profile과 두 iBKD λ를 모두 실행·보고하기로
+고정했습니다.
 
 ```text
-(Vanilla, KD, LG, ALG, iBKD-0.25, iBKD-0.5) × (batch 64, batch 128)
+(Vanilla, KD, LG, ALG, iBKD-0.25, iBKD-0.5)
+× (batch 64, batch 128) × encoder seed (1, 2, 3)
+= student 36 runs
 ```
 
-이 실행은 전체 train/validation에서 2 epoch를 수행하지만 오직 시간, peak memory,
-OOM 여부와 H200 작업 분할을 보기 위한 것입니다. smoke accuracy는 어떤 선택에도
-사용하지 않으며 official test는 접근하지 않습니다.
+H200 요청은 batch 64와 batch 128로 나눕니다. 각 요청은 공통 teacher 1회와 해당
+batch의 student 18회로 구성합니다. timing 환산 기준 예상시간은 각각 약 8시간
+39분과 8시간 20분입니다. 결과가 좋은 batch나 λ만 골라 main 결과로 바꾸지 않고
+두 profile을 별도 표로 모두 남깁니다.
 
 ## 본 실험 초안에 포함된 공통 계약
 
@@ -67,9 +70,10 @@ OOM 여부와 H200 작업 분할을 보기 위한 것입니다. smoke accuracy�
 test 3,669장은 최종 평가 전까지 선택 과정에서 사용하지 않습니다. 분류 encoder는
 seed `[1,2,3]`, probe는 각 encoder마다 seed `[1,2,3,4,5]`를 사용합니다.
 
-full-data timing smoke 뒤 runtime만 보고 H200 작업을 나눕니다. 본 학습을 시작하기
-전에는 batch·λ·primary reporting rule을 별도로 LOCK하고, 이미지 archive SHA-256,
-image-label-trimap 대응, split manifest와 method contract test도 통과해야 합니다.
+full-data timing의 runtime만 사용해 H200 작업을 두 개로 나눴습니다. 각 실행 시작
+전에 이미지 archive SHA-256, image-label-trimap 대응, split manifest와 method
+contract를 검사합니다. 분류 validation으로 checkpoint를 고른 뒤에만 official test를
+각 checkpoint당 정확히 한 번 평가합니다.
 
 ## 비교가 뜻하는 것
 
@@ -93,4 +97,4 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 ## 계산 자원
 
 - 로컬: Pet 데이터 감사, 단위 테스트, smoke probe와 정성 확인
-- H200: 12-way timing, 이후 확정할 공통 teacher·분류 encoder 학습과 전체 probe 반복
+- H200: 완료한 12-way timing, 두 batch profile의 분류 encoder 학습, 이후 전체 probe 반복

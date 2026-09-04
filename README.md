@@ -8,7 +8,7 @@
 
 ## 현재 상태
 
-**Phase 0.5 완료 — Phase 1의 12-way H200 timing 준비 중.**
+**Phase 0.5 완료 — Phase 1의 두 full-classification 요청 준비 완료.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -20,15 +20,15 @@ Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metr
 Oxford-IIIT Pet 실험에서 판단합니다.
 
 Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` split을
-사용합니다. student batch `64/128`과 iBKD λ `0.25/0.5`의 main 선택은 아직
-고정하지 않았으며, 먼저 12-way full-data 2-epoch timing으로 시간·메모리만
-측정합니다.
+사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후
+선택하지 않도록 student batch `64/128`과 iBKD λ `0.25/0.5`를 모두 3 seed로
+실행하고 별도 profile로 보고합니다.
 
 | Phase | 핵심 질문 | 상태 |
 |---|---|---|
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 |
 | 0.5 | Flowers pseudo-mask로 전체 probe 파이프라인이 작동하는가? | 완료 / 통과 |
-| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | timing 준비 / batch·λ 미확정 |
+| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | full classification 요청 준비 |
 | 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 대기 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
@@ -40,7 +40,7 @@ Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` spl
 - Flowers 정량·정성 결과: [phase0.5/DECISION.md](phase0.5/DECISION.md),
   [실제 이미지](phase0.5/reports/QUALITATIVE.md)
 - Pet 본 실험: [phase1/README.md](phase1/README.md)
-- Pet 프로토콜 초안·timing 계약: [phase1/PROTOCOL.md](phase1/PROTOCOL.md)
+- Pet LOCK 프로토콜·full-run 계약: [phase1/PROTOCOL.md](phase1/PROTOCOL.md)
 
 ## 저장소 구성 원칙
 

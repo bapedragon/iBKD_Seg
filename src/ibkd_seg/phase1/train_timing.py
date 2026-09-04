@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -60,6 +61,7 @@ def format_duration(seconds: float) -> str:
 
 def seed_everything(seed: int) -> None:
     random.seed(seed)
+    np.random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -210,6 +212,7 @@ def evaluate(
     correct_by_class = torch.zeros(NUM_CLASSES, dtype=torch.long)
     total_by_class = torch.zeros(NUM_CLASSES, dtype=torch.long)
     total_correct = 0
+    total_top5 = 0
     total = 0
     for images, targets in loader:
         images = images.to(device, non_blocking=True)
@@ -218,6 +221,8 @@ def evaluate(
         predictions = logits.argmax(dim=1)
         matches = predictions.eq(targets)
         total_correct += int(matches.sum())
+        top5_matches = logits.topk(5, dim=1).indices.eq(targets[:, None]).any(dim=1)
+        total_top5 += int(top5_matches.sum())
         total += targets.numel()
         total_by_class += torch.bincount(targets.cpu(), minlength=NUM_CLASSES)
         correct_by_class += torch.bincount(
@@ -229,6 +234,7 @@ def evaluate(
     return {
         "overall_top1": 100.0 * total_correct / max(1, total),
         "macro_top1": 100.0 * macro,
+        "top5": 100.0 * total_top5 / max(1, total),
     }
 
 

@@ -9,7 +9,9 @@ import torch
 
 from ibkd_seg.phase1.controllers import GuidanceController
 from ibkd_seg.phase1.data import build_stratified_split
+from ibkd_seg.phase1.full_matrix import build_full_tasks
 from ibkd_seg.phase1.models import IBKD, LocalityGuidance, ResNet56
+from ibkd_seg.phase1.run_full import aggregate_students
 from ibkd_seg.phase1.timing_matrix import build_tasks
 
 
@@ -41,7 +43,7 @@ class Phase1TimingMatrixTest(unittest.TestCase):
 
     def test_config_marks_timing_as_non_scientific(self) -> None:
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        self.assertTrue(config["status"].startswith("draft_pending_"))
+        self.assertTrue(config["status"].startswith("locked_full_classification_"))
         self.assertEqual(
             config["classification"]["student"]["candidate_train_batch_sizes"],
             [64, 128],
@@ -58,6 +60,59 @@ class Phase1TimingMatrixTest(unittest.TestCase):
         self.assertFalse(smoke["official_test_accessed"])
         self.assertEqual(smoke["student_task_count"], 12)
         self.assertEqual(smoke["samples"], {"train": 2940, "validation": 740, "test": 0})
+        self.assertEqual(smoke["status"], "complete_13_of_13_no_oom")
+
+
+class Phase1FullMatrixTest(unittest.TestCase):
+    def test_each_batch_issue_has_six_variants_by_three_seeds(self) -> None:
+        for batch_size in (64, 128):
+            tasks = build_full_tasks(Path("/tmp/results"), batch_size=batch_size)
+            self.assertEqual(len(tasks), 18)
+            observed = {
+                (task.method, task.fusion_ratio, task.batch_size, task.seed)
+                for task in tasks
+            }
+            expected = {
+                (method, fusion_ratio, batch_size, seed)
+                for method, fusion_ratio in (
+                    ("vanilla", None),
+                    ("kd", None),
+                    ("lg", None),
+                    ("alg", None),
+                    ("ibkd", 0.25),
+                    ("ibkd", 0.5),
+                )
+                for seed in (1, 2, 3)
+            }
+            self.assertEqual(observed, expected)
+            self.assertEqual(len({task.run_name for task in tasks}), 18)
+
+    def test_aggregate_reports_raw_mean_and_sample_sd(self) -> None:
+        rows = [
+            {
+                "kind": "student",
+                "method": "ibkd",
+                "fusion_ratio_lambda": 0.25,
+                "batch_size": 64,
+                "seed": seed,
+                "status": "complete",
+                "test_macro_top1": value,
+                "test_overall_top1": value + 1.0,
+                "test_top5": value + 2.0,
+            }
+            for seed, value in ((1, 70.0), (2, 71.0), (3, 72.0))
+        ]
+        aggregate = aggregate_students(rows)[0]
+        self.assertTrue(aggregate["complete"])
+        self.assertEqual(aggregate["completed_seeds"], [1, 2, 3])
+        self.assertEqual(aggregate["test_macro_top1"]["mean"], 71.0)
+        self.assertEqual(
+            aggregate["test_macro_top1"]["sample_standard_deviation"], 1.0
+        )
+        self.assertEqual(
+            aggregate["test_macro_top1"]["raw_by_seed"],
+            {"1": 70.0, "2": 71.0, "3": 72.0},
+        )
 
 
 class Phase1SplitTest(unittest.TestCase):

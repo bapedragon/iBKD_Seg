@@ -9,8 +9,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Sequence
 
+import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset, Subset
+from PIL import Image
+from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from torchvision.datasets import OxfordIIITPet
 from torchvision.transforms import InterpolationMode
@@ -23,11 +25,154 @@ SPLIT_SEED = 2027
 VALIDATION_PER_CLASS = 20
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+ARCHIVE_CONTRACTS = {
+    "images.tar.gz": {
+        "bytes": 791918971,
+        "md5": "5c4f3ee8e5d25df40f4fd59a7f44e54c",
+        "sha256": None,
+    },
+    "annotations.tar.gz": {
+        "bytes": 19173078,
+        "md5": "95a8c909bbe2e81eed6a22bccdf3f68f",
+        "sha256": "52425fb6de5c424942b7626b428656fcbd798db970a937df61750c0f1d358e91",
+    },
+}
+ANNOTATION_HASHES = {
+    "list.txt": "6a54ab256e22f7a33c6f17a7669e58ea5f6f9c7a080ec2622c205aefd4b354da",
+    "trainval.txt": "408f3f609481b939c94634169e6413414b733a3faeba440cbdcc5c02142eebdc",
+    "test.txt": "a5454003774ffe01f4f322756d3ba5495bae21cb30bb217ab285dbfa2bef245c",
+}
 
 
 def _digest_lines(values: Sequence[str]) -> str:
     payload = "".join(f"{value}\n" for value in values).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def file_digest(path: Path, algorithm: str = "sha256") -> str:
+    digest = hashlib.new(algorithm)
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _parse_annotation_split(path: Path) -> list[tuple[str, int]]:
+    records: list[tuple[str, int]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        fields = line.split()
+        if len(fields) != 4:
+            raise RuntimeError(f"Malformed {path.name}:{line_number}")
+        image_id, label, _, _ = fields
+        zero_based = int(label) - 1
+        if not 0 <= zero_based < NUM_CLASSES:
+            raise RuntimeError(f"Invalid breed label in {path.name}:{line_number}")
+        records.append((image_id, zero_based))
+    return records
+
+
+def prepare_and_audit_dataset(data_dir: Path) -> dict[str, Any]:
+    """Download and integrity-audit all official files before a full run.
+
+    Test files are decoded only for dataset integrity here.  No test target or
+    image statistic is exposed to model fitting, checkpoint selection, or
+    hyperparameter decisions.
+    """
+
+    OxfordIIITPet(
+        root=data_dir,
+        split="trainval",
+        target_types="category",
+        download=True,
+    )
+    base = data_dir / "oxford-iiit-pet"
+    archives: dict[str, Any] = {}
+    for filename, expected in ARCHIVE_CONTRACTS.items():
+        path = base / filename
+        if not path.is_file():
+            raise RuntimeError(f"Downloaded archive is missing: {path}")
+        size = path.stat().st_size
+        md5 = file_digest(path, "md5")
+        sha256 = file_digest(path, "sha256")
+        if size != expected["bytes"] or md5 != expected["md5"]:
+            raise RuntimeError(
+                f"Archive contract mismatch for {filename}: bytes={size} md5={md5}"
+            )
+        if expected["sha256"] is not None and sha256 != expected["sha256"]:
+            raise RuntimeError(f"SHA-256 mismatch for {filename}")
+        archives[filename] = {"bytes": size, "md5": md5, "sha256": sha256}
+
+    annotation_dir = base / "annotations"
+    annotation_hashes: dict[str, str] = {}
+    for filename, expected_sha256 in ANNOTATION_HASHES.items():
+        actual = file_digest(annotation_dir / filename)
+        if actual != expected_sha256:
+            raise RuntimeError(f"Official annotation hash mismatch for {filename}")
+        annotation_hashes[filename] = actual
+
+    split_records = {
+        split: _parse_annotation_split(annotation_dir / f"{split}.txt")
+        for split in ("trainval", "test")
+    }
+    if len(split_records["trainval"]) != OFFICIAL_TRAINVAL_COUNT:
+        raise RuntimeError("Official trainval count mismatch")
+    if len(split_records["test"]) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("Official test count mismatch")
+    trainval_ids = {record[0] for record in split_records["trainval"]}
+    test_ids = {record[0] for record in split_records["test"]}
+    if len(trainval_ids) != OFFICIAL_TRAINVAL_COUNT or len(test_ids) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("Duplicate image id in an official split")
+    if trainval_ids & test_ids:
+        raise RuntimeError("Official trainval and test splits overlap")
+
+    class_counts: dict[str, dict[str, int]] = {}
+    decoded = 0
+    for split, records in split_records.items():
+        counts = [0] * NUM_CLASSES
+        for image_id, label in records:
+            counts[label] += 1
+            image_path = base / "images" / f"{image_id}.jpg"
+            trimap_path = annotation_dir / "trimaps" / f"{image_id}.png"
+            if not image_path.is_file() or not trimap_path.is_file():
+                raise RuntimeError(f"Missing image/trimap pair for {image_id}")
+            with Image.open(image_path) as image:
+                rgb = image.convert("RGB")
+                rgb.load()
+                image_size = rgb.size
+            with Image.open(trimap_path) as trimap:
+                values = np.asarray(trimap)
+                trimap_size = trimap.size
+            if image_size != trimap_size:
+                raise RuntimeError(f"Image/trimap size mismatch for {image_id}")
+            unique_values = set(int(value) for value in np.unique(values))
+            if not unique_values.issubset({1, 2, 3}):
+                raise RuntimeError(
+                    f"Invalid trimap values for {image_id}: {sorted(unique_values)}"
+                )
+            decoded += 1
+            if decoded % 1000 == 0:
+                print(f"[DATA_AUDIT_PROGRESS] decoded={decoded}/7349", flush=True)
+        class_counts[split] = {str(label): count for label, count in enumerate(counts)}
+
+    return {
+        "status": "pass",
+        "dataset": "Oxford-IIIT Pet",
+        "archives": archives,
+        "annotation_hashes": annotation_hashes,
+        "split_counts": {
+            "trainval": len(split_records["trainval"]),
+            "test": len(split_records["test"]),
+            "total": decoded,
+        },
+        "class_counts": class_counts,
+        "unique_ids": True,
+        "disjoint_official_splits": True,
+        "image_label_trimap_one_to_one": True,
+        "rgb_and_trimap_decode": True,
+        "trimap_values": [1, 2, 3],
+        "test_content_access": "integrity_audit_only",
+        "official_test_used_for_training_or_selection": False,
+    }
 
 
 def build_stratified_split(
@@ -212,6 +357,7 @@ def build_train_validation_loaders(
         del worker_id
         worker_seed = torch.initial_seed() % (2**32)
         random.seed(worker_seed)
+        np.random.seed(worker_seed)
 
     common = {
         "num_workers": num_workers,
@@ -236,3 +382,35 @@ def build_train_validation_loaders(
         **common,
     )
     return train_loader, validation_loader, manifest
+
+
+def build_official_test_loader(
+    data_dir: Path,
+    *,
+    eval_batch_size: int,
+    num_workers: int,
+    device: torch.device,
+) -> DataLoader[Any]:
+    """Instantiate official test only after validation selection is complete."""
+
+    test_dataset = OxfordIIITPet(
+        root=data_dir,
+        split="test",
+        target_types="category",
+        transform=evaluation_transform(),
+        download=False,
+    )
+    if len(test_dataset) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError(
+            f"Unexpected official test count {len(test_dataset)}; "
+            f"expected {OFFICIAL_TEST_COUNT}"
+        )
+    return DataLoader(
+        test_dataset,
+        batch_size=eval_batch_size,
+        shuffle=False,
+        drop_last=False,
+        num_workers=num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=num_workers > 0,
+    )

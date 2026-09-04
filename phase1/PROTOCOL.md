@@ -1,6 +1,6 @@
-# Phase 1 Oxford-IIIT Pet 프로토콜 초안과 timing 계약
+# Phase 1 Oxford-IIIT Pet 분류 프로토콜과 full-run 계약
 
-상태: **본 실험 batch/λ 미확정 — 12-way timing 계약만 고정**
+상태: **본 분류 실험 LOCK — batch 64/128과 iBKD λ 0.25/0.5 모두 보고**
 
 고정일: 2026-09-05
 
@@ -8,7 +8,7 @@ machine-readable 설정:
 [`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)
 
 config SHA-256:
-`224299bdddb776a30b435d1f81a16ff1ef6d92cd96c850f5e0bf526e49cf3424`
+`38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143`
 
 ## 목적
 
@@ -50,10 +50,11 @@ Phase 1에는 연결된 두 평가가 있습니다.
 
 iBKD에는 서로 다른 두 역사적 설정이 있습니다. `AAAI_ours_submission`과 Phase
 0.5 matched checkpoint 계보는 `lambda=0.5`, batch `64`이고, 이후 공개
-`IBKD_AAAI-27` 기본값은 `lambda=0.25`, batch `128`입니다. 현재 어느 하나를 Pet
-main으로 확정하지 않습니다. 먼저 여섯 variant를 batch `64/128` 양쪽에서 모두
-timing하고, full 실행 전에 단일 공통 batch와 iBKD λ, 또는 두 설정을 별도 표로
-전부 보고하는 규칙을 결과와 무관하게 확정합니다.
+`IBKD_AAAI-27` 기본값은 `lambda=0.25`, batch `128`입니다. 12-way timing에서 모든
+조합이 H200 한 장에 들어가고 두 batch의 예상시간도 비슷함을 확인했습니다. 따라서
+성능을 보기 전에 batch `64`와 `128`을 독립 profile로 고정하고, 각 profile에서
+Vanilla/KD/LG/ALG/iBKD λ=0.25/iBKD λ=0.5를 모두 3 seed 실행합니다. 결과가 좋은
+batch나 λ 하나만 사후 선택하지 않고 두 profile과 두 λ를 모두 별도로 보고합니다.
 
 ## 데이터 계약
 
@@ -97,7 +98,7 @@ trimap 값 `{1,2,3}` 이외의 값이 하나라도 있으면 full run을 시작�
 - 각 품종에서 `sha256("2027:{image_id}")`, 그다음 `image_id` 순으로 정렬한 앞
   20장을 validation으로 사용하고 나머지를 train으로 사용합니다.
 - 생성된 ID 목록과 SHA-256을 manifest로 보존합니다.
-- teacher, 다섯 student, 모든 probe가 같은 `2,940/740/3,669` partition을
+- teacher, 모든 student 설정, 모든 probe가 같은 `2,940/740/3,669` partition을
   공유합니다.
 - official test는 optimizer step, epoch 선택, LR 선택, controller 선택에 사용하지
   않습니다.
@@ -143,7 +144,7 @@ trimap 값 `{1,2,3}` 이외의 값이 하나라도 있으면 full run을 시작�
 | 입력 | `224 x 224` |
 | encoder seed | `[1, 2, 3]` |
 | epoch | `300` |
-| train batch 후보 | `[64, 128]` — timing 뒤 본 실험 전 고정 |
+| train batch profile | `[64, 128]` — 두 profile 모두 본 실험 및 별도 보고 |
 | eval batch | `200` |
 | precision | FP32 |
 
@@ -244,12 +245,12 @@ LG feature objective에 공개 ALG 식을 적용합니다.
 
 ### iBKD
 
-구조와 controller는 AAAI 제출본 Ours V1/iBKD를 사용하고, λ는 현재 두 후보를
-사전 명시합니다.
+구조와 controller는 AAAI 제출본 Ours V1/iBKD를 사용하고, λ 두 값을 사전
+지정된 비교 설정으로 모두 실행합니다.
 
 ```text
 L_feature = lambda L_fuse + (1 - lambda) L_align
-lambda candidate = {0.25, 0.5}
+lambda = {0.25, 0.5}; 둘 다 실행·보고
 L = CE + beta(e) L_feature
 ```
 
@@ -417,11 +418,29 @@ checkpoint는 과학 결과가 아니며 batch, λ, method 또는 checkpoint 선
 4. teacher/student/method loss 및 동일 초기화 단위 테스트 통과
 5. 여섯 variant × 두 batch의 2-epoch full-data timing/smoke 완료
 6. 예상 시간이 H200 요청의 Pod 제한 안에 들어가는지 확인
-7. timing accuracy를 보지 않고 main batch·λ·보고 규칙 확정
+7. timing accuracy를 보지 않고 batch 64/128과 λ 0.25/0.5를 모두 보고하기로 LOCK
+
+### H200 full classification 실행 분할
+
+timing에서 얻은 300-epoch 환산시간만 사용하여 다음 두 요청으로 나눕니다.
+
+| 요청 | 구성 | 예상시간(학습 환산) |
+|---|---|---:|
+| batch 64 | teacher 1 + 6 variants × 3 seeds = 19 tasks | 8h 39m 27s |
+| batch 128 | teacher 1 + 6 variants × 3 seeds = 19 tasks | 8h 19m 51s |
+
+두 요청은 독립 컨테이너이므로 같은 seed 1·batch 128 teacher를 각각 한 번
+학습합니다. 두 결과의 `teacher_model_state_sha256`가 같아야 cross-profile 결과를
+함께 해석합니다. 각 profile 안에서는 한 teacher checkpoint를 모든 guided method와
+seed가 공유합니다. 두 요청 모두 600분 제한 안에 있으며 위 시간에 최초 설치·다운로드·
+dataset audit와 각 checkpoint의 1회 test 시간이 추가됩니다.
+
+이 두 요청은 37-way 분류까지만 포함합니다. frozen segmentation probe는 모든
+분류 결과와 checkpoint 계약을 회수·감사한 뒤 별도 요청으로 실행합니다.
 
 ### Probe 전
 
-1. 최종 고정한 방법·후보 × encoder seed 3개의 모든 분류 run 완료
+1. 최종 고정한 방법·batch·λ × encoder seed 3개의 모든 분류 run 완료
 2. validation-selected checkpoint strict load와 SHA-256 확인
 3. official test가 selection에 사용되지 않았음을 summary로 확인
 4. encoder frozen/gradient 0과 feature cache 계약 확인

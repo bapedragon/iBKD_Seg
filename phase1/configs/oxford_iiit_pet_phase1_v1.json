@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "protocol_id": "oxford_iiit_pet_phase1_frozen_spatial_probe_v1",
-  "status": "draft_pending_batch_and_ibkd_lambda_after_timing_2026-09-05",
+  "status": "locked_full_classification_two_batch_profiles_two_lambdas_2026-09-05",
   "research_question": "classification_only_ibkd_encoder_has_more_linearly_decodable_pet_spatial_information_than_matched_baselines",
   "method_provenance": {
     "ibkd_track": "two_prespecified_historical_configurations",
@@ -10,7 +10,8 @@
     "candidate_provenance": {
       "lambda_0.5_batch_64": "AAAI_ours_submission_and_phase0.5_matched_checkpoint_lineage",
       "lambda_0.25_batch_128": "IBKD_AAAI-27_public_release_defaults",
-      "timing_factorial": "all_six_variants_crossed_with_batch_64_and_128_for_runtime_and_memory_only"
+      "timing_factorial": "all_six_variants_crossed_with_batch_64_and_128_for_runtime_and_memory_only",
+      "full_classification": "both_batch_profiles_and_both_ibkd_lambdas_prespecified_and_reported_without_posthoc_selection"
     }
   },
   "data_access_policy": {
@@ -115,9 +116,10 @@
       "same_initial_student_state_per_seed_across_methods": true,
       "shared_initial_state_hash_required": true,
       "epochs": 300,
-      "train_batch_size": null,
+      "train_batch_size": [64, 128],
       "candidate_train_batch_sizes": [64, 128],
-      "main_batch_size_status": "not_locked_before_timing",
+      "full_train_batch_size_profiles": [64, 128],
+      "main_batch_size_status": "both_prespecified_profiles_run_and_reported_separately",
       "eval_batch_size": 200,
       "optimizer": {
         "name": "adamw",
@@ -217,9 +219,9 @@
       },
       "ibkd": {
         "loss": "CE+beta(e)*(lambda*L_fuse+(1-lambda)*L_align)",
-        "fusion_ratio_lambda": null,
+        "fusion_ratio_lambda": [0.25, 0.5],
         "candidate_fusion_ratio_lambdas": [0.25, 0.5],
-        "main_lambda_status": "not_locked_before_timing",
+        "main_lambda_status": "both_prespecified_values_run_and_reported_separately",
         "student_blocks": "all_12",
         "teacher_stages": [0, 1, 2],
         "grid_resize_mode": "bilinear_to_larger_of_student_or_teacher_grid_per_stage",
@@ -261,7 +263,8 @@
       "pet_specific_method_hyperparameter_search": false,
       "timing_matrix_is_not_a_performance_search": true,
       "timing_metrics_must_not_select_batch_lambda_method_or_checkpoint": true,
-      "primary_scientific_comparison_requires_one_shared_batch_size": true
+      "primary_scientific_comparison_requires_one_shared_batch_size_within_each_profile": true,
+      "selecting_a_batch_or_lambda_from_validation_or_test_results": false
     },
     "report": {
       "primary_metric": "test_macro_top1",
@@ -455,6 +458,52 @@
     "epochs": 2,
     "planned_epoch_extrapolation": 300,
     "record": ["epoch_seconds_including_validation", "peak_cuda_memory", "oom_or_success"],
-    "timing_teacher_checkpoint_reusable_for_full_training": false
+    "timing_teacher_checkpoint_reusable_for_full_training": false,
+    "status": "complete_13_of_13_no_oom",
+    "observed_max_cuda_memory_bytes": 13292698112,
+    "estimated_seconds": {
+      "teacher_once": 1545,
+      "batch64_six_variants_once_each": 9874,
+      "batch128_six_variants_once_each": 9482,
+      "batch64_teacher_once_plus_six_variants_three_seeds": 31167,
+      "batch128_teacher_once_plus_six_variants_three_seeds": 29991
+    }
+  },
+  "full_classification": {
+    "status": "locked_before_full_results",
+    "issue_profiles": [
+      {
+        "batch_size": 64,
+        "teacher_runs": 1,
+        "student_runs": 18,
+        "estimated_seconds_from_timing": 31167,
+        "estimated_human": "8h39m27s"
+      },
+      {
+        "batch_size": 128,
+        "teacher_runs": 1,
+        "student_runs": 18,
+        "estimated_seconds_from_timing": 29991,
+        "estimated_human": "8h19m51s"
+      }
+    ],
+    "student_matrix_per_profile": "six_variants_x_three_encoder_seeds",
+    "variants": [
+      "vanilla",
+      "kd",
+      "lg",
+      "alg",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "encoder_seeds": [1, 2, 3],
+    "epochs": 300,
+    "teacher_trained_independently_in_each_issue": true,
+    "cross_issue_teacher_model_state_sha256_must_match": true,
+    "report_both_batch_profiles": true,
+    "report_both_ibkd_lambdas": true,
+    "posthoc_selection_of_batch_or_lambda_for_primary_reporting": false,
+    "official_test_policy": "once_per_validation_selected_checkpoint",
+    "segmentation_probe_included_in_these_issues": false
   }
 }
