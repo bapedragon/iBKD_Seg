@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "artifact": "flowers102_phase1a_qualitative_panels",
+  "created_at_utc": "2026-09-04T08:25:45.546184+00:00",
+  "protocol_id": "flowers102_phase1a_frozen_spatial_probe_v1",
+  "protocol_sha256": "2cf353e0e9e6dcc0b0b01b75eb17039dde2a20ac5af07f1c1683ec672c3afae2",
+  "interpretation": "pseudo_mask_pipeline_diagnostic_only",
+  "panel": {
+    "order": ["input", "pseudo_mask", "prediction"],
+    "size_pixels": [672, 224],
+    "cell_size_pixels": [224, 224],
+    "mask_classes": {"0": "background_black", "1": "foreground_white"}
+  },
+  "selection": {
+    "probe_seed": 1,
+    "test_ids": [1, 45, 568, 1737, 3650, 5775, 8189],
+    "rule": "fixed_before_results_split_order_quantiles_plus_phase0_failure_cases"
+  },
+  "methods": {
+    "ours": {
+      "display_name": "Ours",
+      "role": "primary_matched",
+      "checkpoint_id": "flowers102_ours_researcher_sync_v1_seed1",
+      "checkpoint_sha256": "4a566d907c6e8a4db6ffccba6a6f699ef674bcdcda8a98c8f3ebccbf66b24a26",
+      "checkpoint_fusion_ratio_lambda": 0.5,
+      "selected_probe": {"learning_rate": 0.01, "epoch": 20, "validation_grid_mean_iou": 0.8640011755456625},
+      "files_sha256": {
+        "ours/image_00001.png": "cb33a7c4b82b98e56ca241b04f36d5f5f9728f15861b59e0e042a2baba873837",
+        "ours/image_00045.png": "92161f0c7b8245be6dd1769d809bd2df3552677b65eb9e7b32117caf8cfa7f60",
+        "ours/image_00568.png": "4379aaee5eabf57a06a3893620de00825b05f0e5a758b824eba1aca05a592726",
+        "ours/image_01737.png": "66644eedc597191666ab176f316ed080b19e8fbf1e610159706a98c2b0f0a76b",
+        "ours/image_03650.png": "847e3864215002f95544641bbc7efbee39582746204a36d9212dfbb0c2007b42",
+        "ours/image_05775.png": "79257239ea37ed7678a0212158dc1dcc5db534c69f94cff3789ed304e1adf80e",
+        "ours/image_08189.png": "35bdf142e05a76b1d4451cba07295eb382c7ba17bec1484328140fcdf59bef48"
+      }
+    },
+    "alg": {
+      "display_name": "ALG",
+      "role": "primary_matched",
+      "checkpoint_id": "flowers102_alg_researcher_sync_v1_seed1",
+      "checkpoint_sha256": "63d57a2ef7b300ed40d4ffc1848237e620b37fc304118c3813f4636288e8389a",
+      "selected_probe": {"learning_rate": 0.1, "epoch": 91, "validation_grid_mean_iou": 0.8547628984331971},
+      "files_sha256": {
+        "alg/image_00001.png": "05b940ee2a338fe2ea1bace313bf6518a787e6ddb272ee755aa73c644f4b6801",
+        "alg/image_00045.png": "ddc63c3a8bdbe8cc420ec6bef5917bf98aeae845a4438250c1293bf8945b7e28",
+        "alg/image_00568.png": "c054a64cdf63b2fa2682c14197df45670170740bd0ccf3c73fbd344c32da3d56",
+        "alg/image_01737.png": "ff519ea41a85961cf73aec0a33cddd6f8a1d42916b76a5833baaa4d098aea4ee",
+        "alg/image_03650.png": "a3250dbe5e35a500fa59fed60d3061d6677a667cfac06b049dac43f72e851d9a",
+        "alg/image_05775.png": "d76292fbeb1685ce40ec43361b41293fbd30358aaaffbc7c04ad933c598e4bc8",
+        "alg/image_08189.png": "f467c905fa4815a54d62fc3f03bb0bb5635f3e51470c03071dbabbf36cc441ec"
+      }
+    },
+    "kd": {
+      "display_name": "KD",
+      "role": "exploratory_unmatched",
+      "checkpoint_id": "flowers102_kd_generic_epoch_only_seed42",
+      "checkpoint_sha256": "6892317841a77028c90d7f62618ba4981b46656843dc8a6f844dceba2036f715",
+      "selected_probe": {"learning_rate": 0.01, "epoch": 60, "validation_grid_mean_iou": 0.8507971452371754},
+      "files_sha256": {
+        "kd/image_00001.png": "509725f14d06fa70c6c995c896a4248d97c5f916d223f230e7228c9f5b8700fa",
+        "kd/image_00045.png": "ed020f1b83e9d196dabb22325a184c26bb92e09e8e2af827f04d58fc3ed8f2be",
+        "kd/image_00568.png": "6cbb3e93d2b766f0e3f84318e5f3a297df2d7015c3caac8e6a784398bf393017",
+        "kd/image_01737.png": "efd1594db91e2b99b6a98c96542463ec48d2293a959c485e8548aa20072966c4",
+        "kd/image_03650.png": "f8db0c617351873bc629be74b6bc6fb9dabb5ee8de72a31c6994b59e17d5f7e8",
+        "kd/image_05775.png": "82a637450c10d693ff38d8e7c45bec4680703297072f31fa58e7ea84134a3832",
+        "kd/image_08189.png": "1c166cb80643896d3542b14dbcf49091d373703634001e1c85bb59caa1779df8"
+      }
+    }
+  }
+}

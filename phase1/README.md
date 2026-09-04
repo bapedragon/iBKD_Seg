@@ -88,3 +88,30 @@ Phase 1B의 긍정적 결과는 **iBKD feature의 공간정보 복원성이 더 
 
 - 로컬: 데이터 감사, Phase 1A, 단위 테스트, 작은 probe 점검
 - H200: Pet teacher와 조건이 일치하는 다섯 분류 encoder의 multi-seed 학습
+
+## Phase 1A 실행
+
+결과 확인 전에 고정한 전체 계약은 [PROTOCOL.md](PROTOCOL.md), 실행값은
+[`configs/flowers102_phase1a_v1.json`](configs/flowers102_phase1a_v1.json)에
+있습니다. 먼저 Ours checkpoint의 16/16/16 표본으로 2-epoch smoke test를
+실행합니다.
+
+```bash
+bash phase1/scripts/run_phase1a_smoke.sh /path/to/IBAM_KD_H200_V2
+```
+
+smoke gate가 통과하면 Ours/ALG와 탐색용 KD의 전체 공식 split을 실행합니다.
+
+```bash
+bash phase1/scripts/run_phase1a_full.sh /path/to/IBAM_KD_H200_V2
+```
+
+feature와 target cache는 `phase1/results/raw/cache/`, 로컬 JSON 보고서는
+`phase1/reports/*.local.json`에 저장되며 Git에는 포함되지 않습니다.
+
+**2026-09-04 실행 상태:** smoke와 전체 공식 split 실행이 모두 통과했습니다.
+진단값과 해석 제한은 [PHASE1A_DECISION.md](PHASE1A_DECISION.md), 추적 가능한
+소형 수치는 [`reports/phase1a_summary.json`](reports/phase1a_summary.json)에
+고정했습니다. 실제 Flowers 입력, pseudo-mask와 probe 예측은
+[`reports/PHASE1A_QUALITATIVE.md`](reports/PHASE1A_QUALITATIVE.md)에서 함께 볼 수
+있습니다.

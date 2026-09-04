@@ -29,6 +29,12 @@ Flowers-102에서 배포한 segmentation은 원 분류 파이프라인이 만든
   공식 trimap으로 동일한 작은 probe만 학습하여 위치와 형태 정보의 복원성을
   비교합니다. 자세한 목적과 절차는 `phase1/README.md`에 정리합니다.
 
+**2026-09-04 Phase 1A 결과:** 고정된 v1 프로토콜로 전체 공식 split과 Ours/ALG,
+탐색용 KD, 5개 probe seed를 실행해 파이프라인 gate를 통과했습니다. 결과는
+`phase1/PHASE1A_DECISION.md`에 있으며 pseudo-mask 방법 순위는 과학적 결론으로
+사용하지 않습니다. 다음 단계는 Phase 1B Pet 데이터 계약과 H200 분류 encoder
+학습 설정 고정입니다.
+
 **종료 조건:** 조건이 일치하는 iBKD–ALG 비교, 비영상 baseline, 정성 mask,
 신뢰 가능한 pixel GT 결과를 함께 검토하여 Go/Hold/No-Go를 기록합니다.
 

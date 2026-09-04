@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "protocol_id": "flowers102_phase1a_frozen_spatial_probe_v1",
+  "status": "locked_before_results_2026-09-04",
+  "interpretation": "pseudo_mask_pipeline_diagnostic_only",
+  "dataset": {
+    "name": "flowers102",
+    "splits": {
+      "train": "official_train_1020",
+      "validation": "official_validation_1020",
+      "test": "official_test_6149"
+    },
+    "mask": {
+      "conversion": "least_squares_alpha_from_blue_screen_composite",
+      "alpha_threshold": 0.5,
+      "posthoc_exclusion": "none",
+      "postprocessing": "none"
+    },
+    "input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "antialias": true,
+      "normalization_mean": [0.485, 0.456, 0.406],
+      "normalization_std": [0.229, 0.224, 0.225],
+      "random_augmentation": false
+    }
+  },
+  "encoder": {
+    "architecture": "deit_tiny_patch16_224",
+    "checkpoint_manifest": "manifests/checkpoints.json",
+    "strict_load": true,
+    "frozen": true,
+    "eval_mode": true,
+    "feature": {
+      "block_index": 11,
+      "norm": false,
+      "output_format": "NCHW",
+      "channels": 192,
+      "height": 14,
+      "width": 14,
+      "cache_dtype": "float32"
+    }
+  },
+  "probe": {
+    "architecture": "Conv2d(192,2,1,bias=True)",
+    "parameter_count": 386,
+    "initialization": {
+      "weight": "normal",
+      "weight_std": 0.01,
+      "bias": 0.0
+    },
+    "target": {
+      "grid_height": 14,
+      "grid_width": 14,
+      "downsample": "area_then_threshold",
+      "occupancy_threshold": 0.5
+    },
+    "loss": {
+      "name": "cross_entropy",
+      "class_weighting": "none"
+    },
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "nesterov": false
+    },
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "scheduler": {
+      "name": "cosine",
+      "eta_min": 0.0
+    },
+    "seeds": [1, 2, 3, 4, 5]
+  },
+  "selection": {
+    "split": "validation",
+    "metric": "grid_mean_iou",
+    "direction": "maximize",
+    "tie_break": ["lower_learning_rate", "earlier_epoch"],
+    "test_policy": "once_after_validation_selection"
+  },
+  "report": {
+    "primary_metric": "input_224_mean_iou",
+    "metrics": [
+      "foreground_iou",
+      "background_iou",
+      "mean_iou",
+      "foreground_dice",
+      "pixel_accuracy"
+    ],
+    "aggregation": "global_confusion_matrix",
+    "primary_matched_methods": ["Ours", "ALG"],
+    "exploratory_unmatched_methods": ["KD"],
+    "baselines": ["all_background", "train_mean_mask"],
+    "qualitative": {
+      "probe_seed": 1,
+      "test_ids": [1, 45, 568, 1737, 3650, 5775, 8189],
+      "selection_rule": "fixed_before_results_split_order_quantiles_plus_phase0_failure_cases",
+      "panel_order": ["input", "pseudo_mask", "prediction"]
+    }
+  },
+  "runtime": {
+    "feature_batch_size": 32,
+    "num_workers": 0,
+    "device": "auto"
+  },
+  "smoke": {
+    "methods": ["Ours"],
+    "samples": {
+      "train": 16,
+      "validation": 16,
+      "test": 16
+    },
+    "epochs": 2,
+    "learning_rates": [0.03],
+    "seeds": [1]
+  }
+}

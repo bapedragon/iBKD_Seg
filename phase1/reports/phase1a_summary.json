@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "run": "flowers102_phase1a_frozen_spatial_probe",
+  "status": "pass",
+  "interpretation": "pseudo_mask_pipeline_diagnostic_only",
+  "protocol_id": "flowers102_phase1a_frozen_spatial_probe_v1",
+  "protocol_sha256": "2cf353e0e9e6dcc0b0b01b75eb17039dde2a20ac5af07f1c1683ec672c3afae2",
+  "scope": {
+    "ours_checkpoint_fusion_ratio_lambda": 0.5,
+    "lambda_0_25_included": false,
+    "primary_matched_methods": ["Ours", "ALG"],
+    "exploratory_unmatched_methods": ["KD"]
+  },
+  "frozen_probe": {
+    "encoder_feature": [192, 14, 14],
+    "architecture": "Conv2d(192,2,1,bias=True)",
+    "parameter_count": 386,
+    "loss": "unweighted_cross_entropy",
+    "optimizer": "SGD(momentum=0.9,weight_decay=0.0)",
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "encoder_frozen": true
+  },
+  "split_counts": {"train": 1020, "validation": 1020, "test": 6149},
+  "test_input_224": {
+    "Ours": {
+      "role": "primary_matched",
+      "probe_seeds": 5,
+      "selected_and_test_mean_iou_by_probe_seed": [
+        {"seed": 1, "learning_rate": 0.01, "epoch": 20, "validation_grid_mean_iou": 0.8640011755456625, "test_input_224_mean_iou": 0.827127639028197},
+        {"seed": 2, "learning_rate": 0.01, "epoch": 37, "validation_grid_mean_iou": 0.864286191284086, "test_input_224_mean_iou": 0.8279968460598952},
+        {"seed": 3, "learning_rate": 0.01, "epoch": 32, "validation_grid_mean_iou": 0.8643855141940489, "test_input_224_mean_iou": 0.8278695150621684},
+        {"seed": 4, "learning_rate": 0.03, "epoch": 76, "validation_grid_mean_iou": 0.8639690039623038, "test_input_224_mean_iou": 0.8275610619008399},
+        {"seed": 5, "learning_rate": 0.01, "epoch": 14, "validation_grid_mean_iou": 0.863905938387062, "test_input_224_mean_iou": 0.8276671584526647}
+      ],
+      "mean_iou": {"mean": 0.827644444100753, "sample_std": 0.0003351865505000527},
+      "foreground_iou": {"mean": 0.7817927398993366, "sample_std": 0.0006735510601789128},
+      "background_iou": {"mean": 0.8734961483021696, "sample_std": 0.00021343341304738974},
+      "foreground_dice": {"mean": 0.87753486479596, "sample_std": 0.00042442344944634163},
+      "pixel_accuracy": {"mean": 0.9129505830807482, "sample_std": 0.00013374387053612054}
+    },
+    "ALG": {
+      "role": "primary_matched",
+      "probe_seeds": 5,
+      "selected_and_test_mean_iou_by_probe_seed": [
+        {"seed": 1, "learning_rate": 0.1, "epoch": 91, "validation_grid_mean_iou": 0.8547628984331971, "test_input_224_mean_iou": 0.8234244871409045},
+        {"seed": 2, "learning_rate": 0.1, "epoch": 95, "validation_grid_mean_iou": 0.854598543580545, "test_input_224_mean_iou": 0.8227659221568636},
+        {"seed": 3, "learning_rate": 0.1, "epoch": 91, "validation_grid_mean_iou": 0.85456436787479, "test_input_224_mean_iou": 0.8228578743592937},
+        {"seed": 4, "learning_rate": 0.1, "epoch": 94, "validation_grid_mean_iou": 0.8546707053245249, "test_input_224_mean_iou": 0.8224197469707885},
+        {"seed": 5, "learning_rate": 0.03, "epoch": 42, "validation_grid_mean_iou": 0.854546549307428, "test_input_224_mean_iou": 0.8232808960631373}
+      ],
+      "mean_iou": {"mean": 0.8229497853381975, "sample_std": 0.00040563841105175486},
+      "foreground_iou": {"mean": 0.7755929963758882, "sample_std": 0.001195177312426152},
+      "background_iou": {"mean": 0.8703065743005068, "sample_std": 0.0006461885297363571},
+      "foreground_dice": {"mean": 0.8736153337185407, "sample_std": 0.0007579154140179572},
+      "pixel_accuracy": {"mean": 0.9104495431893688, "sample_std": 0.00020020967743305062}
+    },
+    "KD": {
+      "role": "exploratory_unmatched",
+      "probe_seeds": 5,
+      "selected_and_test_mean_iou_by_probe_seed": [
+        {"seed": 1, "learning_rate": 0.01, "epoch": 60, "validation_grid_mean_iou": 0.8507971452371754, "test_input_224_mean_iou": 0.8186417042583118},
+        {"seed": 2, "learning_rate": 0.01, "epoch": 60, "validation_grid_mean_iou": 0.8506922004377033, "test_input_224_mean_iou": 0.8181997672460458},
+        {"seed": 3, "learning_rate": 0.03, "epoch": 64, "validation_grid_mean_iou": 0.8508365636898371, "test_input_224_mean_iou": 0.8168921204738474},
+        {"seed": 4, "learning_rate": 0.03, "epoch": 56, "validation_grid_mean_iou": 0.8511704603331915, "test_input_224_mean_iou": 0.8182770105992074},
+        {"seed": 5, "learning_rate": 0.03, "epoch": 53, "validation_grid_mean_iou": 0.8507193645412654, "test_input_224_mean_iou": 0.8176591222425387}
+      ],
+      "mean_iou": {"mean": 0.8179339449639902, "sample_std": 0.0006801111179230654},
+      "foreground_iou": {"mean": 0.7694729515985234, "sample_std": 0.0012208411935741544},
+      "background_iou": {"mean": 0.866394938329457, "sample_std": 0.0001806699386589545},
+      "foreground_dice": {"mean": 0.8697195059431216, "sample_std": 0.0007801517699829936},
+      "pixel_accuracy": {"mean": 0.9076013440981776, "sample_std": 0.0002663735557041285}
+    },
+    "train_mean_mask": {
+      "role": "non_visual_baseline",
+      "mean_iou": 0.5912680059885804,
+      "foreground_iou": 0.47715251608836784,
+      "foreground_dice": 0.6460436696840356
+    },
+    "all_background": {
+      "role": "non_visual_baseline",
+      "mean_iou": 0.32109498390677016,
+      "foreground_iou": 0.0,
+      "foreground_dice": 0.0
+    }
+  },
+  "paired_diagnostic_differences_percentage_points": {
+    "Ours_minus_ALG": {
+      "mean_iou": 0.4694658762555481,
+      "foreground_iou": 0.6199743523448431,
+      "foreground_dice": 0.3919531077419269
+    }
+  },
+  "gate": {
+    "finite_training_and_validation": true,
+    "cached_features_have_no_gradients": true,
+    "probe_has_two_gradient_tensors": true,
+    "test_evaluated_only_after_selection": true,
+    "qualitative_panels_saved": true
+  },
+  "elapsed_seconds": 2057.4928664579984
+}

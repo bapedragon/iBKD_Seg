@@ -9,18 +9,20 @@
 
 ## 현재 상태
 
-**Phase 0 감사 완료 — Phase 1 프로토콜 정리 및 구현 준비 중.**
+**Phase 1A 완료 — Phase 1B Pet 데이터·학습 계약 준비 중.**
 
 코드, 체크포인트, 공식 파일, split, feature shape, metric 구현은 정상입니다.
 하지만 전체 데이터 감사에서 전경이 없는 마스크 220개와 배경이 사실상 없는
 마스크 22개를 확인했습니다. 따라서 Phase 1A에서는 파이프라인 진단용으로만
 Flowers 자동 마스크를 사용하고, 실제 확장성 판단인 Phase 1B에서는 신뢰할 수
-있는 pixel-level ground truth를 사용해야 합니다.
+있는 pixel-level ground truth를 사용해야 합니다. 2026-09-04에 전체 공식 split
+Phase 1A frozen-probe 실행과 정성 확인이 통과했으며, Flowers 방법 순위는
+진단값으로만 보존했습니다.
 
 | Phase | 핵심 질문 | 상태 |
 |---|---|---|
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 / 보류 |
-| 1 | 고정된 iBKD feature에서 dense mask가 더 잘 복원되는가? | 진행 중 — 구현 준비 |
+| 1 | 고정된 iBKD feature에서 dense mask가 더 잘 복원되는가? | 1A 통과 / 1B 준비 |
 | 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 대기 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
@@ -29,6 +31,10 @@ Flowers 자동 마스크를 사용하고, 실제 확장성 판단인 Phase 1B에
 전체 단계와 gate 조건은 [ROADMAP.md](ROADMAP.md)에 정리되어 있습니다.
 Phase 1A와 Pet Phase 1B의 목적 및 수행 과정은
 [phase1/README.md](phase1/README.md)에서 쉽게 확인할 수 있습니다.
+완료한 Phase 1A의 [결정문](phase1/PHASE1A_DECISION.md),
+[정량 JSON](phase1/reports/phase1a_summary.json),
+[실제 Flowers 정성 결과](phase1/reports/PHASE1A_QUALITATIVE.md)도 Git에 함께
+보존합니다.
 
 ## 저장소 구성 원칙
 
