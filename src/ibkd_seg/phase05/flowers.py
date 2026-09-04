@@ -1,4 +1,4 @@
-"""Paired Flowers-102 image and pseudo-mask inputs for Phase 1A."""
+"""Paired Flowers-102 image and pseudo-mask inputs for Phase 0.5."""
 
 from __future__ import annotations
 

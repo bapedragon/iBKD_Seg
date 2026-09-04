@@ -1,4 +1,4 @@
-"""Run the locked Flowers-102 Phase 1A frozen spatial-probe protocol."""
+"""Run the locked Flowers-102 Phase 0.5 frozen spatial-probe protocol."""
 
 from __future__ import annotations
 
@@ -39,6 +39,12 @@ from .probe import (
 
 
 SPLITS = ("train", "validation", "test")
+
+# These cache-kind strings are part of the already executed v1 cache contract.  They
+# keep the pre-reorganization name so moving Phase 0.5 does not invalidate 3.8 GB of
+# verified local features and targets.
+LEGACY_TARGET_CACHE_KIND = "flowers102_phase1a_targets"
+LEGACY_FEATURE_CACHE_KIND = "flowers102_phase1a_frozen_features"
 
 
 def log(message: str) -> None:
@@ -99,7 +105,7 @@ def _target_cache(
     target_config = config["probe"]["target"]
     grid_size = (int(target_config["grid_height"]), int(target_config["grid_width"]))
     expected = {
-        "kind": "flowers102_phase1a_targets",
+        "kind": LEGACY_TARGET_CACHE_KIND,
         "protocol_digest": digest,
         "split": split,
         "ids_digest": _ids_digest(records),
@@ -189,7 +195,7 @@ def _feature_cache(
         int(feature_config["width"]),
     ]
     expected = {
-        "kind": "flowers102_phase1a_frozen_features",
+        "kind": LEGACY_FEATURE_CACHE_KIND,
         "protocol_digest": digest,
         "split": split,
         "ids_digest": _ids_digest(records),
@@ -545,7 +551,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     report: dict[str, Any] = {
         "schema_version": 1,
-        "run": "flowers102_phase1a_frozen_spatial_probe",
+        "run": "flowers102_phase05_frozen_spatial_probe",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "status": "running",
         "execution_mode": mode,
@@ -653,7 +659,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("phase1/configs/flowers102_phase1a_v1.json"),
+        default=Path("phase0.5/configs/flowers102_phase05_v1.json"),
     )
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
     parser.add_argument("--data-root", type=Path, default=Path("data/flowers102"))
@@ -661,17 +667,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--cache-root",
         type=Path,
-        default=Path("phase1/results/raw/cache"),
+        default=Path("phase0.5/results/raw/cache"),
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("phase1/reports/phase1a.local.json"),
+        default=Path("phase0.5/reports/run.local.json"),
     )
     parser.add_argument(
         "--artifact-root",
         type=Path,
-        default=Path("phase1/results/runs"),
+        default=Path("phase0.5/results/runs"),
     )
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--methods", nargs="+", choices=("Ours", "ALG", "KD"))

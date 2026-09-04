@@ -1,4 +1,4 @@
-"""Load and validate the result-independent Phase 1 protocol."""
+"""Load and validate the result-independent Phase 0.5 protocol."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any
 
 
 class ProtocolError(ValueError):
-    """Raised when a Phase 1 config violates the locked contract."""
+    """Raised when a Phase 0.5 config violates the locked contract."""
 
 
 def _require(condition: bool, message: str) -> None:
@@ -26,11 +26,11 @@ def validate_protocol(config: dict[str, Any]) -> None:
     )
     _require(
         config.get("interpretation") == "pseudo_mask_pipeline_diagnostic_only",
-        "Phase 1A must remain a pseudo-mask diagnostic",
+        "Phase 0.5 must remain a pseudo-mask diagnostic",
     )
 
     dataset = config.get("dataset", {})
-    _require(dataset.get("name") == "flowers102", "Phase 1A dataset must be flowers102")
+    _require(dataset.get("name") == "flowers102", "Phase 0.5 dataset must be flowers102")
     mask = dataset.get("mask", {})
     _require(mask.get("alpha_threshold") == 0.5, "alpha threshold must remain 0.5")
     _require(mask.get("posthoc_exclusion") == "none", "post-hoc exclusions are forbidden")
@@ -38,7 +38,7 @@ def validate_protocol(config: dict[str, Any]) -> None:
     input_config = dataset.get("input", {})
     _require(input_config.get("size") == 224, "encoder input must be 224 x 224")
     _require(input_config.get("resize") == "direct_square", "resize contract changed")
-    _require(input_config.get("random_augmentation") is False, "Phase 1A must be deterministic")
+    _require(input_config.get("random_augmentation") is False, "Phase 0.5 must be deterministic")
 
     encoder = config.get("encoder", {})
     _require(encoder.get("architecture") == "deit_tiny_patch16_224", "unexpected encoder")

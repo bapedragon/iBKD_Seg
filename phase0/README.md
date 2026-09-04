@@ -35,7 +35,7 @@ PYTHONPATH=src python -m ibkd_seg.phase0.checkpoints \
 
 Deep audit는 byte size, SHA-256, metadata, strict `state_dict` loading, 12개의
 NCHW intermediate feature, 최종 `[1, 192, 14, 14]` grid, 완전히 frozen된
-encoder를 확인합니다. 또한 386-parameter Phase 1 probe를 실제로 backward하여
+encoder를 확인합니다. 또한 386-parameter Phase 0.5 probe를 실제로 backward하여
 probe에만 gradient가 생기는지 검사합니다.
 
 ## Step 0.3 — 공식 데이터 다운로드 및 압축 해제
@@ -120,8 +120,8 @@ IBKD_SEG_PYTHON=/path/to/python \
 - [x] 실제 파일에 기반한 binary mask 변환 규칙 확정
 - [x] 자동/pseudo-mask라는 사실과 실제 GT 선택지 문서화
 - [x] 세그멘테이션 metric 단위 테스트 통과
-- [x] Phase 1A 입력 경로와 알려진 leakage 주의사항 문서화
+- [x] Phase 0.5 입력 경로와 알려진 leakage 주의사항 문서화
 
-Phase 0의 최종 판단은 **보류(HOLD) / 프로토콜 수정**입니다. 과학적 검증인
-Phase 1B 전에 `GROUND_TRUTH_OPTIONS.md`의 한 경로를 확정해야 하며,
-Oxford-IIIT Pet trimap을 권장합니다.
+Phase 0의 Flowers ground-truth 판단은 **사용 보류(HOLD)**입니다. 이후
+[`GROUND_TRUTH_OPTIONS.md`](GROUND_TRUTH_OPTIONS.md)의 권장안인 Oxford-IIIT Pet
+trimap을 Phase 1 본 실험으로 확정했고, Flowers는 Phase 0.5 진단으로 분리했습니다.

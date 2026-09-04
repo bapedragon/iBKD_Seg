@@ -1,6 +1,8 @@
 {
   "schema_version": 1,
-  "artifact": "flowers102_phase1a_qualitative_panels",
+  "phase": "phase0.5",
+  "artifact": "flowers102_phase05_qualitative_panels",
+  "legacy_naming_note": "The immutable executed protocol ID predates the Phase 0.5 directory split.",
   "created_at_utc": "2026-09-04T08:25:45.546184+00:00",
   "protocol_id": "flowers102_phase1a_frozen_spatial_probe_v1",
   "protocol_sha256": "2cf353e0e9e6dcc0b0b01b75eb17039dde2a20ac5af07f1c1683ec672c3afae2",

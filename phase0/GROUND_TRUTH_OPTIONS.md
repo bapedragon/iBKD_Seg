@@ -1,6 +1,6 @@
 # Ground truth 경로 결정
 
-상태: **결정 필요 — 과학적 검증인 Phase 1B 전에 확정**
+상태: **Oxford-IIIT Pet 선택 — 과학적 검증인 Phase 1에 적용**
 
 ## 별도 결정이 필요한 이유
 
@@ -15,7 +15,7 @@ Flowers-102 분류 원 논문의 Section 2는 각 이미지를 반복적 color/s
 마스크 220개와 배경이 0.5% 미만인 마스크 22개를 확인했으며, 두 실패 유형 모두
 공식 train/validation/test split에 존재합니다.
 
-## 선택지 A — Oxford-IIIT Pet trimap 사용(권장)
+## 선택지 A — Oxford-IIIT Pet trimap 사용(선택됨)
 
 37개 반려동물 품종으로 조건을 맞춘 data-scarce 분류 encoder를 학습한 뒤, 공식
 pixel-level trimap에 동일한 frozen spatial probe를 적용합니다.
@@ -60,6 +60,6 @@ PASCAL VOC 같은 benchmark로 곧바로 이동하여 조건을 맞춘 distillat
 ## 권장 순서
 
 1. Flowers 전체 파일·마스크 품질 감사를 Phase 0 근거로 유지
-2. Flowers 자동 마스크는 명시적으로 pseudo-mask라고 표시한 smoke test에만 사용
-3. Oxford-IIIT Pet을 주 frozen-representation 검증 데이터셋으로 사용
+2. Flowers 자동 마스크는 Phase 0.5 파이프라인 진단에만 사용
+3. Oxford-IIIT Pet을 Phase 1 주 frozen-representation 검증 데이터셋으로 사용
 4. GT 기반 probe에서 안정적인 신호가 나온 뒤 PASCAL VOC로 확장

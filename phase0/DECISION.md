@@ -1,6 +1,6 @@
 # Phase 0 최종 결정
 
-상태: **완료 — 보류(HOLD) / 프로토콜 수정 필요**
+상태: **완료 — Flowers GT 사용 보류 / Oxford-IIIT Pet 경로 선택**
 
 결정일: 2026-09-02
 
@@ -11,13 +11,12 @@ metric 구현은 준비됐습니다. 하지만 Flowers-102의 공식 자동 segm
 semantic-segmentation 주장을 뒷받침하는 단독 ground truth로 사용하기에 적합하지
 않습니다.
 
-- **Phase 1A는 pseudo-mask 파이프라인 진단으로만 허용합니다.** 기존 Flowers
+- **Phase 0.5는 pseudo-mask 파이프라인 진단으로만 허용합니다.** 기존 Flowers
   Ours/ALG 체크포인트를 재사용할 수 있으며, KD는 조건이 일치하지 않는 탐색
   baseline으로 표시합니다. 결과는 semantic segmentation이 아니라 “자동 마스크
   복원성”으로 표현합니다.
-- **과학적 검증인 Phase 1B는 신뢰 가능한 pixel GT 경로가 확정될 때까지
-  보류합니다.** 현재 권장안은 Oxford-IIIT Pet trimap이며, 조건을 맞춘
-  Vanilla/ALG/iBKD encoder는 H200에서 학습합니다.
+- **과학적 검증인 Phase 1은 Oxford-IIIT Pet trimap으로 진행합니다.** 조건을
+  맞춘 Vanilla/KD/LG/ALG/iBKD encoder는 H200에서 학습합니다.
 - 모델별 결과를 확인한 뒤 자동 마스크 실패 사례를 임의로 제거해서는 안 됩니다.
 
 ## 검증된 기술 계약
@@ -59,12 +58,12 @@ Flowers-102 원 논문은 배포 segmentation이 반복적 color/shape 알고리
 
 ## 다음 gate
 
-`GROUND_TRUTH_OPTIONS.md`의 Phase 1B 경로 중 하나를 확정해야 합니다. 권장 순서는
-다음과 같습니다.
+[`GROUND_TRUTH_OPTIONS.md`](GROUND_TRUTH_OPTIONS.md)를 검토해 Oxford-IIIT Pet을
+선택했습니다. 진행 순서는 다음과 같습니다.
 
-1. 필요하면 Flowers Phase 1A를 로컬에서 명시적인 smoke test로 실행
-2. Oxford-IIIT Pet trimap으로 주 frozen spatial probe 수행
-3. 조건을 맞춘 Pet encoder와 multi-seed 학습은 H200에서 수행
+1. Flowers Phase 0.5 로컬 파이프라인 진단 완료
+2. Oxford-IIIT Pet 데이터·trimap 계약과 Phase 1 프로토콜 고정
+3. 조건을 맞춘 Pet encoder와 multi-seed 학습을 H200에서 수행
 4. GT 기반 probe 신호가 안정적일 때만 PASCAL VOC로 확장
 
 재현 가능한 작은 결과 요약은 `reports/`에 보존합니다. 전체 로컬 보고서와

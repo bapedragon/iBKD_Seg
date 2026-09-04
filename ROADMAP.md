@@ -1,50 +1,48 @@
 # 연구 로드맵
 
-## Phase 0 — 기초 검증 및 프로토콜 확정
+## Phase 0 — 기초 검증 및 데이터 감사
 
-Flowers-102 공식 파일, 이미지–마스크 대응 관계, 공식 split, 체크포인트 출처,
-strict model loading, frozen feature 계약, 세그멘테이션 metric을 검증합니다.
+Flowers-102 공식 파일, 이미지–마스크 대응, 공식 split, 체크포인트 출처, strict
+model loading, frozen feature 계약과 세그멘테이션 metric을 검증합니다.
 
 **2026-09-02 결론:** 구현과 입력 계약은 통과했지만 Flowers 자동 마스크는
-ground-truth 품질 gate를 통과하지 못했습니다. Phase 1A는 pseudo-mask 기반
-파이프라인 진단으로 제한하고, 과학적 검증인 Phase 1B는 신뢰할 수 있는 GT
-경로를 확정할 때까지 보류합니다. 근거는 `phase0/DECISION.md`에 있습니다.
+ground-truth 품질 gate를 통과하지 못했습니다. Flowers 실행은 Phase 0.5 진단으로
+제한하고, 과학적 검증에는 신뢰할 수 있는 pixel GT를 사용합니다. 근거는
+[phase0/DECISION.md](phase0/DECISION.md)에 있습니다.
 
-## Phase 1 — Frozen spatial probe
+## Phase 0.5 — Flowers pseudo-mask 파이프라인 진단
 
-각 DeiT-Ti encoder를 고정하고 최종 `14 x 14` feature grid 위에 동일한
-`Conv2d(192, 2, 1)` head를 학습합니다. Phase 1A는 기존 Flowers 체크포인트로
-작동만 검사하고, Phase 1B는 조건이 일치하는 Pet 분류 encoder를 새로 학습합니다.
-Probe와 encoder seed를 구분해 반복하고 foreground IoU, background IoU,
-2-class mIoU, Dice를 보고합니다.
+기존 Flowers Ours/ALG checkpoint와 조건 불일치 탐색용 KD checkpoint를 고정하고,
+최종 `192 x 14 x 14` feature에 동일한 `Conv2d(192, 2, 1)` probe를 붙여 전체
+데이터·cache·학습·선택·평가·시각화 경로를 검사합니다.
 
-Flowers-102에서 배포한 segmentation은 원 분류 파이프라인이 만든 자동 결과이며
-완전한 human ground truth가 아닙니다. 이에 따라 Phase 1을 두 단계로 나눕니다.
+**2026-09-04 결과:** 공식 train/validation/test 전체와 probe seed 5개를 실행해
+모든 파이프라인 gate를 통과했습니다. 정량값과 실제 Flowers panel은
+[phase0.5/DECISION.md](phase0.5/DECISION.md)에 연결되어 있습니다. 자동 mask에
+대한 방법 순위는 논문의 과학적 결론으로 사용하지 않습니다.
 
-- **Phase 1A — Flowers pseudo-mask 진단:** 기존 Flowers 체크포인트로 전체 probe
-  파이프라인을 검증합니다. 결과는 자동 마스크에 대한 공간 표현 복원성으로만
-  해석합니다.
-- **Phase 1B — Pet GT probe:** Oxford-IIIT Pet의 품종 라벨만으로 조건이 일치하는
-  Vanilla, KD, LG, ALG, iBKD 분류 encoder를 학습합니다. 이후 encoder를 고정하고
-  공식 trimap으로 동일한 작은 probe만 학습하여 위치와 형태 정보의 복원성을
-  비교합니다. 자세한 목적과 절차는 `phase1/README.md`에 정리합니다.
+**종료 조건:** finite 학습, encoder 고정, validation-only 선택, test-once 정책,
+정량 metric과 고정 정성 표본 생성이 모두 확인되면 완료합니다.
 
-**2026-09-04 Phase 1A 결과:** 고정된 v1 프로토콜로 전체 공식 split과 Ours/ALG,
-탐색용 KD, 5개 probe seed를 실행해 파이프라인 gate를 통과했습니다. 결과는
-`phase1/PHASE1A_DECISION.md`에 있으며 pseudo-mask 방법 순위는 과학적 결론으로
-사용하지 않습니다. 다음 단계는 Phase 1B Pet 데이터 계약과 H200 분류 encoder
-학습 설정 고정입니다.
+## Phase 1 — Oxford-IIIT Pet GT frozen spatial probe
 
-**종료 조건:** 조건이 일치하는 iBKD–ALG 비교, 비영상 baseline, 정성 mask,
-신뢰 가능한 pixel GT 결과를 함께 검토하여 Go/Hold/No-Go를 기록합니다.
+Oxford-IIIT Pet의 품종 라벨만 사용해 조건이 일치하는 Vanilla, KD, LG, ALG,
+iBKD 분류 encoder를 학습합니다. 이후 모든 encoder를 고정하고 공식 trimap에
+동일한 작은 probe만 학습하여 위치와 형태 정보의 선형 복원성을 비교합니다.
+
+Probe와 encoder-training seed를 구분해 반복하고 foreground IoU, background IoU,
+2-class mIoU, Dice를 보고합니다. 경계 픽셀 ignore 규칙, split, teacher,
+checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 config로 확정합니다.
+자세한 목적과 절차는 [phase1/README.md](phase1/README.md)에 있습니다.
+
+**종료 조건:** 조건이 일치하는 iBKD–ALG 비교, 여러 encoder seed, 비영상 baseline,
+정성 mask와 공식 pixel GT 결과를 함께 검토해 Go/Hold/No-Go를 기록합니다.
 
 ## Phase 2 — 공간적 대조 실험
 
-Mean-mask/center-prior, translation, 고정 grid permutation, layer별 probe,
-paired bootstrap confidence interval, 여러 encoder seed를 추가합니다.
-
-**종료 조건:** Phase 1의 차이가 단순 분류 성능이나 데이터 위치 편향이 아니라
-공간적으로 유의미하고 재현 가능한 신호인지 판단합니다.
+Mean-mask/center-prior, translation, 고정 grid permutation, layer별 probe, paired
+bootstrap confidence interval과 추가 encoder seed를 사용해 Phase 1 차이가 실제
+공간 신호인지 확인합니다.
 
 ## Phase 3 — 공통 decoder
 

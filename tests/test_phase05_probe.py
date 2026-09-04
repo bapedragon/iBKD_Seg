@@ -4,7 +4,7 @@ import unittest
 
 import torch
 
-from ibkd_seg.phase1.probe import build_probe, confusion_from_tensors, evaluate_probe
+from ibkd_seg.phase05.probe import build_probe, confusion_from_tensors, evaluate_probe
 
 
 PROBE_CONFIG = {
@@ -13,7 +13,7 @@ PROBE_CONFIG = {
 }
 
 
-class Phase1ProbeTest(unittest.TestCase):
+class Phase05ProbeTest(unittest.TestCase):
     def test_probe_contract_and_seed_are_deterministic(self) -> None:
         device = torch.device("cpu")
         first = build_probe(PROBE_CONFIG, seed=3, device=device)

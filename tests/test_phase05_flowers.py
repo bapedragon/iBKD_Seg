@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from ibkd_seg.phase1.flowers import FlowersRecord, evenly_spaced_subset, load_targets
+from ibkd_seg.phase05.flowers import FlowersRecord, evenly_spaced_subset, load_targets
 
 
-class Phase1FlowersTest(unittest.TestCase):
+class Phase05FlowersTest(unittest.TestCase):
     def test_evenly_spaced_subset_is_deterministic_and_keeps_endpoints(self) -> None:
         records = [
             FlowersRecord(index, Path(f"image-{index}"), Path(f"mask-{index}"))

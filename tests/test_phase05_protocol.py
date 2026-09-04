@@ -4,7 +4,7 @@ import copy
 import unittest
 from pathlib import Path
 
-from ibkd_seg.phase1.config import (
+from ibkd_seg.phase05.config import (
     ProtocolError,
     effective_protocol,
     load_protocol,
@@ -14,14 +14,15 @@ from ibkd_seg.phase1.config import (
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = REPOSITORY_ROOT / "phase1/configs/flowers102_phase1a_v1.json"
+CONFIG_PATH = REPOSITORY_ROOT / "phase0.5/configs/flowers102_phase05_v1.json"
+EXPECTED_DIGEST = "2cf353e0e9e6dcc0b0b01b75eb17039dde2a20ac5af07f1c1683ec672c3afae2"
 
 
-class Phase1ProtocolTest(unittest.TestCase):
+class Phase05ProtocolTest(unittest.TestCase):
     def test_locked_protocol_is_valid_and_hashable(self) -> None:
         config = load_protocol(CONFIG_PATH)
         self.assertEqual(config["probe"]["parameter_count"], 386)
-        self.assertEqual(len(protocol_digest(config)), 64)
+        self.assertEqual(protocol_digest(config), EXPECTED_DIGEST)
 
     def test_smoke_override_does_not_mutate_locked_config(self) -> None:
         config = load_protocol(CONFIG_PATH)
