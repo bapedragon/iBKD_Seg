@@ -17,7 +17,11 @@ from ibkd_seg.phase1.probe import (
     train_candidate,
 )
 from ibkd_seg.phase1.probe_data import PetRecord, load_targets
-from ibkd_seg.phase1.run_probe_smoke import _validate_smoke_config, _variant
+from ibkd_seg.phase1.run_probe_smoke import (
+    _smoke_policy_gates,
+    _validate_smoke_config,
+    _variant,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -162,6 +166,16 @@ class Phase1ProbeSmokeConfigTest(unittest.TestCase):
         self.assertFalse(smoke["official_test_accessed"])
         self.assertEqual(smoke["data"]["test_samples"], 0)
         self.assertEqual(smoke["task_count"]["lr_candidates"], 18)
+        policy_gates = _smoke_policy_gates(smoke)
+        self.assertEqual(
+            policy_gates,
+            {
+                "official_test_not_accessed": True,
+                "smoke_metrics_for_scientific_selection_forbidden": True,
+                "smoke_marked_non_scientific": True,
+            },
+        )
+        self.assertTrue(all(policy_gates.values()))
 
     def test_variant_names_are_unambiguous(self) -> None:
         self.assertEqual(_variant("vanilla", None), "vanilla")

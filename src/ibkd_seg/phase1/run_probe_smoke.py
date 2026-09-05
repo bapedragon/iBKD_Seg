@@ -180,6 +180,19 @@ def _validate_smoke_config(
         raise RuntimeError("probe smoke data contract changed")
 
 
+def _smoke_policy_gates(smoke: dict[str, Any]) -> dict[str, bool]:
+    """Express policy compliance as positive booleans for all-gates checks."""
+
+    return {
+        "official_test_not_accessed": smoke.get("official_test_accessed") is False,
+        "smoke_metrics_for_scientific_selection_forbidden": smoke.get(
+            "selection_from_smoke_metrics_forbidden"
+        )
+        is True,
+        "smoke_marked_non_scientific": smoke.get("scientific_result") is False,
+    }
+
+
 def _validate_classification_input(
     classification_root: Path,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
@@ -965,7 +978,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "six_encoder_seed1_checkpoints_sha256_and_strict_load": len(results) == 6,
         "same_classification_and_probe_validation_split": True,
         "official_trainval_counts_2940_740": True,
-        "official_test_accessed": False,
+        **_smoke_policy_gates(smoke),
         "trimap_values_mapped_to_0_1_255": observed_targets.issubset(allowed_targets),
         "encoder_eval_and_zero_trainable_parameters": all(
             result["classification_checkpoint"]["eval_mode"]
@@ -994,7 +1007,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "finite_validation_loss_and_metrics": all_finite,
         "selection_uses_validation_only": True,
-        "smoke_metrics_for_scientific_selection_forbidden": True,
     }
     status = "pass" if all(gates.values()) else "fail"
     total_seconds = time.monotonic() - started
