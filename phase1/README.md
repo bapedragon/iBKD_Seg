@@ -116,11 +116,17 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 bash phase1/scripts/run_probe_smoke_b64.sh
 ```
 
-기본 입력은 이전 H200 분류 작업의
-`/app/output/phase1_pet_full_b64_v1`이며, 새 컨테이너에도 이 디렉터리가 유지되거나
-mount되어 있어야 합니다. 없으면 checkpoint를 새로 학습하거나 임의 파일로
-대체하지 않고 `[INPUT_MISSING]`으로 즉시 종료합니다. 필요하면
-`PHASE1_B64_CLASSIFICATION_ROOT`로 mount 경로만 지정할 수 있습니다.
+기본 입력은 `/app/output/phase1_pet_full_b64_v1`입니다. 이전 H200 출력이 그
+경로에 유지되어 있으면 그대로 사용하고, 새 컨테이너라서 입력이 없으면
+[batch 64 checkpoint Release manifest](reports/classification/batch64/checkpoint_release.json)에
+고정된 GitHub Release asset을 자동으로 내려받습니다. 전체 student 18개와 teacher
+1개 checkpoint가 들어 있으며 byte size와 SHA-256을 통과해야만 압축을 풉니다.
+따라서 이전 컨테이너 mount는 필수가 아닙니다.
+
+checkpoint binary는 저장소의 모든 clone을 영구적으로 무겁게 만들지 않도록 Git
+commit이 아니라 GitHub Release asset으로 보존합니다. manifest와 다운로드·검증
+코드는 Git 이력에 포함합니다. 필요하면 `PHASE1_B64_CLASSIFICATION_ROOT`로 입력
+설치 경로만 바꿀 수 있습니다.
 
 smoke의 validation IoU는 파이프라인 검사용이며 방법 선택이나 논문 결론에 사용할
 수 없습니다. 결과는 `/app/output/phase1_pet_probe_b64_smoke_v1`에 작은 summary,
