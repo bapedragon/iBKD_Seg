@@ -249,6 +249,85 @@ def aggregate_students(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return aggregates
 
 
+def variant_name(method: str, fusion_ratio: float | None) -> str:
+    if fusion_ratio is None:
+        return method
+    return f"{method}_lambda{fusion_ratio:g}"
+
+
+def metric_text(value: Any) -> str:
+    return "NA" if value is None else f"{float(value):.3f}"
+
+
+def build_final_result_lines(
+    rows: list[dict[str, Any]],
+    aggregates: list[dict[str, Any]],
+    *,
+    profile_batch_size: int,
+) -> list[str]:
+    """Build a complete, grep-friendly result table for the final console log."""
+
+    lines = [
+        "=" * 96,
+        f"[FINAL_RESULTS_BEGIN] profile_batch={profile_batch_size}",
+    ]
+    for row in rows:
+        if row["status"] != "complete":
+            failure = " ".join(str(row.get("failure", "unknown")).split())
+            lines.append(
+                "[FINAL_RESULT] "
+                f"kind={row['kind']} "
+                f"variant={variant_name(row['method'], row['fusion_ratio_lambda'])} "
+                f"batch={row['batch_size']} seed={row['seed']} "
+                f"status=failed failure={failure}"
+            )
+            continue
+        lines.append(
+            "[FINAL_RESULT] "
+            f"kind={row['kind']} "
+            f"variant={variant_name(row['method'], row['fusion_ratio_lambda'])} "
+            f"batch={row['batch_size']} seed={row['seed']} "
+            f"selected_epoch={row['selected_epoch']} "
+            f"validation_macro_top1={metric_text(row['validation_macro_top1'])} "
+            f"test_macro_top1={metric_text(row['test_macro_top1'])} "
+            f"test_overall_top1={metric_text(row['test_overall_top1'])} "
+            f"test_top5={metric_text(row['test_top5'])} status=complete"
+        )
+    lines.append(f"[FINAL_AGGREGATES_BEGIN] profile_batch={profile_batch_size}")
+    for aggregate in aggregates:
+        macro = aggregate["test_macro_top1"]
+        overall = aggregate["test_overall_top1"]
+        top5 = aggregate["test_top5"]
+        seeds = ",".join(str(seed) for seed in aggregate["completed_seeds"])
+        lines.append(
+            "[FINAL_AGGREGATE] "
+            f"variant={variant_name(aggregate['method'], aggregate['fusion_ratio_lambda'])} "
+            f"batch={aggregate['batch_size']} seeds={seeds or 'none'} "
+            f"n={len(aggregate['completed_seeds'])} "
+            f"test_macro_top1_mean={metric_text(macro['mean'])} "
+            f"test_macro_top1_sample_sd={metric_text(macro['sample_standard_deviation'])} "
+            f"test_overall_top1_mean={metric_text(overall['mean'])} "
+            f"test_overall_top1_sample_sd={metric_text(overall['sample_standard_deviation'])} "
+            f"test_top5_mean={metric_text(top5['mean'])} "
+            f"test_top5_sample_sd={metric_text(top5['sample_standard_deviation'])} "
+            f"complete={aggregate['complete']}"
+        )
+    lines.extend(
+        (
+            f"[FINAL_AGGREGATES_END] profile_batch={profile_batch_size}",
+            f"[FINAL_RESULTS_END] profile_batch={profile_batch_size}",
+            "=" * 96,
+        )
+    )
+    return lines
+
+
+def write_text(lines: list[str], path: Path) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def contract_checks(
     rows: list[dict[str, Any]],
     payloads: list[dict[str, Any]],
@@ -460,6 +539,13 @@ def run(args: argparse.Namespace) -> None:
     completed = sum(row["status"] == "complete" for row in rows)
     failed = sum(row["status"] == "failed" for row in rows)
     status = "complete" if contracts["all_passed"] else "complete_with_failures"
+    aggregates = aggregate_students(rows)
+    results_text_path = args.output_dir / "classification_results.txt"
+    final_result_lines = build_final_result_lines(
+        rows,
+        aggregates,
+        profile_batch_size=args.batch_size,
+    )
     summary = {
         "status": status,
         "scientific_result": status == "complete",
@@ -481,7 +567,8 @@ def run(args: argparse.Namespace) -> None:
             else None
         ),
         "rows": rows,
-        "aggregates": aggregate_students(rows),
+        "aggregates": aggregates,
+        "final_results_text": str(results_text_path.resolve()),
         "cross_issue_contract": (
             "batch64_and_batch128_teacher_model_state_sha256_must_match_before_"
             "cross_profile_interpretation"
@@ -493,6 +580,7 @@ def run(args: argparse.Namespace) -> None:
     }
     summary_path = args.output_dir / "classification_summary.json"
     save_json(summary, summary_path)
+    write_text(final_result_lines, results_text_path)
     save_json(
         {
             "status": status,
@@ -515,6 +603,9 @@ def run(args: argparse.Namespace) -> None:
         f"test_once={contracts['every_completed_model_tested_once']} "
         f"test_used_for_selection={contracts['official_test_used_for_training_or_selection']}"
     )
+    for line in final_result_lines:
+        log(line)
+    log(f"[FINAL_RESULTS_FILE] path={results_text_path.resolve()}")
     log(
         f"[SEQUENCE_DONE] status={status} completed={completed}/{EXPECTED_TOTAL_TASKS} "
         f"failed={failed} summary={summary_path.resolve()}"

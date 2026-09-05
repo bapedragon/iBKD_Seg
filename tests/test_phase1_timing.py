@@ -11,7 +11,7 @@ from ibkd_seg.phase1.controllers import GuidanceController
 from ibkd_seg.phase1.data import build_stratified_split
 from ibkd_seg.phase1.full_matrix import build_full_tasks
 from ibkd_seg.phase1.models import IBKD, LocalityGuidance, ResNet56
-from ibkd_seg.phase1.run_full import aggregate_students
+from ibkd_seg.phase1.run_full import aggregate_students, build_final_result_lines
 from ibkd_seg.phase1.timing_matrix import build_tasks
 
 
@@ -113,6 +113,29 @@ class Phase1FullMatrixTest(unittest.TestCase):
             aggregate["test_macro_top1"]["raw_by_seed"],
             {"1": 70.0, "2": 71.0, "3": 72.0},
         )
+
+        final_rows = [
+            {
+                **row,
+                "selected_epoch": 250 + int(row["seed"]),
+                "validation_macro_top1": row["test_macro_top1"] - 1.0,
+            }
+            for row in rows
+        ]
+        lines = build_final_result_lines(
+            final_rows,
+            [aggregate],
+            profile_batch_size=64,
+        )
+        self.assertEqual(
+            sum(line.startswith("[FINAL_RESULT]") for line in lines),
+            3,
+        )
+        self.assertIn(
+            "test_macro_top1_mean=71.000 test_macro_top1_sample_sd=1.000",
+            "\n".join(lines),
+        )
+        self.assertIn("[FINAL_RESULTS_END] profile_batch=64", lines)
 
 
 class Phase1SplitTest(unittest.TestCase):
