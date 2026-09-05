@@ -13,6 +13,7 @@ from ibkd_seg.phase1.models import create_student
 from ibkd_seg.phase1.probe import (
     build_probe,
     confusion_from_tensors,
+    evaluate_probe_both_resolutions,
     module_state_sha256,
     train_candidate,
 )
@@ -21,6 +22,15 @@ from ibkd_seg.phase1.run_probe_smoke import (
     _smoke_policy_gates,
     _validate_smoke_config,
     _variant,
+)
+from ibkd_seg.phase1.run_probe_full import (
+    EXPECTED_ENCODER_SEEDS,
+    EXPECTED_PROBE_SEEDS,
+    EXPECTED_VARIANTS,
+    METRIC_PATHS,
+    _aggregate,
+    _select_candidate,
+    _validate_protocol,
 )
 
 
@@ -155,6 +165,105 @@ class Phase1ProbeTrainingTest(unittest.TestCase):
         self.assertEqual(len(intermediates), 1)
         self.assertEqual(tuple(intermediates[0].shape), (1, 192, 14, 14))
         self.assertFalse(intermediates[0].requires_grad)
+
+    def test_grid_input_metrics_and_capture_share_one_probe_pass(self) -> None:
+        class CountingProbe(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.calls = 0
+
+            def forward(self, features: torch.Tensor) -> torch.Tensor:
+                self.calls += 1
+                return torch.stack((features[:, 0], features[:, 1]), dim=1)
+
+        probe = CountingProbe()
+        features = torch.zeros(3, 192, 2, 2)
+        features[:, 1] = 1.0
+        grid_targets = torch.ones(3, 2, 2, dtype=torch.uint8)
+        input_targets = torch.ones(3, 4, 4, dtype=torch.uint8)
+        metrics, captured = evaluate_probe_both_resolutions(
+            probe,
+            features,
+            grid_targets,
+            input_targets,
+            batch_size=2,
+            device=torch.device("cpu"),
+            input_size=4,
+            capture_indices={1},
+        )
+        self.assertEqual(probe.calls, 2)
+        self.assertEqual(metrics["grid_14x14"]["mean_iou"], 1.0)
+        self.assertEqual(metrics["input_224"]["mean_iou"], 1.0)
+        self.assertEqual(set(captured), {1})
+        self.assertEqual(tuple(captured[1].shape), (4, 4))
+
+
+class Phase1ProbeFullReportingTest(unittest.TestCase):
+    def test_full_runner_accepts_the_committed_locked_protocol(self) -> None:
+        protocol = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+        _validate_protocol(protocol, PROTOCOL_PATH)
+
+    def test_lr_tie_selects_lower_learning_rate(self) -> None:
+        state = {"weight": torch.tensor([1.0])}
+        selected_state, selected = _select_candidate(
+            [
+                (
+                    state,
+                    {
+                        "learning_rate": 0.01,
+                        "best_validation_grid_mean_iou": 0.75,
+                    },
+                ),
+                (
+                    {"weight": torch.tensor([2.0])},
+                    {
+                        "learning_rate": 0.03,
+                        "best_validation_grid_mean_iou": 0.75,
+                    },
+                ),
+            ]
+        )
+        self.assertIs(selected_state, state)
+        self.assertEqual(selected["learning_rate"], 0.01)
+
+    def test_aggregate_uses_probe_means_then_encoder_seed_statistics(self) -> None:
+        results = []
+        for variant_index, variant in enumerate(EXPECTED_VARIANTS):
+            for encoder_seed in EXPECTED_ENCODER_SEEDS:
+                for probe_seed in EXPECTED_PROBE_SEEDS:
+                    value = variant_index / 10 + encoder_seed / 100 + probe_seed / 1000
+                    split_metrics = {
+                        resolution: {
+                            metric: value
+                            for candidate_resolution, metric in METRIC_PATHS.values()
+                            if candidate_resolution == resolution
+                        }
+                        for resolution in {path[0] for path in METRIC_PATHS.values()}
+                    }
+                    results.append(
+                        {
+                            "variant": variant,
+                            "encoder_seed": encoder_seed,
+                            "probe_seed": probe_seed,
+                            "validation": split_metrics,
+                            "test": split_metrics,
+                        }
+                    )
+        report = _aggregate(results)
+        vanilla = report["variants"]["vanilla"]
+        encoder_one = vanilla["by_encoder_seed"]["1"]["test"][
+            "input_224_mean_iou"
+        ]
+        self.assertAlmostEqual(encoder_one["mean"], 0.013)
+        across = vanilla["across_encoder_seed_means"]["test"][
+            "input_224_mean_iou"
+        ]
+        self.assertAlmostEqual(across["mean"], 0.023)
+        contrast = report["paired_primary_contrasts"][
+            "ibkd_lambda_0.25_minus_alg"
+        ]["difference_summary"]
+        self.assertAlmostEqual(contrast["mean"], 0.1)
+        self.assertEqual(contrast["count"], 3)
 
 
 class Phase1ProbeSmokeConfigTest(unittest.TestCase):

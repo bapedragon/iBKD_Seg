@@ -195,6 +195,8 @@ def _smoke_policy_gates(smoke: dict[str, Any]) -> dict[str, bool]:
 
 def _validate_classification_input(
     classification_root: Path,
+    *,
+    encoder_seeds: Sequence[int] = (1,),
 ) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
     summary_path = classification_root / "classification_summary.json"
     if not summary_path.is_file():
@@ -281,12 +283,27 @@ def _validate_classification_input(
     if len(validation_hashes) != 1:
         raise RuntimeError("classification checkpoints used different validation splits")
 
-    selected = [entry for entry in all_entries if entry["encoder_seed"] == 1]
-    selected_by_variant = {entry["variant"]: entry for entry in selected}
-    if set(selected_by_variant) != set(EXPECTED_VARIANTS):
-        raise RuntimeError("could not resolve six encoder-seed-1 checkpoints")
+    requested_seeds = tuple(int(seed) for seed in encoder_seeds)
+    if not requested_seeds or len(set(requested_seeds)) != len(requested_seeds):
+        raise ValueError("encoder_seeds must be non-empty and unique")
+    if not set(requested_seeds).issubset({1, 2, 3}):
+        raise ValueError("Phase 1 encoder seeds must be selected from 1, 2, 3")
+    selected_by_key = {
+        (entry["variant"], entry["encoder_seed"]): entry
+        for entry in all_entries
+        if entry["encoder_seed"] in requested_seeds
+    }
+    expected_selected = {
+        (variant, seed) for variant in EXPECTED_VARIANTS for seed in requested_seeds
+    }
+    if set(selected_by_key) != expected_selected:
+        raise RuntimeError("could not resolve the requested classification checkpoints")
     return (
-        [selected_by_variant[variant] for variant in EXPECTED_VARIANTS],
+        [
+            selected_by_key[(variant, seed)]
+            for variant in EXPECTED_VARIANTS
+            for seed in requested_seeds
+        ],
         suite,
         next(iter(validation_hashes)),
     )
@@ -314,7 +331,7 @@ def _load_encoder(
         == entry["fusion_ratio_lambda"],
         "batch": metadata.get("batch_size") == 64,
         "epochs": metadata.get("epochs") == 300,
-        "seed": metadata.get("seed") == 1,
+        "seed": metadata.get("seed") == entry["encoder_seed"],
         "validation_split": metadata.get("validation_image_ids_sha256")
         == entry["validation_image_ids_sha256"],
         "test_before_checkpoint": metadata.get(

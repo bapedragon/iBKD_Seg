@@ -376,7 +376,9 @@ yorkshire_terrier_9
 ```
 
 정성 표에는 encoder seed 1, probe seed 1을 사용하고 입력, GT, Vanilla, KD, LG,
-ALG, iBKD 순으로 표시합니다.
+ALG, iBKD 순으로 표시합니다. 사전 지정된 두 iBKD λ 중 결과가 좋은 값만 고르는
+일이 없도록 iBKD-0.25와 iBKD-0.5 panel을 각각 생성하며, 공통 baseline 열은
+동일하게 유지합니다. 이는 평가·선택 규칙을 바꾸지 않는 표시상의 명확화입니다.
 
 ## 반복과 통계 단위
 
@@ -444,6 +446,17 @@ dataset audit와 각 checkpoint의 1회 test 시간이 추가됩니다.
 2. validation-selected checkpoint strict load와 SHA-256 확인
 3. official test가 selection에 사용되지 않았음을 summary로 확인
 4. encoder frozen/gradient 0과 feature cache 계약 확인
+
+batch 64 frozen probe 본 실험은 다음 명령으로 실행합니다.
+
+```bash
+bash phase1/scripts/run_probe_full_b64.sh
+```
+
+6 variants × 3 encoder seeds × 5 probe seeds × 3 LR의 270개 후보를 validation으로
+선택한 뒤, 선택된 90개 probe 모두가 확정된 다음에만 official test를 엽니다.
+test에서는 각 선택 probe를 정확히 한 번 forward하여 `14 x 14` 및 `224 x 224`
+지표와 사전 고정 정성 예측을 함께 계산합니다.
 
 Timing run은 시간·메모리·작업 분할 추정용이며 과학 결과나 checkpoint로 사용하지 않습니다. 이후
 H200 요청 Issue에는 commit SHA, 실행 명령, 이미지, GPU 할당량, 예상 시간, output

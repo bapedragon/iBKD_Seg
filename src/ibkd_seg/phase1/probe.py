@@ -174,6 +174,70 @@ def evaluate_probe(
     return metrics
 
 
+@torch.inference_mode()
+def evaluate_probe_both_resolutions(
+    probe: torch.nn.Module,
+    features: torch.Tensor,
+    grid_targets: torch.Tensor,
+    input_targets: torch.Tensor,
+    *,
+    batch_size: int,
+    device: torch.device,
+    input_size: int = 224,
+    ignore_index: int = 255,
+    capture_indices: set[int] | None = None,
+) -> tuple[dict[str, Any], dict[int, torch.Tensor]]:
+    """Evaluate grid and input metrics in one model pass per sample.
+
+    ``capture_indices`` is used for the predeclared qualitative examples and
+    returns the already-evaluated 224x224 predictions without a second test
+    forward pass.
+    """
+
+    if not (len(features) == len(grid_targets) == len(input_targets)):
+        raise ValueError("feature/grid/input sample counts differ")
+    requested = set() if capture_indices is None else set(capture_indices)
+    if any(index < 0 or index >= len(features) for index in requested):
+        raise ValueError("capture index is outside the evaluated split")
+    probe.eval()
+    grid_confusion = Confusion()
+    input_confusion = Confusion()
+    captured: dict[int, torch.Tensor] = {}
+    for start in range(0, len(features), batch_size):
+        end = min(start + batch_size, len(features))
+        logits = probe(features[start:end].to(device, non_blocking=True))
+        grid_prediction = logits.argmax(dim=1).cpu()
+        input_prediction = F.interpolate(
+            logits,
+            size=(input_size, input_size),
+            mode="bilinear",
+            align_corners=False,
+        ).argmax(dim=1).cpu()
+        grid_confusion = grid_confusion.add(
+            confusion_from_tensors(
+                grid_prediction,
+                grid_targets[start:end],
+                ignore_index=ignore_index,
+            )
+        )
+        input_confusion = input_confusion.add(
+            confusion_from_tensors(
+                input_prediction,
+                input_targets[start:end],
+                ignore_index=ignore_index,
+            )
+        )
+        for index in requested.intersection(range(start, end)):
+            captured[index] = input_prediction[index - start].clone()
+    grid_metrics = grid_confusion.metrics()
+    input_metrics = input_confusion.metrics()
+    if int(grid_metrics["valid_pixels"]) == 0 or int(input_metrics["valid_pixels"]) == 0:
+        raise RuntimeError("probe evaluation contains no valid pixels")
+    if set(captured) != requested:
+        raise RuntimeError("failed to capture all qualitative predictions")
+    return {"grid_14x14": grid_metrics, "input_224": input_metrics}, captured
+
+
 def train_candidate(
     train_features: torch.Tensor,
     train_targets: torch.Tensor,

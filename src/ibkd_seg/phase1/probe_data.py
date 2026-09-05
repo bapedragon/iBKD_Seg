@@ -18,6 +18,7 @@ from torchvision.transforms import functional as TF
 from .data import (
     IMAGENET_MEAN,
     IMAGENET_STD,
+    OFFICIAL_TEST_COUNT,
     OFFICIAL_TRAINVAL_COUNT,
     build_stratified_split,
 )
@@ -88,6 +89,41 @@ def load_train_validation_records(
         "train": records(train_indices),
         "validation": records(validation_indices),
     }, manifest
+
+
+def load_official_test_records(data_dir: Path) -> list[PetRecord]:
+    """Instantiate the untouched official test split after model selection."""
+
+    dataset = OxfordIIITPet(
+        root=data_dir,
+        split="test",
+        target_types="category",
+        download=False,
+    )
+    if len(dataset) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError(
+            f"unexpected official test count {len(dataset)}; expected {OFFICIAL_TEST_COUNT}"
+        )
+    images = getattr(dataset, "_images", None)
+    labels = getattr(dataset, "_labels", None)
+    if images is None or labels is None:
+        raise RuntimeError("torchvision OxfordIIITPet internals changed")
+    base = data_dir / "oxford-iiit-pet"
+    records: list[PetRecord] = []
+    for image_path, label in zip(images, labels, strict=True):
+        image_id = Path(image_path).stem
+        record = PetRecord(
+            image_id=image_id,
+            label=int(label),
+            image_path=base / "images" / f"{image_id}.jpg",
+            trimap_path=base / "annotations" / "trimaps" / f"{image_id}.png",
+        )
+        if not record.image_path.is_file() or not record.trimap_path.is_file():
+            raise RuntimeError(f"missing official test image/trimap pair for {image_id}")
+        records.append(record)
+    if len({record.image_id for record in records}) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("official test contains duplicate image ids")
+    return records
 
 
 class PetImageDataset(Dataset[tuple[torch.Tensor, str]]):

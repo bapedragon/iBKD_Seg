@@ -29,8 +29,9 @@ ground-truth 품질 gate를 통과하지 못했습니다. Flowers 실행은 Phas
 **2026-09-06 상태:** 12-way timing 뒤 student batch `64/128`과 iBKD λ
 `0.25/0.5`를 모두 사전 고정했습니다. batch 64의 teacher 1회와 여섯 variant ×
 3 seed 분류가 19/19 완료됐으며, test-once·동일 초기화·동일 teacher·동일 split
-계약과 checkpoint 감사를 통과했습니다. batch 128 분류와 두 profile의 frozen
-probe는 대기 중입니다. batch 64 정량값과 해석은
+계약과 checkpoint 감사를 통과했습니다. batch 64 frozen probe smoke도 통과해
+LOCK된 본 실험 실행기가 준비됐습니다. batch 128 분류 결과 회수와 해당 profile
+probe는 대기 중입니다. batch 64 분류 정량값과 해석은
 [결과 보고서](phase1/reports/classification/batch64/RESULTS.md), 상세 계약은
 [phase1/PROTOCOL.md](phase1/PROTOCOL.md)에 있습니다.
 

@@ -1,6 +1,6 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **batch 64 full classification 완료·감사 통과 — batch 64 probe smoke 준비 완료**
+상태: **batch 64 full classification·probe smoke 완료 — batch 64 frozen probe 본 실험 실행 준비 완료**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
@@ -132,3 +132,29 @@ smoke의 validation IoU는 파이프라인 검사용이며 방법 선택이나 �
 수 없습니다. 결과는 `/app/output/phase1_pet_probe_b64_smoke_v1`에 작은 summary,
 CSV와 smoke probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/scratch`에
 둡니다.
+
+## Batch 64 frozen-probe 본 실험
+
+smoke 통과 뒤에는 다음 명령 하나로 LOCK된 본 실험을 실행합니다.
+
+```bash
+bash phase1/scripts/run_probe_full_b64.sh
+```
+
+6개 설정 × encoder seed 3개 × probe seed 5개에서 LR 3개를 각각 100 epoch
+학습하므로 LR 후보는 270개이고, validation으로 선택되는 probe는 90개입니다.
+90개 선택과 strict reload가 모두 끝났다는
+`selection_complete_before_test.json`을 먼저 기록한 다음에만 공식 test를 엽니다.
+선택된 각 probe는 grid/input metric과 고정 정성 예측을 한 번의 test pass에서 함께
+계산하므로 공식 test 평가는 probe당 정확히 1회입니다.
+
+기본 경로는 다음과 같습니다.
+
+- 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b64_v1_input`
+- Pet 데이터와 임시 feature cache: `/app/scratch`
+- 회수할 결과: `/app/output/phase1_pet_probe_b64_full_v1`
+
+결과 폴더에는 90개 선택 probe, 모든 원값 CSV, 집계 JSON, 실행 상태, 두 비영상
+baseline과 결과 전에 고정한 test 8장의 정성 panel이 포함됩니다. iBKD λ 0.25와
+0.5를 결과로 고르지 않도록 정성 panel도 두 세트 모두 저장합니다. 수 GB의 frozen
+feature cache와 데이터셋은 scratch에서 사용 후 결과 폴더에 복사하지 않습니다.
