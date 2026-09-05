@@ -1,8 +1,10 @@
 # Phase 1 Pet 분류 결과
 
 이 폴더에는 Oxford-IIIT Pet 37개 품종 full-classification 실행에서 나온 소형
-결과와 검증 manifest만 Git으로 추적합니다. 데이터셋, 체크포인트, 전체 콘솔 로그,
-원본 ZIP은 `phase1/results/raw/` 아래에 보관하며 `.gitignore`로 제외합니다.
+결과와 검증 manifest만 Git으로 추적합니다. checkpoint와 전체 콘솔 로그는
+`phase1/results/raw/` 아래에 보관하며 `.gitignore`로 제외합니다. 원본 ZIP은 CRC와
+SHA-256 검증 및 필요한 결과 반입이 끝난 뒤 삭제할 수 있고, 파일명·byte size·hash와
+삭제 여부를 `summary.json`에 기록합니다.
 
 | batch profile | 분류 상태 | frozen probe 상태 | 결과 |
 |---|---|---|---|

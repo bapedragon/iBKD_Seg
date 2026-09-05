@@ -653,9 +653,8 @@
     "bytes": 1995418088,
     "canonical_filename": "phase1_pet_b64_full_classification_v1_h200_issue700.zip",
     "original_filename": "Pet_batch64_6\u1109\u1165\u11af\u110c\u1165\u11bcx3seed_full_classification.zip",
-    "retained_local_archive": true,
-    "sha256": "57ddd4cffb6232ac07d42689ffe408e25fb7691b302274d1ef33bbf4d4b4658f",
-    "stored_at": "phase1/results/raw/archives/oxford_iiit_pet/full_classification_v1/batch64/phase1_pet_b64_full_classification_v1_h200_issue700.zip"
+    "retained_local_archive": false,
+    "sha256": "57ddd4cffb6232ac07d42689ffe408e25fb7691b302274d1ef33bbf4d4b4658f"
   },
   "status": "classification_complete_probe_pending",
   "suite_elapsed_seconds": 26982.786055103876,

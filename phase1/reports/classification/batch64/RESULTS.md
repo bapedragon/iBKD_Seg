@@ -22,8 +22,7 @@
   `57ddd4cffb6232ac07d42689ffe408e25fb7691b302274d1ef33bbf4d4b4658f`
 - 정규화한 archive 이름:
   `phase1_pet_b64_full_classification_v1_h200_issue700.zip`
-- Git 제외 archive 보관 위치:
-  `phase1/results/raw/archives/oxford_iiit_pet/full_classification_v1/batch64/phase1_pet_b64_full_classification_v1_h200_issue700.zip`
+- 원본 archive 보관 상태: 필요한 결과를 검증·반입한 뒤 2026-09-06 로컬에서 삭제
 
 Oxford-IIIT Pet 공식 7,349개 표본의 image–label–trimap 1:1 대응, decode,
 split disjointness, trimap 값 `{1,2,3}` 검사도 모두 통과했습니다.
@@ -99,11 +98,11 @@ probe에서도 LG/ALG보다 낮다면 현재 Phase 1 설정에서는 iBKD의 공
   [summary.json](summary.json), [checkpoint_manifest.json](checkpoint_manifest.json)
 - Git 제외 raw:
   `phase1/results/raw/oxford_iiit_pet/full_classification_v1/batch64/`
-- Git 제외 원본 archive:
-  `phase1/results/raw/archives/oxford_iiit_pet/full_classification_v1/batch64/`
 - raw 보존 내용: checkpoint 19개, 개별 summary 19개, H200 로그, import manifest
 - 반입 시 제외: ZIP 내부 중복 Oxford-IIIT Pet 데이터, `__MACOSX`, 중복 status/split
   파일
+- 삭제한 원본 ZIP은 로컬에서 복구할 수 없으며, 다시 필요하면 H200 결과 원본을
+  재수령해야 합니다. 원본의 파일명·byte size·SHA-256·CRC 검증 결과는 남아 있습니다.
 
 전체 콘솔 로그와 checkpoint는 용량 때문에 Git에 올리지 않고, 후속 frozen probe가
 raw 경로의 검증된 checkpoint를 사용합니다.
