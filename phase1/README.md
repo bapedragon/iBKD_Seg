@@ -1,11 +1,16 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **12-way timing 완료 — batch 64/128 full classification 실행 준비**
+상태: **batch 64 full classification 완료·감사 통과 — batch 128 및 probe 대기**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
 [`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)에
 있습니다.
+
+2026-09-06에 batch 64의 teacher 1회와 6설정 × encoder seed 3개를 모두
+완료했습니다. 공식 test-once와 동일 초기화·teacher·validation split 계약,
+checkpoint 19개의 hash·strict-load·유한값 감사를 통과했습니다. 분류 결과와
+해석은 [batch 64 결과 보고서](reports/classification/batch64/RESULTS.md)에 있습니다.
 
 ## 핵심 질문
 
@@ -50,9 +55,9 @@ feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 
 ```
 
 H200 요청은 batch 64와 batch 128로 나눕니다. 각 요청은 공통 teacher 1회와 해당
-batch의 student 18회로 구성합니다. timing 환산 기준 예상시간은 각각 약 8시간
-39분과 8시간 20분입니다. 결과가 좋은 batch나 λ만 골라 main 결과로 바꾸지 않고
-두 profile을 별도 표로 모두 남깁니다.
+batch의 student 18회로 구성합니다. batch 64는 실제 7시간 29분 43초에
+완료됐고, batch 128의 timing 환산 예상시간은 약 8시간 20분입니다. 결과가 좋은
+batch나 λ만 골라 main 결과로 바꾸지 않고 두 profile을 별도 표로 모두 남깁니다.
 
 ## 본 실험 초안에 포함된 공통 계약
 
@@ -97,4 +102,4 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 ## 계산 자원
 
 - 로컬: Pet 데이터 감사, 단위 테스트, smoke probe와 정성 확인
-- H200: 완료한 12-way timing, 두 batch profile의 분류 encoder 학습, 이후 전체 probe 반복
+- H200: 완료한 12-way timing과 batch 64 분류, 남은 batch 128 분류 및 이후 전체 probe 반복

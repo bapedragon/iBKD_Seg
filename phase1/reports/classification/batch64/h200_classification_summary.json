@@ -1,0 +1,879 @@
+{
+  "aggregates": [
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": null,
+      "method": "vanilla",
+      "test_macro_top1": {
+        "mean": 20.48587401707967,
+        "raw_by_seed": {
+          "1": 20.239000022411346,
+          "2": 20.55027484893799,
+          "3": 20.66834717988968
+        },
+        "sample_standard_deviation": 0.22180023842799051
+      },
+      "test_overall_top1": {
+        "mean": 20.46879258653584,
+        "raw_by_seed": {
+          "1": 20.19623875715454,
+          "2": 20.550558735350233,
+          "3": 20.659580267102754
+        },
+        "sample_standard_deviation": 0.2422511424724882
+      },
+      "test_top5": {
+        "mean": 51.776142454801494,
+        "raw_by_seed": {
+          "1": 50.99482147724176,
+          "2": 52.602889070591445,
+          "3": 51.730716816571274
+        },
+        "sample_standard_deviation": 0.8049956289644257
+      }
+    },
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": null,
+      "method": "kd",
+      "test_macro_top1": {
+        "mean": 30.59152364730835,
+        "raw_by_seed": {
+          "1": 29.52778935432434,
+          "2": 30.70996403694153,
+          "3": 31.53681755065918
+        },
+        "sample_standard_deviation": 1.00973742519501
+      },
+      "test_overall_top1": {
+        "mean": 30.580539656582175,
+        "raw_by_seed": {
+          "1": 29.517579721995094,
+          "2": 30.689561188334697,
+          "3": 31.534478059416735
+        },
+        "sample_standard_deviation": 1.0128593173105502
+      },
+      "test_top5": {
+        "mean": 64.57708730807668,
+        "raw_by_seed": {
+          "1": 62.878168438266556,
+          "2": 65.41291905151267,
+          "3": 65.44017443445081
+        },
+        "sample_standard_deviation": 1.471370010779905
+      }
+    },
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": null,
+      "method": "lg",
+      "test_macro_top1": {
+        "mean": 38.2056325674057,
+        "raw_by_seed": {
+          "1": 37.81784474849701,
+          "2": 39.06073868274689,
+          "3": 37.738314270973206
+        },
+        "sample_standard_deviation": 0.7416104945213572
+      },
+      "test_overall_top1": {
+        "mean": 38.21204687925865,
+        "raw_by_seed": {
+          "1": 37.83047151812483,
+          "2": 39.05696375034069,
+          "3": 37.748705369310436
+        },
+        "sample_standard_deviation": 0.7328607064458307
+      },
+      "test_top5": {
+        "mean": 73.52593803942945,
+        "raw_by_seed": {
+          "1": 72.79912782774598,
+          "2": 74.51621695284818,
+          "3": 73.2624693376942
+        },
+        "sample_standard_deviation": 0.8883471075438978
+      }
+    },
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "test_macro_top1": {
+        "mean": 32.27662841478983,
+        "raw_by_seed": {
+          "1": 31.337401270866394,
+          "2": 33.90723764896393,
+          "3": 31.585246324539185
+        },
+        "sample_standard_deviation": 1.4175759763017581
+      },
+      "test_overall_top1": {
+        "mean": 32.2794585263923,
+        "raw_by_seed": {
+          "1": 31.316434995911692,
+          "2": 33.9329517579722,
+          "3": 31.588988825292997
+        },
+        "sample_standard_deviation": 1.4384371024268023
+      },
+      "test_top5": {
+        "mean": 67.90224402652858,
+        "raw_by_seed": {
+          "1": 66.47587898609976,
+          "2": 69.71926955573726,
+          "3": 67.5115835377487
+        },
+        "sample_standard_deviation": 1.6566101864722602
+      }
+    },
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "test_macro_top1": {
+        "mean": 29.473580916722614,
+        "raw_by_seed": {
+          "1": 29.093611240386963,
+          "2": 29.612499475479126,
+          "3": 29.714632034301758
+        },
+        "sample_standard_deviation": 0.333002223857259
+      },
+      "test_overall_top1": {
+        "mean": 29.472154083764877,
+        "raw_by_seed": {
+          "1": 29.10874897792314,
+          "2": 29.599345870809486,
+          "3": 29.708367402562008
+        },
+        "sample_standard_deviation": 0.3194039398791141
+      },
+      "test_top5": {
+        "mean": 65.30389751976016,
+        "raw_by_seed": {
+          "1": 66.4213682202235,
+          "2": 64.75878986099755,
+          "3": 64.73153447805942
+        },
+        "sample_standard_deviation": 0.967853960455968
+      }
+    },
+    {
+      "batch_size": 64,
+      "complete": true,
+      "completed_seeds": [
+        1,
+        2,
+        3
+      ],
+      "expected_seeds": [
+        1,
+        2,
+        3
+      ],
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "test_macro_top1": {
+        "mean": 29.5276681582133,
+        "raw_by_seed": {
+          "1": 28.439682722091675,
+          "2": 28.307533264160156,
+          "3": 31.83578848838806
+        },
+        "sample_standard_deviation": 1.999982615857559
+      },
+      "test_overall_top1": {
+        "mean": 29.52666484964114,
+        "raw_by_seed": {
+          "1": 28.427364404469884,
+          "2": 28.318342872717363,
+          "3": 31.83428727173617
+        },
+        "sample_standard_deviation": 1.9992029301232075
+      },
+      "test_top5": {
+        "mean": 65.45834468974289,
+        "raw_by_seed": {
+          "1": 63.832106841101115,
+          "2": 64.59525756336876,
+          "3": 67.94766966475879
+        },
+        "sample_standard_deviation": 2.1893272664571755
+      }
+    }
+  ],
+  "batch_size": 64,
+  "completed_tasks": 19,
+  "contracts": {
+    "all_passed": true,
+    "complete_1_teacher_18_student_matrix": true,
+    "every_completed_checkpoint_strict_reloaded": true,
+    "every_completed_model_tested_once": true,
+    "official_test_used_for_training_or_selection": false,
+    "same_student_initial_state_within_each_seed": true,
+    "same_teacher_for_all_guided_students": true,
+    "same_validation_split": true,
+    "student_initial_state_hashes_by_seed": {
+      "1": [
+        "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859"
+      ],
+      "2": [
+        "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5"
+      ],
+      "3": [
+        "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38"
+      ]
+    },
+    "teacher_model_state_hashes": [
+      "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa"
+    ],
+    "validation_split_hashes": [
+      "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12"
+    ]
+  },
+  "cross_issue_contract": "batch64_and_batch128_teacher_model_state_sha256_must_match_before_cross_profile_interpretation",
+  "dataset_audit": {
+    "annotation_hashes": {
+      "list.txt": "6a54ab256e22f7a33c6f17a7669e58ea5f6f9c7a080ec2622c205aefd4b354da",
+      "test.txt": "a5454003774ffe01f4f322756d3ba5495bae21cb30bb217ab285dbfa2bef245c",
+      "trainval.txt": "408f3f609481b939c94634169e6413414b733a3faeba440cbdcc5c02142eebdc"
+    },
+    "archives": {
+      "annotations.tar.gz": {
+        "bytes": 19173078,
+        "md5": "95a8c909bbe2e81eed6a22bccdf3f68f",
+        "sha256": "52425fb6de5c424942b7626b428656fcbd798db970a937df61750c0f1d358e91"
+      },
+      "images.tar.gz": {
+        "bytes": 791918971,
+        "md5": "5c4f3ee8e5d25df40f4fd59a7f44e54c",
+        "sha256": "67195c5e1c01f1ab5f9b6a5d22b8c27a580d896ece458917e61d459337fa318d"
+      }
+    },
+    "class_counts": {
+      "test": {
+        "0": 98,
+        "1": 100,
+        "10": 100,
+        "11": 97,
+        "12": 100,
+        "13": 100,
+        "14": 100,
+        "15": 100,
+        "16": 100,
+        "17": 100,
+        "18": 99,
+        "19": 100,
+        "2": 100,
+        "20": 100,
+        "21": 100,
+        "22": 100,
+        "23": 100,
+        "24": 100,
+        "25": 100,
+        "26": 100,
+        "27": 100,
+        "28": 100,
+        "29": 100,
+        "3": 100,
+        "30": 99,
+        "31": 100,
+        "32": 100,
+        "33": 100,
+        "34": 89,
+        "35": 100,
+        "36": 100,
+        "4": 100,
+        "5": 100,
+        "6": 100,
+        "7": 88,
+        "8": 99,
+        "9": 100
+      },
+      "trainval": {
+        "0": 100,
+        "1": 100,
+        "10": 100,
+        "11": 93,
+        "12": 96,
+        "13": 100,
+        "14": 100,
+        "15": 100,
+        "16": 100,
+        "17": 100,
+        "18": 100,
+        "19": 100,
+        "2": 100,
+        "20": 100,
+        "21": 100,
+        "22": 96,
+        "23": 100,
+        "24": 100,
+        "25": 100,
+        "26": 100,
+        "27": 100,
+        "28": 100,
+        "29": 100,
+        "3": 100,
+        "30": 100,
+        "31": 100,
+        "32": 99,
+        "33": 100,
+        "34": 100,
+        "35": 100,
+        "36": 100,
+        "4": 100,
+        "5": 100,
+        "6": 100,
+        "7": 96,
+        "8": 100,
+        "9": 100
+      }
+    },
+    "dataset": "Oxford-IIIT Pet",
+    "disjoint_official_splits": true,
+    "image_label_trimap_one_to_one": true,
+    "official_test_used_for_training_or_selection": false,
+    "rgb_and_trimap_decode": true,
+    "split_counts": {
+      "test": 3669,
+      "total": 7349,
+      "trainval": 3680
+    },
+    "status": "pass",
+    "test_content_access": "integrity_audit_only",
+    "trimap_values": [
+      1,
+      2,
+      3
+    ],
+    "unique_ids": true
+  },
+  "epochs": 300,
+  "expected_tasks": {
+    "student": 18,
+    "teacher": 1,
+    "total": 19
+  },
+  "failed_tasks": 0,
+  "reporting_policy": "report_both_batch_profiles_and_both_ibkd_lambdas_separately; do_not_select_from_test_results",
+  "rows": [
+    {
+      "attempt_elapsed_seconds": 1320.287579625845,
+      "batch_size": 128,
+      "checkpoint_sha256": "66de3ae6d49be7e882a49bd6de0e9e5a815609b295ecf0d5c290713779f02950",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 0,
+      "initial_student_state_sha256": null,
+      "kind": "teacher",
+      "method": "teacher",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 275,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 46.181535720825195,
+      "test_overall_top1": 46.22512946306895,
+      "test_top5": 79.83101662578359,
+      "training_seconds": 1316.5384642751887,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 53.513509035110474
+    },
+    {
+      "attempt_elapsed_seconds": 1403.7551094722003,
+      "batch_size": 64,
+      "checkpoint_sha256": "79aee8035131c285072fd0938c296e72bdcd6639a6f607c5aab21494f2bde16a",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 1,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "vanilla",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 235,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": null,
+      "test_macro_top1": 20.239000022411346,
+      "test_overall_top1": 20.19623875715454,
+      "test_top5": 50.99482147724176,
+      "training_seconds": 1399.8382625328377,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 31.351348757743835
+    },
+    {
+      "attempt_elapsed_seconds": 1388.723270304501,
+      "batch_size": 64,
+      "checkpoint_sha256": "9473f6af641237825e21be4605b08c396689bafc0cb627cb22c0542dff19eaed",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 2,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "vanilla",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 233,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": null,
+      "test_macro_top1": 20.55027484893799,
+      "test_overall_top1": 20.550558735350233,
+      "test_top5": 52.602889070591445,
+      "training_seconds": 1384.9884389853105,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 32.297295331954956
+    },
+    {
+      "attempt_elapsed_seconds": 1394.744991524145,
+      "batch_size": 64,
+      "checkpoint_sha256": "58e422a9fa5acc31f351785ec7c54eed8873303cee1206a84a2d5f4c34703a74",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 3,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "vanilla",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 270,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": null,
+      "test_macro_top1": 20.66834717988968,
+      "test_overall_top1": 20.659580267102754,
+      "test_top5": 51.730716816571274,
+      "training_seconds": 1391.4569266103208,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 29.86486256122589
+    },
+    {
+      "attempt_elapsed_seconds": 1425.372712311335,
+      "batch_size": 64,
+      "checkpoint_sha256": "e52169a6fb97fdd77b26b58390cc5cce90f6ff763669fdab446d167c673ddb62",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 4,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "kd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 257,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 29.52778935432434,
+      "test_overall_top1": 29.517579721995094,
+      "test_top5": 62.878168438266556,
+      "training_seconds": 1421.9705446744338,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 37.162160873413086
+    },
+    {
+      "attempt_elapsed_seconds": 1407.3875253936276,
+      "batch_size": 64,
+      "checkpoint_sha256": "410a80f3b92885e26171d89474040c9fa39866ffa4fa535777c723586ee83fe7",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 5,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "kd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 289,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 30.70996403694153,
+      "test_overall_top1": 30.689561188334697,
+      "test_top5": 65.41291905151267,
+      "training_seconds": 1403.3763950541615,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 36.75675690174103
+    },
+    {
+      "attempt_elapsed_seconds": 1432.838236020878,
+      "batch_size": 64,
+      "checkpoint_sha256": "c284b6110d689bb803137e4811e52a894a00b1f4d26056288e1fc8401b74c9ab",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 6,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "kd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 293,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 31.53681755065918,
+      "test_overall_top1": 31.534478059416735,
+      "test_top5": 65.44017443445081,
+      "training_seconds": 1428.9188766898587,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 37.97297477722168
+    },
+    {
+      "attempt_elapsed_seconds": 1415.7752008456737,
+      "batch_size": 64,
+      "checkpoint_sha256": "fb0fdc02d89ca282e23590bc2302428d40338f3dbb381b2542e6ae70eaf7dcbf",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 7,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "lg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 260,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 37.81784474849701,
+      "test_overall_top1": 37.83047151812483,
+      "test_top5": 72.79912782774598,
+      "training_seconds": 1411.8084004530683,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 45.40540874004364
+    },
+    {
+      "attempt_elapsed_seconds": 1433.3201853921637,
+      "batch_size": 64,
+      "checkpoint_sha256": "145722995041d50a1be737e3ea371fd4648192e2b41ecca5fc2dcd12bcc22331",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 8,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "lg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 231,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 39.06073868274689,
+      "test_overall_top1": 39.05696375034069,
+      "test_top5": 74.51621695284818,
+      "training_seconds": 1429.361026570201,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 48.10810685157776
+    },
+    {
+      "attempt_elapsed_seconds": 1399.2974971169606,
+      "batch_size": 64,
+      "checkpoint_sha256": "6a8b2353efc5239b4b9545d34573ac38ea1a3c175e329530274b2b074cca17ba",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 9,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "lg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 270,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 37.738314270973206,
+      "test_overall_top1": 37.748705369310436,
+      "test_top5": 73.2624693376942,
+      "training_seconds": 1395.2620453378186,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 46.08108401298523
+    },
+    {
+      "attempt_elapsed_seconds": 1388.6858822396025,
+      "batch_size": 64,
+      "checkpoint_sha256": "1b59b95b35f5fdcc4911e6968aa7637d8dd0adf94f5f7f7360a3d44cd009a27f",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 10,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "alg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 253,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 31.337401270866394,
+      "test_overall_top1": 31.316434995911692,
+      "test_top5": 66.47587898609976,
+      "training_seconds": 1384.7837862744927,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 40.27026891708374
+    },
+    {
+      "attempt_elapsed_seconds": 1392.2400161651894,
+      "batch_size": 64,
+      "checkpoint_sha256": "e6e2e0e2c8fe25670f43c775129f5f17bffee352cab00d54d74d9fa326e40c5e",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 11,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "alg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 264,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 33.90723764896393,
+      "test_overall_top1": 33.9329517579722,
+      "test_top5": 69.71926955573726,
+      "training_seconds": 1388.357568062842,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 45.270270109176636
+    },
+    {
+      "attempt_elapsed_seconds": 1397.5315744271502,
+      "batch_size": 64,
+      "checkpoint_sha256": "9e2972adca447f0ecb225322a2379cd8beb987dad63854b942dff53dc0b5f4da",
+      "failure": null,
+      "fusion_ratio_lambda": null,
+      "index": 12,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "alg",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 291,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 31.585246324539185,
+      "test_overall_top1": 31.588988825292997,
+      "test_top5": 67.5115835377487,
+      "training_seconds": 1393.5384039655328,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 44.45946216583252
+    },
+    {
+      "attempt_elapsed_seconds": 1450.3964062295854,
+      "batch_size": 64,
+      "checkpoint_sha256": "d18b59c4d9f21bab2a180185d02b7513363ec5821d856c441a49fb3eef823959",
+      "failure": null,
+      "fusion_ratio_lambda": 0.25,
+      "index": 13,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 289,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 29.093611240386963,
+      "test_overall_top1": 29.10874897792314,
+      "test_top5": 66.4213682202235,
+      "training_seconds": 1446.5289223194122,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 37.29729652404785
+    },
+    {
+      "attempt_elapsed_seconds": 1472.552915922366,
+      "batch_size": 64,
+      "checkpoint_sha256": "1182ea1fd05bdba34a058a36af2ada34bd782216d6818ef24b22491bb8834374",
+      "failure": null,
+      "fusion_ratio_lambda": 0.25,
+      "index": 14,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 280,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 29.612499475479126,
+      "test_overall_top1": 29.599345870809486,
+      "test_top5": 64.75878986099755,
+      "training_seconds": 1468.5654015960172,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 39.054057002067566
+    },
+    {
+      "attempt_elapsed_seconds": 1443.5860067922622,
+      "batch_size": 64,
+      "checkpoint_sha256": "adfff7bc29c115f61941766d685d98c352be45c44438bee1976c994261a6d8dd",
+      "failure": null,
+      "fusion_ratio_lambda": 0.25,
+      "index": 15,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 261,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 29.714632034301758,
+      "test_overall_top1": 29.708367402562008,
+      "test_top5": 64.73153447805942,
+      "training_seconds": 1440.2186135873199,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 39.459460973739624
+    },
+    {
+      "attempt_elapsed_seconds": 1469.0302357412875,
+      "batch_size": 64,
+      "checkpoint_sha256": "970e23d420595280170188d941b8a0191fbca910e7ba4959c1456b521f29f680",
+      "failure": null,
+      "fusion_ratio_lambda": 0.5,
+      "index": 16,
+      "initial_student_state_sha256": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 1,
+      "selected_epoch": 271,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 28.439682722091675,
+      "test_overall_top1": 28.427364404469884,
+      "test_top5": 63.832106841101115,
+      "training_seconds": 1465.6118135359138,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 36.4864856004715
+    },
+    {
+      "attempt_elapsed_seconds": 1463.6548381773755,
+      "batch_size": 64,
+      "checkpoint_sha256": "a3a5f39b590f29bbc19c3780371a15105b158bea356e195c2696fed170cf7521",
+      "failure": null,
+      "fusion_ratio_lambda": 0.5,
+      "index": 17,
+      "initial_student_state_sha256": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 2,
+      "selected_epoch": 292,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 28.307533264160156,
+      "test_overall_top1": 28.318342872717363,
+      "test_top5": 64.59525756336876,
+      "training_seconds": 1459.6272922363132,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 36.89189553260803
+    },
+    {
+      "attempt_elapsed_seconds": 1483.4488834375516,
+      "batch_size": 64,
+      "checkpoint_sha256": "f6faccbd069be9fceee122f64dc73d89c488137fbf9e0fa1614df2c71c037f40",
+      "failure": null,
+      "fusion_ratio_lambda": 0.5,
+      "index": 18,
+      "initial_student_state_sha256": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38",
+      "kind": "student",
+      "method": "ibkd",
+      "official_test_evaluations": 1,
+      "official_test_used_for_training_or_selection": false,
+      "seed": 3,
+      "selected_epoch": 291,
+      "status": "complete",
+      "strict_checkpoint_reload": true,
+      "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+      "test_macro_top1": 31.83578848838806,
+      "test_overall_top1": 31.83428727173617,
+      "test_top5": 67.94766966475879,
+      "training_seconds": 1479.5754237305373,
+      "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+      "validation_macro_top1": 40.94594419002533
+    }
+  ],
+  "scientific_result": true,
+  "status": "complete",
+  "suite_elapsed_seconds": 26982.786055103876,
+  "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa"
+}
