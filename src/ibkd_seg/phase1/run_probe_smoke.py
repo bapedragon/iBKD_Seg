@@ -1004,14 +1004,36 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     probe_seconds_total = sum(
         result["timing"]["probe_training_seconds"] for result in results
     )
+    official_counts = protocol["dataset"]["official_split_counts"]
+    full_feature_multiplier = (
+        3
+        * int(official_counts["total"])
+        / int(official_counts["trainval"])
+    )
     estimate = {
         "basis": "rough_linear_extrapolation_from_full_train_validation_smoke",
-        "batch64_full_feature_cache_seconds": feature_seconds_total * 3,
-        "batch64_full_probe_training_seconds": probe_seconds_total * 750,
+        "batch64_full_target_cache_seconds": (
+            target_seconds
+            * int(official_counts["total"])
+            / int(official_counts["trainval"])
+        ),
+        "batch64_full_feature_cache_seconds": (
+            feature_seconds_total * full_feature_multiplier
+        ),
+        "batch64_full_probe_candidate_training_seconds": probe_seconds_total * 750,
         "multiplier_explanation": {
-            "feature_cache": "3 encoder seeds / 1 smoke encoder seed",
+            "target_cache": "7,349 full samples / 3,680 smoke trainval samples",
+            "feature_cache": (
+                "3 encoder seeds / 1 smoke encoder seed x "
+                "7,349 full samples / 3,680 smoke trainval samples"
+            ),
             "probe_training": "3 encoder seeds x 5 probe seeds x (100/2) epochs",
         },
+        "excluded_from_extrapolation": [
+            "selected-probe official-test evaluation",
+            "qualitative panel export",
+            "queue time and storage variation",
+        ],
         "not_a_runtime_guarantee": True,
     }
     summary = {
