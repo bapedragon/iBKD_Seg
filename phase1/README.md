@@ -1,6 +1,6 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **batch 64 full classification 완료·감사 통과 — batch 128 및 probe 대기**
+상태: **batch 64 full classification 완료·감사 통과 — batch 64 probe smoke 준비 완료**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
@@ -103,3 +103,26 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 
 - 로컬: Pet 데이터 감사, 단위 테스트, smoke probe와 정성 확인
 - H200: 완료한 12-way timing과 batch 64 분류, 남은 batch 128 분류 및 이후 전체 probe 반복
+
+## Batch 64 frozen-probe smoke
+
+본 probe 전에 실행 경로, frozen-feature 계약, 메모리와 시간을 확인하는
+비과학적 smoke가 준비되어 있습니다. batch 64 분류 결과 중 encoder seed 1의
+6개 checkpoint를 사용하고, 공식 train/validation `2,940/740` 전체에 probe seed
+1과 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식 test는 생성하거나
+평가하지 않습니다.
+
+```bash
+bash phase1/scripts/run_probe_smoke_b64.sh
+```
+
+기본 입력은 이전 H200 분류 작업의
+`/app/output/phase1_pet_full_b64_v1`이며, 새 컨테이너에도 이 디렉터리가 유지되거나
+mount되어 있어야 합니다. 없으면 checkpoint를 새로 학습하거나 임의 파일로
+대체하지 않고 `[INPUT_MISSING]`으로 즉시 종료합니다. 필요하면
+`PHASE1_B64_CLASSIFICATION_ROOT`로 mount 경로만 지정할 수 있습니다.
+
+smoke의 validation IoU는 파이프라인 검사용이며 방법 선택이나 논문 결론에 사용할
+수 없습니다. 결과는 `/app/output/phase1_pet_probe_b64_smoke_v1`에 작은 summary,
+CSV와 smoke probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/scratch`에
+둡니다.
