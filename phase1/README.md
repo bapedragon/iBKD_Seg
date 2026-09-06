@@ -197,3 +197,30 @@ bash phase1/scripts/run_probe_full_b128.sh
 - 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b128_v1_input`
 - Pet 데이터와 임시 feature cache: `/app/scratch`
 - 회수할 결과: `/app/output/phase1_pet_probe_b128_full_v1`
+
+## ALG controller warm-up 20 사후 진단
+
+Batch 128의 canonical ALG가 세 seed 모두 epoch 2에서 guidance를 종료한 원인을
+확인하기 위해 별도의 사후 진단을 둡니다. LOCK된 Phase 1 결과를 수정하거나
+대체하지 않으며, ALG의 `controller_warmup_epochs`만 `0`에서 `20`으로 바꿉니다.
+optimizer LR warm-up 20 epoch, locality-guidance loss, `beta=2.5`, threshold
+`-0.02`, smoothing window `50`, ALG 식과 `>=` 종료 경계는 그대로입니다.
+
+여기서 controller warm-up은 guidance를 20 epoch 동안 끄는 뜻이 아닙니다.
+guidance는 epoch 1부터 적용하고, adaptive **종료 판정만** 기존 iBKD controller와
+같은 시점까지 유예합니다.
+
+먼저 다음 통합 smoke로 분류 checkpoint 생성부터 strict load·encoder freeze,
+세 probe LR 후보의 validation-only 실행까지 한 번에 검사합니다.
+
+```bash
+bash phase1/scripts/run_alg_warmup20_smoke_b128.sh
+```
+
+Smoke는 timing teacher와 ALG encoder seed 1을 각각 2 epoch만 학습하고, probe seed
+1에서 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식 test는 열지 않으며,
+분류 정확도와 validation IoU는 논문 결과나 설정 선택에 사용할 수 없습니다. 통과한
+경우에만 별도 full 진단에서 ALG seed 3개 분류와 각 encoder의 frozen probe를
+실행합니다. 기계 판독 계약은
+[`configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json`](configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json)에
+고정했습니다.

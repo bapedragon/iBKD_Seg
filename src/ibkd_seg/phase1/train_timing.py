@@ -143,6 +143,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument(
+        "--alg-controller-warmup-epochs",
+        type=int,
+        default=0,
+        help=(
+            "ALG controller-only stop-decision delay. Canonical ALG uses 0; "
+            "20 is reserved for the explicitly labeled post-hoc diagnostic."
+        ),
+    )
+    parser.add_argument(
+        "--save-student-checkpoint",
+        action="store_true",
+        help="Persist the non-scientific timing student for frozen-probe smoke.",
+    )
     return parser.parse_args()
 
 
@@ -154,6 +168,10 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.seed != 1:
         raise ValueError("Phase 1 timing is fixed to seed 1")
     if args.kind == "teacher":
+        if args.alg_controller_warmup_epochs != 0:
+            raise ValueError("Teacher timing does not accept ALG controller warm-up")
+        if args.save_student_checkpoint:
+            raise ValueError("Teacher timing cannot save a student checkpoint")
         if args.method is not None or args.fusion_ratio is not None:
             raise ValueError("Teacher timing does not accept method/lambda")
         if args.batch_size != 128:
@@ -168,6 +186,19 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError("Only iBKD accepts --fusion-ratio")
         if args.method != "vanilla" and args.teacher_checkpoint is None:
             raise ValueError("Guided student timing requires --teacher-checkpoint")
+        if args.method == "alg":
+            if args.alg_controller_warmup_epochs not in {0, 20}:
+                raise ValueError(
+                    "ALG controller warm-up must be canonical 0 or diagnostic 20"
+                )
+        elif args.alg_controller_warmup_epochs != 0:
+            raise ValueError("Only ALG accepts --alg-controller-warmup-epochs")
+        if args.save_student_checkpoint and not (
+            args.method == "alg" and args.alg_controller_warmup_epochs == 20
+        ):
+            raise ValueError(
+                "Timing student checkpoint export is reserved for ALG warm-up-20 smoke"
+            )
 
 
 def create_scheduler(optimizer: torch.optim.Optimizer, *, teacher: bool) -> Any:
@@ -407,7 +438,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         )
     if args.method in {"lg", "alg"}:
         guidance = LocalityGuidance().to(device)
-        controller = GuidanceController(kind=args.method, warmup_epochs=0)
+        controller = GuidanceController(
+            kind=args.method,
+            warmup_epochs=(
+                args.alg_controller_warmup_epochs if args.method == "alg" else 0
+            ),
+        )
     elif args.method == "ibkd":
         guidance = IBKD().to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
@@ -430,7 +466,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     )
     log(
         f"[STUDENT_CONTRACT] method={args.method} batch={args.batch_size} "
-        f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True"
+        f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True "
+        f"alg_controller_warmup={args.alg_controller_warmup_epochs}"
     )
 
     for epoch in range(1, ACTUAL_EPOCHS + 1):
@@ -535,6 +572,47 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     average = sum(row["seconds_including_validation"] for row in epoch_rows) / len(
         epoch_rows
     )
+    checkpoint_path: Path | None = None
+    checkpoint_sha256: str | None = None
+    student_state_hash: str | None = None
+    if args.save_student_checkpoint:
+        checkpoint_path = run_dir / "timing_student_latest.pt"
+        student_state = {
+            name: tensor.detach().cpu().clone()
+            for name, tensor in student.state_dict().items()
+        }
+        student_state_hash = state_dict_sha256(student)
+        atomic_torch_save(
+            {
+                "student": student_state,
+                "metadata": {
+                    "purpose": "phase1_alg_warmup20_combined_smoke_student",
+                    "scientific_result": False,
+                    "official_test_accessed": False,
+                    "dataset": "Oxford-IIIT Pet",
+                    "architecture": "deit_tiny_patch16_224",
+                    "method": args.method,
+                    "batch_size": args.batch_size,
+                    "seed": args.seed,
+                    "actual_epochs": ACTUAL_EPOCHS,
+                    "planned_epochs": PLANNED_EPOCHS,
+                    "controller_warmup_epochs": args.alg_controller_warmup_epochs,
+                    "validation_image_ids_sha256": manifest[
+                        "validation_image_ids_sha256"
+                    ],
+                    "student_state_sha256": student_state_hash,
+                    "official_test_evaluations_at_checkpoint_write": 0,
+                },
+            },
+            checkpoint_path,
+        )
+        checkpoint_sha256 = file_sha256(checkpoint_path)
+        log(
+            "[TIMING_STUDENT_CHECKPOINT] "
+            f"path={checkpoint_path.resolve()} sha256={checkpoint_sha256} "
+            "scientific_result=false official_test_accessed=false"
+        )
+
     return {
         "status": "complete",
         "purpose": "runtime_and_memory_feasibility_only",
@@ -544,6 +622,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "kind": "student",
         "method": args.method,
         "batch_size": args.batch_size,
+        "seed": args.seed,
         "fusion_ratio_lambda": args.fusion_ratio,
         "actual_epochs": ACTUAL_EPOCHS,
         "planned_epochs": PLANNED_EPOCHS,
@@ -553,6 +632,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_checkpoint_sha256": teacher_hash,
         "teacher_metadata": teacher_metadata,
         "controller": None if controller is None else controller.state_dict(),
+        "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
+        "checkpoint": (
+            None if checkpoint_path is None else str(checkpoint_path.resolve())
+        ),
+        "checkpoint_sha256": checkpoint_sha256,
+        "student_state_sha256": student_state_hash,
         "optimizer_contract": "shared_single_group_adamw_all_trainable_parameters_wd_0.05",
         "split_manifest": manifest,
         "epochs": epoch_rows,

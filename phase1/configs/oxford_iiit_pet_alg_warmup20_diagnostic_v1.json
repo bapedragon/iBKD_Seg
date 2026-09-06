@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagnostic_id": "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1",
+  "status": "posthoc_diagnostic_does_not_replace_locked_phase1_v1",
+  "source_protocol": "oxford_iiit_pet_phase1_frozen_spatial_probe_v1",
+  "source_protocol_config": "phase1/configs/oxford_iiit_pet_phase1_v1.json",
+  "source_protocol_config_sha256": "38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143",
+  "question": "did_the_absence_of_an_alg_controller_warmup_cause_the_batch128_epoch2_shutdown",
+  "interpretation": {
+    "canonical_alg_result_is_retained": true,
+    "replacement_of_locked_phase1_result_forbidden": true,
+    "posthoc_diagnostic_label_required": true,
+    "change_exactly_one_alg_controller_field": "controller_warmup_epochs_0_to_20"
+  },
+  "classification": {
+    "method": "alg",
+    "batch_size": 128,
+    "encoder_seeds_full": [1, 2, 3],
+    "epochs_full": 300,
+    "optimizer_lr_warmup_epochs": 20,
+    "controller": {
+      "kind": "alg",
+      "beta_on": 2.5,
+      "threshold": -0.02,
+      "loss_smoothing_window": 50,
+      "derivative_smoothing_window": 50,
+      "warmup_epochs": 20,
+      "stop_boundary": "smoothed_derivative_greater_than_or_equal_to_threshold",
+      "derivative_mode": "alg_paper_equations",
+      "stop_is_permanent": true
+    },
+    "unchanged_from_canonical_alg": [
+      "dataset_and_split",
+      "teacher",
+      "student_architecture",
+      "seed_specific_student_initial_state",
+      "training_augmentation",
+      "optimizer_and_lr_schedule",
+      "locality_guidance_objective",
+      "beta_threshold_and_smoothing_windows",
+      "validation_checkpoint_selection",
+      "official_test_once_policy"
+    ]
+  },
+  "frozen_probe_full": {
+    "encoder_seeds": [1, 2, 3],
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs_per_candidate": 100,
+    "selection_split": "validation",
+    "official_test_policy": "once_after_all_15_probe_selections"
+  },
+  "smoke": {
+    "purpose": "classification_to_frozen_probe_plumbing_only",
+    "scientific_result": false,
+    "selection_from_smoke_metrics_forbidden": true,
+    "official_test_accessed": false,
+    "classification": {
+      "encoder_seed": 1,
+      "actual_epochs": 2,
+      "planned_epochs": 300,
+      "uses_timing_teacher": true,
+      "timing_teacher_is_forbidden_for_full_run": true
+    },
+    "probe": {
+      "probe_seeds": [1],
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs_per_candidate": 2,
+      "selection_split": "validation",
+      "test_samples": 0
+    },
+    "expected_tasks": {
+      "timing_teacher": 1,
+      "classification_students": 1,
+      "probe_lr_candidates": 3,
+      "selected_probes": 1
+    }
+  }
+}
