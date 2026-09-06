@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the locked batch-64 Phase 1 frozen spatial probe experiment."""
+"""Run a locked Phase 1 frozen spatial probe experiment."""
 
 from __future__ import annotations
 
@@ -569,6 +569,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     protocol = _load_json(args.protocol_config)
     _validate_protocol(protocol, args.protocol_config)
     protocol_sha256 = file_sha256(args.protocol_config)
+    classification_batch_size = int(args.classification_batch_size)
     device = _device(args.device)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -582,19 +583,26 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         official_test_accessed=False,
     )
     log(
-        "[PROBE_FULL_MODE] scientific_result=true batch64=true "
+        f"[PROBE_FULL_MODE] scientific_result=true "
+        f"classification_batch={classification_batch_size} "
         "selection=validation_grid_miou official_test=sealed_until_all_90_selections"
     )
 
     entries, classification_suite, classification_split_hash = (
         _validate_classification_input(
             args.classification_root,
+            expected_batch_size=classification_batch_size,
             encoder_seeds=EXPECTED_ENCODER_SEEDS,
         )
     )
     if len(entries) != 18:
-        raise RuntimeError("expected all 18 batch-64 encoder checkpoints")
-    log("[PROBE_FULL_INPUT] classification_suite=pass checkpoints=18 strict_load=pending")
+        raise RuntimeError(
+            f"expected all 18 batch-{classification_batch_size} encoder checkpoints"
+        )
+    log(
+        f"[PROBE_FULL_INPUT] classification_batch={classification_batch_size} "
+        "classification_suite=pass checkpoints=18 strict_load=pending"
+    )
 
     records, split_manifest = load_train_validation_records(args.data_dir, download=True)
     if split_manifest["validation_image_ids_sha256"] != classification_split_hash:
@@ -807,7 +815,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                     "purpose": "phase1_scientific_full_frozen_probe",
                     "scientific_result": True,
                     "protocol_sha256": protocol_sha256,
-                    "classification_batch_size": 64,
+                    "classification_batch_size": classification_batch_size,
                     "variant": variant,
                     "method": entry["method"],
                     "fusion_ratio_lambda": entry["fusion_ratio_lambda"],
@@ -833,6 +841,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 == "phase1_scientific_full_frozen_probe",
                 "protocol": artifact_payload.get("protocol_sha256")
                 == protocol_sha256,
+                "classification_batch_size": artifact_payload.get(
+                    "classification_batch_size"
+                )
+                == classification_batch_size,
                 "variant": artifact_payload.get("variant") == variant,
                 "encoder_seed": artifact_payload.get("encoder_seed")
                 == encoder_seed,
@@ -961,6 +973,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "completed_at_utc": _utc_now(),
         "scientific_result": True,
         "protocol_sha256": protocol_sha256,
+        "classification_batch_size": classification_batch_size,
         "selection_split": "validation",
         "completed_selections": len(results),
         "official_test_accessed": False,
@@ -1194,10 +1207,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "status": "complete",
         "completed_at_utc": _utc_now(),
         "scientific_result": True,
-        "experiment": "Phase 1 Oxford-IIIT Pet batch-64 frozen spatial probe",
+        "experiment": (
+            "Phase 1 Oxford-IIIT Pet "
+            f"batch-{classification_batch_size} frozen spatial probe"
+        ),
         "protocol_id": protocol["protocol_id"],
         "protocol_sha256": protocol_sha256,
-        "classification_batch_size": 64,
+        "classification_batch_size": classification_batch_size,
         "runtime": _runtime(device),
         "matrix": {
             "variants": list(EXPECTED_VARIANTS),
@@ -1282,7 +1298,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         official_test_accessed=True,
     )
     log(
-        "[PROBE_FULL_DONE] status=pass selections=90/90 "
+        f"[PROBE_FULL_DONE] status=pass "
+        f"classification_batch={classification_batch_size} selections=90/90 "
         f"test_once=90/90 seconds={elapsed_seconds:.2f} "
         f"output={args.output_dir}"
     )
@@ -1300,6 +1317,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cache-dir", type=Path, required=True)
+    parser.add_argument(
+        "--classification-batch-size",
+        type=int,
+        choices=(64, 128),
+        default=64,
+        help="classification checkpoint profile to validate and probe",
+    )
     parser.add_argument("--protocol-config", type=Path, default=DEFAULT_PROTOCOL)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--feature-batch-size", type=int, default=32)

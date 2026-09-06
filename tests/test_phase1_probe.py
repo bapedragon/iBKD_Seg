@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 import torch
@@ -29,6 +30,7 @@ from ibkd_seg.phase1.run_probe_full import (
     EXPECTED_VARIANTS,
     METRIC_PATHS,
     _aggregate,
+    parse_args as parse_full_args,
     _select_candidate,
     _validate_protocol,
 )
@@ -205,6 +207,25 @@ class Phase1ProbeFullReportingTest(unittest.TestCase):
     def test_full_runner_accepts_the_committed_locked_protocol(self) -> None:
         protocol = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
         _validate_protocol(protocol, PROTOCOL_PATH)
+
+    def test_full_runner_cli_accepts_the_batch128_checkpoint_profile(self) -> None:
+        argv = [
+            "run_probe_full",
+            "--full-probe",
+            "--classification-batch-size",
+            "128",
+            "--classification-root",
+            "classification",
+            "--data-dir",
+            "data",
+            "--output-dir",
+            "output",
+            "--cache-dir",
+            "cache",
+        ]
+        with mock.patch("sys.argv", argv):
+            args = parse_full_args()
+        self.assertEqual(args.classification_batch_size, 128)
 
     def test_lr_tie_selects_lower_learning_rate(self) -> None:
         state = {"weight": torch.tensor([1.0])}

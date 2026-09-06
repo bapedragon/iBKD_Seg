@@ -176,3 +176,24 @@ feature cache와 데이터셋은 scratch에서 사용 후 결과 폴더에 복�
 [GitHub Release manifest](reports/frozen_probe/batch64/artifact_release.json)에
 고정했습니다. 다음 단계는 protocol을 사후 변경하는 것이 아니라 batch 128
 checkpoint에 같은 probe 계약을 적용하는 것입니다.
+
+## Batch 128 frozen-probe 본 실험
+
+Batch 128 smoke가 모든 계약을 통과했으므로 다음 명령으로 같은 LOCK된 본 실험을
+실행합니다.
+
+```bash
+bash phase1/scripts/run_probe_full_b128.sh
+```
+
+입력 checkpoint가 없는 새 컨테이너에서는 batch 128 classification GitHub Release를
+자동으로 내려받아 byte size와 SHA-256을 검사합니다. probe 설정은 batch 64 본
+실험과 같으며, 18개 encoder × probe seed 5개에서 LR 3개를 각각 100 epoch
+학습합니다. 90개 probe의 validation 선택이 모두 끝난 기록을 먼저 저장한 뒤에만
+공식 test를 probe당 정확히 한 번 평가합니다.
+
+기본 경로는 다음과 같습니다.
+
+- 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b128_v1_input`
+- Pet 데이터와 임시 feature cache: `/app/scratch`
+- 회수할 결과: `/app/output/phase1_pet_probe_b128_full_v1`
