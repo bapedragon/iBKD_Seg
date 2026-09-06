@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the batch-64 Phase 1 frozen-probe smoke without opening official test."""
+"""Run a Phase 1 frozen-probe smoke without opening official test."""
 
 from __future__ import annotations
 
@@ -170,6 +170,8 @@ def _validate_smoke_config(
         raise RuntimeError("probe smoke must use only the first locked probe seed")
     if tuple(smoke["classification_input"]["variants"]) != EXPECTED_VARIANTS:
         raise RuntimeError("probe smoke variant order differs from the locked matrix")
+    if smoke["classification_input"].get("batch_size") not in (64, 128):
+        raise RuntimeError("probe smoke classification batch must be 64 or 128")
     if smoke["data"] != {
         "source": "official_trainval_only",
         "train_samples": 2940,
@@ -196,19 +198,23 @@ def _smoke_policy_gates(smoke: dict[str, Any]) -> dict[str, bool]:
 def _validate_classification_input(
     classification_root: Path,
     *,
+    expected_batch_size: int = 64,
     encoder_seeds: Sequence[int] = (1,),
 ) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
+    if expected_batch_size not in (64, 128):
+        raise ValueError("expected_batch_size must be 64 or 128")
     summary_path = classification_root / "classification_summary.json"
     if not summary_path.is_file():
         raise RuntimeError(
-            "batch-64 classification summary is missing at " f"{summary_path}"
+            f"batch-{expected_batch_size} classification summary is missing at "
+            f"{summary_path}"
         )
     suite = _load_json(summary_path)
     suite_contracts = suite.get("contracts", {})
     required = {
         "status": suite.get("status") == "complete",
         "scientific_result": suite.get("scientific_result") is True,
-        "batch_size": suite.get("batch_size") == 64,
+        "batch_size": suite.get("batch_size") == expected_batch_size,
         "epochs": suite.get("epochs") == 300,
         "completed_tasks": suite.get("completed_tasks") == 19,
         "failed_tasks": suite.get("failed_tasks") == 0,
@@ -226,14 +232,15 @@ def _validate_classification_input(
     if not all(required.values()):
         failures = [name for name, passed in required.items() if not passed]
         raise RuntimeError(
-            "batch-64 classification suite failed prerequisites: "
+            f"batch-{expected_batch_size} classification suite failed prerequisites: "
             + ", ".join(failures)
         )
 
     summary_paths = sorted((classification_root / "students").glob("*/summary.json"))
     if len(summary_paths) != 18:
         raise RuntimeError(
-            f"expected 18 batch-64 student summaries, found {len(summary_paths)}"
+            f"expected 18 batch-{expected_batch_size} student summaries, "
+            f"found {len(summary_paths)}"
         )
     all_entries: list[dict[str, Any]] = []
     observed_matrix: set[tuple[str, int]] = set()
@@ -245,7 +252,7 @@ def _validate_classification_input(
         checks = {
             "status": row.get("status") == "complete",
             "scientific_result": row.get("scientific_result") is True,
-            "batch_size": row.get("batch_size") == 64,
+            "batch_size": row.get("batch_size") == expected_batch_size,
             "epochs": row.get("epochs") == 300,
             "official_test_evaluations": row.get("official_test_evaluations") == 1,
             "test_not_selected": row.get(
@@ -329,7 +336,7 @@ def _load_encoder(
         "method": metadata.get("method") == entry["method"],
         "lambda": metadata.get("fusion_ratio_lambda")
         == entry["fusion_ratio_lambda"],
-        "batch": metadata.get("batch_size") == 64,
+        "batch": metadata.get("batch_size") == row["batch_size"],
         "epochs": metadata.get("epochs") == 300,
         "seed": metadata.get("seed") == entry["encoder_seed"],
         "validation_split": metadata.get("validation_image_ids_sha256")
@@ -707,6 +714,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     _validate_smoke_config(protocol, smoke, args.protocol_config)
     protocol_sha256 = file_sha256(args.protocol_config)
     smoke_config_sha256 = file_sha256(args.smoke_config)
+    classification_batch_size = int(smoke["classification_input"]["batch_size"])
     device = _device(args.device)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -722,11 +730,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "smoke_metrics_for_selection=forbidden"
     )
     entries, classification_suite, classification_split_hash = (
-        _validate_classification_input(args.classification_root)
+        _validate_classification_input(
+            args.classification_root,
+            expected_batch_size=classification_batch_size,
+        )
     )
     log(
-        "[PROBE_SMOKE_INPUT] batch64_suite=pass student_runs=18 "
-        "selected_encoder_seed=1 checkpoints=6"
+        f"[PROBE_SMOKE_INPUT] batch{classification_batch_size}_suite=pass "
+        "student_runs=18 selected_encoder_seed=1 checkpoints=6"
     )
 
     records, split_manifest = load_train_validation_records(args.data_dir, download=True)
@@ -1039,17 +1050,20 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         * int(official_counts["total"])
         / int(official_counts["trainval"])
     )
+    batch_prefix = f"batch{classification_batch_size}_full"
     estimate = {
         "basis": "rough_linear_extrapolation_from_full_train_validation_smoke",
-        "batch64_full_target_cache_seconds": (
+        f"{batch_prefix}_target_cache_seconds": (
             target_seconds
             * int(official_counts["total"])
             / int(official_counts["trainval"])
         ),
-        "batch64_full_feature_cache_seconds": (
+        f"{batch_prefix}_feature_cache_seconds": (
             feature_seconds_total * full_feature_multiplier
         ),
-        "batch64_full_probe_candidate_training_seconds": probe_seconds_total * 750,
+        f"{batch_prefix}_probe_candidate_training_seconds": (
+            probe_seconds_total * 750
+        ),
         "multiplier_explanation": {
             "target_cache": "7,349 full samples / 3,680 smoke trainval samples",
             "feature_cache": (
@@ -1086,7 +1100,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 args.classification_root / "classification_summary.json"
             ),
             "suite_status": classification_suite["status"],
-            "batch_size": 64,
+            "batch_size": classification_batch_size,
             "student_suite_runs": 18,
             "used_encoder_seed": 1,
             "used_checkpoints": 6,
@@ -1115,7 +1129,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "feature_cache_seconds_total": feature_seconds_total,
             "probe_training_seconds_total": probe_seconds_total,
             "suite_seconds": total_seconds,
-            "rough_full_batch64_extrapolation": estimate,
+            f"rough_full_batch{classification_batch_size}_extrapolation": estimate,
         },
         "runtime": _runtime(device),
     }

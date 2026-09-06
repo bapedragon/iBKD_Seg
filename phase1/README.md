@@ -112,34 +112,37 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 - 로컬: Pet 데이터 감사, 단위 테스트, 결과 curation과 정성 확인
 - H200: 완료한 timing·두 분류 profile·batch 64 probe, 남은 batch 128 probe
 
-## Batch 64 frozen-probe smoke
+## Batch 64/128 frozen-probe smoke
 
 본 probe 전에 실행 경로, frozen-feature 계약, 메모리와 시간을 확인하는
-비과학적 smoke가 준비되어 있습니다. batch 64 분류 결과 중 encoder seed 1의
-6개 checkpoint를 사용하고, 공식 train/validation `2,940/740` 전체에 probe seed
-1과 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식 test는 생성하거나
-평가하지 않습니다.
+비과학적 smoke가 두 batch profile에 준비되어 있습니다. 해당 batch 분류 결과 중
+encoder seed 1의 6개 checkpoint를 사용하고, 공식 train/validation `2,940/740`
+전체에 probe seed 1과 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식
+test는 생성하거나 평가하지 않습니다.
 
 ```bash
 bash phase1/scripts/run_probe_smoke_b64.sh
+bash phase1/scripts/run_probe_smoke_b128.sh
 ```
 
-기본 입력은 `/app/output/phase1_pet_full_b64_v1`입니다. 이전 H200 출력이 그
-경로에 유지되어 있으면 그대로 사용하고, 새 컨테이너라서 입력이 없으면
-[batch 64 checkpoint Release manifest](reports/classification/batch64/checkpoint_release.json)에
-고정된 GitHub Release asset을 자동으로 내려받습니다. 전체 student 18개와 teacher
-1개 checkpoint가 들어 있으며 byte size와 SHA-256을 통과해야만 압축을 풉니다.
-따라서 이전 컨테이너 mount는 필수가 아닙니다.
+batch 64 기본 입력은 `/app/output/phase1_pet_full_b64_v1`, batch 128 기본 입력은
+`/app/scratch/phase1_pet_full_b128_v1_input`입니다. 이전 H200 출력이 해당 경로에
+유지되어 있으면 그대로 사용하고, 새 컨테이너라서 입력이 없으면
+[batch 64](reports/classification/batch64/checkpoint_release.json) 또는
+[batch 128](reports/classification/batch128/checkpoint_release.json) checkpoint Release
+manifest에 고정된 GitHub Release asset을 자동으로 내려받습니다. 전체 student
+18개와 teacher 1개 checkpoint가 들어 있으며 byte size와 SHA-256을 통과해야만
+압축을 풉니다. 따라서 이전 컨테이너 mount는 필수가 아닙니다.
 
 checkpoint binary는 저장소의 모든 clone을 영구적으로 무겁게 만들지 않도록 Git
 commit이 아니라 GitHub Release asset으로 보존합니다. manifest와 다운로드·검증
-코드는 Git 이력에 포함합니다. 필요하면 `PHASE1_B64_CLASSIFICATION_ROOT`로 입력
-설치 경로만 바꿀 수 있습니다.
+코드는 Git 이력에 포함합니다. 필요하면 `PHASE1_B64_CLASSIFICATION_ROOT` 또는
+`PHASE1_B128_CLASSIFICATION_ROOT`로 입력 설치 경로만 바꿀 수 있습니다.
 
 smoke의 validation IoU는 파이프라인 검사용이며 방법 선택이나 논문 결론에 사용할
-수 없습니다. 결과는 `/app/output/phase1_pet_probe_b64_smoke_v1`에 작은 summary,
-CSV와 smoke probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/scratch`에
-둡니다.
+수 없습니다. 결과는 batch별
+`/app/output/phase1_pet_probe_b{64,128}_smoke_v1`에 작은 summary, CSV와 smoke
+probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/scratch`에 둡니다.
 
 ## Batch 64 frozen-probe 본 실험
 

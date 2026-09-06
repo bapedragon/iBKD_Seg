@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "smoke_id": "oxford_iiit_pet_phase1_probe_b128_smoke_v1",
+  "source_protocol": "oxford_iiit_pet_phase1_frozen_spatial_probe_v1",
+  "source_protocol_config_sha256": "38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143",
+  "purpose": "pipeline_freeze_memory_runtime_and_selection_plumbing_only",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "official_test_accessed": false,
+  "classification_input": {
+    "batch_size": 128,
+    "encoder_seed": 1,
+    "variants": [
+      "vanilla",
+      "kd",
+      "lg",
+      "alg",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "expected_student_suite_runs": 18,
+    "required_suite_status": "complete"
+  },
+  "data": {
+    "source": "official_trainval_only",
+    "train_samples": 2940,
+    "validation_samples": 740,
+    "test_samples": 0,
+    "random_augmentation": false
+  },
+  "probe": {
+    "probe_seeds": [1],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 2,
+    "batch_size": 64,
+    "selection_split": "validation",
+    "selection_metric": "grid_14x14_two_class_mean_iou",
+    "selection_is_smoke_plumbing_only": true
+  },
+  "task_count": {
+    "encoders": 6,
+    "lr_candidates": 18,
+    "candidate_epochs": 36
+  },
+  "outputs": [
+    "probe_smoke_summary.json",
+    "probe_smoke_summary.csv",
+    "sequence_status.json",
+    "probes/*.pt"
+  ]
+}
