@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "experiment_id": "oxford_iiit_pet_alg_controller_warmup20_posthoc_full_v1",
+  "status": "locked_after_smoke_pass",
+  "posthoc_diagnostic": true,
+  "scientific_result": true,
+  "confirmatory_main_result": false,
+  "canonical_phase1_result_replaced": false,
+  "source_diagnostic_id": "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1",
+  "source_diagnostic_config": "phase1/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json",
+  "source_diagnostic_config_sha256": "03c2f8bc0eed88f3dec88bbe959abcc1838ec3463f74494645fd75bdf067b88f",
+  "source_protocol": "oxford_iiit_pet_phase1_frozen_spatial_probe_v1",
+  "source_protocol_config": "phase1/configs/oxford_iiit_pet_phase1_v1.json",
+  "source_protocol_config_sha256": "38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143",
+  "changed_field": {
+    "name": "alg_controller_warmup_epochs",
+    "canonical_value": 0,
+    "diagnostic_value": 20
+  },
+  "reference_classification": {
+    "batch_size": 128,
+    "release_manifest": "phase1/reports/classification/batch128/checkpoint_release.json",
+    "release_manifest_sha256": "19630b1fb38982757ab01f03b44317fcb669958a9e29114f5fe96a954ca748a6",
+    "teacher_checkpoint_relative_path": "teacher/pet_teacher_resnet56_32_b128_full_300ep_seed1/teacher_best_validation.pt",
+    "teacher_checkpoint_sha256": "66de3ae6d49be7e882a49bd6de0e9e5a815609b295ecf0d5c290713779f02950",
+    "teacher_model_state_sha256": "dc4818a64274124bfdc1e77c31ecbb3b9e2fb2d5bae382e159827e07617e1eaa",
+    "validation_image_ids_sha256": "08adc64ce5df69a3d2135fce49d1988d882e01947f158cb1c0dff30da1fe6e12",
+    "alg_initial_student_state_sha256_by_seed": {
+      "1": "9934a9687a4182f9150acb4946c2c2f3b97b0447e3df409edff933a6a3702859",
+      "2": "993d9dabff8b881e568bc47fb065ae3bda0589fbb25e7268f30f2825098a17c5",
+      "3": "4be2a910bc6de5ea99f2b51f8a9347a02b08e0958958dd0832b992eef71aaa38"
+    }
+  },
+  "classification": {
+    "method": "alg",
+    "batch_size": 128,
+    "encoder_seeds": [1, 2, 3],
+    "epochs": 300,
+    "optimizer_lr_warmup_epochs": 20,
+    "controller": {
+      "kind": "alg",
+      "beta_on": 2.5,
+      "threshold": -0.02,
+      "smoothing_window": 50,
+      "warmup_epochs": 20,
+      "stop_comparison": "greater_or_equal"
+    },
+    "selection": {
+      "split": "validation",
+      "metric": "macro_top1",
+      "tie_break": "earlier_epoch"
+    },
+    "official_test_evaluations": 3
+  },
+  "frozen_probe": {
+    "encoder_seeds": [1, 2, 3],
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs_per_candidate": 100,
+    "probe_parameter_count": 386,
+    "selection": {
+      "split": "validation",
+      "metric": "grid_14x14_two_class_mean_iou",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"]
+    },
+    "lr_candidate_count": 45,
+    "selected_probe_count": 15,
+    "official_test_policy": "once_after_all_15_probe_selections",
+    "official_test_evaluations": 15,
+    "qualitative": "reuse_locked_8_test_ids_encoder_seed1_probe_seed1"
+  },
+  "expected_output": {
+    "classification_students": 3,
+    "probe_lr_candidates": 45,
+    "selected_probes": 15,
+    "classification_test_evaluations": 3,
+    "probe_test_evaluations": 15
+  }
+}

@@ -48,6 +48,9 @@ from .train_timing import (
 
 
 METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
+ALG_WARMUP20_DIAGNOSTIC_ID = (
+    "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1"
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -64,6 +67,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument(
+        "--alg-controller-warmup-epochs",
+        type=int,
+        default=0,
+        help="Canonical ALG uses 0; the labeled post-hoc diagnostic uses 20.",
+    )
+    parser.add_argument(
+        "--posthoc-diagnostic-id",
+        type=str,
+        help="Required diagnostic identity when ALG controller warm-up is 20.",
+    )
     return parser.parse_args()
 
 
@@ -73,6 +87,10 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.eval_batch_size <= 0 or args.num_workers < 0:
         raise ValueError("Invalid evaluation batch size or worker count")
     if args.kind == "teacher":
+        if args.alg_controller_warmup_epochs != 0:
+            raise ValueError("Teacher does not accept ALG controller warm-up")
+        if args.posthoc_diagnostic_id is not None:
+            raise ValueError("Teacher does not accept a post-hoc diagnostic id")
         if args.seed != 1 or args.batch_size != 128:
             raise ValueError("Teacher is fixed to seed 1 and batch 128")
         if args.method is not None or args.fusion_ratio is not None:
@@ -89,6 +107,24 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("Only iBKD accepts --fusion-ratio")
     if args.method != "vanilla" and args.teacher_checkpoint is None:
         raise ValueError("Guided student run requires --teacher-checkpoint")
+    if args.method == "alg":
+        if args.alg_controller_warmup_epochs not in {0, 20}:
+            raise ValueError(
+                "ALG controller warm-up must be canonical 0 or diagnostic 20"
+            )
+        if args.alg_controller_warmup_epochs == 20:
+            if args.batch_size != 128:
+                raise ValueError("ALG warm-up-20 diagnostic is fixed to batch 128")
+            if args.posthoc_diagnostic_id != ALG_WARMUP20_DIAGNOSTIC_ID:
+                raise ValueError(
+                    "ALG warm-up-20 requires the fixed post-hoc diagnostic id"
+                )
+        elif args.posthoc_diagnostic_id is not None:
+            raise ValueError("Canonical ALG cannot carry a post-hoc diagnostic id")
+    elif args.alg_controller_warmup_epochs != 0:
+        raise ValueError("Only ALG accepts --alg-controller-warmup-epochs")
+    elif args.posthoc_diagnostic_id is not None:
+        raise ValueError("Only diagnostic ALG accepts --posthoc-diagnostic-id")
 
 
 def clone_state_dict(module: nn.Module) -> dict[str, torch.Tensor]:
@@ -114,6 +150,8 @@ def write_epoch_status(
             "batch_size": args.batch_size,
             "fusion_ratio_lambda": args.fusion_ratio,
             "seed": args.seed,
+            "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
+            "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
             "completed_epochs": len(history),
             "planned_epochs": PLANNED_EPOCHS,
             "best_validation_epoch": best_epoch,
@@ -351,7 +389,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         )
     if args.method in {"lg", "alg"}:
         guidance = LocalityGuidance().to(device)
-        controller = GuidanceController(kind=args.method, warmup_epochs=0)
+        controller = GuidanceController(
+            kind=args.method,
+            warmup_epochs=(
+                args.alg_controller_warmup_epochs if args.method == "alg" else 0
+            ),
+        )
     elif args.method == "ibkd":
         guidance = IBKD().to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
@@ -381,7 +424,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     start_all = time.perf_counter()
     log(
         f"[STUDENT_START] method={args.method} batch={args.batch_size} "
-        f"lambda={args.fusion_ratio} seed={args.seed} initial_sha256={initial_hash}"
+        f"lambda={args.fusion_ratio} seed={args.seed} initial_sha256={initial_hash} "
+        f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
+        f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
     )
 
     for epoch in range(1, PLANNED_EPOCHS + 1):
@@ -514,8 +559,18 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         raise RuntimeError("Student training produced no selected checkpoint")
     student.load_state_dict(best_student_state, strict=True)
     selected_student_hash = state_dict_sha256(student)
+    is_alg_warmup20_diagnostic = (
+        args.posthoc_diagnostic_id == ALG_WARMUP20_DIAGNOSTIC_ID
+    )
     metadata = {
-        "purpose": "phase1_scientific_full_student",
+        "purpose": (
+            "phase1_posthoc_alg_warmup20_full_student"
+            if is_alg_warmup20_diagnostic
+            else "phase1_scientific_full_student"
+        ),
+        "posthoc_diagnostic": is_alg_warmup20_diagnostic,
+        "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
+        "canonical_phase1_result_replaced": False,
         "dataset": "Oxford-IIIT Pet",
         "architecture": "deit_tiny_patch16_224",
         "method": args.method,
@@ -531,6 +586,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "student_state_sha256": selected_student_hash,
         "initial_student_state_sha256": initial_hash,
         "teacher_model_state_sha256": teacher_state_hash,
+        "controller_warmup_epochs": args.alg_controller_warmup_epochs,
         "official_test_policy": "once_after_validation_selection",
         "official_test_evaluations_at_checkpoint_write": 0,
     }
@@ -571,6 +627,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     summary = {
         "status": "complete",
         "scientific_result": True,
+        "confirmatory_main_result": not is_alg_warmup20_diagnostic,
+        "posthoc_diagnostic": is_alg_warmup20_diagnostic,
+        "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
+        "canonical_phase1_result_replaced": False,
         "kind": "student",
         "method": args.method,
         "fusion_ratio_lambda": args.fusion_ratio,
@@ -591,6 +651,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_model_state_sha256": teacher_state_hash,
         "teacher_metadata": teacher_metadata,
         "controller_final": None if controller is None else controller.state_dict(),
+        "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
         "optimizer_contract": "shared_single_group_adamw_all_trainable_parameters_wd_0.05",
         "split_manifest": manifest,
         "training_seconds": time.perf_counter() - start_all,
@@ -617,7 +678,9 @@ def main() -> None:
         device = torch.device("cuda")
         log(
             f"[PHASE1_FULL_START] kind={args.kind} method={args.method} "
-            f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed}"
+            f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
+            f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
+            f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
         )
         payload = (
             run_teacher(args, device)
@@ -630,6 +693,7 @@ def main() -> None:
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"selected_epoch={payload['selected_epoch']} "
             f"test_macro={payload['official_test']['macro_top1']:.3f} "
+            f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"elapsed={format_duration(payload['training_seconds'])}"
         )
     except Exception as error:
@@ -649,6 +713,8 @@ def main() -> None:
                 "fusion_ratio_lambda": args.fusion_ratio,
                 "batch_size": args.batch_size,
                 "seed": args.seed,
+                "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
+                "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
                 "failure_kind": failure_kind,
                 "error_type": type(error).__name__,
                 "error": message,

@@ -219,8 +219,31 @@ bash phase1/scripts/run_alg_warmup20_smoke_b128.sh
 
 Smoke는 timing teacher와 ALG encoder seed 1을 각각 2 epoch만 학습하고, probe seed
 1에서 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식 test는 열지 않으며,
-분류 정확도와 validation IoU는 논문 결과나 설정 선택에 사용할 수 없습니다. 통과한
-경우에만 별도 full 진단에서 ALG seed 3개 분류와 각 encoder의 frozen probe를
-실행합니다. 기계 판독 계약은
+분류 정확도와 validation IoU는 논문 결과나 설정 선택에 사용할 수 없습니다. 기계
+판독 계약은
 [`configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json`](configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json)에
 고정했습니다.
+
+H200 작업 711에서 통합 smoke가 `classification=1/1`, probe LR 후보 `3/3`, 선택
+probe `1/1`로 통과했습니다. ALG의 두 epoch 동안 guidance가 유지됐고
+(`stop_epoch=None`, `beta_history=[2.5, 2.5]`), peak CUDA 사용량은 약 4.47 GB,
+실행 본체 시간은 130.95초였습니다. 따라서 MIG 1개에서 다음 full 진단을 실행할 수
+있습니다.
+
+```bash
+bash phase1/scripts/run_alg_warmup20_full_b128.sh
+```
+
+Full 진단은 batch 128 Release에서 감사된 동일 teacher를 내려받아 재사용하고, ALG
+encoder seed `[1,2,3]`을 300 epoch로 새로 학습합니다. 이어서 세 encoder 각각에
+probe seed `[1,2,3,4,5]`와 LR `[0.01,0.03,0.1]`을 적용하므로 45개 후보 중
+validation으로 15개를 선택합니다. 15개 선택 완료 기록을 남긴 뒤에만 공식 probe
+test를 열어 선택된 probe당 한 번 평가하고, encoder/probe seed 1의 고정 test 8장
+panel도 같은 추론에서 저장합니다. 회수할 결과는
+`/app/output/phase1_pet_alg_warmup20_b128_full_v1`이며, full 계약은
+[`configs/oxford_iiit_pet_alg_warmup20_full_v1.json`](configs/oxford_iiit_pet_alg_warmup20_full_v1.json)에
+고정했습니다.
+
+이 실행은 결과를 본 뒤 원인을 확인하는 **사후 진단**입니다. 수치는 보고할 수 있지만
+사전에 LOCK한 canonical ALG 및 Phase 1 주 결과를 대체하는 confirmatory 실험으로
+해석하지 않습니다.
