@@ -1,5 +1,18 @@
 # 연구 로드맵
 
+## Phase 1~5 핵심 흐름
+
+공간정보 차이의 존재를 확인한 뒤 원인, 실제 활용성, 외부 일반화, 새 방법론
+개발 순서로 단계별 gate를 통과합니다.
+
+| Phase | 확인하려는 핵심 | 앞 Phase에서 넘어오는 논리 |
+|---|---|---|
+| **1. Frozen spatial probe** | iBKD encoder가 LG/ALG보다 위치·형태 정보를 더 잘 보존하는가? | 신뢰 가능한 Pet pixel GT로 현상 자체가 존재하는지 확인 |
+| **2. 공간적 대조 실험** | Phase 1 차이가 shortcut이나 우연이 아니라 실제 공간정보 때문인가? | 공간정보 우위가 관측됐으므로 그 원인과 통계적 안정성을 검증 |
+| **3. 공통 decoder** | 작은 probe뿐 아니라 실제 segmentation 학습에서도 우위가 유지되는가? | 표현 자체의 공간성이 확인됐으므로 실용적인 decoder 조건으로 확장 |
+| **4. 표준 segmentation** | Pet에만 국한되지 않고 표준 multi-class segmentation에서도 일반화되는가? | 실제 segmentation 효과가 확인됐으므로 외부 데이터셋에서 재검증 |
+| **5. Dense iBKD** | segmentation에 특화된 새 iBKD 방법을 설계할 가치가 있는가? | 여러 조건에서 확장성이 확인됐으므로 새로운 방법론으로 발전 |
+
 ## Phase 0 — 기초 검증 및 데이터 감사
 
 Flowers-102 공식 파일, 이미지–마스크 대응, 공식 split, 체크포인트 출처, strict
