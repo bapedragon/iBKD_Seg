@@ -1,6 +1,6 @@
 # Phase 1 Pet batch 64 full-classification 결과
 
-상태: **37-way 분류 완료·감사 통과 — frozen segmentation probe 대기**
+상태: **37-way 분류 완료·감사 통과 — frozen segmentation probe 완료**
 
 이 문서는 사전에 LOCK한 Phase 1 v1 프로토콜의 batch 64 profile 결과입니다.
 분류 결과만 기록하며, 공간정보 보존 여부는 동일 checkpoint에 공통 frozen probe를
@@ -88,9 +88,11 @@ encoder seed에 걸쳐 일관되게 높다면, probe 우위가 단순히 “분�
 probe에서도 LG/ALG보다 낮다면 현재 Phase 1 설정에서는 iBKD의 공간정보 우위
 주장을 지지하기 어렵습니다.
 
-따라서 다음 순서는 사전 고정한 batch 128 분류를 그대로 실행·보고한 뒤, 두 batch의
-모든 checkpoint에 같은 frozen probe 프로토콜을 적용하는 것입니다. batch 64 결과를
-보고 batch 128이나 한 λ를 제외하거나 hyperparameter를 바꾸지 않습니다.
+실제 batch 64 frozen probe에서는 LG와 ALG가 iBKD보다 높았습니다. 따라서 이
+profile은 기대했던 “분류 성능과 분리된 iBKD 공간정보 우위”를 지지하지 않습니다.
+정확한 결과는 [frozen probe 보고서](../../frozen_probe/batch64/RESULTS.md)에 있습니다.
+Batch 128 분류도 완료됐으며, 사전 고정한 해당 profile probe는 같은 계약으로
+계속 수행합니다. 한 batch나 λ만 사후 선택하거나 hyperparameter를 바꾸지 않습니다.
 
 ## 파일 구조
 
@@ -104,5 +106,5 @@ probe에서도 LG/ALG보다 낮다면 현재 Phase 1 설정에서는 iBKD의 공
 - 삭제한 원본 ZIP은 로컬에서 복구할 수 없으며, 다시 필요하면 H200 결과 원본을
   재수령해야 합니다. 원본의 파일명·byte size·SHA-256·CRC 검증 결과는 남아 있습니다.
 
-전체 콘솔 로그와 checkpoint는 용량 때문에 Git에 올리지 않고, 후속 frozen probe가
-raw 경로의 검증된 checkpoint를 사용합니다.
+전체 콘솔 로그와 checkpoint는 용량 때문에 Git history에 직접 넣지 않고,
+[검증된 GitHub Release](checkpoint_release.json)와 raw 경로로 보존했습니다.

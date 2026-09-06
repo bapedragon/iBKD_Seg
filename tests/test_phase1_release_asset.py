@@ -20,53 +20,73 @@ def _sha256(path: Path) -> str:
 
 
 class Phase1ReleaseAssetTest(unittest.TestCase):
+    def _write_complete_asset(self, root: Path, batch_size: int) -> Path:
+        source = root / "source"
+        source.mkdir()
+        (source / "classification_summary.json").write_text(
+            json.dumps(
+                {
+                    "status": "complete",
+                    "batch_size": batch_size,
+                    "completed_tasks": 19,
+                    "failed_tasks": 0,
+                }
+            ),
+            encoding="utf-8",
+        )
+        for seed in range(18):
+            path = source / "students" / f"student_{seed}"
+            path.mkdir(parents=True)
+            (path / "student_best_validation.pt").write_bytes(b"student")
+        teacher = source / "teacher" / "teacher_1"
+        teacher.mkdir(parents=True)
+        (teacher / "teacher_best_validation.pt").write_bytes(b"teacher")
+
+        archive_path = root / "asset.tar.gz"
+        with tarfile.open(archive_path, mode="w:gz") as archive:
+            for path in sorted(source.rglob("*")):
+                archive.add(path, arcname=path.relative_to(source))
+        manifest_path = root / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "download_url": archive_path.as_uri(),
+                    "asset_name": archive_path.name,
+                    "size_bytes": archive_path.stat().st_size,
+                    "sha256": _sha256(archive_path),
+                    "source": {
+                        "classification_batch_size": batch_size,
+                        "total_checkpoints": 19,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        return manifest_path
+
     def test_download_verifies_and_installs_all_nineteen_checkpoints(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            source = root / "source"
-            source.mkdir()
-            (source / "classification_summary.json").write_text(
-                json.dumps(
-                    {
-                        "status": "complete",
-                        "batch_size": 64,
-                        "completed_tasks": 19,
-                        "failed_tasks": 0,
-                    }
-                ),
-                encoding="utf-8",
-            )
-            for seed in range(18):
-                path = source / "students" / f"student_{seed}"
-                path.mkdir(parents=True)
-                (path / "student_best_validation.pt").write_bytes(b"student")
-            teacher = source / "teacher" / "teacher_1"
-            teacher.mkdir(parents=True)
-            (teacher / "teacher_best_validation.pt").write_bytes(b"teacher")
-
-            archive_path = root / "asset.tar.gz"
-            with tarfile.open(archive_path, mode="w:gz") as archive:
-                for path in sorted(source.rglob("*")):
-                    archive.add(path, arcname=path.relative_to(source))
-            manifest_path = root / "manifest.json"
-            manifest_path.write_text(
-                json.dumps(
-                    {
-                        "download_url": archive_path.as_uri(),
-                        "asset_name": archive_path.name,
-                        "size_bytes": archive_path.stat().st_size,
-                        "sha256": _sha256(archive_path),
-                        "source": {"total_checkpoints": 19},
-                    }
-                ),
-                encoding="utf-8",
-            )
+            manifest_path = self._write_complete_asset(root, batch_size=64)
             destination = root / "installed"
             download_and_extract(manifest_path, destination, root / "downloads")
             self.assertTrue((destination / "classification_summary.json").is_file())
             self.assertEqual(len(list(destination.rglob("*_best_validation.pt"))), 19)
             # A second call validates and reuses the installed result.
             download_and_extract(manifest_path, destination, root / "downloads")
+
+    def test_batch128_asset_is_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = self._write_complete_asset(root, batch_size=128)
+            destination = root / "installed"
+            download_and_extract(manifest_path, destination, root / "downloads")
+            summary = json.loads(
+                (destination / "classification_summary.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(summary["batch_size"], 128)
 
     def test_path_traversal_member_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -85,7 +105,10 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
                         "asset_name": archive_path.name,
                         "size_bytes": archive_path.stat().st_size,
                         "sha256": _sha256(archive_path),
-                        "source": {"total_checkpoints": 19},
+                        "source": {
+                            "classification_batch_size": 64,
+                            "total_checkpoints": 19,
+                        },
                     }
                 ),
                 encoding="utf-8",

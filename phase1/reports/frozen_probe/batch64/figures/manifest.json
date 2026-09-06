@@ -1,0 +1,198 @@
+{
+  "encoder_seed": 1,
+  "fixed_before_results": true,
+  "panel_count": 16,
+  "panels": [
+    {
+      "bytes": 98820,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "Abyssinian_201",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/Abyssinian_201.png",
+      "sha256": "299169f29cc886f0feeeab710779ac86540ea33d6ba05ffb656e3181fd1b6805",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/Abyssinian_201.png",
+      "width": 1568
+    },
+    {
+      "bytes": 131324,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "Bengal_33",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/Bengal_33.png",
+      "sha256": "2a12d921d1dbf77f8cd128798d4fc523845a0b1ad2ac6f009a6a8720d9f6706f",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/Bengal_33.png",
+      "width": 1568
+    },
+    {
+      "bytes": 71066,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "chihuahua_67",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/chihuahua_67.png",
+      "sha256": "4dac8b67a84fcd49823debaf1977db19b89bb4e561fc5dcdef8f7f010149b560",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/chihuahua_67.png",
+      "width": 1568
+    },
+    {
+      "bytes": 100471,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "great_pyrenees_91",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/great_pyrenees_91.png",
+      "sha256": "be11b7cfc868a1c9725e0d54510be0a1b2e166ffa24999c522104c5d5a9b93c2",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/great_pyrenees_91.png",
+      "width": 1568
+    },
+    {
+      "bytes": 95515,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "miniature_pinscher_23",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/miniature_pinscher_23.png",
+      "sha256": "f9748af67da7f62a433c1695847878f99d89324367c68f9e1a718f3ac223d800",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/miniature_pinscher_23.png",
+      "width": 1568
+    },
+    {
+      "bytes": 80020,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "Ragdoll_37",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/Ragdoll_37.png",
+      "sha256": "a3db8fabff3f0782c170fb131e238643a86ddad26d3e31012d95b7e37c89506b",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/Ragdoll_37.png",
+      "width": 1568
+    },
+    {
+      "bytes": 101250,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "shiba_inu_68",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/shiba_inu_68.png",
+      "sha256": "128e9ab9b345d49b3102c44bb11b0c384bb49f2c290d1ab0b4916bf22bbfa701",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/shiba_inu_68.png",
+      "width": 1568
+    },
+    {
+      "bytes": 95050,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.25",
+      "image_id": "yorkshire_terrier_9",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.25/yorkshire_terrier_9.png",
+      "sha256": "22bb256f3e8b606a0c3b2e30a24128a4d6af6b2f031879363b29d1441051d171",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.25/yorkshire_terrier_9.png",
+      "width": 1568
+    },
+    {
+      "bytes": 98687,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "Abyssinian_201",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/Abyssinian_201.png",
+      "sha256": "d6325c4687441cac047f9bfec5c64a7d747c0c40ef9ad85257e01b8936000df9",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/Abyssinian_201.png",
+      "width": 1568
+    },
+    {
+      "bytes": 131163,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "Bengal_33",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/Bengal_33.png",
+      "sha256": "15ce42d1378dd43a26bce2e6c713e0b79e5c7f6201e31ea5f42169b127e42bc3",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/Bengal_33.png",
+      "width": 1568
+    },
+    {
+      "bytes": 70939,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "chihuahua_67",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/chihuahua_67.png",
+      "sha256": "69cd228556f0f9acd993a8900d53d6281b7fcdebfada907ebb4239161d2c2870",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/chihuahua_67.png",
+      "width": 1568
+    },
+    {
+      "bytes": 100168,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "great_pyrenees_91",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/great_pyrenees_91.png",
+      "sha256": "f7f0e544054888db680784f205b0c9271870aa67e3643b90ad4b02e68c6da67b",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/great_pyrenees_91.png",
+      "width": 1568
+    },
+    {
+      "bytes": 95447,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "miniature_pinscher_23",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/miniature_pinscher_23.png",
+      "sha256": "dddf5aaa5272ec37d7a2e418381f50d823275913fe4552f91c81765474074361",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/miniature_pinscher_23.png",
+      "width": 1568
+    },
+    {
+      "bytes": 79375,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "Ragdoll_37",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/Ragdoll_37.png",
+      "sha256": "19be9d416d4b672640bef817d72dad82aee2c84ec14bdfda34f21c366c6b560c",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/Ragdoll_37.png",
+      "width": 1568
+    },
+    {
+      "bytes": 101086,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "shiba_inu_68",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/shiba_inu_68.png",
+      "sha256": "b2bf4d3d463658679e287704b1136794decec80d0ff01f773c51ac771ab9df69",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/shiba_inu_68.png",
+      "width": 1568
+    },
+    {
+      "bytes": 94849,
+      "height": 252,
+      "ibkd_panel_variant": "ibkd_lambda_0.5",
+      "image_id": "yorkshire_terrier_9",
+      "mode": "RGB",
+      "path": "figures/ibkd_lambda_0.5/yorkshire_terrier_9.png",
+      "sha256": "32f0c12e3466103d3620f3f7b49a787588536f92e13779bc05b617544dd310fe",
+      "source_path_under_ignored_raw_root": "qualitative/ibkd_0.5/yorkshire_terrier_9.png",
+      "width": 1568
+    }
+  ],
+  "posthoc_example_selection": false,
+  "probe_seed": 1,
+  "schema_version": 1,
+  "source_mask_count_audited_but_not_committed": 80,
+  "status": "pass",
+  "test_image_ids": [
+    "Abyssinian_201",
+    "Bengal_33",
+    "chihuahua_67",
+    "great_pyrenees_91",
+    "miniature_pinscher_23",
+    "Ragdoll_37",
+    "shiba_inu_68",
+    "yorkshire_terrier_9"
+  ]
+}

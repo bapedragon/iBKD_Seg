@@ -208,33 +208,72 @@ def run(args: argparse.Namespace) -> None:
     ):
         raise RuntimeError("Expected six complete three-seed student groups")
 
+    controller_by_run: dict[tuple[str, int], dict[str, Any]] = {}
+    for summary_path in sorted(raw_dir.glob("students/*/summary.json")):
+        run = json.loads(summary_path.read_text(encoding="utf-8"))
+        controller = run.get("controller_final")
+        if controller is not None:
+            controller_by_run[(variant(run), int(run["seed"]))] = controller
+
     method_summaries: list[dict[str, Any]] = []
     for method in VARIANT_ORDER:
         rows = groups[method]
-        method_summaries.append(
-            {
-                "variant": method,
-                "method": rows[0]["method"],
-                "fusion_ratio_lambda": rows[0]["fusion_ratio_lambda"],
-                "selected_epoch_by_seed": {
-                    str(row["seed"]): row["selected_epoch"] for row in rows
+        method_summary: dict[str, Any] = {
+            "variant": method,
+            "method": rows[0]["method"],
+            "fusion_ratio_lambda": rows[0]["fusion_ratio_lambda"],
+            "selected_epoch_by_seed": {
+                str(row["seed"]): row["selected_epoch"] for row in rows
+            },
+            "validation_macro_top1": summarize(
+                [row["validation_macro_top1"] for row in rows]
+            ),
+            "test_macro_top1": summarize(
+                [row["test_macro_top1"] for row in rows]
+            ),
+            "test_overall_top1": summarize(
+                [row["test_overall_top1"] for row in rows]
+            ),
+            "test_top5": summarize([row["test_top5"] for row in rows]),
+            "validation_minus_test_macro_top1": summarize(
+                [
+                    row["validation_macro_top1"] - row["test_macro_top1"]
+                    for row in rows
+                ]
+            ),
+        }
+        controllers = [
+            controller_by_run.get((method, int(row["seed"]))) for row in rows
+        ]
+        if any(controller is not None for controller in controllers):
+            if not all(controller is not None for controller in controllers):
+                raise RuntimeError(f"Incomplete controller metadata for {method}")
+            complete_controllers = [
+                controller for controller in controllers if controller is not None
+            ]
+            method_summary["guidance_controller"] = {
+                "kind_by_seed": {
+                    str(row["seed"]): controller["kind"]
+                    for row, controller in zip(rows, complete_controllers)
                 },
-                "validation_macro_top1": summarize(
-                    [row["validation_macro_top1"] for row in rows]
-                ),
-                "test_macro_top1": summarize([row["test_macro_top1"] for row in rows]),
-                "test_overall_top1": summarize(
-                    [row["test_overall_top1"] for row in rows]
-                ),
-                "test_top5": summarize([row["test_top5"] for row in rows]),
-                "validation_minus_test_macro_top1": summarize(
-                    [
-                        row["validation_macro_top1"] - row["test_macro_top1"]
-                        for row in rows
-                    ]
-                ),
+                "stop_epoch_by_seed": {
+                    str(row["seed"]): controller.get("stop_epoch")
+                    for row, controller in zip(rows, complete_controllers)
+                },
+                "warmup_epochs_by_seed": {
+                    str(row["seed"]): controller.get("warmup_epochs")
+                    for row, controller in zip(rows, complete_controllers)
+                },
+                "smoothing_window_by_seed": {
+                    str(row["seed"]): controller.get("smoothing_window")
+                    for row, controller in zip(rows, complete_controllers)
+                },
+                "threshold_by_seed": {
+                    str(row["seed"]): controller.get("threshold")
+                    for row, controller in zip(rows, complete_controllers)
+                },
             }
-        )
+        method_summaries.append(method_summary)
 
     contrasts = [
         paired_difference(groups, method, "vanilla")
@@ -284,7 +323,7 @@ def run(args: argparse.Namespace) -> None:
         )
     report = {
         "schema_version": 1,
-        "status": "classification_complete_probe_pending",
+        "status": "classification_complete",
         "dataset": "Oxford-IIIT Pet",
         "task": "37_way_breed_classification",
         "batch_size": suite["batch_size"],
@@ -322,9 +361,8 @@ def run(args: argparse.Namespace) -> None:
         },
         "interpretation_scope": {
             "classification_result_only": True,
-            "frozen_segmentation_probe_pending": True,
+            "frozen_segmentation_probe_required_for_spatial_conclusion": True,
             "no_spatial_information_conclusion_from_this_report": True,
-            "batch128_profile_pending": True,
             "posthoc_batch_or_lambda_selection_forbidden": True,
         },
     }

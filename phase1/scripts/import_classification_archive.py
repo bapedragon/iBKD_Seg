@@ -97,6 +97,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, choices=(64, 128), required=True)
     parser.add_argument("--issue-id", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--canonical-bundle-filename")
     parser.add_argument("--verify-all-crc", action="store_true")
     return parser.parse_args()
 
@@ -227,7 +228,8 @@ def run(args: argparse.Namespace) -> None:
         "source_archive": {
             "original_filename": archive.name,
             "canonical_filename": (
-                f"phase1_pet_b{args.batch_size}_full_classification_v1_"
+                args.canonical_bundle_filename
+                or f"phase1_pet_b{args.batch_size}_full_classification_v1_"
                 f"h200_issue{args.issue_id}.zip"
             ),
             "bytes": archive.stat().st_size,

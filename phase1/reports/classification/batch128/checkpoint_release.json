@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "release_tag": "phase1-pet-b128-classification-v1",
+  "asset_name": "phase1_pet_b128_full_classification_v1.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-pet-b128-classification-v1/phase1_pet_b128_full_classification_v1.tar.gz",
+  "size_bytes": 376267322,
+  "sha256": "ab5759a8749b9dffaf17530007f1f8e38735f8c0d47991cefc20f637898a05a7",
+  "source": {
+    "h200_job_id": 702,
+    "classification_batch_size": 128,
+    "student_checkpoints": 18,
+    "teacher_checkpoints": 1,
+    "total_checkpoints": 19
+  },
+  "contents": {
+    "all_student_checkpoints": true,
+    "teacher_checkpoint": true,
+    "all_run_summaries": true,
+    "classification_summary": true,
+    "dataset_audit": true,
+    "sequence_status": true,
+    "h200_log": true,
+    "dataset_files": false
+  },
+  "remote_asset_digest_verified": true,
+  "storage_policy": "github_release_asset_not_git_history",
+  "reason": "Preserve and reuse audited binary checkpoints without permanently inflating every Git clone."
+}

@@ -107,19 +107,25 @@ def _validate_members(archive: tarfile.TarFile, extraction_root: Path) -> None:
 
 
 def _validate_extracted(root: Path, manifest: dict[str, Any]) -> None:
+    source = manifest["source"]
+    batch_size = int(source["classification_batch_size"])
+    if batch_size not in (64, 128):
+        raise RuntimeError(
+            f"unsupported classification batch size in release manifest: {batch_size}"
+        )
     summary_path = root / "classification_summary.json"
     if not summary_path.is_file():
         raise RuntimeError("release asset does not contain classification_summary.json")
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     if (
         summary.get("status") != "complete"
-        or summary.get("batch_size") != 64
+        or summary.get("batch_size") != batch_size
         or summary.get("completed_tasks") != 19
         or summary.get("failed_tasks") != 0
     ):
         raise RuntimeError("extracted classification suite summary is not complete")
     checkpoint_paths = sorted(root.rglob("*_best_validation.pt"))
-    expected_count = int(manifest["source"]["total_checkpoints"])
+    expected_count = int(source["total_checkpoints"])
     if len(checkpoint_paths) != expected_count:
         raise RuntimeError(
             f"release contains {len(checkpoint_paths)} checkpoints; "
@@ -142,6 +148,7 @@ def download_and_extract(
     """Fetch a release asset, verify it, and atomically install its contents."""
 
     manifest = _load_manifest(manifest_path)
+    batch_size = int(manifest["source"]["classification_batch_size"])
     if (destination / "classification_summary.json").is_file():
         _validate_extracted(destination, manifest)
         log(f"[CHECKPOINT_RELEASE] existing audited input: {destination}")
@@ -154,7 +161,7 @@ def download_and_extract(
     destination.parent.mkdir(parents=True, exist_ok=True)
     download_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        prefix="phase1_pet_b64_",
+        prefix=f"phase1_pet_b{batch_size}_",
         suffix=".tar.gz",
         dir=download_dir,
         delete=False,
@@ -162,7 +169,7 @@ def download_and_extract(
         archive_path = Path(handle.name)
     extraction_root = Path(
         tempfile.mkdtemp(
-            prefix=".phase1_pet_b64_extract_",
+            prefix=f".phase1_pet_b{batch_size}_extract_",
             dir=destination.parent,
         )
     )

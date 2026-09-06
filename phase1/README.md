@@ -1,16 +1,24 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **batch 64 full classification·probe smoke 완료 — batch 64 frozen probe 본 실험 실행 준비 완료**
+상태: **batch 64/128 분류·batch 64 frozen probe 완료 — batch 128 probe 대기**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
 [`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)에
 있습니다.
 
-2026-09-06에 batch 64의 teacher 1회와 6설정 × encoder seed 3개를 모두
+2026-09-06에 batch 64/128의 teacher와 6설정 × encoder seed 3개를 모두
 완료했습니다. 공식 test-once와 동일 초기화·teacher·validation split 계약,
-checkpoint 19개의 hash·strict-load·유한값 감사를 통과했습니다. 분류 결과와
-해석은 [batch 64 결과 보고서](reports/classification/batch64/RESULTS.md)에 있습니다.
+각 profile checkpoint 19개의 hash·strict-load·유한값 감사를 통과했습니다.
+[batch 64](reports/classification/batch64/RESULTS.md),
+[batch 128](reports/classification/batch128/RESULTS.md) 분류 결과와
+[profile 비교](reports/classification/BATCH_PROFILE_COMPARISON.md)를 함께 보고합니다.
+
+Batch 64 frozen probe 본 실험도 완료했으나 iBKD λ=0.25/0.5가 matched ALG보다
+각각 `-1.796/-2.358`%p 낮았고, 여섯 paired encoder-seed 차이가 모두
+음수였습니다. 따라서 batch 64의 1차 가설은 지지되지 않았으며
+[전체 probe 결과](reports/frozen_probe/batch64/RESULTS.md)와
+[고정 정성 panel](reports/frozen_probe/batch64/QUALITATIVE.md)에 근거를 남깁니다.
 
 ## 핵심 질문
 
@@ -54,10 +62,10 @@ feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 
 = student 36 runs
 ```
 
-H200 요청은 batch 64와 batch 128로 나눕니다. 각 요청은 공통 teacher 1회와 해당
-batch의 student 18회로 구성합니다. batch 64는 실제 7시간 29분 43초에
-완료됐고, batch 128의 timing 환산 예상시간은 약 8시간 20분입니다. 결과가 좋은
-batch나 λ만 골라 main 결과로 바꾸지 않고 두 profile을 별도 표로 모두 남깁니다.
+H200 요청은 batch 64와 batch 128로 나눴습니다. 각 요청은 공통 teacher 1회와 해당
+batch의 student 18회로 구성했습니다. 실제 시간은 batch 64가 7시간 29분 43초,
+batch 128이 7시간 23분 29초였습니다. 결과가 좋은 batch나 λ만 골라 main 결과로
+바꾸지 않고 두 profile을 별도 표로 모두 남깁니다.
 
 ## 본 실험 초안에 포함된 공통 계약
 
@@ -101,8 +109,8 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 
 ## 계산 자원
 
-- 로컬: Pet 데이터 감사, 단위 테스트, smoke probe와 정성 확인
-- H200: 완료한 12-way timing과 batch 64 분류, 남은 batch 128 분류 및 이후 전체 probe 반복
+- 로컬: Pet 데이터 감사, 단위 테스트, 결과 curation과 정성 확인
+- H200: 완료한 timing·두 분류 profile·batch 64 probe, 남은 batch 128 probe
 
 ## Batch 64 frozen-probe smoke
 
@@ -135,7 +143,8 @@ CSV와 smoke probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/
 
 ## Batch 64 frozen-probe 본 실험
 
-smoke 통과 뒤에는 다음 명령 하나로 LOCK된 본 실험을 실행합니다.
+Smoke 통과 뒤 다음 명령으로 LOCK된 본 실험을 실행했고 H200 작업 706에서
+완료했습니다.
 
 ```bash
 bash phase1/scripts/run_probe_full_b64.sh
@@ -158,3 +167,9 @@ bash phase1/scripts/run_probe_full_b64.sh
 baseline과 결과 전에 고정한 test 8장의 정성 panel이 포함됩니다. iBKD λ 0.25와
 0.5를 결과로 고르지 않도록 정성 panel도 두 세트 모두 저장합니다. 수 GB의 frozen
 feature cache와 데이터셋은 scratch에서 사용 후 결과 폴더에 복사하지 않습니다.
+
+검증된 결과는 [batch 64 결과 보고서](reports/frozen_probe/batch64/RESULTS.md)에
+있습니다. 전체 raw 산출물은 Git history 대신
+[GitHub Release manifest](reports/frozen_probe/batch64/artifact_release.json)에
+고정했습니다. 다음 단계는 protocol을 사후 변경하는 것이 아니라 batch 128
+checkpoint에 같은 probe 계약을 적용하는 것입니다.

@@ -27,12 +27,14 @@ ground-truth 품질 gate를 통과하지 못했습니다. Flowers 실행은 Phas
 ## Phase 1 — Oxford-IIIT Pet GT frozen spatial probe
 
 **2026-09-06 상태:** 12-way timing 뒤 student batch `64/128`과 iBKD λ
-`0.25/0.5`를 모두 사전 고정했습니다. batch 64의 teacher 1회와 여섯 variant ×
-3 seed 분류가 19/19 완료됐으며, test-once·동일 초기화·동일 teacher·동일 split
-계약과 checkpoint 감사를 통과했습니다. batch 64 frozen probe smoke도 통과해
-LOCK된 본 실험 실행기가 준비됐습니다. batch 128 분류 결과 회수와 해당 profile
-probe는 대기 중입니다. batch 64 분류 정량값과 해석은
-[결과 보고서](phase1/reports/classification/batch64/RESULTS.md), 상세 계약은
+`0.25/0.5`를 모두 사전 고정했습니다. 두 batch의 teacher와 여섯 variant × 3 seed
+분류가 각각 19/19 완료됐고 test-once·동일 초기화·동일 teacher·동일 split 계약과
+checkpoint 감사를 통과했습니다. Batch 64 frozen probe도 90/90 완료됐으나 주
+비교인 iBKD–ALG에서 두 λ의 paired 차이가 세 encoder seed 모두 음수였습니다.
+따라서 batch 64의 `iBKD > ALG` 가설은 No-Go이며, 사전 고정한 batch 128 probe 뒤
+Phase 1 전체 결정을 확정합니다. 근거는
+[분류 profile 비교](phase1/reports/classification/BATCH_PROFILE_COMPARISON.md),
+[batch 64 probe 결과](phase1/reports/frozen_probe/batch64/RESULTS.md), 상세 계약은
 [phase1/PROTOCOL.md](phase1/PROTOCOL.md)에 있습니다.
 
 Oxford-IIIT Pet의 품종 라벨만 사용해 조건이 일치하는 Vanilla, KD, LG, ALG,

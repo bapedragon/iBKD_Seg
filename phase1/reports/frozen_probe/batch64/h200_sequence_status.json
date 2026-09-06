@@ -1,0 +1,13 @@
+{
+  "active": null,
+  "completed_official_test_evaluations": 90,
+  "completed_selections": 90,
+  "expected_official_test_evaluations": 90,
+  "expected_selections": 90,
+  "failure": null,
+  "official_test_accessed": true,
+  "phase": "complete",
+  "scientific_result": true,
+  "status": "complete",
+  "updated_at_utc": "2026-09-05T19:46:22.908306+00:00"
+}
