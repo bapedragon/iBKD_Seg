@@ -28,6 +28,8 @@ DATASET_NAME = "CUB-200-2011"
 DATASET_DIRECTORY = "CUB_200_2011"
 ARCHIVE_NAME = "CUB_200_2011.tgz"
 ARCHIVE_MD5 = "97eceeb196236b17998738112f37df78"
+ARCHIVE_BYTES = 1_150_585_339
+ARCHIVE_SHA256 = "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081"
 DOWNLOAD_URL = (
     "https://data.caltech.edu/records/65de6-vp158/files/"
     "CUB_200_2011.tgz?download=1"
@@ -195,6 +197,17 @@ def ensure_cub200(root: Path, *, download: bool = True) -> Path:
         if not archive.is_file() or file_digest(archive, "md5") != ARCHIVE_MD5:
             archive.unlink(missing_ok=True)
             _download(DOWNLOAD_URL, archive, expected_md5=ARCHIVE_MD5)
+        if archive.stat().st_size != ARCHIVE_BYTES:
+            raise RuntimeError(
+                f"CUB archive byte-size mismatch: expected={ARCHIVE_BYTES} "
+                f"actual={archive.stat().st_size}"
+            )
+        actual_sha256 = file_digest(archive)
+        if actual_sha256 != ARCHIVE_SHA256:
+            raise RuntimeError(
+                "CUB archive SHA-256 mismatch: "
+                f"expected={ARCHIVE_SHA256} actual={actual_sha256}"
+            )
         print(f"[CUB_EXTRACT] archive={archive}", flush=True)
         extract_archive(str(archive), str(root))
         dataset_root = resolve_dataset_root(root)
@@ -376,3 +389,34 @@ def build_train_validation_loaders(
         **shared,
     )
     return train_loader, validation_loader, manifest
+
+
+def build_official_test_loader(
+    data_dir: Path,
+    *,
+    eval_batch_size: int,
+    num_workers: int,
+    device: torch.device,
+) -> DataLoader[Any]:
+    """Instantiate the untouched official test split after selection."""
+
+    dataset_root = ensure_cub200(data_dir, download=True)
+    test_records = [
+        record for record in read_records(dataset_root) if not record.is_train
+    ]
+    if len(test_records) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("CUB official-test count changed")
+    test_dataset = CUBClassificationDataset(
+        dataset_root,
+        test_records,
+        transform=evaluation_transform(),
+    )
+    return DataLoader(
+        test_dataset,
+        batch_size=eval_batch_size,
+        shuffle=False,
+        drop_last=False,
+        num_workers=num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=num_workers > 0,
+    )

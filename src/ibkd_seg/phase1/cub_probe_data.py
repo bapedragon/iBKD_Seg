@@ -16,10 +16,14 @@ from torchvision.transforms import InterpolationMode
 from torchvision.transforms import functional as TF
 
 from .cub_data import (
+    ARCHIVE_BYTES,
     ARCHIVE_MD5,
+    ARCHIVE_NAME,
+    ARCHIVE_SHA256,
     DATASET_NAME,
     DERIVED_TRAIN_COUNT,
     DERIVED_VALIDATION_COUNT,
+    OFFICIAL_TEST_COUNT,
     OFFICIAL_TRAIN_COUNT,
     CubRecord,
     _download,
@@ -33,6 +37,10 @@ from .data import IMAGENET_MEAN, IMAGENET_STD
 
 SEGMENTATION_ARCHIVE_NAME = "segmentations.tgz"
 SEGMENTATION_ARCHIVE_MD5 = "4d47ba1228eae64f2fa547c47bc65255"
+SEGMENTATION_ARCHIVE_BYTES = 39_272_883
+SEGMENTATION_ARCHIVE_SHA256 = (
+    "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f"
+)
 SEGMENTATION_DOWNLOAD_URL = (
     "https://data.caltech.edu/records/w9d68-gec53/files/"
     "segmentations.tgz?download=1"
@@ -92,6 +100,17 @@ def ensure_cub_segmentations(
                 SEGMENTATION_DOWNLOAD_URL,
                 archive,
                 expected_md5=SEGMENTATION_ARCHIVE_MD5,
+            )
+        if archive.stat().st_size != SEGMENTATION_ARCHIVE_BYTES:
+            raise RuntimeError(
+                "CUB segmentation archive byte-size mismatch: "
+                f"expected={SEGMENTATION_ARCHIVE_BYTES} actual={archive.stat().st_size}"
+            )
+        actual_sha256 = file_digest(archive)
+        if actual_sha256 != SEGMENTATION_ARCHIVE_SHA256:
+            raise RuntimeError(
+                "CUB segmentation archive SHA-256 mismatch: "
+                f"expected={SEGMENTATION_ARCHIVE_SHA256} actual={actual_sha256}"
             )
         print(f"[CUB_MASK_EXTRACT] archive={archive}", flush=True)
         extract_archive(str(archive), str(data_dir))
@@ -160,8 +179,12 @@ def load_train_validation_records(
 
     source = {
         "dataset": DATASET_NAME,
+        "image_archive_bytes": ARCHIVE_BYTES,
         "image_archive_md5": ARCHIVE_MD5,
+        "image_archive_sha256": ARCHIVE_SHA256,
+        "segmentation_archive_bytes": SEGMENTATION_ARCHIVE_BYTES,
         "segmentation_archive_md5": SEGMENTATION_ARCHIVE_MD5,
+        "segmentation_archive_sha256": SEGMENTATION_ARCHIVE_SHA256,
         "dataset_root": str(dataset_root),
         "segmentation_root": str(segmentation_root),
     }
@@ -169,6 +192,48 @@ def load_train_validation_records(
         "train": make(train_indices),
         "validation": make(validation_indices),
     }, manifest, source
+
+
+def load_official_test_records(
+    data_dir: Path,
+    *,
+    download: bool = True,
+) -> tuple[list[CubProbeRecord], dict[str, Any]]:
+    """Resolve official-test RGB/mask pairs only after validation selection."""
+
+    dataset_root = ensure_cub200(data_dir, download=download)
+    segmentation_root = ensure_cub_segmentations(
+        data_dir,
+        dataset_root,
+        download=download,
+    )
+    official_test = [
+        record for record in read_records(dataset_root) if not record.is_train
+    ]
+    if len(official_test) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("CUB official-test count changed")
+    records = [
+        _to_probe_record(
+            record,
+            dataset_root=dataset_root,
+            segmentation_root=segmentation_root,
+        )
+        for record in official_test
+    ]
+    source = {
+        "dataset": DATASET_NAME,
+        "image_archive_name": ARCHIVE_NAME,
+        "image_archive_bytes": ARCHIVE_BYTES,
+        "image_archive_md5": ARCHIVE_MD5,
+        "image_archive_sha256": ARCHIVE_SHA256,
+        "segmentation_archive_name": SEGMENTATION_ARCHIVE_NAME,
+        "segmentation_archive_bytes": SEGMENTATION_ARCHIVE_BYTES,
+        "segmentation_archive_md5": SEGMENTATION_ARCHIVE_MD5,
+        "segmentation_archive_sha256": SEGMENTATION_ARCHIVE_SHA256,
+        "dataset_root": str(dataset_root),
+        "segmentation_root": str(segmentation_root),
+    }
+    return records, source
 
 
 class CubImageDataset(Dataset[tuple[torch.Tensor, str]]):

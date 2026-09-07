@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **batch 128 통합 smoke 준비 — 본실험 프로토콜 미고정·본실험 미실행**
+상태: **batch 128 통합 smoke 통과 — 본실험 v1 LOCK·두 shard 실행 준비**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -20,8 +20,8 @@
 5. validation으로 probe를 선택한 뒤 test를 최종 평가합니다.
 
 Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 포함한 CUB용
-프로토콜은 별도로 고정합니다. Pet 설정 파일을 복사해 곧바로 본실험에 사용하지
-않습니다.
+프로토콜은 v1으로 별도 고정했습니다. Pet 결과나 checkpoint는 CUB 본실험에
+섞지 않습니다.
 
 ## 디렉터리
 
@@ -31,7 +31,7 @@ Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 
 - `reports/frozen_probe/`: frozen segmentation probe 정량·정성 결과
 - `results/raw/`: 로컬 원시 산출물 전용 경로이며 Git에는 포함하지 않음
 
-프로토콜 확정 전 체크 항목은 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
+잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
 ## Batch 128 분류 → frozen probe 통합 smoke
 
@@ -58,17 +58,41 @@ Pet에서 이미 확인한 ALG의 epoch-2 조기 종료를 CUB에서 다시 주 
 feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 validation
 진단값, 여섯 probe validation 진단값, 선형 시간 외삽과 `25/25` 작업 완료 여부가
 출력됩니다. 이 수치로 방법·lambda·checkpoint를 선택하거나 논문 결과를 주장할 수
-없습니다. smoke 통과 후에도 [PROTOCOL.md](PROTOCOL.md)의 본실험 계약을 별도로
-LOCK해야 합니다. Smoke는 encoder seed 1만 사용하고 본실험 분류는 encoder seed
-`[1, 2, 3]`을 모두 실행합니다.
+없습니다. Smoke는 `25/25`로 통과했으며 이 진단값은 본실험 설정 선택에 사용하지
+않았습니다.
+
+## 두 shard 본실험
+
+10시간 실행 제한을 피하도록 예상 시간이 비슷한 두 독립 작업으로 나눴습니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_full_shard_a_b128.sh
+bash phase1/phase1_cub/scripts/run_full_shard_b_b128.sh
+```
+
+- Shard A: Vanilla, LG, iBKD λ=0.5
+- Shard B: KD, ALG-w20, iBKD λ=0.25
+
+각 shard는 ResNet-56 teacher를 동일한 seed 1로 재현하고 각 설정의 encoder seed
+`[1,2,3]`을 300 epoch 학습합니다. 이후 모든 encoder를 동결하고 probe seed
+`[1,2,3,4,5]`, LR `[0.01,0.03,0.1]`, 100 epoch를 실행합니다. 한 shard의 모든
+validation 선택이 끝난 뒤에만 official test mask를 열어 선택된 probe를 한 번씩
+평가합니다.
+
+기본 결과 경로는 각각
+`/app/output/phase1_cub_b128_full_v1_shard_a`와
+`/app/output/phase1_cub_b128_full_v1_shard_b`입니다. 각 결과에는 teacher 1개,
+분류 best checkpoint 9개, 선택된 probe checkpoint 45개, raw CSV와 summary JSON이
+포함되며 전체 실행 로그도 `run.log`로 저장됩니다. 이미지 본체와 segmentation
+mask archive, feature cache는
+`/app/scratch`에만 두므로 결과 ZIP에 포함되지 않습니다.
 
 ## 현재 주의사항
 
-- 통합 smoke가 CUB-200-2011 본체와 별도 segmentation archive의 train/validation
-  이미지·mask 대응과 공식 MD5를 먼저 검사합니다. 본실험 전에는 전체 데이터의
-  byte size·SHA-256까지 별도 LOCK해야 합니다.
-- train/validation/test, ambiguous·배경 픽셀 처리, 입력 해상도, teacher,
-  batch size, 방법별 hyperparameter, seed와 checkpoint 선택 규칙은 아직
-  확정하지 않았습니다.
+- 이미지와 segmentation archive의 byte size·MD5·SHA-256, split, binary mask
+  mapping, teacher/student, 여섯 방법, seed, checkpoint와 test-once 규칙은
+  [full v1 config](configs/cub200_b128_full_v1.json)에 고정했습니다.
+- 두 shard 결과는 teacher state, seed별 초기 student state와 split hash가 서로
+  일치하는지 확인한 뒤에만 하나의 6설정 결과로 병합합니다.
 - 데이터셋, checkpoint, feature cache와 원시 H200 결과는 Git에 올리지 않습니다.
   검증된 작은 요약·manifest·정성 예시만 `reports/`에 반영합니다.

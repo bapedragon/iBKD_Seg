@@ -15,10 +15,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .controllers import GuidanceController
+from .cub_data import (
+    DATASET_NAME as CUB_DATASET_NAME,
+    NUM_CLASSES as CUB_NUM_CLASSES,
+    build_official_test_loader as build_cub_official_test_loader,
+    build_train_validation_loaders as build_cub_train_validation_loaders,
+)
 from .data import (
-    NUM_CLASSES,
-    build_official_test_loader,
-    build_train_validation_loaders,
+    NUM_CLASSES as PET_NUM_CLASSES,
+    build_official_test_loader as build_pet_official_test_loader,
+    build_train_validation_loaders as build_pet_train_validation_loaders,
     save_json,
 )
 from .models import (
@@ -53,9 +59,33 @@ ALG_WARMUP20_DIAGNOSTIC_ID = (
 )
 
 
+def _dataset_key(args: argparse.Namespace) -> str:
+    value = str(getattr(args, "dataset", "pet"))
+    if value not in {"pet", "cub"}:
+        raise ValueError(f"unsupported Phase 1 full dataset: {value!r}")
+    return value
+
+
+def _dataset_contract(args: argparse.Namespace) -> tuple[str, int, Any, Any]:
+    if _dataset_key(args) == "cub":
+        return (
+            CUB_DATASET_NAME,
+            CUB_NUM_CLASSES,
+            build_cub_train_validation_loaders,
+            build_cub_official_test_loader,
+        )
+    return (
+        "Oxford-IIIT Pet",
+        PET_NUM_CLASSES,
+        build_pet_train_validation_loaders,
+        build_pet_official_test_loader,
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--full-run", action="store_true", required=True)
+    parser.add_argument("--dataset", choices=("pet", "cub"), default="pet")
     parser.add_argument("--kind", choices=("teacher", "student"), required=True)
     parser.add_argument("--method", choices=METHODS)
     parser.add_argument("--batch-size", type=int, required=True)
@@ -82,6 +112,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    dataset_key = _dataset_key(args)
     if args.batch_size not in {64, 128}:
         raise ValueError("Phase 1 full-run batch must be 64 or 128")
     if args.eval_batch_size <= 0 or args.num_workers < 0:
@@ -112,7 +143,14 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError(
                 "ALG controller warm-up must be canonical 0 or diagnostic 20"
             )
-        if args.alg_controller_warmup_epochs == 20:
+        if dataset_key == "cub":
+            if args.alg_controller_warmup_epochs != 20:
+                raise ValueError("CUB confirmatory ALG is fixed to warm-up 20")
+            if args.batch_size != 128:
+                raise ValueError("CUB ALG warm-up-20 is fixed to batch 128")
+            if args.posthoc_diagnostic_id is not None:
+                raise ValueError("CUB ALG-w20 is prespecified, not a Pet diagnostic")
+        elif args.alg_controller_warmup_epochs == 20:
             if args.batch_size != 128:
                 raise ValueError("ALG warm-up-20 diagnostic is fixed to batch 128")
             if args.posthoc_diagnostic_id != ALG_WARMUP20_DIAGNOSTIC_ID:
@@ -145,6 +183,7 @@ def write_epoch_status(
     save_json(
         {
             "status": "training",
+            "dataset": _dataset_contract(args)[0],
             "kind": args.kind,
             "method": args.method,
             "batch_size": args.batch_size,
@@ -167,13 +206,15 @@ def load_full_teacher(
     *,
     validation_hash: str,
     device: torch.device,
+    dataset_name: str = "Oxford-IIIT Pet",
+    num_classes: int = PET_NUM_CLASSES,
 ) -> tuple[ResNet56, dict[str, Any], str, str]:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     metadata = payload.get("metadata", {})
     expected = {
         "purpose": "phase1_scientific_full_teacher",
-        "dataset": "Oxford-IIIT Pet",
-        "num_classes": NUM_CLASSES,
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "architecture": "cifar_style_resnet56_6n_plus_2_n9",
         "epochs": PLANNED_EPOCHS,
         "seed": 1,
@@ -186,7 +227,7 @@ def load_full_teacher(
                 f"Full teacher contract mismatch for {key}: "
                 f"expected={value!r} got={metadata.get(key)!r}"
             )
-    teacher = ResNet56(num_classes=NUM_CLASSES)
+    teacher = ResNet56(num_classes=num_classes)
     teacher.load_state_dict(payload["model"], strict=True)
     actual_state_hash = state_dict_sha256(teacher)
     if actual_state_hash != metadata.get("model_state_sha256"):
@@ -198,10 +239,13 @@ def load_full_teacher(
 
 
 def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any]:
+    dataset_name, num_classes, loader_builder, test_loader_builder = _dataset_contract(
+        args
+    )
     seed_everything(args.seed)
-    model = ResNet56(num_classes=NUM_CLASSES).to(device)
+    model = ResNet56(num_classes=num_classes).to(device)
     initial_hash = state_dict_sha256(model)
-    train_loader, validation_loader, manifest = build_train_validation_loaders(
+    train_loader, validation_loader, manifest = loader_builder(
         args.data_dir,
         train_batch_size=args.batch_size,
         eval_batch_size=args.eval_batch_size,
@@ -248,7 +292,13 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             total += batch
             total_loss += float(loss.detach()) * batch
             correct += int(logits.argmax(dim=1).eq(targets).sum())
-        validation = evaluate(model, validation_loader, device, teacher=True)
+        validation = evaluate(
+            model,
+            validation_loader,
+            device,
+            teacher=True,
+            num_classes=num_classes,
+        )
         synchronize(device)
         elapsed = time.perf_counter() - epoch_start
         row = {
@@ -285,8 +335,8 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     selected_state_hash = state_dict_sha256(model)
     metadata = {
         "purpose": "phase1_scientific_full_teacher",
-        "dataset": "Oxford-IIIT Pet",
-        "num_classes": NUM_CLASSES,
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "architecture": "cifar_style_resnet56_6n_plus_2_n9",
         "epochs": PLANNED_EPOCHS,
         "seed": args.seed,
@@ -310,23 +360,31 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     if device.type == "cuda":
         torch.cuda.empty_cache()
     selected_payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    model = ResNet56(num_classes=NUM_CLASSES)
+    model = ResNet56(num_classes=num_classes)
     model.load_state_dict(selected_payload["model"], strict=True)
     if state_dict_sha256(model) != selected_state_hash:
         raise RuntimeError("Reloaded teacher state does not match selected state")
     model.to(device)
 
     # Official test is instantiated only after validation selection and strict load.
-    test_loader = build_official_test_loader(
+    test_loader = test_loader_builder(
         args.data_dir,
         eval_batch_size=args.eval_batch_size,
         num_workers=args.num_workers,
         device=device,
     )
-    test_metrics = evaluate(model, test_loader, device, teacher=True)
+    test_metrics = evaluate(
+        model,
+        test_loader,
+        device,
+        teacher=True,
+        num_classes=num_classes,
+    )
     summary = {
         "status": "complete",
         "scientific_result": True,
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "kind": "teacher",
         "epochs": PLANNED_EPOCHS,
         "seed": args.seed,
@@ -352,10 +410,13 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
 
 def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any]:
     assert args.method is not None
+    dataset_name, num_classes, loader_builder, test_loader_builder = _dataset_contract(
+        args
+    )
     seed_everything(args.seed)
-    student = create_student(num_classes=NUM_CLASSES, drop_path_rate=0.1).to(device)
+    student = create_student(num_classes=num_classes, drop_path_rate=0.1).to(device)
     initial_hash = state_dict_sha256(student)
-    train_loader, validation_loader, manifest = build_train_validation_loaders(
+    train_loader, validation_loader, manifest = loader_builder(
         args.data_dir,
         train_batch_size=args.batch_size,
         eval_batch_size=args.eval_batch_size,
@@ -386,6 +447,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             args.teacher_checkpoint,
             validation_hash=manifest["validation_image_ids_sha256"],
             device=device,
+            dataset_name=dataset_name,
+            num_classes=num_classes,
         )
     if args.method in {"lg", "alg"}:
         guidance = LocalityGuidance().to(device)
@@ -505,7 +568,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         average_guidance = totals["guidance"] / total
         if controller is not None:
             controller.observe(epoch, average_guidance, beta_used=beta)
-        validation = evaluate(student, validation_loader, device, teacher=False)
+        validation = evaluate(
+            student,
+            validation_loader,
+            device,
+            teacher=False,
+            num_classes=num_classes,
+        )
         synchronize(device)
         elapsed = time.perf_counter() - epoch_start
         peak_memory = (
@@ -560,7 +629,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     student.load_state_dict(best_student_state, strict=True)
     selected_student_hash = state_dict_sha256(student)
     is_alg_warmup20_diagnostic = (
-        args.posthoc_diagnostic_id == ALG_WARMUP20_DIAGNOSTIC_ID
+        _dataset_key(args) == "pet"
+        and args.posthoc_diagnostic_id == ALG_WARMUP20_DIAGNOSTIC_ID
     )
     metadata = {
         "purpose": (
@@ -571,7 +641,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic": is_alg_warmup20_diagnostic,
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
-        "dataset": "Oxford-IIIT Pet",
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "architecture": "deit_tiny_patch16_224",
         "method": args.method,
         "fusion_ratio_lambda": args.fusion_ratio,
@@ -587,6 +658,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "initial_student_state_sha256": initial_hash,
         "teacher_model_state_sha256": teacher_state_hash,
         "controller_warmup_epochs": args.alg_controller_warmup_epochs,
+        "guidance_controller_warmup_epochs": (
+            None if controller is None else controller.warmup_epochs
+        ),
         "official_test_policy": "once_after_validation_selection",
         "official_test_evaluations_at_checkpoint_write": 0,
     }
@@ -610,20 +684,26 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     if device.type == "cuda":
         torch.cuda.empty_cache()
     selected_payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
-    student = create_student(num_classes=NUM_CLASSES, drop_path_rate=0.1)
+    student = create_student(num_classes=num_classes, drop_path_rate=0.1)
     student.load_state_dict(selected_payload["student"], strict=True)
     if state_dict_sha256(student) != selected_student_hash:
         raise RuntimeError("Reloaded student state does not match selected state")
     student.to(device)
 
     # Official test is instantiated only after validation selection and strict load.
-    test_loader = build_official_test_loader(
+    test_loader = test_loader_builder(
         args.data_dir,
         eval_batch_size=args.eval_batch_size,
         num_workers=args.num_workers,
         device=device,
     )
-    test_metrics = evaluate(student, test_loader, device, teacher=False)
+    test_metrics = evaluate(
+        student,
+        test_loader,
+        device,
+        teacher=False,
+        num_classes=num_classes,
+    )
     summary = {
         "status": "complete",
         "scientific_result": True,
@@ -632,6 +712,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
         "kind": "student",
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "method": args.method,
         "fusion_ratio_lambda": args.fusion_ratio,
         "batch_size": args.batch_size,
@@ -652,6 +734,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_metadata": teacher_metadata,
         "controller_final": None if controller is None else controller.state_dict(),
         "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
+        "guidance_controller_warmup_epochs": (
+            None if controller is None else controller.warmup_epochs
+        ),
         "optimizer_contract": "shared_single_group_adamw_all_trainable_parameters_wd_0.05",
         "split_manifest": manifest,
         "training_seconds": time.perf_counter() - start_all,
@@ -677,7 +762,8 @@ def main() -> None:
         torch.backends.cudnn.deterministic = True
         device = torch.device("cuda")
         log(
-            f"[PHASE1_FULL_START] kind={args.kind} method={args.method} "
+            f"[PHASE1_FULL_START] dataset={_dataset_contract(args)[0]} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
@@ -689,7 +775,8 @@ def main() -> None:
         )
         save_json(payload, run_dir / "summary.json")
         log(
-            f"[PHASE1_FULL_DONE] kind={args.kind} method={args.method} "
+            f"[PHASE1_FULL_DONE] dataset={_dataset_contract(args)[0]} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"selected_epoch={payload['selected_epoch']} "
             f"test_macro={payload['official_test']['macro_top1']:.3f} "
@@ -708,6 +795,7 @@ def main() -> None:
             {
                 "status": "failed",
                 "scientific_result": False,
+                "dataset": _dataset_contract(args)[0],
                 "kind": args.kind,
                 "method": args.method,
                 "fusion_ratio_lambda": args.fusion_ratio,
@@ -723,7 +811,8 @@ def main() -> None:
             run_dir / "failure.json",
         )
         log(
-            f"[PHASE1_FULL_FAILED] kind={args.kind} method={args.method} "
+            f"[PHASE1_FULL_FAILED] dataset={_dataset_contract(args)[0]} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} seed={args.seed} "
             f"failure={failure_kind}:{type(error).__name__}:{message}"
         )
