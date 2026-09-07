@@ -8,7 +8,7 @@
 
 ## 현재 상태
 
-**Phase 0.5 완료 — Phase 1 batch 64 probe 완료, batch 128 probe 대기.**
+**Phase 0.5 완료 — Phase 1 batch 64 probe 감사 완료, batch 128 probe 로그상 완료·산출물 감사 대기.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -23,15 +23,17 @@ Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` spl
 사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후
 선택하지 않도록 student batch `64/128`과 iBKD λ `0.25/0.5`를 모두 3 seed로
 실행하고 별도 profile로 보고합니다. 2026-09-06에 batch 64/128 분류 36개 student와
-각 profile의 teacher 실행을 모두 완료했습니다. Batch 64 frozen probe 본 실험도
-완료됐지만 iBKD가 matched ALG보다 높다는 1차 가설은 지지되지 않았습니다. 사전에
-고정한 batch 128 probe까지 실행한 뒤 Phase 1 최종 결정을 내립니다.
+각 profile의 teacher 실행을 모두 완료했습니다. Batch 64 frozen probe에서는 iBKD가
+matched ALG보다 낮았습니다. Batch 128 probe는 H200 로그상 90/90 완료됐고 iBKD가
+ALG보다 높았지만, epoch 2에 guidance가 종료된 ALG만 batch 64 대비 18.713%p
+급락했습니다. LG는 두 profile 모두 1위였습니다. Batch 128 전체 산출물 감사와 ALG
+warm-up 20 사후 진단을 확인한 뒤 Phase 1 최종 결정을 내립니다.
 
 | Phase | 핵심 질문 | 상태 |
 |---|---|---|
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 |
 | 0.5 | Flowers pseudo-mask로 전체 probe 파이프라인이 작동하는가? | 완료 / 통과 |
-| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | batch 64 1차 가설 No-Go / batch 128 probe 대기 |
+| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 두 profile 실행 완료 / 방향 불일치·산출물 감사 대기 |
 | 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 대기 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
@@ -47,6 +49,7 @@ Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` spl
 - Pet batch 64 분류 결과: [phase1/reports/classification/batch64/RESULTS.md](phase1/reports/classification/batch64/RESULTS.md)
 - Pet batch 128 분류 결과: [phase1/reports/classification/batch128/RESULTS.md](phase1/reports/classification/batch128/RESULTS.md)
 - Pet batch 64 frozen probe 결과: [phase1/reports/frozen_probe/batch64/RESULTS.md](phase1/reports/frozen_probe/batch64/RESULTS.md)
+- Pet batch 128 frozen probe 잠정 결과: [phase1/reports/frozen_probe/batch128/RESULTS.md](phase1/reports/frozen_probe/batch128/RESULTS.md)
 
 ## 저장소 구성 원칙
 

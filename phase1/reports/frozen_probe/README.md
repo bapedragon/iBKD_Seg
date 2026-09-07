@@ -7,10 +7,13 @@ GitHub Release에 보존하고 데이터셋과 feature cache는 보존하지 않
 | 분류 batch profile | 상태 | 결과 |
 |---|---|---|
 | 64 | 6설정 × 3 encoder seed × 5 probe seed 완료 | [batch64/RESULTS.md](batch64/RESULTS.md) |
-| 128 | 대기 | batch 128 분류 checkpoint로 동일 프로토콜 실행 예정 |
+| 128 | H200 로그상 90/90 완료·산출물 감사 대기 | [batch128/RESULTS.md](batch128/RESULTS.md) |
 
-Batch 64의 1차 가설인 `iBKD mIoU > matched ALG mIoU`는 지지되지 않았습니다.
-전체 Phase 1 판단은 사전에 고정한 batch 128 probe까지 완료한 뒤 확정합니다.
+Batch 64에서는 `iBKD mIoU > matched ALG mIoU`가 지지되지 않았고, batch 128에서는
+반대로 iBKD가 ALG보다 `+14.879/+13.817`%p 높았습니다. 그러나 batch 128 ALG는
+guidance가 epoch 2에 종료된 checkpoint라 profile 간 방향이 뒤집혔으며, LG가 두
+profile 모두 1위입니다. 전체 Phase 1 판단은 batch 128 산출물 독립 감사와 별도 ALG
+warm-up 20 사후 진단을 확인한 뒤 기록합니다.
 
 ## 결과 반입·감사 절차
 
@@ -19,11 +22,11 @@ Batch 64의 1차 가설인 `iBKD mIoU > matched ALG mIoU`는 지지되지 않았
 ```bash
 PYTHONPATH=src python phase1/scripts/import_probe_archive.py \
   /path/to/result.zip \
-  --batch-size 64 \
-  --issue-id 706 \
-  --output-dir phase1/results/raw/oxford_iiit_pet/frozen_probe_v1/batch64 \
+  --batch-size 128 \
+  --issue-id ISSUE_ID \
+  --output-dir phase1/results/raw/oxford_iiit_pet/frozen_probe_v1/batch128 \
   --canonical-bundle-filename \
-    phase1_pet_b128_classification_issue702_and_b64_frozen_probe_issue706_v1.zip \
+    phase1_pet_b128_frozen_probe_v1.zip \
   --verify-all-crc
 ```
 
@@ -32,6 +35,6 @@ metric, test-once, 정성 panel을 독립적으로 다시 검사하고 Git 추�
 
 ```bash
 PYTHONPATH=src python phase1/scripts/curate_probe_results.py \
-  --raw-dir phase1/results/raw/oxford_iiit_pet/frozen_probe_v1/batch64 \
-  --report-dir phase1/reports/frozen_probe/batch64
+  --raw-dir phase1/results/raw/oxford_iiit_pet/frozen_probe_v1/batch128 \
+  --report-dir phase1/reports/frozen_probe/batch128
 ```

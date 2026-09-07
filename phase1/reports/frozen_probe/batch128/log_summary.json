@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "preliminary_log_only_artifact_audit_pending",
+  "dataset": "Oxford-IIIT Pet",
+  "classification_batch_size": 128,
+  "primary_metric": "test_input_224_two_class_mean_iou",
+  "aggregation": "mean_over_5_probe_seeds_within_each_encoder_seed_then_mean_and_sample_sd_over_3_encoder_seeds",
+  "source_log": {
+    "size_bytes": 65004,
+    "sha256": "6dda72b1c7ae3d5f0a81d24f74c4ffff2cfaeef414220a9ae9f1e25b4f5b1d86",
+    "excerpt_starts_mid_run": true,
+    "probe_candidate_done_lines_present": 136,
+    "probe_selection_done_lines_present": 46,
+    "probe_test_once_lines_present": 90,
+    "probe_full_raw_lines_present": 90,
+    "unique_variant_encoder_probe_rows": 90
+  },
+  "reported_completion": {
+    "status": "pass",
+    "selected_probes": 90,
+    "expected_selected_probes": 90,
+    "official_test_evaluations": 90,
+    "expected_official_test_evaluations": 90,
+    "elapsed_seconds": 3396.27,
+    "output_path": "/app/output/phase1_pet_probe_b128_full_v1"
+  },
+  "results": {
+    "vanilla": {
+      "encoder_seed_means": [0.599990, 0.605188, 0.608426],
+      "mean": 0.604535,
+      "sample_standard_deviation": 0.004256
+    },
+    "kd": {
+      "encoder_seed_means": [0.734474, 0.730092, 0.748374],
+      "mean": 0.737646,
+      "sample_standard_deviation": 0.009545
+    },
+    "lg": {
+      "encoder_seed_means": [0.831711, 0.828009, 0.825972],
+      "mean": 0.828564,
+      "sample_standard_deviation": 0.002910
+    },
+    "alg": {
+      "encoder_seed_means": [0.638199, 0.636601, 0.626529],
+      "mean": 0.633776,
+      "sample_standard_deviation": 0.006327
+    },
+    "ibkd_lambda_0.25": {
+      "encoder_seed_means": [0.785752, 0.773785, 0.788158],
+      "mean": 0.782565,
+      "sample_standard_deviation": 0.007698
+    },
+    "ibkd_lambda_0.5": {
+      "encoder_seed_means": [0.777753, 0.766825, 0.771272],
+      "mean": 0.771950,
+      "sample_standard_deviation": 0.005495
+    }
+  },
+  "reported_primary_contrasts": {
+    "ibkd_lambda_0.25_minus_alg": {
+      "encoder_seed_differences": [0.147553, 0.137183, 0.161628],
+      "mean": 0.148788,
+      "sample_standard_deviation": 0.012269,
+      "formal_p_value_reported": false
+    },
+    "ibkd_lambda_0.5_minus_alg": {
+      "encoder_seed_differences": [0.139554, 0.130224, 0.144743],
+      "mean": 0.138174,
+      "sample_standard_deviation": 0.007357,
+      "formal_p_value_reported": false
+    }
+  },
+  "audit": {
+    "full_artifact_bundle_received": false,
+    "checkpoint_hash_and_strict_load_verified": false,
+    "candidate_selection_recomputed": false,
+    "confusion_metrics_recomputed": false,
+    "qualitative_panels_verified": false,
+    "final_scientific_status": "pending"
+  }
+}

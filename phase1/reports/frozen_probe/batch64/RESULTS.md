@@ -85,9 +85,9 @@ Vanilla feature의 공간 복원성이 약하다는 점도 확인됩니다.
 4. **결과 확인 뒤 protocol을 바꾸면 안 됩니다.** probe head, LR grid, selection,
    mask 규칙을 고쳐 같은 v1 결과를 대체할 수 없습니다. 수정 실험은 명시적인 v2
    ablation으로 분리해야 합니다.
-5. **전체 Phase 1 결정은 아직 보류입니다.** batch 64/128을 모두 보고하기로 사전
-   고정했으므로 batch 128 checkpoint에 동일 probe를 적용한 뒤 최종 Go/Hold/No-Go를
-   기록합니다.
+5. **전체 Phase 1 결정은 아직 보류입니다.** 후속 batch 128 probe는 로그상
+   완료됐지만 iBKD–ALG 방향이 반대로 나타났고 LG가 다시 1위였습니다. Batch 128
+   산출물 감사와 ALG warm-up 20 사후 진단 뒤 최종 Go/Hold/No-Go를 기록합니다.
 
 분류 정확도와 probe mIoU 사이의 인과관계를 이 여섯 점만으로 주장할 수도 없습니다.
 Batch 64에서는 LG와 ALG가 분류에서도 iBKD보다 높았고 probe에서도 높았다는 관측만

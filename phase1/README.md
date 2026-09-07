@@ -1,6 +1,6 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **batch 64/128 분류·batch 64 frozen probe 완료 — batch 128 probe 대기**
+상태: **batch 64 probe 감사 완료·batch 128 probe 로그상 완료 — batch 128 산출물 감사 대기**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
@@ -19,6 +19,14 @@ Batch 64 frozen probe 본 실험도 완료했으나 iBKD λ=0.25/0.5가 matched 
 음수였습니다. 따라서 batch 64의 1차 가설은 지지되지 않았으며
 [전체 probe 결과](reports/frozen_probe/batch64/RESULTS.md)와
 [고정 정성 panel](reports/frozen_probe/batch64/QUALITATIVE.md)에 근거를 남깁니다.
+
+Batch 128 frozen probe는 전달된 H200 로그상 선택·test `90/90`과 최종 pass를
+완료했습니다. iBKD λ=0.25/0.5는 canonical ALG보다 각각
+`+14.879/+13.817`%p 높았지만 LG보다 `-4.600/-5.661`%p 낮았습니다. Batch 128
+ALG는 guidance가 epoch 2에 종료된 분류 checkpoint로 probe mIoU가 batch 64보다
+`-18.713`%p 급락했으므로, profile 간 iBKD–ALG 방향이 뒤집혔습니다. 현재 값과
+제한사항은 [batch 128 잠정 결과](reports/frozen_probe/batch128/RESULTS.md)에
+기록했으며, 전체 산출물의 독립 감사 전까지 최종 Phase 1 결정은 보류합니다.
 
 ## 핵심 질문
 
@@ -110,7 +118,8 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 ## 계산 자원
 
 - 로컬: Pet 데이터 감사, 단위 테스트, 결과 curation과 정성 확인
-- H200: 완료한 timing·두 분류 profile·batch 64 probe, 남은 batch 128 probe
+- H200: timing·두 분류 profile·batch 64/128 probe 실행 완료, ALG warm-up 20 사후
+  진단 실행 중/결과 대기
 
 ## Batch 64/128 frozen-probe smoke
 
@@ -179,8 +188,8 @@ checkpoint에 같은 probe 계약을 적용하는 것입니다.
 
 ## Batch 128 frozen-probe 본 실험
 
-Batch 128 smoke가 모든 계약을 통과했으므로 다음 명령으로 같은 LOCK된 본 실험을
-실행합니다.
+Batch 128 smoke 통과 뒤 다음 명령으로 같은 LOCK된 본 실험을 실행했고, 전달된
+로그상 선택 `90/90`, test-once `90/90`, 최종 pass를 완료했습니다.
 
 ```bash
 bash phase1/scripts/run_probe_full_b128.sh
@@ -197,6 +206,13 @@ bash phase1/scripts/run_probe_full_b128.sh
 - 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b128_v1_input`
 - Pet 데이터와 임시 feature cache: `/app/scratch`
 - 회수할 결과: `/app/output/phase1_pet_probe_b128_full_v1`
+
+로그에서 확인한 주 metric 순위는
+`LG 82.856 > iBKD-0.25 78.256 > iBKD-0.5 77.195 > KD 73.765 > ALG 63.378 > Vanilla 60.454`
+입니다. 자세한 encoder-seed 원값과 paired 차이는
+[잠정 결과 보고서](reports/frozen_probe/batch128/RESULTS.md)에 있습니다. 현재
+보고서는 로그만 반영했으며, 결과 bundle을 받은 뒤 270개 후보 선택, 90개
+checkpoint, confusion metric과 정성 panel을 독립 감사해 확정합니다.
 
 ## ALG controller warm-up 20 사후 진단
 
