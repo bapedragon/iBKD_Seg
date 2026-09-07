@@ -1,0 +1,275 @@
+# Phase 1 — Oxford-IIIT Pet 공간 표현 검증
+
+상태: **batch 64/128 probe와 ALG warm-up 20 진단 완료·감사 통과 — Phase 1 핵심 가설 No-Go**
+
+현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
+있는 설정은
+[`configs/oxford_iiit_pet_phase1_v1.json`](configs/oxford_iiit_pet_phase1_v1.json)에
+있습니다.
+
+2026-09-06에 batch 64/128의 teacher와 6설정 × encoder seed 3개를 모두
+완료했습니다. 공식 test-once와 동일 초기화·teacher·validation split 계약,
+각 profile checkpoint 19개의 hash·strict-load·유한값 감사를 통과했습니다.
+[batch 64](reports/classification/batch64/RESULTS.md),
+[batch 128](reports/classification/batch128/RESULTS.md) 분류 결과와
+[profile 비교](reports/classification/BATCH_PROFILE_COMPARISON.md)를 함께 보고합니다.
+
+Batch 64 frozen probe 본 실험도 완료했으나 iBKD λ=0.25/0.5가 matched ALG보다
+각각 `-1.796/-2.358`%p 낮았고, 여섯 paired encoder-seed 차이가 모두
+음수였습니다. 따라서 batch 64의 1차 가설은 지지되지 않았으며
+[전체 probe 결과](reports/frozen_probe/batch64/RESULTS.md)와
+[고정 정성 panel](reports/frozen_probe/batch64/QUALITATIVE.md)에 근거를 남깁니다.
+
+Batch 128 frozen probe도 선택·test `90/90`과 전체 산출물 독립 감사를
+통과했습니다. iBKD λ=0.25/0.5는 canonical ALG보다 각각
+`+14.879/+13.817`%p 높았지만 LG보다 `-4.600/-5.661`%p 낮았습니다. Batch 128
+ALG는 guidance가 epoch 2에 종료되어 probe mIoU가 batch 64보다 `-18.713`%p
+급락했습니다. Controller 종료 판정 warm-up만 `0 → 20`으로 바꾼 사후 진단에서는
+ALG mIoU가 `80.947%`로 회복되어 iBKD 두 λ보다 `+2.691/+3.752`%p 높았습니다.
+따라서 원래의 iBKD > LG/ALG 가설은 지지되지 않았고, 최종 판단을
+[Phase 1 결정문](DECISION.md)에 No-Go로 기록했습니다.
+
+## 핵심 질문
+
+> 품종 분류 정답만으로 학습한 iBKD encoder에 동물의 위치와 형태 정보가
+> Vanilla, KD, LG, ALG보다 선형적으로 더 쉽게 읽히는 상태로 남아 있는가?
+
+[Phase 0.5](../phase0.5/README.md)는 Flowers 자동 pseudo-mask로 실행 경로만
+확인했습니다. Phase 1은 Oxford-IIIT Pet의 공식 pixel-level trimap을 사용해 실제
+공간정보 보존 여부를 판단하는 첫 본 실험입니다.
+
+## 실험 흐름
+
+Oxford-IIIT Pet에는 각 이미지의 품종 label과 pixel trimap이 함께 있습니다.
+먼저 모델에는 mask를 보여주지 않고 품종 label만으로 분류 encoder를 학습합니다.
+그 뒤 분류 head를 제거하고 encoder를 고정한 다음, 모든 방법에 같은 작은
+segmentation probe를 붙입니다.
+
+```text
+Pet 이미지 + 품종 라벨
+        ↓ 조건을 맞춘 분류 학습
+Vanilla / KD / LG / ALG / iBKD encoder
+        ↓ 분류 head 제거 및 encoder 고정
+최종 feature [B, 192, 14, 14]
+        ↓ 동일한 Conv2d(192, 2, 1) probe만 trimap으로 학습
+동물 / 배경 예측 비교
+```
+
+iBKD 결과가 여러 encoder seed에서 일관되게 높다면, 분류만 학습했는데도 iBKD
+feature에 위치·형태 정보가 더 선형적으로 읽기 쉬운 형태로 남았다는 근거가 됩니다.
+
+## 고정한 full classification matrix
+
+데이터 split, test-once, 모델 구조, metric과 probe 방식을 유지합니다. timing
+결과에서 12개 조합 모두 OOM 없이 실행되고 batch 64/128의 시간이 비슷했으므로,
+성능 수치를 보기 전에 다음 두 batch profile과 두 iBKD λ를 모두 실행·보고하기로
+고정했습니다.
+
+```text
+(Vanilla, KD, LG, ALG, iBKD-0.25, iBKD-0.5)
+× (batch 64, batch 128) × encoder seed (1, 2, 3)
+= student 36 runs
+```
+
+H200 요청은 batch 64와 batch 128로 나눴습니다. 각 요청은 공통 teacher 1회와 해당
+batch의 student 18회로 구성했습니다. 실제 시간은 batch 64가 7시간 29분 43초,
+batch 128이 7시간 23분 29초였습니다. 결과가 좋은 batch나 λ만 골라 main 결과로
+바꾸지 않고 두 profile을 별도 표로 모두 남깁니다.
+
+## 본 실험 초안에 포함된 공통 계약
+
+1. 공식 이미지, 품종 label, trimap과 split의 byte size·SHA-256 및 1:1 대응
+2. trimap의 동물/배경 정의와 애매한 경계 픽셀 ignore 규칙
+3. 공통 CNN teacher, DeiT-Tiny student와 분류 학습 schedule
+4. Vanilla/KD/LG/ALG/iBKD의 방법별 고정값과 동일성 범위
+5. encoder-training seed, checkpoint 선택 규칙과 test 접근 정책
+6. frozen feature layer, normalization 여부와 cache 계약
+7. 공통 probe 초기화, LR grid, epoch, seed와 validation 선택 규칙
+8. foreground/background IoU, 2-class mIoU, Dice와 비영상 baseline
+
+위 항목 중 batch와 λ를 제외한 초안은 2026-09-05에 기록했습니다. 공식 `trainval` 3,680장은 품종별
+20장의 고정 validation을 떼어 `train/validation=2,940/740`으로 사용하고, 공식
+test 3,669장은 최종 평가 전까지 선택 과정에서 사용하지 않습니다. 분류 encoder는
+seed `[1,2,3]`, probe는 각 encoder마다 seed `[1,2,3,4,5]`를 사용합니다.
+
+full-data timing의 runtime만 사용해 H200 작업을 두 개로 나눴습니다. 각 실행 시작
+전에 이미지 archive SHA-256, image-label-trimap 대응, split manifest와 method
+contract를 검사합니다. 분류 validation으로 checkpoint를 고른 뒤에만 official test를
+각 checkpoint당 정확히 한 번 평가합니다.
+
+## 비교가 뜻하는 것
+
+| 비교 | 확인하는 내용 |
+|---|---|
+| iBKD vs Vanilla | CNN teacher guidance가 공간정보 보존에 도움이 되는가? |
+| iBKD vs KD | 최종 예측 전달보다 grid를 유지한 전달이 유리한가? |
+| iBKD vs LG | 학습 가능한 정렬이 고정된 공간 정렬보다 유리한가? |
+| iBKD vs ALG | iBKD 추가 구조가 adaptive guidance보다 유리한가? |
+
+가장 가까운 주 비교는 조건이 일치한 iBKD–ALG입니다. 조건이 다른 checkpoint나
+pilot 결과는 별도의 탐색 결과로 표시합니다.
+
+## 해석 범위
+
+긍정적 결과는 iBKD feature의 **공간정보 선형 복원성**이 더 좋다는 근거입니다.
+iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 우수하다는 뜻은
+아닙니다. 이후 Phase에서 공간 대조 실험, 공통 decoder fine-tuning, PASCAL VOC와
+세그멘테이션 전용 KD 비교가 필요합니다.
+
+## 계산 자원
+
+- 로컬: Pet 데이터 감사, 단위 테스트, 결과 curation과 정성 확인
+- H200: timing·두 분류 profile·batch 64/128 probe·ALG warm-up 20 사후 진단 완료
+
+## Batch 64/128 frozen-probe smoke
+
+본 probe 전에 실행 경로, frozen-feature 계약, 메모리와 시간을 확인하는
+비과학적 smoke가 두 batch profile에 준비되어 있습니다. 해당 batch 분류 결과 중
+encoder seed 1의 6개 checkpoint를 사용하고, 공식 train/validation `2,940/740`
+전체에 probe seed 1과 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식
+test는 생성하거나 평가하지 않습니다.
+
+```bash
+bash Phase1_PET/scripts/run_probe_smoke_b64.sh
+bash Phase1_PET/scripts/run_probe_smoke_b128.sh
+```
+
+batch 64 기본 입력은 `/app/output/phase1_pet_full_b64_v1`, batch 128 기본 입력은
+`/app/scratch/phase1_pet_full_b128_v1_input`입니다. 이전 H200 출력이 해당 경로에
+유지되어 있으면 그대로 사용하고, 새 컨테이너라서 입력이 없으면
+[batch 64](reports/classification/batch64/checkpoint_release.json) 또는
+[batch 128](reports/classification/batch128/checkpoint_release.json) checkpoint Release
+manifest에 고정된 GitHub Release asset을 자동으로 내려받습니다. 전체 student
+18개와 teacher 1개 checkpoint가 들어 있으며 byte size와 SHA-256을 통과해야만
+압축을 풉니다. 따라서 이전 컨테이너 mount는 필수가 아닙니다.
+
+checkpoint binary는 저장소의 모든 clone을 영구적으로 무겁게 만들지 않도록 Git
+commit이 아니라 GitHub Release asset으로 보존합니다. manifest와 다운로드·검증
+코드는 Git 이력에 포함합니다. 필요하면 `PHASE1_B64_CLASSIFICATION_ROOT` 또는
+`PHASE1_B128_CLASSIFICATION_ROOT`로 입력 설치 경로만 바꿀 수 있습니다.
+
+smoke의 validation IoU는 파이프라인 검사용이며 방법 선택이나 논문 결론에 사용할
+수 없습니다. 결과는 batch별
+`/app/output/phase1_pet_probe_b{64,128}_smoke_v1`에 작은 summary, CSV와 smoke
+probe checkpoint만 저장하고, 수 GB의 feature cache는 `/app/scratch`에 둡니다.
+
+## Batch 64 frozen-probe 본 실험
+
+Smoke 통과 뒤 다음 명령으로 LOCK된 본 실험을 실행했고 H200 작업 706에서
+완료했습니다.
+
+```bash
+bash Phase1_PET/scripts/run_probe_full_b64.sh
+```
+
+6개 설정 × encoder seed 3개 × probe seed 5개에서 LR 3개를 각각 100 epoch
+학습하므로 LR 후보는 270개이고, validation으로 선택되는 probe는 90개입니다.
+90개 선택과 strict reload가 모두 끝났다는
+`selection_complete_before_test.json`을 먼저 기록한 다음에만 공식 test를 엽니다.
+선택된 각 probe는 grid/input metric과 고정 정성 예측을 한 번의 test pass에서 함께
+계산하므로 공식 test 평가는 probe당 정확히 1회입니다.
+
+기본 경로는 다음과 같습니다.
+
+- 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b64_v1_input`
+- Pet 데이터와 임시 feature cache: `/app/scratch`
+- 회수할 결과: `/app/output/phase1_pet_probe_b64_full_v1`
+
+결과 폴더에는 90개 선택 probe, 모든 원값 CSV, 집계 JSON, 실행 상태, 두 비영상
+baseline과 결과 전에 고정한 test 8장의 정성 panel이 포함됩니다. iBKD λ 0.25와
+0.5를 결과로 고르지 않도록 정성 panel도 두 세트 모두 저장합니다. 수 GB의 frozen
+feature cache와 데이터셋은 scratch에서 사용 후 결과 폴더에 복사하지 않습니다.
+
+검증된 결과는 [batch 64 결과 보고서](reports/frozen_probe/batch64/RESULTS.md)에
+있습니다. 전체 raw 산출물은 Git history 대신
+[GitHub Release manifest](reports/frozen_probe/batch64/artifact_release.json)에
+고정했습니다. 이후 동일 계약을 batch 128 checkpoint에도 적용해 실행·감사를
+완료했습니다.
+
+## Batch 128 frozen-probe 본 실험
+
+Batch 128 smoke 통과 뒤 다음 명령으로 같은 LOCK된 본 실험을 실행했고, H200 작업
+710에서 선택 `90/90`, test-once `90/90`, 최종 pass를 완료했습니다.
+
+```bash
+bash Phase1_PET/scripts/run_probe_full_b128.sh
+```
+
+입력 checkpoint가 없는 새 컨테이너에서는 batch 128 classification GitHub Release를
+자동으로 내려받아 byte size와 SHA-256을 검사합니다. probe 설정은 batch 64 본
+실험과 같으며, 18개 encoder × probe seed 5개에서 LR 3개를 각각 100 epoch
+학습합니다. 90개 probe의 validation 선택이 모두 끝난 기록을 먼저 저장한 뒤에만
+공식 test를 probe당 정확히 한 번 평가합니다.
+
+기본 경로는 다음과 같습니다.
+
+- 분류 checkpoint 설치: `/app/scratch/phase1_pet_full_b128_v1_input`
+- Pet 데이터와 임시 feature cache: `/app/scratch`
+- 회수할 결과: `/app/output/phase1_pet_probe_b128_full_v1`
+
+독립 감사로 확정한 주 metric 순위는
+`LG 82.856 > iBKD-0.25 78.256 > iBKD-0.5 77.195 > KD 73.765 > ALG 63.378 > Vanilla 60.454`
+입니다. 자세한 encoder-seed 원값과 paired 차이는
+[확정 결과 보고서](reports/frozen_probe/batch128/RESULTS.md)에 있습니다. 270개 후보
+선택, 90개 checkpoint, confusion metric, test-once와 정성 panel 감사를 모두
+통과했으며 전체 바이너리는
+[GitHub Release manifest](reports/frozen_probe/batch128/artifact_release.json)에
+고정했습니다.
+
+## ALG controller warm-up 20 사후 진단
+
+Batch 128의 canonical ALG가 세 seed 모두 epoch 2에서 guidance를 종료한 원인을
+확인하기 위해 별도의 사후 진단을 둡니다. LOCK된 Phase 1 결과를 수정하거나
+대체하지 않으며, ALG의 `controller_warmup_epochs`만 `0`에서 `20`으로 바꿉니다.
+optimizer LR warm-up 20 epoch, locality-guidance loss, `beta=2.5`, threshold
+`-0.02`, smoothing window `50`, ALG 식과 `>=` 종료 경계는 그대로입니다.
+
+여기서 controller warm-up은 guidance를 20 epoch 동안 끄는 뜻이 아닙니다.
+guidance는 epoch 1부터 적용하고, adaptive **종료 판정만** 기존 iBKD controller와
+같은 시점까지 유예합니다.
+
+먼저 다음 통합 smoke로 분류 checkpoint 생성부터 strict load·encoder freeze,
+세 probe LR 후보의 validation-only 실행까지 한 번에 검사합니다.
+
+```bash
+bash Phase1_PET/scripts/run_alg_warmup20_smoke_b128.sh
+```
+
+Smoke는 timing teacher와 ALG encoder seed 1을 각각 2 epoch만 학습하고, probe seed
+1에서 LR `[0.01, 0.03, 0.1]`을 각각 2 epoch 실행합니다. 공식 test는 열지 않으며,
+분류 정확도와 validation IoU는 논문 결과나 설정 선택에 사용할 수 없습니다. 기계
+판독 계약은
+[`configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json`](configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json)에
+고정했습니다.
+
+H200 작업 711에서 통합 smoke가 `classification=1/1`, probe LR 후보 `3/3`, 선택
+probe `1/1`로 통과했습니다. ALG의 두 epoch 동안 guidance가 유지됐고
+(`stop_epoch=None`, `beta_history=[2.5, 2.5]`), peak CUDA 사용량은 약 4.47 GB,
+실행 본체 시간은 130.95초였습니다. 따라서 MIG 1개에서 다음 full 진단을 실행할 수
+있습니다.
+
+```bash
+bash Phase1_PET/scripts/run_alg_warmup20_full_b128.sh
+```
+
+Full 진단은 batch 128 Release에서 감사된 동일 teacher를 내려받아 재사용하고, ALG
+encoder seed `[1,2,3]`을 300 epoch로 새로 학습했습니다. 이어서 세 encoder 각각에
+probe seed `[1,2,3,4,5]`와 LR `[0.01,0.03,0.1]`을 적용하므로 45개 후보 중
+validation으로 15개를 선택합니다. 15개 선택 완료 기록을 남긴 뒤에만 공식 probe
+test를 열어 선택된 probe당 한 번 평가하고, encoder/probe seed 1의 고정 test 8장
+panel도 같은 추론에서 저장합니다. 회수할 결과는
+`/app/output/phase1_pet_alg_warmup20_b128_full_v1`이며, full 계약은
+[`configs/oxford_iiit_pet_alg_warmup20_full_v1.json`](configs/oxford_iiit_pet_alg_warmup20_full_v1.json)에
+고정했습니다.
+
+H200 작업 712에서 분류 3/3, probe 선택·test 15/15를 완료했고 전체 산출물 감사도
+통과했습니다. Controller 종료 epoch는 canonical의 `2/2/2`에서 `103/118/137`로
+늦어졌고, test macro Top-1은 `22.880 → 31.080%`, probe mIoU는
+`63.378 → 80.947%`로 회복됐습니다. 회복된 ALG probe는 iBKD λ=0.25/0.5보다
+`+2.691/+3.752`%p 높고 LG보다 `-1.909`%p 낮았습니다. 전체 결과는
+[사후 진단 보고서](reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)에
+있습니다.
+
+이 실행은 결과를 본 뒤 원인을 확인한 **사후 진단**입니다. 수치는 보고하지만
+사전에 LOCK한 canonical ALG 및 Phase 1 주 결과를 대체하는 confirmatory 실험으로
+해석하지 않습니다.

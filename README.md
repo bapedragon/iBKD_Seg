@@ -8,7 +8,7 @@
 
 ## 현재 상태
 
-**Phase 0.5 완료 — Phase 1 전체 실행·감사 완료, 핵심 iBKD > LG/ALG 가설 No-Go.**
+**Phase 0.5 완료 — Phase 1-PET 실행·감사 완료 및 No-Go, Phase 1-CUB-200 준비 중.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -16,10 +16,11 @@ Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metr
 분리했습니다. 2026-09-04에 전체 공식 split의 frozen-probe 실행과 정성 확인이
 통과했습니다.
 
-실제 공간정보 보존 여부는 공식 pixel-level trimap을 사용하는 Phase 1
-Oxford-IIIT Pet 실험에서 판단합니다.
+첫 공간정보 보존 검증은 공식 pixel-level trimap을 사용하는 Phase 1-PET에서
+완료했습니다. 데이터셋 의존성을 분리해서 확인하기 위한 CUB-200-2011 독립 반복은
+`Phase1_CUB_200/`에서 준비합니다.
 
-Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` split을
+Phase 1-PET은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` split을
 사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후
 선택하지 않도록 student batch `64/128`과 iBKD λ `0.25/0.5`를 모두 3 seed로
 실행하고 별도 profile로 보고합니다. 2026-09-06에 batch 64/128 분류 36개 student와
@@ -28,15 +29,16 @@ checkpoint도 독립 감사를 통과했습니다. Batch 64에서는 iBKD가 mat
 낮았고, batch 128에서만 iBKD가 ALG보다 높았지만 ALG가 세 seed 모두 epoch 2에
 guidance를 종료했습니다. 종료 판정 warm-up만 20 epoch로 바꾼 사후 진단에서 ALG
 mIoU가 `63.378 → 80.947%`로 회복되어 iBKD 두 λ보다 높았습니다. LG는 두
-canonical profile 모두 1위였습니다. 따라서 Phase 1 핵심 가설은 No-Go이고 원래
+canonical profile 모두 1위였습니다. 따라서 Phase 1-PET 핵심 가설은 No-Go이고 원래
 전제의 Phase 2 진입은 보류합니다.
 
 | Phase | 핵심 질문 | 상태 |
 |---|---|---|
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 |
 | 0.5 | Flowers pseudo-mask로 전체 probe 파이프라인이 작동하는가? | 완료 / 통과 |
-| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 완료 / 핵심 가설 No-Go |
-| 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 진입 보류 — Phase 1 전제 미충족 |
+| 1-PET | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 완료 / 핵심 가설 No-Go |
+| 1-CUB-200 | CUB-200-2011에서도 같은 질문의 결론이 재현되는가? | 폴더 생성 / 프로토콜 미고정 |
+| 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 진입 보류 — Phase 1-PET 전제 미충족, CUB 반복 대기 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
 | 5 | dense task 전용 iBKD 확장이 필요한가? | 대기 |
@@ -46,18 +48,20 @@ canonical profile 모두 1위였습니다. 따라서 Phase 1 핵심 가설은 No
 - Flowers 점검: [phase0.5/README.md](phase0.5/README.md)
 - Flowers 정량·정성 결과: [phase0.5/DECISION.md](phase0.5/DECISION.md),
   [실제 이미지](phase0.5/reports/QUALITATIVE.md)
-- Pet 본 실험: [phase1/README.md](phase1/README.md)
-- Pet LOCK 프로토콜·full-run 계약: [phase1/PROTOCOL.md](phase1/PROTOCOL.md)
-- Pet batch 64 분류 결과: [phase1/reports/classification/batch64/RESULTS.md](phase1/reports/classification/batch64/RESULTS.md)
-- Pet batch 128 분류 결과: [phase1/reports/classification/batch128/RESULTS.md](phase1/reports/classification/batch128/RESULTS.md)
-- Pet batch 64 frozen probe 결과: [phase1/reports/frozen_probe/batch64/RESULTS.md](phase1/reports/frozen_probe/batch64/RESULTS.md)
-- Pet batch 128 frozen probe 결과: [phase1/reports/frozen_probe/batch128/RESULTS.md](phase1/reports/frozen_probe/batch128/RESULTS.md)
-- ALG controller warm-up 20 사후 진단: [phase1/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](phase1/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
-- Phase 1 결정: [phase1/DECISION.md](phase1/DECISION.md)
+- Pet 본 실험: [Phase1_PET/README.md](Phase1_PET/README.md)
+- Pet LOCK 프로토콜·full-run 계약: [Phase1_PET/PROTOCOL.md](Phase1_PET/PROTOCOL.md)
+- Pet batch 64 분류 결과: [Phase1_PET/reports/classification/batch64/RESULTS.md](Phase1_PET/reports/classification/batch64/RESULTS.md)
+- Pet batch 128 분류 결과: [Phase1_PET/reports/classification/batch128/RESULTS.md](Phase1_PET/reports/classification/batch128/RESULTS.md)
+- Pet batch 64 frozen probe 결과: [Phase1_PET/reports/frozen_probe/batch64/RESULTS.md](Phase1_PET/reports/frozen_probe/batch64/RESULTS.md)
+- Pet batch 128 frozen probe 결과: [Phase1_PET/reports/frozen_probe/batch128/RESULTS.md](Phase1_PET/reports/frozen_probe/batch128/RESULTS.md)
+- ALG controller warm-up 20 사후 진단: [Phase1_PET/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](Phase1_PET/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
+- Phase 1-PET 결정: [Phase1_PET/DECISION.md](Phase1_PET/DECISION.md)
+- CUB-200-2011 독립 반복 준비: [Phase1_CUB_200/README.md](Phase1_CUB_200/README.md)
 
 ## 저장소 구성 원칙
 
-- `phase0/`, `phase0.5/`, `phase1/`처럼 연구 단계별 최상위 폴더를 사용합니다.
+- `phase0/`, `phase0.5/`처럼 단계별 폴더를 사용하고, 같은 단계의 데이터셋별
+  실험은 `Phase1_PET/`, `Phase1_CUB_200/`처럼 분리합니다.
 - 각 Phase 폴더에는 해당 단계의 절차, 명령어, 보고서, 결정문을 둡니다.
 - 여러 Phase가 공유하는 구현은 `src/`에 둡니다.
 - 데이터셋, 체크포인트, feature cache와 원시 실행 결과는 Git에 올리지 않습니다.

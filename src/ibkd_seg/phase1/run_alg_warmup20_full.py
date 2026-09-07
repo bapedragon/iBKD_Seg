@@ -74,11 +74,11 @@ from .train_timing import file_sha256, format_duration
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FULL_CONFIG = (
     REPOSITORY_ROOT
-    / "phase1/configs/oxford_iiit_pet_alg_warmup20_full_v1.json"
+    / "Phase1_PET/configs/oxford_iiit_pet_alg_warmup20_full_v1.json"
 )
 DEFAULT_RELEASE_MANIFEST = (
     REPOSITORY_ROOT
-    / "phase1/reports/classification/batch128/checkpoint_release.json"
+    / "Phase1_PET/reports/classification/batch128/checkpoint_release.json"
 )
 EXPERIMENT_ID = "oxford_iiit_pet_alg_controller_warmup20_posthoc_full_v1"
 VARIANT = "alg_controller_warmup20"
@@ -165,6 +165,8 @@ def _validate_full_config(
             "diagnostic_value": 20,
         },
         "reference_batch": reference.get("batch_size") == 128,
+        # This is locked historical metadata inside the hashed full config.
+        # The live manifest path moved to Phase1_PET, but this value must remain.
         "reference_manifest_path": reference.get("release_manifest")
         == "phase1/reports/classification/batch128/checkpoint_release.json",
         "reference_release_hash": reference.get("release_manifest_sha256")

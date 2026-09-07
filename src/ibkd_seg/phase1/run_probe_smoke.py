@@ -40,10 +40,10 @@ from .train_timing import file_sha256
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PROTOCOL = (
-    REPOSITORY_ROOT / "phase1/configs/oxford_iiit_pet_phase1_v1.json"
+    REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_phase1_v1.json"
 )
 DEFAULT_SMOKE_CONFIG = (
-    REPOSITORY_ROOT / "phase1/configs/oxford_iiit_pet_probe_smoke_b64_v1.json"
+    REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_probe_smoke_b64_v1.json"
 )
 EXPECTED_VARIANTS = (
     "vanilla",

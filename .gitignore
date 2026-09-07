@@ -19,3 +19,6 @@ wandb/
 phase*/results/runs/
 phase*/results/raw/
 phase*/reports/*.local.json
+Phase*/results/runs/
+Phase*/results/raw/
+Phase*/reports/*.local.json

@@ -37,12 +37,12 @@ from ibkd_seg.phase1.run_probe_full import (
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-PROTOCOL_PATH = REPOSITORY_ROOT / "phase1/configs/oxford_iiit_pet_phase1_v1.json"
+PROTOCOL_PATH = REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_phase1_v1.json"
 SMOKE_B64_PATH = (
-    REPOSITORY_ROOT / "phase1/configs/oxford_iiit_pet_probe_smoke_b64_v1.json"
+    REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_probe_smoke_b64_v1.json"
 )
 SMOKE_B128_PATH = (
-    REPOSITORY_ROOT / "phase1/configs/oxford_iiit_pet_probe_smoke_b128_v1.json"
+    REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_probe_smoke_b128_v1.json"
 )
 
 

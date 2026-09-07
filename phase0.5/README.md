@@ -14,7 +14,7 @@ Phase 0.5의 질문은 하나입니다.
 > 기존 분류 checkpoint를 고정한 상태에서 데이터 처리, feature cache, 선형
 > segmentation probe 학습, metric과 정성 시각화가 끝까지 정상 작동하는가?
 
-과학적 비교는 공식 trimap을 사용하는 [Phase 1 Pet 실험](../phase1/README.md)에서
+과학적 비교는 공식 trimap을 사용하는 [Phase 1 Pet 실험](../Phase1_PET/README.md)에서
 진행합니다.
 
 ## 실제 실행 흐름

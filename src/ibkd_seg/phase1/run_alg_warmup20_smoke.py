@@ -46,7 +46,7 @@ from .train_timing import file_sha256, format_duration
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DIAGNOSTIC_CONFIG = (
     REPOSITORY_ROOT
-    / "phase1/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json"
+    / "Phase1_PET/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json"
 )
 LOCKED_PROTOCOL_SHA256 = (
     "38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143"
