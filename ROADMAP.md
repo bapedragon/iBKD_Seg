@@ -71,12 +71,17 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: 실험 폴더 생성, 프로토콜 미고정.** Pet 결과가 특정 데이터셋에만 의존한
+**상태: batch 128 통합 smoke 준비, 본실험 프로토콜 미고정.** Pet 결과가 특정 데이터셋에만 의존한
 것인지 확인하기 위해 CUB-200-2011에서 분류 encoder 학습과 frozen segmentation
 probe를 독립적으로 반복할 예정입니다. Pet의 잠긴 config나 결과를 그대로 섞지
 않으며, CUB용 데이터·split·mask 대응·학습 설정·평가 계약을 먼저 확정한 뒤 H200
 실험을 시작합니다. 준비 위치는
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
+
+현재 준비된 smoke는 공식 test를 열지 않고 scratch ResNet-56 teacher 1개,
+batch-128 DeiT-Tiny 분류 6설정과 각 frozen encoder의 세 probe LR을 2 epoch씩
+연결해 데이터·mask·checkpoint·freeze·메모리·시간 경로만 검사합니다. Smoke
+metric은 과학적 결과나 본실험 설정 선택에 사용하지 않습니다.
 
 ## Phase 2 — 공간적 대조 실험
 

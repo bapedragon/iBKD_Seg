@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "smoke_id": "cub200_phase1_b128_classification_to_frozen_probe_smoke_v1",
+  "status": "locked_non_scientific_smoke_only_2026-09-07",
+  "full_protocol_status": "not_locked",
+  "purpose": "data_plumbing_runtime_memory_checkpoint_freeze_and_probe_path_only",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "official_test_accessed": false,
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "image_archive": {
+      "url": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
+      "md5": "97eceeb196236b17998738112f37df78"
+    },
+    "segmentation_archive": {
+      "url": "https://data.caltech.edu/records/w9d68-gec53/files/segmentations.tgz?download=1",
+      "md5": "4d47ba1228eae64f2fa547c47bc65255"
+    },
+    "official_counts": {
+      "train": 5994,
+      "test": 5794,
+      "total": 11788
+    },
+    "split": {
+      "source": "official_train_only",
+      "strategy": "fixed_class_stratified_holdout",
+      "validation_per_class": 6,
+      "split_seed": 2027,
+      "ranking_key": "sha256(f'{split_seed}:{image_id}')_then_image_id",
+      "counts": {
+        "train": 4794,
+        "validation": 1200,
+        "test": 0
+      }
+    },
+    "mask": {
+      "source": "official_separate_segmentations_archive",
+      "foreground_rule": "grayscale_value_greater_than_0",
+      "background_rule": "grayscale_value_equal_to_0",
+      "ambiguous_or_ignore_pixels": false,
+      "resize_interpolation": "nearest"
+    }
+  },
+  "classification": {
+    "actual_epochs": 2,
+    "planned_epochs": 300,
+    "encoder_seed": 1,
+    "teacher": {
+      "architecture": "cifar_style_resnet56_6n_plus_2_n9",
+      "initialization": "scratch",
+      "input_size": 32,
+      "batch_size": 128,
+      "shared_by_all_guided_students": true
+    },
+    "student": {
+      "architecture": "deit_tiny_patch16_224",
+      "initialization": "scratch",
+      "input_size": 224,
+      "batch_size": 128,
+      "same_initial_state_across_variants": true
+    },
+    "variants": [
+      "vanilla",
+      "kd",
+      "lg",
+      "alg",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "controller": {
+      "lg": "all_epochs",
+      "alg_warmup_epochs": 0,
+      "ibkd_warmup_epochs": 20
+    },
+    "checkpoint": "two_epoch_latest_smoke_only_not_validation_selected"
+  },
+  "frozen_probe": {
+    "image_input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "random_augmentation": false
+    },
+    "encoder": {
+      "strict_load": true,
+      "frozen": true,
+      "eval_mode": true,
+      "feature": {
+        "block_index": 11,
+        "norm": false,
+        "exclude_cls_token": true,
+        "output_format": "NCHW",
+        "channels": 192,
+        "height": 14,
+        "width": 14,
+        "dtype": "float32"
+      }
+    },
+    "probe": {
+      "architecture": "Conv2d(192,2,1,bias=True)",
+      "parameter_count": 386,
+      "initialization": {
+        "weight": "normal",
+        "weight_std": 0.01,
+        "bias": 0.0
+      },
+      "target": {
+        "grid_height": 14,
+        "grid_width": 14,
+        "foreground_occupancy_threshold": 0.5
+      },
+      "loss": {
+        "name": "cross_entropy",
+        "ignore_index": 255,
+        "class_weighting": "none"
+      },
+      "optimizer": {
+        "name": "sgd",
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "nesterov": false
+      },
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2,
+      "planned_epochs": 100,
+      "batch_size": 64,
+      "scheduler": {
+        "name": "cosine",
+        "minimum_learning_rate": 0.0
+      },
+      "probe_seeds": [1]
+    },
+    "selection": {
+      "split": "validation",
+      "metric": "grid_14x14_two_class_mean_iou",
+      "tie_break": [
+        "lower_learning_rate",
+        "earlier_epoch"
+      ],
+      "smoke_selection_has_scientific_meaning": false
+    },
+    "evaluation": {
+      "validation_only": true,
+      "input_metric": "global_binary_mean_iou_at_224x224",
+      "official_test_evaluations": 0
+    }
+  },
+  "task_count": {
+    "teacher": 1,
+    "classification_students": 6,
+    "probe_lr_candidates": 18,
+    "selected_smoke_probes": 6
+  },
+  "runtime": {
+    "device": "single_cuda_gpu",
+    "precision": "float32",
+    "classification_num_workers": 4,
+    "classification_eval_batch_size": 200,
+    "probe_feature_batch_size": 32
+  }
+}

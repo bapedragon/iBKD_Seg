@@ -73,7 +73,7 @@ class ResStage(nn.Sequential):
 
 
 class ResNet56(nn.Module):
-    """Official-LG-compatible CIFAR-style ResNet56 with a Pet classifier."""
+    """Official-LG-compatible CIFAR-style ResNet56 with a configurable head."""
 
     def __init__(self, num_classes: int = 37) -> None:
         super().__init__()

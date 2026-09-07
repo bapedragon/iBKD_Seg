@@ -8,7 +8,7 @@
 
 ## 현재 상태
 
-**Phase 0.5 완료 — Phase 1-PET 실행·감사 완료 및 No-Go, Phase 1-CUB-200 준비 중.**
+**Phase 0.5 완료 — Phase 1-PET 실행·감사 완료 및 No-Go, Phase 1-CUB-200 통합 smoke 준비.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -37,7 +37,7 @@ canonical profile 모두 1위였습니다. 따라서 Phase 1-PET 핵심 가설�
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 |
 | 0.5 | Flowers pseudo-mask로 전체 probe 파이프라인이 작동하는가? | 완료 / 통과 |
 | 1-PET | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 완료 / 핵심 가설 No-Go |
-| 1-CUB-200 | CUB-200-2011에서도 같은 질문의 결론이 재현되는가? | 폴더 생성 / 프로토콜 미고정 |
+| 1-CUB-200 | CUB-200-2011에서도 같은 질문의 결론이 재현되는가? | batch 128 통합 smoke 준비 / 본실험 프로토콜 미고정 |
 | 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 진입 보류 — Phase 1-PET 전제 미충족, CUB 반복 대기 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
@@ -56,7 +56,7 @@ canonical profile 모두 1위였습니다. 따라서 Phase 1-PET 핵심 가설�
 - Pet batch 128 frozen probe 결과: [phase1/phase1_pet/reports/frozen_probe/batch128/RESULTS.md](phase1/phase1_pet/reports/frozen_probe/batch128/RESULTS.md)
 - ALG controller warm-up 20 사후 진단: [phase1/phase1_pet/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](phase1/phase1_pet/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
 - Phase 1-PET 결정: [phase1/phase1_pet/DECISION.md](phase1/phase1_pet/DECISION.md)
-- CUB-200-2011 독립 반복 준비: [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)
+- CUB-200-2011 통합 smoke 및 독립 반복 준비: [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)
 
 ## 저장소 구성 원칙
 

@@ -1,4 +1,4 @@
-"""Frozen 1x1 segmentation probe primitives for Oxford-IIIT Pet Phase 1."""
+"""Shared frozen 1x1 segmentation-probe primitives for Phase 1 datasets."""
 
 from __future__ import annotations
 

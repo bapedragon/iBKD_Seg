@@ -2,8 +2,8 @@
 """Run one full-data, two-epoch Phase 1 timing task.
 
 This entry point cannot run a scientific/full experiment and never opens the
-Oxford-IIIT Pet official test split.  Its checkpoints and accuracies are marked
-timing-only by construction.
+selected dataset's official test split.  Its checkpoints and accuracies are
+marked timing-only by construction.
 """
 
 from __future__ import annotations
@@ -26,7 +26,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .controllers import GuidanceController
-from .data import NUM_CLASSES, build_train_validation_loaders, save_json
+from .cub_data import (
+    DATASET_NAME as CUB_DATASET_NAME,
+    NUM_CLASSES as CUB_NUM_CLASSES,
+    build_train_validation_loaders as build_cub_train_validation_loaders,
+)
+from .data import (
+    NUM_CLASSES as PET_NUM_CLASSES,
+    build_train_validation_loaders as build_pet_train_validation_loaders,
+    save_json,
+)
 from .models import (
     IBKD,
     LocalityGuidance,
@@ -42,6 +51,21 @@ PLANNED_EPOCHS = 300
 METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
 KD_TEMPERATURE = 4.0
 KD_ALPHA = 0.9
+
+
+def _dataset_key(args: argparse.Namespace) -> str:
+    value = str(getattr(args, "dataset", "pet"))
+    if value not in {"pet", "cub"}:
+        raise ValueError(f"unsupported Phase 1 timing dataset: {value!r}")
+    return value
+
+
+def _dataset_contract(
+    args: argparse.Namespace,
+) -> tuple[str, int, Any]:
+    if _dataset_key(args) == "cub":
+        return CUB_DATASET_NAME, CUB_NUM_CLASSES, build_cub_train_validation_loaders
+    return "Oxford-IIIT Pet", PET_NUM_CLASSES, build_pet_train_validation_loaders
 
 
 def log(message: str = "") -> None:
@@ -132,6 +156,7 @@ def runtime_metadata(device: torch.device) -> dict[str, Any]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--timing-run", action="store_true", required=True)
+    parser.add_argument("--dataset", choices=("pet", "cub"), default="pet")
     parser.add_argument("--kind", choices=("teacher", "student"), required=True)
     parser.add_argument("--method", choices=METHODS)
     parser.add_argument("--batch-size", type=int, required=True)
@@ -161,6 +186,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    dataset_key = _dataset_key(args)
     if args.batch_size not in {64, 128}:
         raise ValueError("Timing matrix batch size must be 64 or 128")
     if args.eval_batch_size <= 0 or args.num_workers < 0:
@@ -193,8 +219,12 @@ def validate_args(args: argparse.Namespace) -> None:
                 )
         elif args.alg_controller_warmup_epochs != 0:
             raise ValueError("Only ALG accepts --alg-controller-warmup-epochs")
-        if args.save_student_checkpoint and not (
-            args.method == "alg" and args.alg_controller_warmup_epochs == 20
+        if (
+            args.save_student_checkpoint
+            and dataset_key == "pet"
+            and not (
+                args.method == "alg" and args.alg_controller_warmup_epochs == 20
+            )
         ):
             raise ValueError(
                 "Timing student checkpoint export is reserved for ALG warm-up-20 smoke"
@@ -238,10 +268,11 @@ def evaluate(
     device: torch.device,
     *,
     teacher: bool,
+    num_classes: int = PET_NUM_CLASSES,
 ) -> dict[str, float]:
     model.eval()
-    correct_by_class = torch.zeros(NUM_CLASSES, dtype=torch.long)
-    total_by_class = torch.zeros(NUM_CLASSES, dtype=torch.long)
+    correct_by_class = torch.zeros(num_classes, dtype=torch.long)
+    total_by_class = torch.zeros(num_classes, dtype=torch.long)
     total_correct = 0
     total_top5 = 0
     total = 0
@@ -255,9 +286,9 @@ def evaluate(
         top5_matches = logits.topk(5, dim=1).indices.eq(targets[:, None]).any(dim=1)
         total_top5 += int(top5_matches.sum())
         total += targets.numel()
-        total_by_class += torch.bincount(targets.cpu(), minlength=NUM_CLASSES)
+        total_by_class += torch.bincount(targets.cpu(), minlength=num_classes)
         correct_by_class += torch.bincount(
-            targets[matches].cpu(), minlength=NUM_CLASSES
+            targets[matches].cpu(), minlength=num_classes
         )
     if bool((total_by_class == 0).any()):
         raise RuntimeError("Validation split is missing at least one breed")
@@ -270,10 +301,11 @@ def evaluate(
 
 
 def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any]:
+    dataset_name, num_classes, loader_builder = _dataset_contract(args)
     seed_everything(args.seed)
-    model = ResNet56(num_classes=NUM_CLASSES).to(device)
+    model = ResNet56(num_classes=num_classes).to(device)
     initial_hash = state_dict_sha256(model)
-    train_loader, validation_loader, manifest = build_train_validation_loaders(
+    train_loader, validation_loader, manifest = loader_builder(
         args.data_dir,
         train_batch_size=args.batch_size,
         eval_batch_size=args.eval_batch_size,
@@ -313,7 +345,13 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             total += batch
             total_loss += float(loss.detach()) * batch
             correct += int(logits.argmax(dim=1).eq(targets).sum())
-        validation = evaluate(model, validation_loader, device, teacher=True)
+        validation = evaluate(
+            model,
+            validation_loader,
+            device,
+            teacher=True,
+            num_classes=num_classes,
+        )
         synchronize(device)
         elapsed = time.perf_counter() - start
         row = {
@@ -336,8 +374,8 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "model": model.state_dict(),
         "metadata": {
             "purpose": "phase1_timing_only_not_scientific",
-            "dataset": "Oxford-IIIT Pet",
-            "num_classes": NUM_CLASSES,
+            "dataset": dataset_name,
+            "num_classes": num_classes,
             "architecture": "cifar_style_resnet56_6n_plus_2_n9",
             "actual_epochs": ACTUAL_EPOCHS,
             "planned_epochs": PLANNED_EPOCHS,
@@ -354,6 +392,7 @@ def run_teacher(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "purpose": "runtime_feasibility_only",
         "scientific_result": False,
         "official_test_accessed": False,
+        "dataset": dataset_name,
         "kind": "teacher",
         "batch_size": args.batch_size,
         "actual_epochs": ACTUAL_EPOCHS,
@@ -374,13 +413,15 @@ def load_timing_teacher(
     *,
     validation_hash: str,
     device: torch.device,
+    dataset_name: str = "Oxford-IIIT Pet",
+    num_classes: int = PET_NUM_CLASSES,
 ) -> tuple[ResNet56, dict[str, Any], str]:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     metadata = payload.get("metadata", {})
     expected = {
         "purpose": "phase1_timing_only_not_scientific",
-        "dataset": "Oxford-IIIT Pet",
-        "num_classes": NUM_CLASSES,
+        "dataset": dataset_name,
+        "num_classes": num_classes,
         "actual_epochs": ACTUAL_EPOCHS,
         "validation_image_ids_sha256": validation_hash,
     }
@@ -390,7 +431,7 @@ def load_timing_teacher(
                 f"Timing teacher contract mismatch for {key}: "
                 f"expected={value!r} got={metadata.get(key)!r}"
             )
-    teacher = ResNet56(num_classes=NUM_CLASSES)
+    teacher = ResNet56(num_classes=num_classes)
     teacher.load_state_dict(payload["model"], strict=True)
     teacher.to(device).eval()
     for parameter in teacher.parameters():
@@ -409,10 +450,11 @@ def kd_loss(student_logits: torch.Tensor, teacher_logits: torch.Tensor) -> torch
 
 def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any]:
     assert args.method is not None
+    dataset_name, num_classes, loader_builder = _dataset_contract(args)
     seed_everything(args.seed)
-    student = create_student(num_classes=NUM_CLASSES, drop_path_rate=0.1).to(device)
+    student = create_student(num_classes=num_classes, drop_path_rate=0.1).to(device)
     initial_hash = state_dict_sha256(student)
-    train_loader, validation_loader, manifest = build_train_validation_loaders(
+    train_loader, validation_loader, manifest = loader_builder(
         args.data_dir,
         train_batch_size=args.batch_size,
         eval_batch_size=args.eval_batch_size,
@@ -435,6 +477,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             args.teacher_checkpoint,
             validation_hash=manifest["validation_image_ids_sha256"],
             device=device,
+            dataset_name=dataset_name,
+            num_classes=num_classes,
         )
     if args.method in {"lg", "alg"}:
         guidance = LocalityGuidance().to(device)
@@ -540,7 +584,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         average_guidance = totals["guidance"] / total
         if controller is not None:
             controller.observe(epoch, average_guidance, beta_used=beta)
-        validation = evaluate(student, validation_loader, device, teacher=False)
+        validation = evaluate(
+            student,
+            validation_loader,
+            device,
+            teacher=False,
+            num_classes=num_classes,
+        )
         synchronize(device)
         elapsed = time.perf_counter() - start
         peak_memory = (
@@ -586,10 +636,15 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             {
                 "student": student_state,
                 "metadata": {
-                    "purpose": "phase1_alg_warmup20_combined_smoke_student",
+                    "purpose": (
+                        "phase1_cub_combined_smoke_student"
+                        if _dataset_key(args) == "cub"
+                        else "phase1_alg_warmup20_combined_smoke_student"
+                    ),
                     "scientific_result": False,
                     "official_test_accessed": False,
-                    "dataset": "Oxford-IIIT Pet",
+                    "dataset": dataset_name,
+                    "num_classes": num_classes,
                     "architecture": "deit_tiny_patch16_224",
                     "method": args.method,
                     "batch_size": args.batch_size,
@@ -619,6 +674,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "scientific_result": False,
         "selection_from_smoke_metrics_forbidden": True,
         "official_test_accessed": False,
+        "dataset": dataset_name,
         "kind": "student",
         "method": args.method,
         "batch_size": args.batch_size,
@@ -657,7 +713,8 @@ def main() -> None:
         torch.backends.cudnn.benchmark = False
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log(
-            f"[PHASE1_TIMING_START] kind={args.kind} method={args.method} "
+            f"[PHASE1_TIMING_START] dataset={_dataset_key(args)} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} device={device} actual_epochs=2 planned_epochs=300"
         )
         payload = (
@@ -667,7 +724,8 @@ def main() -> None:
         )
         save_json(payload, run_dir / "summary.json")
         log(
-            f"[PHASE1_TIMING_DONE] kind={args.kind} method={args.method} "
+            f"[PHASE1_TIMING_DONE] dataset={_dataset_key(args)} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} avg_epoch={payload['avg_epoch_seconds']:.2f}s "
             f"estimated_300={format_duration(payload['estimated_planned_seconds'])}"
         )
@@ -700,7 +758,8 @@ def main() -> None:
             run_dir / "failure.json",
         )
         log(
-            f"[PHASE1_TIMING_FAILED] kind={args.kind} method={args.method} "
+            f"[PHASE1_TIMING_FAILED] dataset={_dataset_key(args)} "
+            f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} failure_kind={failure_kind} "
             f"error={type(error).__name__}:{message}"
         )
