@@ -26,22 +26,22 @@ from ibkd_seg.phase1.train_timing import validate_args as validate_timing_args
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-PROTOCOL_PATH = REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_phase1_v1.json"
+PROTOCOL_PATH = REPOSITORY_ROOT / "phase1/phase1_pet/configs/oxford_iiit_pet_phase1_v1.json"
 DIAGNOSTIC_PATH = (
     REPOSITORY_ROOT
-    / "Phase1_PET/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json"
+    / "phase1/phase1_pet/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json"
 )
-SCRIPT_PATH = REPOSITORY_ROOT / "Phase1_PET/scripts/run_alg_warmup20_smoke_b128.sh"
+SCRIPT_PATH = REPOSITORY_ROOT / "phase1/phase1_pet/scripts/run_alg_warmup20_smoke_b128.sh"
 FULL_CONFIG_PATH = (
     REPOSITORY_ROOT
-    / "Phase1_PET/configs/oxford_iiit_pet_alg_warmup20_full_v1.json"
+    / "phase1/phase1_pet/configs/oxford_iiit_pet_alg_warmup20_full_v1.json"
 )
 FULL_SCRIPT_PATH = (
-    REPOSITORY_ROOT / "Phase1_PET/scripts/run_alg_warmup20_full_b128.sh"
+    REPOSITORY_ROOT / "phase1/phase1_pet/scripts/run_alg_warmup20_full_b128.sh"
 )
 RELEASE_MANIFEST_PATH = (
     REPOSITORY_ROOT
-    / "Phase1_PET/reports/classification/batch128/checkpoint_release.json"
+    / "phase1/phase1_pet/reports/classification/batch128/checkpoint_release.json"
 )
 
 
@@ -234,7 +234,7 @@ class Phase1AlgWarmup20DiagnosticTest(unittest.TestCase):
         self.assertIn("ibkd_seg.phase1.run_alg_warmup20_full", script)
         self.assertIn("--full-diagnostic", script)
         self.assertIn(
-            "Phase1_PET/reports/classification/batch128/checkpoint_release.json",
+            "phase1/phase1_pet/reports/classification/batch128/checkpoint_release.json",
             script,
         )
         self.assertIn("--device cuda", script)

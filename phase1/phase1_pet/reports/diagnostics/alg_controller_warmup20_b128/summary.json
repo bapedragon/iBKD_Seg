@@ -1,0 +1,313 @@
+{
+  "candidate_audit": {
+    "all_candidate_histories_have_100_epochs": true,
+    "candidate_count": 45,
+    "encoder_feature_gradient_tensor_count": 0,
+    "probe_gradient_tensor_count": 2,
+    "same_batch_order_per_probe_seed_and_epoch": true,
+    "same_initial_probe_state_per_probe_seed": true,
+    "validation_best_epoch_recomputed": true,
+    "validation_lr_selection_recomputed": true
+  },
+  "canonical_phase1_result_replaced": false,
+  "changed_field": "alg_controller_warmup_epochs:0_to_20",
+  "checkpoint_audit": {
+    "all_file_hashes_match": true,
+    "all_floating_tensors_finite": true,
+    "all_safe_loads_use_weights_only": true,
+    "all_strict_loads_passed": true,
+    "all_written_before_official_test": true,
+    "checkpoint_count": 19,
+    "classification_student_count": 3,
+    "reference_teacher_count": 1,
+    "schema_version": 1,
+    "selected_probe_count": 15,
+    "status": "pass"
+  },
+  "classification": {
+    "canonical_comparisons": [
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 21.118103961149853,
+        "variant": "vanilla",
+        "warmup20_minus_canonical_percentage_points": 9.96200790007909
+      },
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 30.077924331029255,
+        "variant": "kd",
+        "warmup20_minus_canonical_percentage_points": 1.0021875301996879
+      },
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 32.99329380194346,
+        "variant": "lg",
+        "warmup20_minus_canonical_percentage_points": -1.9131819407145159
+      },
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 22.87997156381607,
+        "variant": "alg",
+        "warmup20_minus_canonical_percentage_points": 8.200140297412872
+      },
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 26.71642303466797,
+        "variant": "ibkd_lambda0.25",
+        "warmup20_minus_canonical_percentage_points": 4.363688826560974
+      },
+      {
+        "alg_warmup20_test_macro_top1": 31.080111861228943,
+        "canonical_test_macro_top1": 24.895986417929333,
+        "variant": "ibkd_lambda0.5",
+        "warmup20_minus_canonical_percentage_points": 6.18412544329961
+      }
+    ],
+    "controller_stop_epoch_by_seed": {
+      "1": 103,
+      "2": 118,
+      "3": 137
+    },
+    "elapsed_seconds": 4183.058624042198,
+    "encoder_seeds": [
+      1,
+      2,
+      3
+    ],
+    "epochs": 300,
+    "official_test_evaluations": 3,
+    "selected_epoch_by_seed": {
+      "1": 239,
+      "2": 293,
+      "3": 273
+    },
+    "test_macro_top1": {
+      "mean": 31.080111861228943,
+      "raw_by_seed": {
+        "1": 32.058945298194885,
+        "2": 31.081897020339966,
+        "3": 30.099493265151978
+      },
+      "sample_standard_deviation": 0.9797272362978304
+    },
+    "test_overall_top1": {
+      "mean": 31.08022167711456,
+      "raw_by_seed": {
+        "1": 32.05233033524121,
+        "2": 31.07113654946852,
+        "3": 30.11719814663396
+      },
+      "sample_standard_deviation": 0.967598083660891
+    },
+    "test_top5": {
+      "mean": 65.22213137094576,
+      "raw_by_seed": {
+        "1": 65.05859907331698,
+        "2": 65.98528209321341,
+        "3": 64.6225129463069
+      },
+      "sample_standard_deviation": 0.6959468702536776
+    }
+  },
+  "classification_batch_size": 128,
+  "confirmatory_main_result": false,
+  "curation_gates": {
+    "all_15_probe_checkpoints_hash_and_strict_load_passed": true,
+    "all_45_probe_candidates_recomputed": true,
+    "all_probe_metrics_recomputed_from_global_confusions": true,
+    "canonical_phase1_result_retained": true,
+    "classification_best_epoch_recomputed_for_three_seeds": true,
+    "classification_test_exactly_once_per_seed": true,
+    "fixed_qualitative_panels_decoded": true,
+    "pre_test_probe_selection_contains_no_test_results": true,
+    "probe_aggregate_exactly_recomputed": true,
+    "probe_test_exactly_once_per_selected_probe": true,
+    "single_declared_change_is_controller_warmup_0_to_20": true,
+    "source_zip_all_member_crc_verified": true
+  },
+  "data_counts": {
+    "test": 3669,
+    "train": 2940,
+    "validation": 740
+  },
+  "dataset": "Oxford-IIIT Pet",
+  "diagnostic_id": "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1",
+  "experiment": "oxford_iiit_pet_alg_controller_warmup20_posthoc_full_v1",
+  "frozen_probe": {
+    "canonical_comparisons": [
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.6045346441032433,
+        "variant": "vanilla",
+        "warmup20_minus_canonical": 0.2049362765232382
+      },
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.7376464563453686,
+        "variant": "kd",
+        "warmup20_minus_canonical": 0.07182446428111289
+      },
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.8285639841888769,
+        "variant": "lg",
+        "warmup20_minus_canonical": -0.019093063562395374
+      },
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.633776454669879,
+        "variant": "alg",
+        "warmup20_minus_canonical": 0.17569446595660254
+      },
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.7825647030337752,
+        "variant": "ibkd_lambda_0.25",
+        "warmup20_minus_canonical": 0.026906217592706283
+      },
+      {
+        "alg_warmup20_test_input_224_mean_iou": 0.8094709206264815,
+        "canonical_test_input_224_mean_iou": 0.771950151649826,
+        "variant": "ibkd_lambda_0.5",
+        "warmup20_minus_canonical": 0.03752076897665546
+      }
+    ],
+    "matrix": {
+      "encoder_seeds": [
+        1,
+        2,
+        3
+      ],
+      "epochs_per_lr_candidate": 100,
+      "learning_rates": [
+        0.01,
+        0.03,
+        0.1
+      ],
+      "lr_candidate_count": 45,
+      "probe_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "selected_probe_count": 15,
+      "variant": "alg_controller_warmup20"
+    },
+    "peak_cuda_memory_bytes": 134273536,
+    "test_grid_14x14_mean_iou": {
+      "count": 3,
+      "mean": 0.7544791900781987,
+      "sample_standard_deviation": 0.0018111838693946273,
+      "values": [
+        0.7562505593791968,
+        0.7545563528238984,
+        0.7526306580315011
+      ]
+    },
+    "test_input_224_background_iou": {
+      "count": 3,
+      "mean": 0.8643215226325781,
+      "sample_standard_deviation": 0.002248537663162705,
+      "values": [
+        0.8661502884911088,
+        0.8650032703992979,
+        0.8618110090073278
+      ]
+    },
+    "test_input_224_foreground_dice": {
+      "count": 3,
+      "mean": 0.8601496118966213,
+      "sample_standard_deviation": 0.0019653704479558154,
+      "values": [
+        0.8622804408105701,
+        0.859760479261307,
+        0.8584079156179868
+      ]
+    },
+    "test_input_224_foreground_iou": {
+      "count": 3,
+      "mean": 0.7546203186203849,
+      "sample_standard_deviation": 0.0030274883398859614,
+      "values": [
+        0.7579038245161198,
+        0.7540176168852355,
+        0.7519395144597993
+      ]
+    },
+    "test_input_224_mean_iou": {
+      "count": 3,
+      "mean": 0.8094709206264815,
+      "sample_standard_deviation": 0.002576124781481524,
+      "values": [
+        0.8120270565036143,
+        0.8095104436422667,
+        0.8068752617335635
+      ]
+    },
+    "test_policy": {
+      "expected_official_test_evaluations": 15,
+      "official_test_evaluations": 15,
+      "official_test_opened_after_all_selections": true,
+      "official_test_used_for_training_or_selection": false,
+      "selection_uses": "validation_grid_14x14_two_class_mean_iou"
+    },
+    "timing": {
+      "official_test_and_qualitative_seconds": 59.70733174216002,
+      "target_cache_seconds_before_selection": 5.455841292627156,
+      "validation_selection_seconds": 460.91498418711126
+    }
+  },
+  "full_config_sha256": "5e385b1d0be7e23318393489e2c6bd11de91c126f335fc2d9a988e93c9f81843",
+  "h200_issue_id": "712",
+  "ignored_raw_artifact_root": "phase1/phase1_pet/results/raw/oxford_iiit_pet/diagnostics/alg_controller_warmup20_b128_v1",
+  "interpretation": {
+    "canonical_alg_epoch2_shutdown_avoided": true,
+    "causal_scope": "controller_warmup_effect_within_batch128_alg_only",
+    "diagnostic_must_not_replace_canonical_result": true,
+    "formal_p_value_reported": false,
+    "lg_remains_highest_probe": true,
+    "warmup20_improves_over_canonical_alg_classification": true,
+    "warmup20_improves_over_canonical_alg_probe": true,
+    "warmup20_probe_exceeds_both_ibkd_lambdas": true,
+    "warmup20_stop_epochs": [
+      103,
+      118,
+      137
+    ]
+  },
+  "posthoc_diagnostic": true,
+  "protocol_sha256": "38f743958d1211144495dd9b4c7eb6edd4c12ab1bacbb27c75d38528b3e72143",
+  "qualitative_audit": {
+    "encoder_seed": 1,
+    "fixed_before_results": true,
+    "panel_count": 8,
+    "posthoc_example_selection": false,
+    "probe_seed": 1,
+    "schema_version": 1,
+    "source_mask_count_audited_but_not_committed": 8,
+    "status": "pass",
+    "test_image_ids": [
+      "Abyssinian_201",
+      "Bengal_33",
+      "chihuahua_67",
+      "great_pyrenees_91",
+      "miniature_pinscher_23",
+      "Ragdoll_37",
+      "shiba_inu_68",
+      "yorkshire_terrier_9"
+    ]
+  },
+  "runtime_git_commit": "4d9ae4411ca9d3a58704919a6b62b3db170975f5",
+  "schema_version": 1,
+  "source_archive": {
+    "all_member_crc_verified": true,
+    "bytes": 73462153,
+    "canonical_bundle_filename": "phase1_pet_b128_frozen_probe_issue710_and_alg_warmup20_issue712_v1.zip",
+    "original_filename": "bapedragon_712.zip",
+    "sha256": "866afc9289144245738f2625c18f5c2864f84180c69db3bb68b462e833bc72a2"
+  },
+  "status": "complete_posthoc_diagnostic",
+  "total_elapsed_seconds": 4853.514762268402
+}

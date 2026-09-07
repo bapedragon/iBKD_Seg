@@ -16,7 +16,7 @@ from ibkd_seg.phase1.timing_matrix import build_tasks
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = REPOSITORY_ROOT / "Phase1_PET/configs/oxford_iiit_pet_phase1_v1.json"
+CONFIG_PATH = REPOSITORY_ROOT / "phase1/phase1_pet/configs/oxford_iiit_pet_phase1_v1.json"
 
 
 class Phase1TimingMatrixTest(unittest.TestCase):

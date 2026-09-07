@@ -18,7 +18,7 @@ Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metr
 
 첫 공간정보 보존 검증은 공식 pixel-level trimap을 사용하는 Phase 1-PET에서
 완료했습니다. 데이터셋 의존성을 분리해서 확인하기 위한 CUB-200-2011 독립 반복은
-`Phase1_CUB_200/`에서 준비합니다.
+`phase1/phase1_cub/`에서 준비합니다.
 
 Phase 1-PET은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` split을
 사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후
@@ -48,20 +48,20 @@ canonical profile 모두 1위였습니다. 따라서 Phase 1-PET 핵심 가설�
 - Flowers 점검: [phase0.5/README.md](phase0.5/README.md)
 - Flowers 정량·정성 결과: [phase0.5/DECISION.md](phase0.5/DECISION.md),
   [실제 이미지](phase0.5/reports/QUALITATIVE.md)
-- Pet 본 실험: [Phase1_PET/README.md](Phase1_PET/README.md)
-- Pet LOCK 프로토콜·full-run 계약: [Phase1_PET/PROTOCOL.md](Phase1_PET/PROTOCOL.md)
-- Pet batch 64 분류 결과: [Phase1_PET/reports/classification/batch64/RESULTS.md](Phase1_PET/reports/classification/batch64/RESULTS.md)
-- Pet batch 128 분류 결과: [Phase1_PET/reports/classification/batch128/RESULTS.md](Phase1_PET/reports/classification/batch128/RESULTS.md)
-- Pet batch 64 frozen probe 결과: [Phase1_PET/reports/frozen_probe/batch64/RESULTS.md](Phase1_PET/reports/frozen_probe/batch64/RESULTS.md)
-- Pet batch 128 frozen probe 결과: [Phase1_PET/reports/frozen_probe/batch128/RESULTS.md](Phase1_PET/reports/frozen_probe/batch128/RESULTS.md)
-- ALG controller warm-up 20 사후 진단: [Phase1_PET/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](Phase1_PET/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
-- Phase 1-PET 결정: [Phase1_PET/DECISION.md](Phase1_PET/DECISION.md)
-- CUB-200-2011 독립 반복 준비: [Phase1_CUB_200/README.md](Phase1_CUB_200/README.md)
+- Pet 본 실험: [phase1/phase1_pet/README.md](phase1/phase1_pet/README.md)
+- Pet LOCK 프로토콜·full-run 계약: [phase1/phase1_pet/PROTOCOL.md](phase1/phase1_pet/PROTOCOL.md)
+- Pet batch 64 분류 결과: [phase1/phase1_pet/reports/classification/batch64/RESULTS.md](phase1/phase1_pet/reports/classification/batch64/RESULTS.md)
+- Pet batch 128 분류 결과: [phase1/phase1_pet/reports/classification/batch128/RESULTS.md](phase1/phase1_pet/reports/classification/batch128/RESULTS.md)
+- Pet batch 64 frozen probe 결과: [phase1/phase1_pet/reports/frozen_probe/batch64/RESULTS.md](phase1/phase1_pet/reports/frozen_probe/batch64/RESULTS.md)
+- Pet batch 128 frozen probe 결과: [phase1/phase1_pet/reports/frozen_probe/batch128/RESULTS.md](phase1/phase1_pet/reports/frozen_probe/batch128/RESULTS.md)
+- ALG controller warm-up 20 사후 진단: [phase1/phase1_pet/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](phase1/phase1_pet/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
+- Phase 1-PET 결정: [phase1/phase1_pet/DECISION.md](phase1/phase1_pet/DECISION.md)
+- CUB-200-2011 독립 반복 준비: [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)
 
 ## 저장소 구성 원칙
 
 - `phase0/`, `phase0.5/`처럼 단계별 폴더를 사용하고, 같은 단계의 데이터셋별
-  실험은 `Phase1_PET/`, `Phase1_CUB_200/`처럼 분리합니다.
+  실험은 `phase1/phase1_pet/`, `phase1/phase1_cub/`처럼 분리합니다.
 - 각 Phase 폴더에는 해당 단계의 절차, 명령어, 보고서, 결정문을 둡니다.
 - 여러 Phase가 공유하는 구현은 `src/`에 둡니다.
 - 데이터셋, 체크포인트, feature cache와 원시 실행 결과는 Git에 올리지 않습니다.

@@ -50,12 +50,12 @@ probe만 batch 64보다 18.713%p 급락했습니다. Controller 종료 판정 wa
 `0 → 20`으로 바꾼 사후 진단에서 ALG mIoU가 `80.947%`로 회복되어 iBKD 두
 λ보다 높았습니다. 따라서 iBKD의 LG/ALG 우위는 지지되지 않았으며 Phase 1-PET은
 **No-Go**, 원래 전제의 Phase 2 진입은 **보류**합니다. 근거는
-[분류 profile 비교](Phase1_PET/reports/classification/BATCH_PROFILE_COMPARISON.md),
-[batch 64 probe 결과](Phase1_PET/reports/frozen_probe/batch64/RESULTS.md),
-[batch 128 결과](Phase1_PET/reports/frozen_probe/batch128/RESULTS.md),
-[ALG warm-up 20 진단](Phase1_PET/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md),
-[Phase 1-PET 결정문](Phase1_PET/DECISION.md)에 있습니다. 상세 계약은
-[Phase1_PET/PROTOCOL.md](Phase1_PET/PROTOCOL.md)에 있습니다.
+[분류 profile 비교](phase1/phase1_pet/reports/classification/BATCH_PROFILE_COMPARISON.md),
+[batch 64 probe 결과](phase1/phase1_pet/reports/frozen_probe/batch64/RESULTS.md),
+[batch 128 결과](phase1/phase1_pet/reports/frozen_probe/batch128/RESULTS.md),
+[ALG warm-up 20 진단](phase1/phase1_pet/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md),
+[Phase 1-PET 결정문](phase1/phase1_pet/DECISION.md)에 있습니다. 상세 계약은
+[phase1/phase1_pet/PROTOCOL.md](phase1/phase1_pet/PROTOCOL.md)에 있습니다.
 
 Oxford-IIIT Pet의 품종 라벨만 사용해 조건이 일치하는 Vanilla, KD, LG, ALG,
 iBKD 분류 encoder를 학습합니다. 이후 모든 encoder를 고정하고 공식 trimap에
@@ -64,7 +64,7 @@ iBKD 분류 encoder를 학습합니다. 이후 모든 encoder를 고정하고 �
 Probe와 encoder-training seed를 구분해 반복하고 foreground IoU, background IoU,
 2-class mIoU, Dice를 보고합니다. 경계 픽셀 ignore 규칙, split, teacher,
 checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 config로 확정합니다.
-자세한 목적과 절차는 [Phase1_PET/README.md](Phase1_PET/README.md)에 있습니다.
+자세한 목적과 절차는 [phase1/phase1_pet/README.md](phase1/phase1_pet/README.md)에 있습니다.
 
 **종료 조건:** 조건이 일치하는 iBKD–ALG 비교, 여러 encoder seed, 비영상 baseline,
 정성 mask와 공식 pixel GT 결과를 함께 검토해 Go/Hold/No-Go를 기록합니다.
@@ -76,7 +76,7 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 probe를 독립적으로 반복할 예정입니다. Pet의 잠긴 config나 결과를 그대로 섞지
 않으며, CUB용 데이터·split·mask 대응·학습 설정·평가 계약을 먼저 확정한 뒤 H200
 실험을 시작합니다. 준비 위치는
-[Phase1_CUB_200/README.md](Phase1_CUB_200/README.md)입니다.
+[phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
 ## Phase 2 — 공간적 대조 실험
 
