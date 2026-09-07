@@ -8,10 +8,10 @@
 | Phase | 확인하려는 핵심 | 앞 Phase에서 넘어오는 논리 |
 |---|---|---|
 | **1. Frozen spatial probe** | iBKD encoder가 LG/ALG보다 위치·형태 정보를 더 잘 보존하는가? | 신뢰 가능한 Pet pixel GT로 현상 자체가 존재하는지 확인 |
-| **2. 공간적 대조 실험** | Phase 1 차이가 shortcut이나 우연이 아니라 실제 공간정보 때문인가? | 공간정보 우위가 관측됐으므로 그 원인과 통계적 안정성을 검증 |
-| **3. 공통 decoder** | 작은 probe뿐 아니라 실제 segmentation 학습에서도 우위가 유지되는가? | 표현 자체의 공간성이 확인됐으므로 실용적인 decoder 조건으로 확장 |
-| **4. 표준 segmentation** | Pet에만 국한되지 않고 표준 multi-class segmentation에서도 일반화되는가? | 실제 segmentation 효과가 확인됐으므로 외부 데이터셋에서 재검증 |
-| **5. Dense iBKD** | segmentation에 특화된 새 iBKD 방법을 설계할 가치가 있는가? | 여러 조건에서 확장성이 확인됐으므로 새로운 방법론으로 발전 |
+| **2. 공간적 대조 실험** | Phase 1 차이가 shortcut이나 우연이 아니라 실제 공간정보 때문인가? | Phase 1에서 iBKD 우위가 관측될 때만 원인과 통계적 안정성을 검증 |
+| **3. 공통 decoder** | 작은 probe뿐 아니라 실제 segmentation 학습에서도 우위가 유지되는가? | 표현 자체의 공간성이 확인될 때 실용적인 decoder 조건으로 확장 |
+| **4. 표준 segmentation** | Pet에만 국한되지 않고 표준 multi-class segmentation에서도 일반화되는가? | 실제 segmentation 효과가 확인될 때 외부 데이터셋에서 재검증 |
+| **5. Dense iBKD** | segmentation에 특화된 새 iBKD 방법을 설계할 가치가 있는가? | 여러 조건에서 확장성이 확인될 때 새로운 방법론으로 발전 |
 
 ## Phase 0 — 기초 검증 및 데이터 감사
 
@@ -39,19 +39,22 @@ ground-truth 품질 gate를 통과하지 못했습니다. Flowers 실행은 Phas
 
 ## Phase 1 — Oxford-IIIT Pet GT frozen spatial probe
 
-**2026-09-07 상태:** 12-way timing 뒤 student batch `64/128`과 iBKD λ
+**2026-09-07 결론:** 12-way timing 뒤 student batch `64/128`과 iBKD λ
 `0.25/0.5`를 모두 사전 고정했습니다. 두 batch의 teacher와 여섯 variant × 3 seed
 분류가 각각 19/19 완료됐고 test-once·동일 초기화·동일 teacher·동일 split 계약과
-checkpoint 감사를 통과했습니다. 두 frozen probe profile도 실행상 90/90
-완료됐습니다. Batch 64에서는 iBKD–ALG 차이가 두 λ 모두 음수였지만, batch
-128에서는 두 λ 모두 큰 양수로 방향이 뒤집혔습니다. 동시에 LG는 두 profile 모두
-1위였고, epoch 2에 guidance를 종료한 batch 128 ALG의 probe만 batch 64보다
-18.713%p 급락했습니다. 따라서 iBKD의 일관된 LG/ALG 우위는 현재 지지되지 않으며,
-batch 128 산출물 감사와 ALG warm-up 20 사후 진단 뒤 Phase 1 전체 결정을
-확정합니다. 근거는
+checkpoint 감사를 통과했습니다. 두 frozen probe profile의 선택 probe 180개도
+전체 산출물 감사를 통과했습니다. Batch 64에서는 iBKD–ALG 차이가 두 λ 모두
+음수였지만, batch 128에서는 두 λ 모두 큰 양수로 방향이 뒤집혔습니다. 동시에
+LG는 두 profile 모두 1위였고, epoch 2에 guidance를 종료한 batch 128 ALG의
+probe만 batch 64보다 18.713%p 급락했습니다. Controller 종료 판정 warm-up만
+`0 → 20`으로 바꾼 사후 진단에서 ALG mIoU가 `80.947%`로 회복되어 iBKD 두
+λ보다 높았습니다. 따라서 iBKD의 LG/ALG 우위는 지지되지 않았으며 Phase 1은
+**No-Go**, 원래 전제의 Phase 2 진입은 **보류**합니다. 근거는
 [분류 profile 비교](phase1/reports/classification/BATCH_PROFILE_COMPARISON.md),
 [batch 64 probe 결과](phase1/reports/frozen_probe/batch64/RESULTS.md),
-[batch 128 잠정 결과](phase1/reports/frozen_probe/batch128/RESULTS.md), 상세 계약은
+[batch 128 결과](phase1/reports/frozen_probe/batch128/RESULTS.md),
+[ALG warm-up 20 진단](phase1/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md),
+[Phase 1 결정문](phase1/DECISION.md)에 있습니다. 상세 계약은
 [phase1/PROTOCOL.md](phase1/PROTOCOL.md)에 있습니다.
 
 Oxford-IIIT Pet의 품종 라벨만 사용해 조건이 일치하는 Vanilla, KD, LG, ALG,
@@ -67,6 +70,10 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 정성 mask와 공식 pixel GT 결과를 함께 검토해 Go/Hold/No-Go를 기록합니다.
 
 ## Phase 2 — 공간적 대조 실험
+
+**상태: 진입 보류.** Phase 1에서 검증하려던 iBKD의 LG/ALG 우위가 관측되지 않아
+현재 형태의 원인 검증을 진행할 전제가 없습니다. CUB-200-2011 독립 반복 등 새
+Phase 1 protocol에서 양의 현상이 확인될 경우에만 재개합니다.
 
 Mean-mask/center-prior, translation, 고정 grid permutation, layer별 probe, paired
 bootstrap confidence interval과 추가 encoder seed를 사용해 Phase 1 차이가 실제

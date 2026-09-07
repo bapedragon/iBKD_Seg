@@ -1,0 +1,389 @@
+{
+  "classification_batch_size": 128,
+  "dataset": "Oxford-IIIT Pet",
+  "experiment": "phase1_alg_controller_warmup20_posthoc_full_v1",
+  "files": [
+    {
+      "bytes": 3892,
+      "checkpoint": false,
+      "path": "alg_warmup20_full_summary.json",
+      "sha256": "a6dcdf6082a3d69caf3a8e34ea807d501917e4448cb67a20989e5f432f6f407c",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/alg_warmup20_full_summary.json"
+    },
+    {
+      "bytes": 1156,
+      "checkpoint": false,
+      "path": "classification/classification_results.txt",
+      "sha256": "d610c926764c3a7e5e4f3947a0789d5afe4a90b99c2651b3ddac47985e9db18c",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/classification_results.txt"
+    },
+    {
+      "bytes": 1647,
+      "checkpoint": false,
+      "path": "classification/classification_summary.csv",
+      "sha256": "8ebbb4ce444d7591d200744860ec5fa4667b29eda51ba87e213d38ae06426c9e",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/classification_summary.csv"
+    },
+    {
+      "bytes": 11176,
+      "checkpoint": false,
+      "path": "classification/classification_summary.json",
+      "sha256": "bf836d8405a9968f5ef0ec2bef3140c9f7e9cf854a2297b12f71936a11f46e60",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/classification_summary.json"
+    },
+    {
+      "bytes": 2429,
+      "checkpoint": false,
+      "path": "classification/reference_teacher/reference_audit.json",
+      "sha256": "d603a3d4b5c93ca917bf517918f27c59d38b6e042265dce9ad89db1fe55297a2",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/reference_teacher/reference_audit.json"
+    },
+    {
+      "bytes": 3560009,
+      "checkpoint": true,
+      "path": "classification/reference_teacher/teacher_best_validation.pt",
+      "sha256": "66de3ae6d49be7e882a49bd6de0e9e5a815609b295ecf0d5c290713779f02950",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/reference_teacher/teacher_best_validation.pt"
+    },
+    {
+      "bytes": 22269615,
+      "checkpoint": true,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed1/student_best_validation.pt",
+      "sha256": "73f580d38ac888a403daa851c68e423d252bfdfc3f087f0e76d38e2520bc531b",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed1/student_best_validation.pt"
+    },
+    {
+      "bytes": 275859,
+      "checkpoint": false,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed1/summary.json",
+      "sha256": "ca6bd82f53e05e6f8c6931f57b8222cda4441b5bdda76909a244aff567efaf28",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed1/summary.json"
+    },
+    {
+      "bytes": 22270511,
+      "checkpoint": true,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed2/student_best_validation.pt",
+      "sha256": "b736781f38324d6e18cfdc6ecd27f566942a106b411814b2f8331b3c31955af5",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed2/student_best_validation.pt"
+    },
+    {
+      "bytes": 277246,
+      "checkpoint": false,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed2/summary.json",
+      "sha256": "7b9aa542a171f96c4191167dcca03ca47128f67353c78fa6c06cb91ada3aeb11",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed2/summary.json"
+    },
+    {
+      "bytes": 22270831,
+      "checkpoint": true,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed3/student_best_validation.pt",
+      "sha256": "29ddea4603de3b671ed66eeb566c2034c2f3a25b928cef738d5f2f5edda8dc21",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed3/student_best_validation.pt"
+    },
+    {
+      "bytes": 279084,
+      "checkpoint": false,
+      "path": "classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed3/summary.json",
+      "sha256": "aa286bc86f3b24483fca8fc1b21fc2a13c6df2bb1e789d346beeadbbb53b2a79",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/classification/students/pet_alg_controller_warmup20_b128_full_300ep_seed3/summary.json"
+    },
+    {
+      "bytes": 2400,
+      "checkpoint": false,
+      "path": "dataset_audit.json",
+      "sha256": "65ee04fc7b487271922b6903a8e5fbea951bc13cf5c3daa1e111009e5f789571",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/dataset_audit.json"
+    },
+    {
+      "bytes": 198327,
+      "checkpoint": false,
+      "path": "h200_issue_712.log",
+      "sha256": "a503e26a80a970b359a498187280108b61a83aafd3f26abccac2ab04cf4276b1",
+      "source_member": "bapedragon_712/bapedragon_712_result.txt"
+    },
+    {
+      "bytes": 3354,
+      "checkpoint": false,
+      "path": "probe/probe_raw_results.csv",
+      "sha256": "1f927fce6cedcca12463aebce263c7f6ac5fb3d49b7d312dad53f8bcd7ac8483",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probe_raw_results.csv"
+    },
+    {
+      "bytes": 1554334,
+      "checkpoint": false,
+      "path": "probe/probe_summary.json",
+      "sha256": "81fdb35b330b6cc0e393f406cce07a921c6c5c75ac4e44dd5129148a10a188fd",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probe_summary.json"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_1.pt",
+      "sha256": "79b0e11f946d86ab8f9c68800b9fdc9adea32b84e3c3e3426b1d561b686169f9",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_1.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_2.pt",
+      "sha256": "15a6c80fc4deaed0397dd6b970e0dfc1668ebf8ffdcb3abfed960945b8155ec3",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_2.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_3.pt",
+      "sha256": "66980c8c822efa06241cb50a2185bfc053fc573be436945ef549bf37f88c005a",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_3.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_4.pt",
+      "sha256": "d220531821ff95ab53da226904c02f6159aea7ce7d3367889cd81cf770c88645",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_4.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_5.pt",
+      "sha256": "30cae263a6073775c5488ab9fca22d7f99fb50aa527337960f162de83a3fbcfe",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_1/probe_seed_5.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_1.pt",
+      "sha256": "2f818ee92a2ea6f4455bb5d9883acdc70158284299984e7ffeb8df285cf77bfa",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_1.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_2.pt",
+      "sha256": "1dbc813c4c0cd77f6d4945ecffcdc19435bc40eb0d07acd16eb43ed09e3e3e26",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_2.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_3.pt",
+      "sha256": "fd9f56e762ba511a06b0ccd797182ffd86f4c3a002c5a0faf4338151dffd82e5",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_3.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_4.pt",
+      "sha256": "cad2e4e91beb192599247b32eaf8440b8cf63f8cdbdd0959062291b75a6ebd58",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_4.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_5.pt",
+      "sha256": "1c5b6933e7d0c556c9fec3c4afd23e15ee15c6b7d57952ef9647197011977666",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_2/probe_seed_5.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_1.pt",
+      "sha256": "b351e161e91e94bcecf35da3b23d8076f5ad87470321b2893df85d7b099b468c",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_1.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_2.pt",
+      "sha256": "8026b84fdc9a9c2208a26f89b16b06302ff8cb53ee5f2f99a8b0bd53d59dd7ff",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_2.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_3.pt",
+      "sha256": "4d4bd70969873e286f351a8077e6fcb924142afd9b9d7b2d1f82853f8061b4dd",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_3.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_4.pt",
+      "sha256": "713633cefbf3854dcbb51fdb06a29405e17473c6026442dd43de9168b0d99dde",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_4.pt"
+    },
+    {
+      "bytes": 40549,
+      "checkpoint": true,
+      "path": "probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_5.pt",
+      "sha256": "6db1ecd8fc9ea8d7d949c527fb4f8a417bc83ae94a4d4f2372b81c0a33e853cf",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/probes/alg_controller_warmup20/encoder_seed_3/probe_seed_5.pt"
+    },
+    {
+      "bytes": 91324,
+      "checkpoint": false,
+      "path": "probe/qualitative/Abyssinian_201.png",
+      "sha256": "8d71bb040927ea6f2a59fcadbd6b843563420e47b9726aa0d25b473e864229a3",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/Abyssinian_201.png"
+    },
+    {
+      "bytes": 124925,
+      "checkpoint": false,
+      "path": "probe/qualitative/Bengal_33.png",
+      "sha256": "b586889b9052e3652448e7a7cc3c29e038e27fdc54606a28e9b0febe16b29d2c",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/Bengal_33.png"
+    },
+    {
+      "bytes": 73147,
+      "checkpoint": false,
+      "path": "probe/qualitative/Ragdoll_37.png",
+      "sha256": "184dc8a1f39fecb8a81c2ea469fb6e25a5076614072c9a65866103c27046c3f2",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/Ragdoll_37.png"
+    },
+    {
+      "bytes": 63660,
+      "checkpoint": false,
+      "path": "probe/qualitative/chihuahua_67.png",
+      "sha256": "35ec42d0b3b60824c857cf92b32bcc7857f3bbf419d3c0be660467040ea964be",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/chihuahua_67.png"
+    },
+    {
+      "bytes": 93660,
+      "checkpoint": false,
+      "path": "probe/qualitative/great_pyrenees_91.png",
+      "sha256": "01fcf9cf0ef0bb567af70948ae61440e4cf75509b3ecc8561301eac5210f6c83",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/great_pyrenees_91.png"
+    },
+    {
+      "bytes": 1311,
+      "checkpoint": false,
+      "path": "probe/qualitative/manifest.json",
+      "sha256": "3c06c4fcd5f2d3e92f965d12d577b3804fec6064945d488548d3e7bea6c1dff6",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/manifest.json"
+    },
+    {
+      "bytes": 1744,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/Abyssinian_201_alg_controller_warmup20.png",
+      "sha256": "aa160d0d9bc08cbd976d04bd84983a483a2dbfe6534a0e0dc8a6868dfc73c71b",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/Abyssinian_201_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1176,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/Bengal_33_alg_controller_warmup20.png",
+      "sha256": "712fc19c0b8c8b6e712b9e42446390fdabbb637771457ee1e0dacb6b03962c3b",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/Bengal_33_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1300,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/Ragdoll_37_alg_controller_warmup20.png",
+      "sha256": "63d7d8e510199bf1900c816529144199b3b0992092fa14bb8480d6f5f36adcaf",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/Ragdoll_37_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1353,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/chihuahua_67_alg_controller_warmup20.png",
+      "sha256": "6bf088fcd97f930a1d082ee7bf9426425b34404f461b7166f5a8b96c94886532",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/chihuahua_67_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1740,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/great_pyrenees_91_alg_controller_warmup20.png",
+      "sha256": "7700342ac4eae373f27d7706a0a939cd3d9586bf6d87994e8f5843926b7d9260",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/great_pyrenees_91_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1240,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/miniature_pinscher_23_alg_controller_warmup20.png",
+      "sha256": "aac98ae5c61f1688fa5f9511ce97d233d26829f8853fefe1af189ef0bbfc85e0",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/miniature_pinscher_23_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1397,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/shiba_inu_68_alg_controller_warmup20.png",
+      "sha256": "9836d2a63b1d75a6288cb335c61b35e6c0d684c6bdb6d10b996376b40472b5fe",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/shiba_inu_68_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 1718,
+      "checkpoint": false,
+      "path": "probe/qualitative/masks/yorkshire_terrier_9_alg_controller_warmup20.png",
+      "sha256": "06caf8fa7db20e6948e1744c8670b04c77b82fb5ec478f20850e02f29e45f80b",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/masks/yorkshire_terrier_9_alg_controller_warmup20.png"
+    },
+    {
+      "bytes": 89405,
+      "checkpoint": false,
+      "path": "probe/qualitative/miniature_pinscher_23.png",
+      "sha256": "54aeb1a736af45f890085c76c52c9c0d6c147f4b0422486f1763ece6615337c2",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/miniature_pinscher_23.png"
+    },
+    {
+      "bytes": 94343,
+      "checkpoint": false,
+      "path": "probe/qualitative/shiba_inu_68.png",
+      "sha256": "a4e0fdb1cb8558133370807e1b1d8372203bb8ec9f9aee4abf11adfe0ee992c4",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/shiba_inu_68.png"
+    },
+    {
+      "bytes": 87987,
+      "checkpoint": false,
+      "path": "probe/qualitative/yorkshire_terrier_9.png",
+      "sha256": "e37de7b4c1cc824c1ad0b44ca44d192f5bf44f7a45e41f0019021563af8b3c0c",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/qualitative/yorkshire_terrier_9.png"
+    },
+    {
+      "bytes": 1403294,
+      "checkpoint": false,
+      "path": "probe/selection_complete_before_test.json",
+      "sha256": "dc00c2c4efccf5b41ee9a1af31d5b05686e94f222fabedfaa0a54dd793be6524",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/probe/selection_complete_before_test.json"
+    },
+    {
+      "bytes": 638,
+      "checkpoint": false,
+      "path": "sequence_status.json",
+      "sha256": "2744ca6427a415ac8e5bcc28dae50e022cc0a5e7a22739f0993de79c5d1f4895",
+      "source_member": "bapedragon_712/phase1_pet_alg_warmup20_b128_full_v1/sequence_status.json"
+    }
+  ],
+  "h200_issue_id": "712",
+  "import_policy": {
+    "kept": [
+      "three ALG warm-up-20 classification checkpoints and summaries",
+      "reference teacher checkpoint and audit",
+      "fifteen selected probe checkpoints and full selection histories",
+      "classification/probe summaries and raw CSV files",
+      "pre-test selection record and sequence status",
+      "fixed qualitative panels and prediction masks",
+      "H200 console log"
+    ],
+    "omitted": [
+      "duplicate training_status.json files",
+      "duplicate validation_split.json files",
+      "unrelated issue 710 output in the shared ZIP",
+      "__MACOSX metadata"
+    ]
+  },
+  "imported_bytes_excluding_this_manifest": 75725467,
+  "imported_file_count_excluding_this_manifest": 50,
+  "runtime_git_commits": [
+    "4d9ae4411ca9d3a58704919a6b62b3db170975f5"
+  ],
+  "schema_version": 1,
+  "source_archive": {
+    "all_member_crc_verified": true,
+    "bytes": 73462153,
+    "canonical_bundle_filename": "phase1_pet_b128_frozen_probe_issue710_and_alg_warmup20_issue712_v1.zip",
+    "original_filename": "bapedragon_712.zip",
+    "sha256": "866afc9289144245738f2625c18f5c2864f84180c69db3bb68b462e833bc72a2"
+  },
+  "status": "pass"
+}

@@ -6,14 +6,15 @@ GitHub Release에 보존하고 데이터셋과 feature cache는 보존하지 않
 
 | 분류 batch profile | 상태 | 결과 |
 |---|---|---|
-| 64 | 6설정 × 3 encoder seed × 5 probe seed 완료 | [batch64/RESULTS.md](batch64/RESULTS.md) |
-| 128 | H200 로그상 90/90 완료·산출물 감사 대기 | [batch128/RESULTS.md](batch128/RESULTS.md) |
+| 64 | 6설정 × 3 encoder seed × 5 probe seed 완료·감사 통과 | [batch64/RESULTS.md](batch64/RESULTS.md) |
+| 128 | 6설정 × 3 encoder seed × 5 probe seed 완료·감사 통과 | [batch128/RESULTS.md](batch128/RESULTS.md) |
 
 Batch 64에서는 `iBKD mIoU > matched ALG mIoU`가 지지되지 않았고, batch 128에서는
-반대로 iBKD가 ALG보다 `+14.879/+13.817`%p 높았습니다. 그러나 batch 128 ALG는
-guidance가 epoch 2에 종료된 checkpoint라 profile 간 방향이 뒤집혔으며, LG가 두
-profile 모두 1위입니다. 전체 Phase 1 판단은 batch 128 산출물 독립 감사와 별도 ALG
-warm-up 20 사후 진단을 확인한 뒤 기록합니다.
+반대로 iBKD가 canonical ALG보다 `+14.879/+13.817`%p 높았습니다. 그러나 batch
+128 ALG는 guidance가 epoch 2에 종료됐습니다. Controller 종료 판정 warm-up만
+20 epoch로 바꾼 사후 진단에서 ALG가 `80.947%`로 회복되어 iBKD 두 λ보다
+`+2.691/+3.752`%p 높았고, LG는 두 profile 모두 1위였습니다. 따라서 Phase 1
+핵심 가설은 지지되지 않았으며 [결정문](../../DECISION.md)에 No-Go로 기록했습니다.
 
 ## 결과 반입·감사 절차
 
@@ -38,3 +39,7 @@ PYTHONPATH=src python phase1/scripts/curate_probe_results.py \
   --raw-dir phase1/results/raw/oxford_iiit_pet/frozen_probe_v1/batch128 \
   --report-dir phase1/reports/frozen_probe/batch128
 ```
+
+ALG warm-up 20 사후 진단의 별도 반입·감사 스크립트와 결과는
+[진단 보고서](../diagnostics/alg_controller_warmup20_b128/RESULTS.md)에 연결되어
+있습니다.

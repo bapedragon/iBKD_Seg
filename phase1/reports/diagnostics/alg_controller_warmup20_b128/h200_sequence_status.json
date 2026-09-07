@@ -1,0 +1,19 @@
+{
+  "active": null,
+  "canonical_phase1_result_replaced": false,
+  "classification_complete": 3,
+  "classification_expected": 3,
+  "classification_official_test_evaluations": 3,
+  "confirmatory_main_result": false,
+  "experiment_id": "oxford_iiit_pet_alg_controller_warmup20_posthoc_full_v1",
+  "failure": null,
+  "phase": "complete",
+  "posthoc_diagnostic": true,
+  "probe_official_test_accessed": true,
+  "probe_selections_complete": 15,
+  "probe_selections_expected": 15,
+  "probe_test_evaluations_complete": 15,
+  "probe_test_evaluations_expected": 15,
+  "status": "complete",
+  "updated_at_utc": "2026-09-06T18:03:59.716565+00:00"
+}

@@ -8,7 +8,7 @@
 
 ## 현재 상태
 
-**Phase 0.5 완료 — Phase 1 batch 64 probe 감사 완료, batch 128 probe 로그상 완료·산출물 감사 대기.**
+**Phase 0.5 완료 — Phase 1 전체 실행·감사 완료, 핵심 iBKD > LG/ALG 가설 No-Go.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -23,18 +23,20 @@ Phase 1은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` spl
 사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후
 선택하지 않도록 student batch `64/128`과 iBKD λ `0.25/0.5`를 모두 3 seed로
 실행하고 별도 profile로 보고합니다. 2026-09-06에 batch 64/128 분류 36개 student와
-각 profile의 teacher 실행을 모두 완료했습니다. Batch 64 frozen probe에서는 iBKD가
-matched ALG보다 낮았습니다. Batch 128 probe는 H200 로그상 90/90 완료됐고 iBKD가
-ALG보다 높았지만, epoch 2에 guidance가 종료된 ALG만 batch 64 대비 18.713%p
-급락했습니다. LG는 두 profile 모두 1위였습니다. Batch 128 전체 산출물 감사와 ALG
-warm-up 20 사후 진단을 확인한 뒤 Phase 1 최종 결정을 내립니다.
+각 profile의 teacher 실행을 모두 완료했습니다. 두 frozen probe의 180개 선택
+checkpoint도 독립 감사를 통과했습니다. Batch 64에서는 iBKD가 matched ALG보다
+낮았고, batch 128에서만 iBKD가 ALG보다 높았지만 ALG가 세 seed 모두 epoch 2에
+guidance를 종료했습니다. 종료 판정 warm-up만 20 epoch로 바꾼 사후 진단에서 ALG
+mIoU가 `63.378 → 80.947%`로 회복되어 iBKD 두 λ보다 높았습니다. LG는 두
+canonical profile 모두 1위였습니다. 따라서 Phase 1 핵심 가설은 No-Go이고 원래
+전제의 Phase 2 진입은 보류합니다.
 
 | Phase | 핵심 질문 | 상태 |
 |---|---|---|
 | 0 | 입력 데이터와 평가 계약을 신뢰할 수 있는가? | 감사 완료 |
 | 0.5 | Flowers pseudo-mask로 전체 probe 파이프라인이 작동하는가? | 완료 / 통과 |
-| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 두 profile 실행 완료 / 방향 불일치·산출물 감사 대기 |
-| 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 대기 |
+| 1 | Pet GT에서 iBKD feature의 공간정보가 더 잘 복원되는가? | 완료 / 핵심 가설 No-Go |
+| 2 | 관측된 차이가 공간적이고 여러 seed에서 재현되는가? | 진입 보류 — Phase 1 전제 미충족 |
 | 3 | 더 강한 공통 decoder와 fine-tuning에서도 차이가 유지되는가? | 대기 |
 | 4 | multi-class semantic segmentation으로 일반화되는가? | 대기 |
 | 5 | dense task 전용 iBKD 확장이 필요한가? | 대기 |
@@ -49,7 +51,9 @@ warm-up 20 사후 진단을 확인한 뒤 Phase 1 최종 결정을 내립니다.
 - Pet batch 64 분류 결과: [phase1/reports/classification/batch64/RESULTS.md](phase1/reports/classification/batch64/RESULTS.md)
 - Pet batch 128 분류 결과: [phase1/reports/classification/batch128/RESULTS.md](phase1/reports/classification/batch128/RESULTS.md)
 - Pet batch 64 frozen probe 결과: [phase1/reports/frozen_probe/batch64/RESULTS.md](phase1/reports/frozen_probe/batch64/RESULTS.md)
-- Pet batch 128 frozen probe 잠정 결과: [phase1/reports/frozen_probe/batch128/RESULTS.md](phase1/reports/frozen_probe/batch128/RESULTS.md)
+- Pet batch 128 frozen probe 결과: [phase1/reports/frozen_probe/batch128/RESULTS.md](phase1/reports/frozen_probe/batch128/RESULTS.md)
+- ALG controller warm-up 20 사후 진단: [phase1/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md](phase1/reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)
+- Phase 1 결정: [phase1/DECISION.md](phase1/DECISION.md)
 
 ## 저장소 구성 원칙
 

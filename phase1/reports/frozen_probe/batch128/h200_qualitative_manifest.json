@@ -1,0 +1,61 @@
+{
+  "encoder_seed": 1,
+  "panel_sets": {
+    "ibkd_0.25": {
+      "panel_order": [
+        "input",
+        "ground truth",
+        "vanilla",
+        "KD",
+        "LG",
+        "ALG",
+        "ibkd_0.25"
+      ],
+      "panels": [
+        "qualitative/ibkd_0.25/Abyssinian_201.png",
+        "qualitative/ibkd_0.25/Bengal_33.png",
+        "qualitative/ibkd_0.25/chihuahua_67.png",
+        "qualitative/ibkd_0.25/great_pyrenees_91.png",
+        "qualitative/ibkd_0.25/miniature_pinscher_23.png",
+        "qualitative/ibkd_0.25/Ragdoll_37.png",
+        "qualitative/ibkd_0.25/shiba_inu_68.png",
+        "qualitative/ibkd_0.25/yorkshire_terrier_9.png"
+      ]
+    },
+    "ibkd_0.5": {
+      "panel_order": [
+        "input",
+        "ground truth",
+        "vanilla",
+        "KD",
+        "LG",
+        "ALG",
+        "ibkd_0.5"
+      ],
+      "panels": [
+        "qualitative/ibkd_0.5/Abyssinian_201.png",
+        "qualitative/ibkd_0.5/Bengal_33.png",
+        "qualitative/ibkd_0.5/chihuahua_67.png",
+        "qualitative/ibkd_0.5/great_pyrenees_91.png",
+        "qualitative/ibkd_0.5/miniature_pinscher_23.png",
+        "qualitative/ibkd_0.5/Ragdoll_37.png",
+        "qualitative/ibkd_0.5/shiba_inu_68.png",
+        "qualitative/ibkd_0.5/yorkshire_terrier_9.png"
+      ]
+    }
+  },
+  "posthoc_example_selection": false,
+  "probe_seed": 1,
+  "selection_rule": "eight_fixed_near_equal_quantiles_of_official_test_file_order_before_results",
+  "test_image_ids": [
+    "Abyssinian_201",
+    "Bengal_33",
+    "chihuahua_67",
+    "great_pyrenees_91",
+    "miniature_pinscher_23",
+    "Ragdoll_37",
+    "shiba_inu_68",
+    "yorkshire_terrier_9"
+  ],
+  "test_inference_reused_from_metric_pass": true
+}

@@ -1,6 +1,6 @@
 # Phase 1 Pet batch 128 full-classification 결과
 
-상태: **37-way 분류 완료·감사 통과 — frozen probe 로그상 완료·산출물 감사 대기**
+상태: **37-way 분류 및 후속 frozen probe 완료·감사 통과**
 
 이 문서는 사전에 LOCK한 Phase 1 v1 프로토콜의 batch 128 profile 결과입니다.
 분류 정확도만 기록하며, 공간정보 보존 여부는 이 checkpoint들의 encoder를 고정한
@@ -89,6 +89,8 @@ interaction**으로 보는 것이 맞습니다. 두 profile 중 좋은 것만 ma
 - Release asset에서 제외: Oxford-IIIT Pet 데이터셋
 
 후속 batch 128 probe는 Release asset의 byte size와 SHA-256을 확인한 checkpoint로
-실행됐고, 전달 로그상 선택·test `90/90`과 최종 pass를 완료했습니다. 현재 잠정
-수치는 [batch 128 frozen probe 결과](../../frozen_probe/batch128/RESULTS.md)에
-있으며, 전체 결과 bundle을 받은 뒤 독립 감사를 완료합니다.
+실행됐고, 선택·test `90/90`과 독립 산출물 감사를 모두 통과했습니다. 확정 수치와
+해석은 [batch 128 frozen probe 결과](../../frozen_probe/batch128/RESULTS.md)에
+있습니다. Epoch 2 ALG 종료의 원인은 별도
+[controller warm-up 20 사후 진단](../../diagnostics/alg_controller_warmup20_b128/RESULTS.md)으로
+검사했습니다.

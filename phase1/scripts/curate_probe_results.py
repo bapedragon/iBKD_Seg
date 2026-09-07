@@ -216,6 +216,7 @@ def _audit_artifacts(
     raw_dir: Path,
     results: list[dict[str, Any]],
     probe_config: dict[str, Any],
+    batch_size: int,
 ) -> dict[str, Any]:
     expected_paths = {
         raw_dir / result["probe_artifact"]["relative_path"] for result in results
@@ -235,7 +236,7 @@ def _audit_artifacts(
             == "phase1_scientific_full_frozen_probe",
             "scientific": payload.get("scientific_result") is True,
             "protocol": payload.get("protocol_sha256") == LOCKED_PROTOCOL_SHA256,
-            "batch": payload.get("classification_batch_size") == 64,
+            "batch": payload.get("classification_batch_size") == batch_size,
             "variant": payload.get("variant") == result["variant"],
             "encoder_seed": payload.get("encoder_seed") == result["encoder_seed"],
             "probe_seed": payload.get("probe_seed") == result["probe_seed"],
@@ -520,6 +521,7 @@ def run(args: argparse.Namespace) -> None:
         raw_dir,
         results,
         protocol["frozen_spatial_probe"]["probe"],
+        int(suite["classification_batch_size"]),
     )
     _audit_raw_csv(raw_dir, results)
     recomputed_aggregates = _aggregate(results)
@@ -616,12 +618,17 @@ def run(args: argparse.Namespace) -> None:
     save_json(qualitative_audit, report_dir / "figures/manifest.json")
     write_csv(per_encoder_rows, report_dir / "per_encoder_seed.csv")
 
+    batch_size = int(suite["classification_batch_size"])
     summary = {
         "schema_version": 1,
-        "status": "complete_primary_hypothesis_not_supported",
+        "status": (
+            "complete_primary_hypothesis_supported"
+            if primary_supported
+            else "complete_primary_hypothesis_not_supported"
+        ),
         "dataset": "Oxford-IIIT Pet",
-        "experiment": "phase1_batch64_frozen_spatial_probe",
-        "classification_batch_size": 64,
+        "experiment": f"phase1_batch{batch_size}_frozen_spatial_probe",
+        "classification_batch_size": batch_size,
         "h200_issue_id": source_manifest["h200_issue_id"],
         "runtime_git_commit": suite["runtime"]["git_commit"],
         "protocol_sha256": suite["protocol_sha256"],
@@ -670,7 +677,11 @@ def run(args: argparse.Namespace) -> None:
                 contrast["all_encoder_seed_differences_negative"]
                 for contrast in primary_contrasts
             ),
-            "decision_scope": "no_go_for_batch64_v1_ibkd_greater_than_alg_claim",
+            "decision_scope": (
+                f"paired_ibkd_greater_than_alg_observed_for_batch{batch_size}_v1"
+                if primary_supported
+                else f"no_go_for_batch{batch_size}_v1_ibkd_greater_than_alg_claim"
+            ),
             "ibkd_exceeds_kd_for_both_lambdas_and_all_encoder_seeds": all(
                 contrast["all_encoder_seed_differences_positive"]
                 for contrast in contrasts

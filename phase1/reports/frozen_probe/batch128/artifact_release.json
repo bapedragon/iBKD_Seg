@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "release_tag": "phase1-pet-b128-frozen-probe-v1",
+  "asset_name": "phase1_pet_b128_frozen_probe_v1.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-pet-b128-frozen-probe-v1/phase1_pet_b128_frozen_probe_v1.tar.gz",
+  "size_bytes": 6389676,
+  "sha256": "b6c5cb218a05d086563eae32e47a7aea5a3d6f325aeeebca85cbf4610e57d9f5",
+  "source": {
+    "h200_job_id": 710,
+    "classification_batch_size": 128,
+    "selected_probe_checkpoints": 90
+  },
+  "contents": {
+    "all_selected_probe_checkpoints": true,
+    "full_raw_results": true,
+    "selection_before_test_record": true,
+    "sequence_status": true,
+    "fixed_qualitative_panels": true,
+    "fixed_qualitative_masks": true,
+    "h200_log": true,
+    "dataset_files": false,
+    "feature_caches": false
+  },
+  "remote_asset_digest_verified": true,
+  "storage_policy": "github_release_asset_not_git_history",
+  "reason": "Preserve the audited probe checkpoints and complete raw evidence without permanently inflating every Git clone."
+}

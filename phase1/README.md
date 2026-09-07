@@ -1,6 +1,6 @@
 # Phase 1 — Oxford-IIIT Pet 공간 표현 검증
 
-상태: **batch 64 probe 감사 완료·batch 128 probe 로그상 완료 — batch 128 산출물 감사 대기**
+상태: **batch 64/128 probe와 ALG warm-up 20 진단 완료·감사 통과 — Phase 1 핵심 가설 No-Go**
 
 현재 LOCK한 프로토콜과 full-run 계약은 [PROTOCOL.md](PROTOCOL.md), 기계가 읽을 수
 있는 설정은
@@ -20,13 +20,14 @@ Batch 64 frozen probe 본 실험도 완료했으나 iBKD λ=0.25/0.5가 matched 
 [전체 probe 결과](reports/frozen_probe/batch64/RESULTS.md)와
 [고정 정성 panel](reports/frozen_probe/batch64/QUALITATIVE.md)에 근거를 남깁니다.
 
-Batch 128 frozen probe는 전달된 H200 로그상 선택·test `90/90`과 최종 pass를
-완료했습니다. iBKD λ=0.25/0.5는 canonical ALG보다 각각
+Batch 128 frozen probe도 선택·test `90/90`과 전체 산출물 독립 감사를
+통과했습니다. iBKD λ=0.25/0.5는 canonical ALG보다 각각
 `+14.879/+13.817`%p 높았지만 LG보다 `-4.600/-5.661`%p 낮았습니다. Batch 128
-ALG는 guidance가 epoch 2에 종료된 분류 checkpoint로 probe mIoU가 batch 64보다
-`-18.713`%p 급락했으므로, profile 간 iBKD–ALG 방향이 뒤집혔습니다. 현재 값과
-제한사항은 [batch 128 잠정 결과](reports/frozen_probe/batch128/RESULTS.md)에
-기록했으며, 전체 산출물의 독립 감사 전까지 최종 Phase 1 결정은 보류합니다.
+ALG는 guidance가 epoch 2에 종료되어 probe mIoU가 batch 64보다 `-18.713`%p
+급락했습니다. Controller 종료 판정 warm-up만 `0 → 20`으로 바꾼 사후 진단에서는
+ALG mIoU가 `80.947%`로 회복되어 iBKD 두 λ보다 `+2.691/+3.752`%p 높았습니다.
+따라서 원래의 iBKD > LG/ALG 가설은 지지되지 않았고, 최종 판단을
+[Phase 1 결정문](DECISION.md)에 No-Go로 기록했습니다.
 
 ## 핵심 질문
 
@@ -118,8 +119,7 @@ iBKD가 완성된 segmentation 모델이나 세그멘테이션 전용 KD보다 �
 ## 계산 자원
 
 - 로컬: Pet 데이터 감사, 단위 테스트, 결과 curation과 정성 확인
-- H200: timing·두 분류 profile·batch 64/128 probe 실행 완료, ALG warm-up 20 사후
-  진단 실행 중/결과 대기
+- H200: timing·두 분류 profile·batch 64/128 probe·ALG warm-up 20 사후 진단 완료
 
 ## Batch 64/128 frozen-probe smoke
 
@@ -183,13 +183,13 @@ feature cache와 데이터셋은 scratch에서 사용 후 결과 폴더에 복�
 검증된 결과는 [batch 64 결과 보고서](reports/frozen_probe/batch64/RESULTS.md)에
 있습니다. 전체 raw 산출물은 Git history 대신
 [GitHub Release manifest](reports/frozen_probe/batch64/artifact_release.json)에
-고정했습니다. 다음 단계는 protocol을 사후 변경하는 것이 아니라 batch 128
-checkpoint에 같은 probe 계약을 적용하는 것입니다.
+고정했습니다. 이후 동일 계약을 batch 128 checkpoint에도 적용해 실행·감사를
+완료했습니다.
 
 ## Batch 128 frozen-probe 본 실험
 
-Batch 128 smoke 통과 뒤 다음 명령으로 같은 LOCK된 본 실험을 실행했고, 전달된
-로그상 선택 `90/90`, test-once `90/90`, 최종 pass를 완료했습니다.
+Batch 128 smoke 통과 뒤 다음 명령으로 같은 LOCK된 본 실험을 실행했고, H200 작업
+710에서 선택 `90/90`, test-once `90/90`, 최종 pass를 완료했습니다.
 
 ```bash
 bash phase1/scripts/run_probe_full_b128.sh
@@ -207,12 +207,14 @@ bash phase1/scripts/run_probe_full_b128.sh
 - Pet 데이터와 임시 feature cache: `/app/scratch`
 - 회수할 결과: `/app/output/phase1_pet_probe_b128_full_v1`
 
-로그에서 확인한 주 metric 순위는
+독립 감사로 확정한 주 metric 순위는
 `LG 82.856 > iBKD-0.25 78.256 > iBKD-0.5 77.195 > KD 73.765 > ALG 63.378 > Vanilla 60.454`
 입니다. 자세한 encoder-seed 원값과 paired 차이는
-[잠정 결과 보고서](reports/frozen_probe/batch128/RESULTS.md)에 있습니다. 현재
-보고서는 로그만 반영했으며, 결과 bundle을 받은 뒤 270개 후보 선택, 90개
-checkpoint, confusion metric과 정성 panel을 독립 감사해 확정합니다.
+[확정 결과 보고서](reports/frozen_probe/batch128/RESULTS.md)에 있습니다. 270개 후보
+선택, 90개 checkpoint, confusion metric, test-once와 정성 panel 감사를 모두
+통과했으며 전체 바이너리는
+[GitHub Release manifest](reports/frozen_probe/batch128/artifact_release.json)에
+고정했습니다.
 
 ## ALG controller warm-up 20 사후 진단
 
@@ -251,7 +253,7 @@ bash phase1/scripts/run_alg_warmup20_full_b128.sh
 ```
 
 Full 진단은 batch 128 Release에서 감사된 동일 teacher를 내려받아 재사용하고, ALG
-encoder seed `[1,2,3]`을 300 epoch로 새로 학습합니다. 이어서 세 encoder 각각에
+encoder seed `[1,2,3]`을 300 epoch로 새로 학습했습니다. 이어서 세 encoder 각각에
 probe seed `[1,2,3,4,5]`와 LR `[0.01,0.03,0.1]`을 적용하므로 45개 후보 중
 validation으로 15개를 선택합니다. 15개 선택 완료 기록을 남긴 뒤에만 공식 probe
 test를 열어 선택된 probe당 한 번 평가하고, encoder/probe seed 1의 고정 test 8장
@@ -260,6 +262,14 @@ panel도 같은 추론에서 저장합니다. 회수할 결과는
 [`configs/oxford_iiit_pet_alg_warmup20_full_v1.json`](configs/oxford_iiit_pet_alg_warmup20_full_v1.json)에
 고정했습니다.
 
-이 실행은 결과를 본 뒤 원인을 확인하는 **사후 진단**입니다. 수치는 보고할 수 있지만
+H200 작업 712에서 분류 3/3, probe 선택·test 15/15를 완료했고 전체 산출물 감사도
+통과했습니다. Controller 종료 epoch는 canonical의 `2/2/2`에서 `103/118/137`로
+늦어졌고, test macro Top-1은 `22.880 → 31.080%`, probe mIoU는
+`63.378 → 80.947%`로 회복됐습니다. 회복된 ALG probe는 iBKD λ=0.25/0.5보다
+`+2.691/+3.752`%p 높고 LG보다 `-1.909`%p 낮았습니다. 전체 결과는
+[사후 진단 보고서](reports/diagnostics/alg_controller_warmup20_b128/RESULTS.md)에
+있습니다.
+
+이 실행은 결과를 본 뒤 원인을 확인한 **사후 진단**입니다. 수치는 보고하지만
 사전에 LOCK한 canonical ALG 및 Phase 1 주 결과를 대체하는 confirmatory 실험으로
 해석하지 않습니다.

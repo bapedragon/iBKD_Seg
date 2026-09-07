@@ -1,0 +1,94 @@
+{
+  "encoder_seed": 1,
+  "fixed_before_results": true,
+  "panel_count": 8,
+  "panels": [
+    {
+      "bytes": 91324,
+      "height": 252,
+      "image_id": "Abyssinian_201",
+      "mode": "RGB",
+      "path": "figures/Abyssinian_201.png",
+      "sha256": "8d71bb040927ea6f2a59fcadbd6b843563420e47b9726aa0d25b473e864229a3",
+      "width": 672
+    },
+    {
+      "bytes": 124925,
+      "height": 252,
+      "image_id": "Bengal_33",
+      "mode": "RGB",
+      "path": "figures/Bengal_33.png",
+      "sha256": "b586889b9052e3652448e7a7cc3c29e038e27fdc54606a28e9b0febe16b29d2c",
+      "width": 672
+    },
+    {
+      "bytes": 63660,
+      "height": 252,
+      "image_id": "chihuahua_67",
+      "mode": "RGB",
+      "path": "figures/chihuahua_67.png",
+      "sha256": "35ec42d0b3b60824c857cf92b32bcc7857f3bbf419d3c0be660467040ea964be",
+      "width": 672
+    },
+    {
+      "bytes": 93660,
+      "height": 252,
+      "image_id": "great_pyrenees_91",
+      "mode": "RGB",
+      "path": "figures/great_pyrenees_91.png",
+      "sha256": "01fcf9cf0ef0bb567af70948ae61440e4cf75509b3ecc8561301eac5210f6c83",
+      "width": 672
+    },
+    {
+      "bytes": 89405,
+      "height": 252,
+      "image_id": "miniature_pinscher_23",
+      "mode": "RGB",
+      "path": "figures/miniature_pinscher_23.png",
+      "sha256": "54aeb1a736af45f890085c76c52c9c0d6c147f4b0422486f1763ece6615337c2",
+      "width": 672
+    },
+    {
+      "bytes": 73147,
+      "height": 252,
+      "image_id": "Ragdoll_37",
+      "mode": "RGB",
+      "path": "figures/Ragdoll_37.png",
+      "sha256": "184dc8a1f39fecb8a81c2ea469fb6e25a5076614072c9a65866103c27046c3f2",
+      "width": 672
+    },
+    {
+      "bytes": 94343,
+      "height": 252,
+      "image_id": "shiba_inu_68",
+      "mode": "RGB",
+      "path": "figures/shiba_inu_68.png",
+      "sha256": "a4e0fdb1cb8558133370807e1b1d8372203bb8ec9f9aee4abf11adfe0ee992c4",
+      "width": 672
+    },
+    {
+      "bytes": 87987,
+      "height": 252,
+      "image_id": "yorkshire_terrier_9",
+      "mode": "RGB",
+      "path": "figures/yorkshire_terrier_9.png",
+      "sha256": "e37de7b4c1cc824c1ad0b44ca44d192f5bf44f7a45e41f0019021563af8b3c0c",
+      "width": 672
+    }
+  ],
+  "posthoc_example_selection": false,
+  "probe_seed": 1,
+  "schema_version": 1,
+  "source_mask_count_audited_but_not_committed": 8,
+  "status": "pass",
+  "test_image_ids": [
+    "Abyssinian_201",
+    "Bengal_33",
+    "chihuahua_67",
+    "great_pyrenees_91",
+    "miniature_pinscher_23",
+    "Ragdoll_37",
+    "shiba_inu_68",
+    "yorkshire_terrier_9"
+  ]
+}

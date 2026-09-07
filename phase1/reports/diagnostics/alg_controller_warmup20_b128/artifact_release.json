@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "release_tag": "phase1-pet-b128-alg-warmup20-diagnostic-v1",
+  "asset_name": "phase1_pet_b128_alg_controller_warmup20_diagnostic_v1.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-pet-b128-alg-warmup20-diagnostic-v1/phase1_pet_b128_alg_controller_warmup20_diagnostic_v1.tar.gz",
+  "size_bytes": 66902596,
+  "sha256": "efb7660181f51ccac8b3f2c4a3c8dfe930d6705dde72b12f951ccee80472b12b",
+  "source": {
+    "h200_job_id": 712,
+    "classification_batch_size": 128,
+    "classification_student_checkpoints": 3,
+    "selected_probe_checkpoints": 15,
+    "reference_teacher_checkpoints": 1,
+    "posthoc_diagnostic": true
+  },
+  "contents": {
+    "all_classification_student_checkpoints": true,
+    "reference_teacher_checkpoint": true,
+    "all_selected_probe_checkpoints": true,
+    "full_classification_and_probe_summaries": true,
+    "selection_before_test_record": true,
+    "sequence_status": true,
+    "fixed_qualitative_panels": true,
+    "fixed_qualitative_masks": true,
+    "h200_log": true,
+    "dataset_files": false,
+    "feature_caches": false
+  },
+  "remote_asset_digest_verified": true,
+  "storage_policy": "github_release_asset_not_git_history",
+  "canonical_phase1_result_replaced": false,
+  "reason": "Preserve the audited post-hoc diagnostic evidence while keeping all checkpoints out of Git history."
+}
