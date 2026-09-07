@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "smoke_id": "cub200_phase1_b128_classification_to_frozen_probe_smoke_v1",
+  "smoke_id": "cub200_phase1_b128_classification_to_frozen_probe_smoke_v2",
   "status": "locked_non_scientific_smoke_only_2026-09-07",
   "full_protocol_status": "not_locked",
   "purpose": "data_plumbing_runtime_memory_checkpoint_freeze_and_probe_path_only",
@@ -65,13 +65,14 @@
       "vanilla",
       "kd",
       "lg",
-      "alg",
+      "alg_warmup20",
       "ibkd_lambda_0.25",
       "ibkd_lambda_0.5"
     ],
     "controller": {
       "lg": "all_epochs",
-      "alg_warmup_epochs": 0,
+      "alg_warmup_epochs": 20,
+      "canonical_alg_warmup0_included": false,
       "ibkd_warmup_epochs": 20
     },
     "checkpoint": "two_epoch_latest_smoke_only_not_validation_selected"

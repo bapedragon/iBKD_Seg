@@ -18,6 +18,7 @@ from ibkd_seg.phase1.cub_data import (
 from ibkd_seg.phase1.cub_probe_data import CubProbeRecord, load_targets
 from ibkd_seg.phase1.run_cub_combined_smoke import (
     EXPECTED_VARIANTS,
+    VARIANT_ARGUMENTS,
     _validate_config,
 )
 from ibkd_seg.phase1.train_timing import validate_args as validate_timing_args
@@ -26,7 +27,7 @@ from ibkd_seg.phase1.train_timing import validate_args as validate_timing_args
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = (
     REPOSITORY_ROOT
-    / "phase1/phase1_cub/configs/cub200_b128_combined_smoke_v1.json"
+    / "phase1/phase1_cub/configs/cub200_b128_combined_smoke_v2.json"
 )
 SCRIPT_PATH = (
     REPOSITORY_ROOT / "phase1/phase1_cub/scripts/run_combined_smoke_b128.sh"
@@ -34,7 +35,7 @@ SCRIPT_PATH = (
 
 
 class Phase1CubSplitTest(unittest.TestCase):
-    def test_six_validation_images_per_class_are_deterministic(self) -> None:
+    def test_three_validation_images_per_class_are_deterministic(self) -> None:
         records = [
             CubRecord(
                 image_id=label * 100 + offset + 1,
@@ -104,17 +105,31 @@ class Phase1CubSmokeContractTest(unittest.TestCase):
         self.assertEqual(
             tuple(config["classification"]["variants"]), EXPECTED_VARIANTS
         )
+        self.assertEqual(len(EXPECTED_VARIANTS), 6)
+        self.assertEqual(VARIANT_ARGUMENTS["alg_warmup20"], ("alg", None, 20))
+        self.assertEqual(VARIANT_ARGUMENTS["ibkd_lambda_0.25"][2], 20)
+        self.assertEqual(VARIANT_ARGUMENTS["ibkd_lambda_0.5"][2], 20)
         self.assertEqual(config["classification"]["student"]["batch_size"], 128)
+        self.assertNotIn("alg", config["classification"]["variants"])
+        self.assertIn("alg_warmup20", config["classification"]["variants"])
+        self.assertEqual(
+            config["classification"]["controller"]["alg_warmup_epochs"], 20
+        )
+        self.assertFalse(
+            config["classification"]["controller"][
+                "canonical_alg_warmup0_included"
+            ]
+        )
         self.assertEqual(config["task_count"]["probe_lr_candidates"], 18)
 
     def test_cub_timing_export_allows_each_smoke_student(self) -> None:
-        for method, fusion_ratio in (
-            ("vanilla", None),
-            ("kd", None),
-            ("lg", None),
-            ("alg", None),
-            ("ibkd", 0.25),
-            ("ibkd", 0.5),
+        for method, fusion_ratio, alg_warmup in (
+            ("vanilla", None, 0),
+            ("kd", None, 0),
+            ("lg", None, 0),
+            ("alg", None, 20),
+            ("ibkd", 0.25, 0),
+            ("ibkd", 0.5, 0),
         ):
             with self.subTest(method=method, fusion_ratio=fusion_ratio):
                 args = argparse.Namespace(
@@ -129,7 +144,7 @@ class Phase1CubSmokeContractTest(unittest.TestCase):
                     eval_batch_size=200,
                     num_workers=4,
                     seed=1,
-                    alg_controller_warmup_epochs=0,
+                    alg_controller_warmup_epochs=alg_warmup,
                     save_student_checkpoint=True,
                 )
                 validate_timing_args(args)

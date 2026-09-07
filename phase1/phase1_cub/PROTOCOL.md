@@ -30,17 +30,25 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 ## 본실험 전 통합 smoke 계약
 
 본실험 결과를 보기 전 실행 경로를 검증하기 위한 batch-128 통합 smoke만
-`configs/cub200_b128_combined_smoke_v1.json`에 별도로 고정했습니다. 이는 이
+`configs/cub200_b128_combined_smoke_v2.json`에 별도로 고정했습니다. 이는 이
 문서의 본실험 LOCK을 대신하지 않습니다.
+
+Smoke config SHA-256:
+`502e6d5e285452d1aeae3eb1ec3e912da34337d2bfc6e3bdb1868ce444941699`
+
+실행되지 않은 v1은 CUB의 ALG warm-up 0 조건을 제거하면서 v2로 대체했으며,
+과거 내용은 Git 이력에만 보존합니다.
 
 - 공식 train 5,994장만 클래스별 고정 분할: train 5,394 / validation 600
   (클래스당 3장, seed 2027)
 - 공식 test 5,794장: loader 생성·이미지/mask decode·평가 모두 금지
 - scratch CIFAR-style ResNet-56 teacher 1개, 입력 32, batch 128, seed 1,
   2 epoch
-- scratch DeiT-Tiny student 6개: Vanilla, KD, LG, ALG, iBKD λ=0.25/0.5,
+- scratch DeiT-Tiny student 6개: Vanilla, KD, LG, ALG-w20, iBKD λ=0.25/0.5,
   입력 224, batch 128, seed 1, 각각 2 epoch
-- canonical ALG controller warm-up 0, iBKD controller warm-up 20
+- CUB에서는 ALG controller 종료 판정 warm-up을 20 epoch로 사전 고정하고
+  canonical warm-up 0 조건은 제외; 결과 표기명은 `ALG-w20`
+- iBKD controller 종료 판정 warm-up 20
 - 각 student 최신 smoke checkpoint를 strict load하고 encoder를 완전히 동결
 - 공식 binary mask의 grayscale 값 `> 0`을 foreground로 임시 고정하고 nearest
   resize

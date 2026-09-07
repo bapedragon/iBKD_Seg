@@ -79,7 +79,8 @@ probe를 독립적으로 반복할 예정입니다. Pet의 잠긴 config나 결�
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
 현재 준비된 smoke는 공식 test를 열지 않고 scratch ResNet-56 teacher 1개,
-batch-128 DeiT-Tiny 분류 6설정과 각 frozen encoder의 세 probe LR을 2 epoch씩
+batch-128 DeiT-Tiny 분류 6설정(Vanilla, KD, LG, ALG-w20, iBKD-0.25/0.5)과 각
+frozen encoder의 세 probe LR을 2 epoch씩
 연결해 데이터·mask·checkpoint·freeze·메모리·시간 경로만 검사합니다. Smoke
 metric은 과학적 결과나 본실험 설정 선택에 사용하지 않습니다.
 

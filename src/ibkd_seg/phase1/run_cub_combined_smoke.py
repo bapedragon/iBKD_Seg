@@ -3,8 +3,9 @@
 
 The smoke trains one two-epoch ResNet-56 teacher and six two-epoch DeiT-Tiny
 students, then strictly reloads and freezes each student before exercising the
-three probe learning-rate candidates for two epochs.  Official test images and
-masks are never opened by this entry point.
+three probe learning-rate candidates for two epochs.  The sole ALG condition
+uses the predeclared 20-epoch controller decision warm-up.  Official test images
+and masks are never opened by this entry point.
 """
 
 from __future__ import annotations
@@ -49,23 +50,23 @@ from .train_timing import file_sha256, format_duration, state_dict_sha256
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
-    / "phase1/phase1_cub/configs/cub200_b128_combined_smoke_v1.json"
+    / "phase1/phase1_cub/configs/cub200_b128_combined_smoke_v2.json"
 )
 EXPECTED_VARIANTS = (
     "vanilla",
     "kd",
     "lg",
-    "alg",
+    "alg_warmup20",
     "ibkd_lambda_0.25",
     "ibkd_lambda_0.5",
 )
-VARIANT_ARGUMENTS: dict[str, tuple[str, float | None]] = {
-    "vanilla": ("vanilla", None),
-    "kd": ("kd", None),
-    "lg": ("lg", None),
-    "alg": ("alg", None),
-    "ibkd_lambda_0.25": ("ibkd", 0.25),
-    "ibkd_lambda_0.5": ("ibkd", 0.5),
+VARIANT_ARGUMENTS: dict[str, tuple[str, float | None, int | None]] = {
+    "vanilla": ("vanilla", None, None),
+    "kd": ("kd", None, None),
+    "lg": ("lg", None, 0),
+    "alg_warmup20": ("alg", None, 20),
+    "ibkd_lambda_0.25": ("ibkd", 0.25, 20),
+    "ibkd_lambda_0.5": ("ibkd", 0.5, 20),
 }
 
 
@@ -135,7 +136,7 @@ def _runtime(device: torch.device) -> dict[str, Any]:
 def _validate_config(config: dict[str, Any]) -> None:
     checks = {
         "smoke_id": config.get("smoke_id")
-        == "cub200_phase1_b128_classification_to_frozen_probe_smoke_v1",
+        == "cub200_phase1_b128_classification_to_frozen_probe_smoke_v2",
         "non_scientific": config.get("scientific_result") is False,
         "selection_forbidden": config.get(
             "selection_from_smoke_metrics_forbidden"
@@ -186,10 +187,14 @@ def _validate_config(config: dict[str, Any]) -> None:
         == "cifar_style_resnet56_6n_plus_2_n9",
         "variants": tuple(config.get("classification", {}).get("variants", ()))
         == EXPECTED_VARIANTS,
-        "alg_canonical": config.get("classification", {}).get(
+        "alg_warmup20_only": config.get("classification", {}).get(
             "controller", {}
         ).get("alg_warmup_epochs")
-        == 0,
+        == 20
+        and config.get("classification", {}).get("controller", {}).get(
+            "canonical_alg_warmup0_included"
+        )
+        is False,
         "ibkd_warmup": config.get("classification", {}).get(
             "controller", {}
         ).get("ibkd_warmup_epochs")
@@ -348,7 +353,10 @@ def _load_encoder(
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     metadata = payload.get("metadata", {})
-    method, _ = VARIANT_ARGUMENTS[variant]
+    method, _, controller_warmup_epochs = VARIANT_ARGUMENTS[variant]
+    alg_controller_warmup_epochs = (
+        int(controller_warmup_epochs) if method == "alg" else 0
+    )
     expected = {
         "purpose": "phase1_cub_combined_smoke_student",
         "scientific_result": False,
@@ -361,6 +369,8 @@ def _load_encoder(
         "seed": 1,
         "actual_epochs": 2,
         "planned_epochs": 300,
+        "controller_warmup_epochs": alg_controller_warmup_epochs,
+        "guidance_controller_warmup_epochs": controller_warmup_epochs,
         "validation_image_ids_sha256": validation_hash,
         "official_test_evaluations_at_checkpoint_write": 0,
     }
@@ -524,6 +534,7 @@ def _finite_metrics(metrics: dict[str, Any]) -> bool:
 def _write_classification_csv(rows: list[dict[str, Any]], path: Path) -> None:
     fields = [
         "variant",
+        "controller_warmup_epochs",
         "validation_macro_top1_epoch2",
         "validation_overall_top1_epoch2",
         "avg_epoch_seconds",
@@ -542,6 +553,9 @@ def _write_classification_csv(rows: list[dict[str, Any]], path: Path) -> None:
             writer.writerow(
                 {
                     "variant": row["variant"],
+                    "controller_warmup_epochs": row[
+                        "controller_warmup_epochs"
+                    ],
                     "validation_macro_top1_epoch2": final_epoch["validation"][
                         "macro_top1"
                     ],
@@ -717,7 +731,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             selected_probes_complete=0,
             active_variant=variant,
         )
-        method, fusion_ratio = VARIANT_ARGUMENTS[variant]
+        method, fusion_ratio, controller_warmup_epochs = VARIANT_ARGUMENTS[variant]
         run_name = f"cub_{variant}_deit_tiny_b128_smoke_2ep_seed1"
         run_dir = student_root / run_name
         command = [
@@ -751,6 +765,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             command.extend(["--teacher-checkpoint", str(teacher_checkpoint)])
         if fusion_ratio is not None:
             command.extend(["--fusion-ratio", str(fusion_ratio)])
+        if method == "alg":
+            assert controller_warmup_epochs is not None
+            command.extend(
+                [
+                    "--alg-controller-warmup-epochs",
+                    str(controller_warmup_epochs),
+                ]
+            )
         _run_command(command, label=f"classification_{variant}")
         summary_path = run_dir / "summary.json"
         summary = _complete_summary(summary_path)
@@ -762,6 +784,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "seed": 1,
             "fusion_ratio_lambda": fusion_ratio,
             "actual_epochs": 2,
+            "alg_controller_warmup_epochs": (
+                controller_warmup_epochs if method == "alg" else 0
+            ),
+            "guidance_controller_warmup_epochs": controller_warmup_epochs,
         }
         for key, value in expected_values.items():
             if summary.get(key) != value:
@@ -780,6 +806,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "variant": variant,
                 "method": method,
                 "fusion_ratio_lambda": fusion_ratio,
+                "controller_warmup_epochs": controller_warmup_epochs,
                 "summary_path": str(summary_path.resolve()),
                 "checkpoint_path": str(checkpoint_path.resolve()),
                 "summary": summary,

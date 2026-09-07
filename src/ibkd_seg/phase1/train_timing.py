@@ -652,6 +652,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "actual_epochs": ACTUAL_EPOCHS,
                     "planned_epochs": PLANNED_EPOCHS,
                     "controller_warmup_epochs": args.alg_controller_warmup_epochs,
+                    "guidance_controller_warmup_epochs": (
+                        None if controller is None else controller.warmup_epochs
+                    ),
                     "validation_image_ids_sha256": manifest[
                         "validation_image_ids_sha256"
                     ],
@@ -689,6 +692,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_metadata": teacher_metadata,
         "controller": None if controller is None else controller.state_dict(),
         "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
+        "guidance_controller_warmup_epochs": (
+            None if controller is None else controller.warmup_epochs
+        ),
         "checkpoint": (
             None if checkpoint_path is None else str(checkpoint_path.resolve())
         ),

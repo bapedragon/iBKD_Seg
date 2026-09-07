@@ -46,11 +46,15 @@ bash phase1/phase1_cub/scripts/run_combined_smoke_b128.sh
 공식 train 5,994장 중 클래스별 3장, 총 600장을 seed 2027 validation으로
 분리하고 나머지 5,394장을 학습에 사용합니다. 공식 test 5,794장은 smoke에서
 열거나 평가하지 않습니다. scratch ResNet-56 teacher 1개와 batch-128
-DeiT-Tiny의 Vanilla, KD, LG, ALG, iBKD λ=0.25/0.5를 seed 1에서 각각 2 epoch
+DeiT-Tiny의 Vanilla, KD, LG, ALG-w20, iBKD λ=0.25/0.5를 seed 1에서 각각 2 epoch
 실행합니다. 이어서 각 smoke encoder를 완전히 동결하고 LR
 `[0.01, 0.03, 0.1]`의 probe를 각각 2 epoch 실행합니다.
 
-기본 결과 경로는 `/app/output/phase1_cub_b128_combined_smoke_v1`, 데이터와 큰
+Pet에서 이미 확인한 ALG의 epoch-2 조기 종료를 CUB에서 다시 주 비교 조건으로
+사용하지 않도록, CUB의 유일한 ALG 설정은 controller 종료 판정 warm-up 20으로
+사전 고정합니다. 이는 원본 ALG와 구분해 모든 로그와 표에서 `ALG-w20`으로 씁니다.
+
+기본 결과 경로는 `/app/output/phase1_cub_b128_combined_smoke_v2`, 데이터와 큰
 feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 validation
 진단값, 여섯 probe validation 진단값, 선형 시간 외삽과 `25/25` 작업 완료 여부가
 출력됩니다. 이 수치로 방법·lambda·checkpoint를 선택하거나 논문 결과를 주장할 수
