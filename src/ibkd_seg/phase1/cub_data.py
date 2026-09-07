@@ -37,9 +37,9 @@ OFFICIAL_TRAIN_COUNT = 5_994
 OFFICIAL_TEST_COUNT = 5_794
 OFFICIAL_TOTAL_COUNT = 11_788
 SPLIT_SEED = 2027
-VALIDATION_PER_CLASS = 6
-DERIVED_TRAIN_COUNT = 4_794
-DERIVED_VALIDATION_COUNT = 1_200
+VALIDATION_PER_CLASS = 3
+DERIVED_TRAIN_COUNT = 5_394
+DERIVED_VALIDATION_COUNT = 600
 
 
 @dataclass(frozen=True)
@@ -318,7 +318,7 @@ def build_train_validation_loaders(
     seed: int,
     device: torch.device,
 ) -> tuple[DataLoader[Any], DataLoader[Any], dict[str, Any]]:
-    """Build the fixed 4,794/1,200 loaders without opening official test."""
+    """Build the fixed 5,394/600 loaders without opening official test."""
 
     dataset_root = ensure_cub200(data_dir, download=True)
     official_train = [

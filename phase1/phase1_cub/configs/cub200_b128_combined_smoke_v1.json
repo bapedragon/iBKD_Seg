@@ -26,12 +26,12 @@
     "split": {
       "source": "official_train_only",
       "strategy": "fixed_class_stratified_holdout",
-      "validation_per_class": 6,
+      "validation_per_class": 3,
       "split_seed": 2027,
       "ranking_key": "sha256(f'{split_seed}:{image_id}')_then_image_id",
       "counts": {
-        "train": 4794,
-        "validation": 1200,
+        "train": 5394,
+        "validation": 600,
         "test": 0
       }
     },

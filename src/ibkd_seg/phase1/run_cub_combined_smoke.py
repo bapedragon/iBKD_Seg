@@ -166,7 +166,7 @@ def _validate_config(config: dict[str, Any]) -> None:
         "split": config.get("dataset", {}).get("split", {}).get(
             "validation_per_class"
         )
-        == 6
+        == 3
         and config.get("dataset", {}).get("split", {}).get("split_seed") == 2027,
         "mask_threshold": config.get("dataset", {}).get("mask", {}).get(
             "foreground_rule"
@@ -660,8 +660,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         args.output_dir / "data_smoke_audit.json",
     )
     log(
-        "[CUB_SMOKE_DATA] source=official_train train=4794 validation=1200 "
-        f"test=0 val_per_class=6 split_seed=2027 split_sha256={validation_hash}"
+        "[CUB_SMOKE_DATA] source=official_train train=5394 validation=600 "
+        f"test=0 val_per_class=3 split_seed=2027 split_sha256={validation_hash}"
     )
 
     classification_root = args.output_dir / "classification"
@@ -1029,8 +1029,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "non_scientific": True,
         "official_test_not_accessed": True,
         "full_protocol_still_unlocked": True,
-        "official_train_derived_counts_4794_1200": counts
-        == {"train": 4794, "validation": 1200},
+        "official_train_derived_counts_5394_600": counts
+        == {"train": 5394, "validation": 600},
         "classification_and_probe_split_match": all(
             row["summary"]["split_manifest"]["validation_image_ids_sha256"]
             == validation_hash

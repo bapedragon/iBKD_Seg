@@ -33,8 +33,8 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 `configs/cub200_b128_combined_smoke_v1.json`에 별도로 고정했습니다. 이는 이
 문서의 본실험 LOCK을 대신하지 않습니다.
 
-- 공식 train 5,994장만 클래스별 고정 분할: train 4,794 / validation 1,200
-  (클래스당 6장, seed 2027)
+- 공식 train 5,994장만 클래스별 고정 분할: train 5,394 / validation 600
+  (클래스당 3장, seed 2027)
 - 공식 test 5,794장: loader 생성·이미지/mask decode·평가 모두 금지
 - scratch CIFAR-style ResNet-56 teacher 1개, 입력 32, batch 128, seed 1,
   2 epoch
@@ -49,3 +49,7 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 
 Smoke가 통과해도 archive SHA-256, 본실험 checkpoint 선택·test-once 계약,
 classification/probe seed, epoch와 정성 샘플을 확정한 새 full config가 필요합니다.
+
+현재 확정한 반복 원칙은 smoke에서는 encoder seed 1만 사용하고, 본실험 분류에서는
+encoder seed `[1, 2, 3]`을 모두 실행한다는 것입니다. Probe 반복 수 등 나머지
+본실험 항목은 full config LOCK 때 확정합니다.

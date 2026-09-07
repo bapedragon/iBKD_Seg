@@ -43,8 +43,8 @@ checkpoint 저장·strict load, encoder freeze, feature cache 및 probe 학습 �
 bash phase1/phase1_cub/scripts/run_combined_smoke_b128.sh
 ```
 
-공식 train 5,994장 중 클래스별 6장, 총 1,200장을 seed 2027 validation으로
-분리하고 나머지 4,794장을 학습에 사용합니다. 공식 test 5,794장은 smoke에서
+공식 train 5,994장 중 클래스별 3장, 총 600장을 seed 2027 validation으로
+분리하고 나머지 5,394장을 학습에 사용합니다. 공식 test 5,794장은 smoke에서
 열거나 평가하지 않습니다. scratch ResNet-56 teacher 1개와 batch-128
 DeiT-Tiny의 Vanilla, KD, LG, ALG, iBKD λ=0.25/0.5를 seed 1에서 각각 2 epoch
 실행합니다. 이어서 각 smoke encoder를 완전히 동결하고 LR
@@ -55,7 +55,8 @@ feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 v
 진단값, 여섯 probe validation 진단값, 선형 시간 외삽과 `25/25` 작업 완료 여부가
 출력됩니다. 이 수치로 방법·lambda·checkpoint를 선택하거나 논문 결과를 주장할 수
 없습니다. smoke 통과 후에도 [PROTOCOL.md](PROTOCOL.md)의 본실험 계약을 별도로
-LOCK해야 합니다.
+LOCK해야 합니다. Smoke는 encoder seed 1만 사용하고 본실험 분류는 encoder seed
+`[1, 2, 3]`을 모두 실행합니다.
 
 ## 현재 주의사항
 

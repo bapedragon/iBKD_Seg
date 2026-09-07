@@ -43,15 +43,15 @@ class Phase1CubSplitTest(unittest.TestCase):
                 is_train=True,
             )
             for label in range(NUM_CLASSES)
-            for offset in range(7)
+            for offset in range(4)
         ]
         first = build_stratified_split(records)
         second = build_stratified_split(records)
         self.assertEqual(first, second)
         train_indices, validation_indices, manifest = first
         self.assertEqual(len(train_indices), 200)
-        self.assertEqual(len(validation_indices), 1200)
-        self.assertEqual(manifest["validation_per_class"], 6)
+        self.assertEqual(len(validation_indices), 600)
+        self.assertEqual(manifest["validation_per_class"], 3)
         self.assertEqual(manifest["split_seed"], 2027)
         self.assertEqual(len(manifest["validation_image_ids_sha256"]), 64)
 
