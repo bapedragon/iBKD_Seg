@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "protocol_id": "cub200_phase1_b128_frozen_spatial_probe_full_v1",
-  "status": "locked_before_full_results_2026-09-07",
+  "protocol_id": "cub200_phase1_b128_frozen_spatial_probe_full_v2",
+  "status": "locked_before_full_results_2026-09-07_shared_teacher",
   "scientific_result": true,
   "research_question": "classification_only_ibkd_encoder_has_more_linearly_decodable_cub_bird_spatial_information_than_matched_baselines",
   "dataset": {
@@ -377,37 +377,44 @@
     "probe_feature_batch_size": 32,
     "probe_num_workers": 4,
     "shards": {
-      "a": {
-        "label": "balanced_half_a",
+      "guided": {
+        "label": "shared_teacher_producer_and_primary_guided_comparison",
         "variants": [
-          "vanilla",
-          "lg",
+          "alg_warmup20",
+          "ibkd_lambda_0.25",
           "ibkd_lambda_0.5"
         ],
         "teacher_runs": 1,
+        "teacher_role": "produce_single_shared_teacher_checkpoint",
         "student_runs": 9,
         "probe_lr_candidates": 135,
         "selected_probes": 45,
-        "estimated_runtime_from_smoke": "approximately_7h47m"
+        "estimated_core_runtime_from_smoke": "approximately_7h59m",
+        "estimated_runtime_with_data_and_feature_overhead": "approximately_8h10m_to_8h30m"
       },
-      "b": {
-        "label": "balanced_half_b",
+      "baseline": {
+        "label": "shared_teacher_consumer_and_remaining_baselines",
         "variants": [
+          "vanilla",
           "kd",
-          "alg_warmup20",
-          "ibkd_lambda_0.25"
+          "lg"
         ],
-        "teacher_runs": 1,
+        "teacher_runs": 0,
+        "teacher_source": "exact_guided_shard_teacher_checkpoint_bound_by_sha256",
+        "runnable_before_teacher_binding": false,
         "student_runs": 9,
         "probe_lr_candidates": 135,
         "selected_probes": 45,
-        "estimated_runtime_from_smoke": "approximately_7h49m"
+        "estimated_core_runtime_from_smoke": "approximately_6h54m"
       }
     },
     "cross_shard_contract": {
       "both_shards_locked_before_results": true,
       "no_protocol_change_between_shards": true,
-      "duplicate_teacher_state_sha256_must_match": true,
+      "exactly_one_teacher_training_run": true,
+      "baseline_shard_must_not_retrain_teacher": true,
+      "teacher_checkpoint_file_and_model_state_sha256_must_match_guided_shard": true,
+      "teacher_artifact_binding_does_not_change_scientific_protocol": true,
       "merge_only_after_both_shards_complete": true,
       "complete_matrix": "six_variants_x_three_encoder_seeds_x_five_probe_seeds"
     }

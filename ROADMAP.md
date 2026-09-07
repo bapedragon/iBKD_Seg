@@ -71,11 +71,12 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: batch 128 통합 smoke 통과, 본실험 v1 LOCK·두 shard 실행 준비.** Pet 결과가 특정 데이터셋에만 의존한
+**상태: batch 128 통합 smoke 통과, 본실험 v2 LOCK·guided 첫 실행 준비.** Pet 결과가 특정 데이터셋에만 의존한
 것인지 확인하기 위해 CUB-200-2011에서 분류 encoder 학습과 frozen segmentation
 probe를 독립적으로 반복할 예정입니다. Pet의 잠긴 config나 결과를 그대로 섞지
-않으며, CUB용 데이터·split·mask 대응·학습 설정·평가 계약을 full v1으로 잠갔습니다.
-10시간 제한을 피하도록 여섯 설정을 동일 예상 시간의 두 H200 shard로 나눴습니다.
+않으며, CUB용 데이터·split·mask 대응·학습 설정·평가 계약을 full v2로 잠갔습니다.
+10시간 제한을 피하도록 여섯 설정을 두 H200 shard로 나누되, 첫 guided shard에서
+학습한 teacher checkpoint 하나를 두 번째 baseline shard가 그대로 사용합니다.
 준비 위치는
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 

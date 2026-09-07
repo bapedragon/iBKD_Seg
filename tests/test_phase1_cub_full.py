@@ -13,6 +13,7 @@ from ibkd_seg.phase1.cub_probe_data import (
 from ibkd_seg.phase1.run_cub_full_shard import (
     EXPECTED_SHARDS,
     EXPECTED_VARIANTS,
+    RUNNABLE_SHARDS,
     _validate_config,
 )
 from ibkd_seg.phase1.train_full import validate_args as validate_full_args
@@ -20,10 +21,9 @@ from ibkd_seg.phase1.train_full import validate_args as validate_full_args
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = (
-    REPOSITORY_ROOT / "phase1/phase1_cub/configs/cub200_b128_full_v1.json"
+    REPOSITORY_ROOT / "phase1/phase1_cub/configs/cub200_b128_full_v2.json"
 )
-SCRIPT_A = REPOSITORY_ROOT / "phase1/phase1_cub/scripts/run_full_shard_a_b128.sh"
-SCRIPT_B = REPOSITORY_ROOT / "phase1/phase1_cub/scripts/run_full_shard_b_b128.sh"
+GUIDED_SCRIPT = REPOSITORY_ROOT / "phase1/phase1_cub/scripts/run_full_guided_b128.sh"
 
 
 def _cub_full_args(**updates: object) -> argparse.Namespace:
@@ -49,23 +49,35 @@ class Phase1CubFullProtocolTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
-    def test_locked_config_and_balanced_shards(self) -> None:
+    def test_locked_config_and_shared_teacher_shards(self) -> None:
         _validate_config(self.config)
         self.assertEqual(
             sorted(variant for values in EXPECTED_SHARDS.values() for variant in values),
             sorted(EXPECTED_VARIANTS),
         )
-        self.assertEqual(len(EXPECTED_SHARDS["a"]), 3)
-        self.assertEqual(len(EXPECTED_SHARDS["b"]), 3)
-        self.assertFalse(set(EXPECTED_SHARDS["a"]) & set(EXPECTED_SHARDS["b"]))
         self.assertEqual(
-            self.config["execution"]["shards"]["a"]["probe_lr_candidates"],
+            EXPECTED_SHARDS["guided"],
+            ("alg_warmup20", "ibkd_lambda_0.25", "ibkd_lambda_0.5"),
+        )
+        self.assertEqual(EXPECTED_SHARDS["baseline"], ("vanilla", "kd", "lg"))
+        self.assertFalse(
+            set(EXPECTED_SHARDS["guided"]) & set(EXPECTED_SHARDS["baseline"])
+        )
+        self.assertEqual(
+            self.config["execution"]["shards"]["guided"]["probe_lr_candidates"],
             135,
         )
         self.assertEqual(
-            self.config["execution"]["shards"]["b"]["selected_probes"],
+            self.config["execution"]["shards"]["baseline"]["selected_probes"],
             45,
         )
+        self.assertEqual(
+            self.config["execution"]["shards"]["guided"]["teacher_runs"], 1
+        )
+        self.assertEqual(
+            self.config["execution"]["shards"]["baseline"]["teacher_runs"], 0
+        )
+        self.assertEqual(RUNNABLE_SHARDS, ("guided",))
 
     def test_archive_identities_are_fully_locked(self) -> None:
         image = self.config["dataset"]["image_archive"]
@@ -82,14 +94,19 @@ class Phase1CubFullProtocolTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not a Pet diagnostic"):
             validate_full_args(_cub_full_args(posthoc_diagnostic_id="pet-only"))
 
-    def test_both_h200_scripts_run_one_distinct_full_shard(self) -> None:
-        for shard, script_path in (("a", SCRIPT_A), ("b", SCRIPT_B)):
-            script = script_path.read_text(encoding="utf-8")
-            self.assertIn("ibkd_seg.phase1.run_cub_full_shard", script)
-            self.assertIn("--full-shard", script)
-            self.assertIn(f"--shard {shard}", script)
-            self.assertIn("/app/output/phase1_cub_b128_full_v1_shard_", script)
-            self.assertTrue(script_path.stat().st_mode & 0o111)
+    def test_only_shared_teacher_producer_is_currently_runnable(self) -> None:
+        script = GUIDED_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("ibkd_seg.phase1.run_cub_full_shard", script)
+        self.assertIn("--full-shard", script)
+        self.assertIn("--shard guided", script)
+        self.assertIn("/app/output/phase1_cub_b128_full_v2_guided", script)
+        self.assertTrue(GUIDED_SCRIPT.stat().st_mode & 0o111)
+        self.assertFalse(
+            (
+                REPOSITORY_ROOT
+                / "phase1/phase1_cub/scripts/run_full_shard_b_b128.sh"
+            ).exists()
+        )
 
     def test_full_probe_matches_pet_repeat_depth(self) -> None:
         probe = self.config["frozen_probe"]["probe"]

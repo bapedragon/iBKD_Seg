@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **batch 128 통합 smoke 통과 — 본실험 v1 LOCK·두 shard 실행 준비**
+상태: **batch 128 통합 smoke 통과 — 본실험 v2 LOCK·guided 첫 실행 준비**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -20,7 +20,7 @@
 5. validation으로 probe를 선택한 뒤 test를 최종 평가합니다.
 
 Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 포함한 CUB용
-프로토콜은 v1으로 별도 고정했습니다. Pet 결과나 checkpoint는 CUB 본실험에
+프로토콜은 v2로 별도 고정했습니다. Pet 결과나 checkpoint는 CUB 본실험에
 섞지 않습니다.
 
 ## 디렉터리
@@ -61,38 +61,38 @@ feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 v
 없습니다. Smoke는 `25/25`로 통과했으며 이 진단값은 본실험 설정 선택에 사용하지
 않았습니다.
 
-## 두 shard 본실험
+## 단일 teacher를 공유하는 두 단계 본실험
 
-10시간 실행 제한을 피하도록 예상 시간이 비슷한 두 독립 작업으로 나눴습니다.
+10시간 실행 제한을 피하면서 teacher가 달라지는 문제를 막기 위해 순차적인 두
+작업으로 나눴습니다. 지금 실행 가능한 첫 작업은 다음과 같습니다.
 
 ```bash
-bash phase1/phase1_cub/scripts/run_full_shard_a_b128.sh
-bash phase1/phase1_cub/scripts/run_full_shard_b_b128.sh
+bash phase1/phase1_cub/scripts/run_full_guided_b128.sh
 ```
 
-- Shard A: Vanilla, LG, iBKD λ=0.5
-- Shard B: KD, ALG-w20, iBKD λ=0.25
+- Guided producer: teacher + ALG-w20 + iBKD λ=0.25 + iBKD λ=0.5
+- Baseline consumer: 동일 teacher + Vanilla + KD + LG
 
-각 shard는 ResNet-56 teacher를 동일한 seed 1로 재현하고 각 설정의 encoder seed
-`[1,2,3]`을 300 epoch 학습합니다. 이후 모든 encoder를 동결하고 probe seed
+첫 작업은 ResNet-56 teacher를 seed 1로 한 번 학습하고 세 설정의 encoder seed
+`[1,2,3]`을 각각 300 epoch 학습합니다. 이후 모든 encoder를 동결하고 probe seed
 `[1,2,3,4,5]`, LR `[0.01,0.03,0.1]`, 100 epoch를 실행합니다. 한 shard의 모든
 validation 선택이 끝난 뒤에만 official test mask를 열어 선택된 probe를 한 번씩
 평가합니다.
 
-기본 결과 경로는 각각
-`/app/output/phase1_cub_b128_full_v1_shard_a`와
-`/app/output/phase1_cub_b128_full_v1_shard_b`입니다. 각 결과에는 teacher 1개,
+첫 결과 경로는 `/app/output/phase1_cub_b128_full_v2_guided`입니다. 결과에는 teacher 1개,
 분류 best checkpoint 9개, 선택된 probe checkpoint 45개, raw CSV와 summary JSON이
 포함되며 전체 실행 로그도 `run.log`로 저장됩니다. 이미지 본체와 segmentation
-mask archive, feature cache는
-`/app/scratch`에만 두므로 결과 ZIP에 포함되지 않습니다.
+mask archive, feature cache는 `/app/scratch`에만 두므로 결과 ZIP에 포함되지
+않습니다. 결과를 받은 뒤 teacher의 파일·model-state hash를 고정하고 이를 받는
+두 번째 baseline 실행기를 추가합니다.
 
 ## 현재 주의사항
 
 - 이미지와 segmentation archive의 byte size·MD5·SHA-256, split, binary mask
   mapping, teacher/student, 여섯 방법, seed, checkpoint와 test-once 규칙은
-  [full v1 config](configs/cub200_b128_full_v1.json)에 고정했습니다.
-- 두 shard 결과는 teacher state, seed별 초기 student state와 split hash가 서로
+  [full v2 config](configs/cub200_b128_full_v2.json)에 고정했습니다.
+- Baseline shard는 guided shard의 teacher checkpoint가 hash로 고정되기 전에는
+  실행할 수 없습니다. 두 결과의 seed별 초기 student state와 split/config hash도
   일치하는지 확인한 뒤에만 하나의 6설정 결과로 병합합니다.
 - 데이터셋, checkpoint, feature cache와 원시 H200 결과는 Git에 올리지 않습니다.
   검증된 작은 요약·manifest·정성 예시만 `reports/`에 반영합니다.

@@ -55,7 +55,7 @@ from .train_timing import file_sha256, format_duration, state_dict_sha256
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
-    REPOSITORY_ROOT / "phase1/phase1_cub/configs/cub200_b128_full_v1.json"
+    REPOSITORY_ROOT / "phase1/phase1_cub/configs/cub200_b128_full_v2.json"
 )
 EXPECTED_VALIDATION_HASH = (
     "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
@@ -63,9 +63,10 @@ EXPECTED_VALIDATION_HASH = (
 ENCODER_SEEDS = (1, 2, 3)
 PROBE_SEEDS = (1, 2, 3, 4, 5)
 EXPECTED_SHARDS = {
-    "a": ("vanilla", "lg", "ibkd_lambda_0.5"),
-    "b": ("kd", "alg_warmup20", "ibkd_lambda_0.25"),
+    "guided": ("alg_warmup20", "ibkd_lambda_0.25", "ibkd_lambda_0.5"),
+    "baseline": ("vanilla", "kd", "lg"),
 }
+RUNNABLE_SHARDS = ("guided",)
 
 
 def log(message: str = "") -> None:
@@ -75,7 +76,7 @@ def log(message: str = "") -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--full-shard", action="store_true", required=True)
-    parser.add_argument("--shard", choices=tuple(EXPECTED_SHARDS), required=True)
+    parser.add_argument("--shard", choices=RUNNABLE_SHARDS, required=True)
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cache-dir", type=Path, required=True)
@@ -97,7 +98,7 @@ def _validate_config(config: dict[str, Any]) -> None:
     configured_shards = execution.get("shards", {})
     checks = {
         "protocol": config.get("protocol_id")
-        == "cub200_phase1_b128_frozen_spatial_probe_full_v1",
+        == "cub200_phase1_b128_frozen_spatial_probe_full_v2",
         "locked": str(config.get("status", "")).startswith("locked_before_full_results"),
         "scientific": config.get("scientific_result") is True,
         "dataset": config.get("dataset", {}).get("name") == DATASET_NAME,
@@ -148,6 +149,19 @@ def _validate_config(config: dict[str, Any]) -> None:
             key: tuple(value.get("variants", ())) for key, value in configured_shards.items()
         }
         == EXPECTED_SHARDS,
+        "single_shared_teacher": configured_shards.get("guided", {}).get(
+            "teacher_runs"
+        )
+        == 1
+        and configured_shards.get("guided", {}).get("teacher_role")
+        == "produce_single_shared_teacher_checkpoint"
+        and configured_shards.get("baseline", {}).get("teacher_runs") == 0
+        and configured_shards.get("baseline", {}).get("teacher_source")
+        == "exact_guided_shard_teacher_checkpoint_bound_by_sha256"
+        and configured_shards.get("baseline", {}).get(
+            "runnable_before_teacher_binding"
+        )
+        is False,
         "shard_cover": sorted(
             variant
             for shard_variants in EXPECTED_SHARDS.values()

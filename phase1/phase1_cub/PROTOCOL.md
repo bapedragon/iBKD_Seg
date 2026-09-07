@@ -1,9 +1,9 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v1 LOCK — 실행 전**
+상태: **본실험 v2 LOCK — guided 첫 실행 전**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 아래 항목을
-`configs/cub200_b128_full_v1.json`에 고정했으며, 결과를 확인한 뒤에는 v1을
+`configs/cub200_b128_full_v2.json`에 고정했으며, 결과를 확인한 뒤에는 v2를
 수정하지 않습니다. 변경이 필요하면 새 버전을 만들고 비교하는 여섯 설정을 모두
 다시 실행합니다.
 
@@ -28,10 +28,10 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 수정하지 않습니다. 가능한 조건은 Pet과 맞추되, CUB 데이터 특성 때문에 달라지는
 항목은 근거와 함께 이 문서에 명시합니다.
 
-## 잠긴 본실험 v1 계약
+## 잠긴 본실험 v2 계약
 
 Full config SHA-256:
-`86e23457579935f68841bf068b613379e2f96d49e1196875064049a506058374`
+`0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575`
 
 - CaltechDATA 이미지 archive: 1,150,585,339 bytes, MD5
   `97eceeb196236b17998738112f37df78`, SHA-256
@@ -64,21 +64,28 @@ Full config SHA-256:
 - 정성 예시는 결과 확인 전 test image ID
   `[787, 2285, 3735, 5205, 6691, 8139, 9597, 11064]`로 고정했습니다.
 
-## 10시간 제한용 두 실행 shard
+## 10시간 제한 및 단일 teacher용 두 단계
 
-두 shard는 동일한 full config를 사용하고 각각 teacher를 seed 1로 재현합니다.
-두 teacher state SHA-256, seed별 초기 student state SHA-256과 split hash가
-일치해야 결과를 합칠 수 있습니다.
+두 shard는 동일한 full config를 사용하지만 teacher를 두 번 학습하지 않습니다.
 
-- Shard A: Vanilla, LG, iBKD λ=0.5 — 학생 9개, probe 후보 135개,
-  선택·test probe 45개, smoke 외삽 약 7시간 47분
-- Shard B: KD, ALG-w20, iBKD λ=0.25 — 학생 9개, probe 후보 135개,
-  선택·test probe 45개, smoke 외삽 약 7시간 49분
+- Guided producer: teacher seed 1을 한 번 학습한 뒤 ALG-w20, iBKD λ=0.25,
+  iBKD λ=0.5의 학생 9개와 probe 후보 135개, 선택·test probe 45개를 실행합니다.
+  Smoke 핵심 연산 외삽은 약 7시간 59분이고 데이터·feature/test overhead를 더한
+  예상은 약 8시간 10~30분입니다.
+- Baseline consumer: guided 결과에서 고정한 정확히 같은 teacher checkpoint를
+  사용해 Vanilla, KD, LG의 학생 9개와 probe를 실행합니다. Teacher를 재학습하지
+  않으며 핵심 연산 외삽은 약 6시간 54분입니다.
 
-각 shard는 이미지와 segmentation archive를 `/app/scratch`에 독립 다운로드하고,
+먼저 guided 결과 archive에서 teacher checkpoint의 파일 SHA-256과 model-state
+SHA-256을 고정합니다. Baseline 실행기는 두 hash가 모두 일치할 때만 시작하도록
+만들며, 이 artifact binding은 결과를 보고 hyperparameter를 바꾸는 행위가 아닙니다.
+Vanilla는 teacher loss를 사용하지 않지만 같은 실행 내에서 함께 관리합니다.
+
+Guided 실행은 이미지와 segmentation archive를 `/app/scratch`에 다운로드하고,
 분류 best checkpoint 9개, 선택된 probe checkpoint 45개, teacher checkpoint 1개와
 CSV/JSON 결과 및 `run.log`를 `/app/output`에 남깁니다. 데이터셋과 feature cache는
-결과 archive에 포함하지 않습니다.
+결과 archive에 포함하지 않습니다. Baseline 실행기는 teacher artifact가 실제로
+고정된 뒤 별도 추가합니다.
 
 ## 본실험 전 통합 smoke 계약
 
