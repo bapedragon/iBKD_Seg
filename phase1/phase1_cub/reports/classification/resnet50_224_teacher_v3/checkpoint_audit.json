@@ -1,0 +1,45 @@
+{
+  "all_checks_passed": true,
+  "archive_crc_verified": true,
+  "archive_sha256": "c2dd7f591dcaaf4d77f870f549d12abaeff32ab413100c7a4cc04984e2aa6989",
+  "checkpoint": {
+    "all_floating_tensors_finite": true,
+    "bytes": 95989681,
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "frozen_after_load": true,
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "path_under_ignored_raw_root": "teacher_best_validation.pt",
+    "safe_torch_load": "weights_only_true_for_tensor_finiteness_audit",
+    "strict_load": true
+  },
+  "h200_issue_id": "722",
+  "history": {
+    "all_numeric_values_finite": true,
+    "earlier_epoch_tie_break_recomputed": true,
+    "epoch_rows": 200,
+    "epochs_are_exactly_1_through_200": true,
+    "post_warmup_learning_rate_strictly_decreases": true,
+    "selected_epoch": 165,
+    "selected_epoch_train_loss": 0.20426625829367412,
+    "selected_epoch_train_top1": 94.86607142857143,
+    "status": "pass",
+    "validation_maximum_recomputed": true,
+    "warmup_learning_rates": [
+      0.0,
+      0.01,
+      0.02,
+      0.03,
+      0.04
+    ]
+  },
+  "official_test": {
+    "evaluations": 1,
+    "performed_after_validation_selection_and_strict_reload": true,
+    "used_for_training_or_selection": false
+  },
+  "protocol_config_sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc",
+  "protocol_id": "cub200_phase1_resnet50_224_scratch_b128_full_v3",
+  "schema_version": 1,
+  "status": "pass",
+  "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+}

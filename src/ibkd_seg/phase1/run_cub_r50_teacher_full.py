@@ -314,7 +314,7 @@ def load_scientific_teacher(
 ) -> tuple[ResNet50CUB, dict[str, Any], str, str]:
     """Strictly load and freeze the single teacher shared by v3 students."""
 
-    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     if not isinstance(payload, dict) or "model" not in payload:
         raise RuntimeError("CUB v3 teacher checkpoint payload is malformed")
     metadata = payload.get("metadata", {})

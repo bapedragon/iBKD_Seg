@@ -1,6 +1,6 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 통과, Teacher 실행 준비 완료**
+상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 및 Teacher 실행·감사 완료**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
@@ -45,6 +45,13 @@ Full config SHA-256:
 - 산출물의 checkpoint SHA-256과 model-state SHA-256을 후속 LG, ALG-w20,
   iBKD 학생 실행기에 함께 고정해 모든 guided 방법이 동일 Teacher를 사용하게 합니다.
 
+H200 issue 722 결과는 위 계약대로 완료되고 독립 감사를 통과했습니다. 선택 epoch는
+165, validation macro top-1은 `42.667%`, official-test macro top-1은
+`41.178%`입니다. 공유 Teacher checkpoint의 파일 SHA-256은
+`ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3`,
+model-state SHA-256은
+`96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7`입니다.
+
 ## v3 guided end-to-end smoke 계약
 
 Smoke config SHA-256:
@@ -64,10 +71,8 @@ Smoke config SHA-256:
   MIG 용량만 늘려 동일 설정을 다시 실행합니다.
 
 Smoke는 Full H200에서 `17/17`로 통과했습니다. Teacher 측정값은 epoch당 약
-7.56초, peak allocated 11.377 GB, peak reserved 15.731 GB였고 200 epoch 단순
-외삽은 약 25분입니다. Teacher 전용 본학습은 H200 1g.18gb MIG 1개로 요청하며,
-연산 자원 축소와 데이터·test overhead를 포함한 예상은 약 2~3시간입니다. 이
-추정은 scheduling 보장이 아니며 실제 `run.log`의 완료 시간과 peak를 최종 기록합니다.
+7.56초, peak allocated 11.377 GB, peak reserved 15.731 GB였습니다. 실제 Teacher
+본학습은 25분 42초에 완료됐고 동일한 peak memory를 기록했습니다.
 
 ## 고정한 항목
 
@@ -90,10 +95,11 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 수정하지 않습니다. 가능한 조건은 Pet과 맞추되, CUB 데이터 특성 때문에 달라지는
 항목은 근거와 함께 이 문서에 명시합니다.
 
-## 미실행으로 보존한 본실험 v2 계약
+## 대체된 본실험 v2 계약과 회수 결과
 
-아래 ResNet-56/32 v2는 결과가 나오기 전에 v3로 대체했으며, v3 결과와 비교하거나
-합치지 않습니다.
+아래 ResNet-56/32 v2 guided shard는 v3 교체 전에 제출되어 H200 issue 716에서
+완료됐지만, 결과를 회수하기 전에 v3를 최종 프로토콜로 확정했습니다. 따라서 v2
+baseline shard는 실행하지 않고, 회수 결과를 v3와 비교하거나 합치지 않습니다.
 
 Full config SHA-256:
 `0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575`
@@ -129,9 +135,10 @@ Full config SHA-256:
 - 정성 예시는 결과 확인 전 test image ID
   `[787, 2285, 3735, 5205, 6691, 8139, 9597, 11064]`로 고정했습니다.
 
-## 10시간 제한 및 단일 teacher용 두 단계
+## 대체된 v2의 10시간 제한 및 단일 teacher용 두 단계
 
-두 shard는 동일한 full config를 사용하지만 teacher를 두 번 학습하지 않습니다.
+다음은 v3 확정 전 v2 실행 계획과 실제 완료 상태를 보존한 기록입니다. 두 shard는
+동일한 v2 full config를 사용하되 teacher를 두 번 학습하지 않도록 설계했습니다.
 
 - Guided producer: teacher seed 1을 한 번 학습한 뒤 ALG-w20, iBKD λ=0.25,
   iBKD λ=0.5의 학생 9개와 probe 후보 135개, 선택·test probe 45개를 실행합니다.
@@ -141,16 +148,16 @@ Full config SHA-256:
   사용해 Vanilla, KD, LG의 학생 9개와 probe를 실행합니다. Teacher를 재학습하지
   않으며 핵심 연산 외삽은 약 6시간 54분입니다.
 
-먼저 guided 결과 archive에서 teacher checkpoint의 파일 SHA-256과 model-state
-SHA-256을 고정합니다. Baseline 실행기는 두 hash가 모두 일치할 때만 시작하도록
-만들며, 이 artifact binding은 결과를 보고 hyperparameter를 바꾸는 행위가 아닙니다.
-Vanilla는 teacher loss를 사용하지 않지만 같은 실행 내에서 함께 관리합니다.
+Guided shard는 9개 분류 encoder, 135개 probe 후보, 45개 validation 선택과 45개
+official-test 평가를 완료했고 55개 checkpoint의 독립 감사도 통과했습니다.
+구버전 조건의 test input-224 mIoU는 ALG-w20 `77.882%`, iBKD λ=0.25
+`77.546%`, iBKD λ=0.5 `77.538%`였습니다. 이는 v2 참고 결과이며 v3 핵심 주장
+판정에는 사용하지 않습니다.
 
-Guided 실행은 이미지와 segmentation archive를 `/app/scratch`에 다운로드하고,
+Guided 실행은 이미지와 segmentation archive를 `/app/scratch`에 다운로드했고,
 분류 best checkpoint 9개, 선택된 probe checkpoint 45개, teacher checkpoint 1개와
-CSV/JSON 결과 및 `run.log`를 `/app/output`에 남깁니다. 데이터셋과 feature cache는
-결과 archive에 포함하지 않습니다. Baseline 실행기는 teacher artifact가 실제로
-고정된 뒤 별도 추가합니다.
+CSV/JSON 결과 및 `run.log`를 `/app/output`에 남겼습니다. 데이터셋과 feature
+cache는 결과 archive에 포함하지 않았으며, v2 baseline 실행기는 추가하지 않습니다.
 
 ## 본실험 전 통합 smoke 계약
 

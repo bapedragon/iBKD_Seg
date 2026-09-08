@@ -4,14 +4,18 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import torch
 import torch.nn as nn
 
 from ibkd_seg.phase1.models import ResNet50CUB
 from ibkd_seg.phase1.run_cub_r50_teacher_full import (
+    CHECKPOINT_PURPOSE,
     EXPECTED_CONFIG_SHA256,
+    EXPECTED_VALIDATION_HASH,
     _validate_config,
+    load_scientific_teacher,
 )
 from ibkd_seg.phase1.train_timing import file_sha256
 
@@ -56,6 +60,62 @@ class Phase1CubR50TeacherFullTest(unittest.TestCase):
         self.assertIn("--device cuda", script)
         self.assertNotIn("ibkd_seg.phase1.train_full", script)
         self.assertTrue(SCRIPT.stat().st_mode & 0o111)
+
+    def test_shared_teacher_checkpoint_uses_safe_weights_only_load(self) -> None:
+        model = nn.Linear(1, 1)
+        state = model.state_dict()
+        metadata = {
+            "purpose": CHECKPOINT_PURPOSE,
+            "scientific_result": True,
+            "dataset": "CUB-200-2011",
+            "num_classes": 200,
+            "architecture": "torchvision_resnet50",
+            "initialization": "scratch",
+            "external_pretraining": False,
+            "input_size": 224,
+            "epochs": 200,
+            "seed": 1,
+            "batch_size": 128,
+            "selection_metric": "validation_macro_top1",
+            "selection_tie_break": "earlier_epoch",
+            "validation_image_ids_sha256": EXPECTED_VALIDATION_HASH,
+            "full_config_sha256": EXPECTED_CONFIG_SHA256,
+            "official_test_evaluations_at_checkpoint_write": 0,
+            "model_state_sha256": "state-hash",
+        }
+        incompatible = MagicMock(missing_keys=[], unexpected_keys=[])
+        model.load_state_dict = MagicMock(return_value=incompatible)
+        with (
+            patch(
+                "ibkd_seg.phase1.run_cub_r50_teacher_full.torch.load",
+                return_value={"model": state, "metadata": metadata},
+            ) as loader,
+            patch(
+                "ibkd_seg.phase1.run_cub_r50_teacher_full.ResNet50CUB",
+                return_value=model,
+            ),
+            patch(
+                "ibkd_seg.phase1.run_cub_r50_teacher_full.state_dict_sha256",
+                return_value="state-hash",
+            ),
+            patch(
+                "ibkd_seg.phase1.run_cub_r50_teacher_full.file_sha256",
+                return_value="file-hash",
+            ),
+        ):
+            loaded, _, checkpoint_hash, state_hash = load_scientific_teacher(
+                Path("teacher.pt"), device=torch.device("cpu")
+            )
+
+        loader.assert_called_once_with(
+            Path("teacher.pt"), map_location="cpu", weights_only=True
+        )
+        model.load_state_dict.assert_called_once_with(state, strict=True)
+        self.assertIs(loaded, model)
+        self.assertFalse(loaded.training)
+        self.assertTrue(all(not parameter.requires_grad for parameter in loaded.parameters()))
+        self.assertEqual(checkpoint_hash, "file-hash")
+        self.assertEqual(state_hash, "state-hash")
 
 
 if __name__ == "__main__":

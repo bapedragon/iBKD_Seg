@@ -11,9 +11,9 @@ Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation
 사전 고정한 전체 matrix를 변경하지 않는 조건으로 official test 경로도 검증하지만,
 모든 smoke 수치는 비과학적입니다.
 
-## 미실행 v2 보존본
+## 대체된 v2 보존본
 
-CUB 전용 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은
+과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은
 `0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575`입니다.
 
 현재 `cub200_b128_combined_smoke_v2.json`은 분류부터 frozen probe까지의 실행
@@ -24,6 +24,6 @@ CUB 전용 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습�
 `ALG-w20`으로 사전 고정합니다. v1의 내용은 Git 이력에만 남깁니다.
 
 실행되지 않은 full v1은 두 컨테이너에서 teacher를 각각 재학습하는 설계였으므로
-폐기했고 Git 이력에만 남깁니다. Full v2는 guided shard가 만든 teacher checkpoint
-하나를 baseline shard도 사용합니다. 두 shard 사이에서 hyperparameter나 평가
-규칙을 변경할 수 없습니다.
+폐기했고 Git 이력에만 남깁니다. Full v2 guided shard는 v3 교체 전에 제출되어
+H200 issue 716에서 완료됐지만, baseline shard는 실행하지 않습니다. 회수한 v2
+결과는 최종 v3와 합치지 않고 `reports/legacy_resnet56_v2_guided/`에 보존합니다.

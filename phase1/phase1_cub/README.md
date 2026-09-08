@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided smoke 통과, Teacher 본학습 준비 완료**
+상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided smoke 및 Teacher 본학습·감사 완료**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -20,9 +20,10 @@
 5. validation으로 probe를 선택한 뒤 test를 최종 평가합니다.
 
 Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 포함한 CUB용
-프로토콜은 별도로 고정합니다. ResNet-56/32 v2는 결과가 나오기 전에 중단했고,
-현재 본실험은 더 보편적인 scratch ResNet-50/224 teacher를 쓰는 v3입니다. Pet
-결과나 checkpoint는 CUB 본실험에 섞지 않습니다.
+프로토콜은 별도로 고정합니다. ResNet-56/32 v2 guided shard는 v3 교체 전에 이미
+제출되어 완료됐지만, 결과를 회수하기 전에 최종 프로토콜을 scratch
+ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참고 자료로만
+보존하며 Pet 결과나 v2 checkpoint를 CUB v3 본실험에 섞지 않습니다.
 
 ## 디렉터리
 
@@ -34,11 +35,11 @@ Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
-## 현재 v3: ResNet-50/224 Teacher 본학습
+## 현재 v3: ResNet-50/224 Teacher 본학습 완료
 
 Guided smoke는 `17/17` 작업을 완료해 실행 경로와 메모리·시간 gate를 통과했습니다.
-본실험의 첫 단계는 모든 guided student가 공유할 단 하나의 Teacher checkpoint를
-만드는 작업입니다.
+H200 issue 722에서 모든 guided student가 공유할 단 하나의 Teacher checkpoint도
+학습하고 독립 감사를 통과했습니다.
 
 ```bash
 bash phase1/phase1_cub/scripts/run_r50_224_teacher_full.sh
@@ -54,7 +55,11 @@ ResNet-56/32용 `train_full.py`는 호출하지 않습니다.
 기본 결과 경로는 `/app/output/phase1_cub_r50_224_teacher_full_v3`입니다. 공유할
 `teacher_best_validation.pt`와 파일/model-state SHA-256, epoch별 CSV,
 summary·split·protocol JSON 및 `run.log`가 남습니다. 원시 CUB 데이터는
-`/app/scratch`에만 두고 결과 폴더에 복사하지 않습니다.
+`/app/scratch`에만 두고 결과 폴더에 복사하지 않습니다. 선택 epoch는 165,
+official-test macro top-1은 `41.178%`였고 상세 결과와 checkpoint hash는
+[Teacher 결과 보고서](reports/classification/resnet50_224_teacher_v3/RESULTS.md)에
+고정했습니다. 다음 단계는 이 checkpoint를 공유하는 v3 학생 분류와 frozen
+probe입니다.
 
 ## v3 guided smoke 기록
 
@@ -78,10 +83,9 @@ validation으로 선택한 probe의 official test 경로까지 한 번씩 실행
 마지막 로그에 4개 방법의 validation/test 진단값, peak CUDA memory, 실제 smoke
 시간과 4방법×3seed guided block 선형 외삽을 출력합니다. Batch 128 FP32 iBKD의
 28×28 cross-attention이 용량 gate였습니다. Full H200에서 `17/17`로
-통과했으며, Teacher만 분리한 현재 작업은 smoke peak reserved 15.731 GB를
-기준으로 H200 1g.18gb MIG 1개에서 실행합니다.
+통과했으며, Teacher 본학습은 25분 42초에 완료됐습니다.
 
-## 이전 v2 smoke 및 미실행 본실험
+## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류
 checkpoint 저장·strict load, encoder freeze, feature cache 및 probe 학습 경로를 한
@@ -109,10 +113,11 @@ feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 v
 없습니다. Smoke는 `25/25`로 통과했으며 이 진단값은 본실험 설정 선택에 사용하지
 않았습니다.
 
-### v2 단일 teacher를 공유하는 두 단계 본실험
+### v2 guided shard 완료·보존
 
-이 v2 작업은 실행하지 않았으며 v3로 대체했습니다. 기록 재현을 위해 코드와
-설정은 보존합니다.
+이 v2 guided 작업은 v3 교체 전에 제출되어 H200 issue 716에서 완료됐습니다.
+다만 결과 회수 전에 v3를 최종 프로토콜로 확정했으므로 baseline shard는 실행하지
+않고, v2 결과를 v3와 합치지 않습니다. 기록 재현을 위해 코드와 설정은 보존합니다.
 
 ```bash
 bash phase1/phase1_cub/scripts/run_full_guided_b128.sh
@@ -127,21 +132,21 @@ bash phase1/phase1_cub/scripts/run_full_guided_b128.sh
 validation 선택이 끝난 뒤에만 official test mask를 열어 선택된 probe를 한 번씩
 평가합니다.
 
-첫 결과 경로는 `/app/output/phase1_cub_b128_full_v2_guided`입니다. 결과에는 teacher 1개,
+결과 경로는 `/app/output/phase1_cub_b128_full_v2_guided`입니다. 결과에는 teacher 1개,
 분류 best checkpoint 9개, 선택된 probe checkpoint 45개, raw CSV와 summary JSON이
-포함되며 전체 실행 로그도 `run.log`로 저장됩니다. 이미지 본체와 segmentation
-mask archive, feature cache는 `/app/scratch`에만 두므로 결과 ZIP에 포함되지
-않습니다. 결과를 받은 뒤 teacher의 파일·model-state hash를 고정하고 이를 받는
-두 번째 baseline 실행기를 추가합니다.
+포함되며 전체 실행 로그도 `run.log`로 저장됐습니다. 55개 checkpoint와 전체
+계약은 독립 감사를 통과했습니다. 구버전 조건에서 probe mIoU는 ALG-w20
+`77.882%`, iBKD λ=0.25 `77.546%`, iBKD λ=0.5 `77.538%`였습니다. 해석과 제한은
+[v2 보존 보고서](reports/legacy_resnet56_v2_guided/RESULTS.md)에 기록했습니다.
 
 ## 현재 주의사항
 
 - 현재 실험의 이미지와 segmentation archive, split, binary mask mapping,
   ResNet-50/224 scratch teacher, student, 여섯 방법, seed, checkpoint와 test
   규칙은 [full v3 config](configs/cub200_r50_224_b128_full_v3.json)에 고정했습니다.
-- v2 설정은 미실행 기록이며 v3 결과와 섞지 않습니다.
-- Baseline shard는 guided shard의 teacher checkpoint가 hash로 고정되기 전에는
-  실행할 수 없습니다. 두 결과의 seed별 초기 student state와 split/config hash도
-  일치하는지 확인한 뒤에만 하나의 6설정 결과로 병합합니다.
+- v2 guided 결과는 완료됐지만 최종 v3 결과와 섞지 않으며, v2 baseline shard도
+  더 이상 실행하지 않습니다.
+- v3 학생은 issue 722의 ResNet-50 checkpoint 파일·model-state hash를 모두
+  확인한 뒤 시작하고, 모든 guided 방법이 그 하나를 공유해야 합니다.
 - 데이터셋, checkpoint, feature cache와 원시 H200 결과는 Git에 올리지 않습니다.
   검증된 작은 요약·manifest·정성 예시만 `reports/`에 반영합니다.

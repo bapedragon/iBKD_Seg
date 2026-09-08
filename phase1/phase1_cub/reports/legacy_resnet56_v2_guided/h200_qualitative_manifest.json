@@ -1,0 +1,50 @@
+{
+  "encoder_seed": 1,
+  "image_ids": [
+    787,
+    2285,
+    3735,
+    5205,
+    6691,
+    8139,
+    9597,
+    11064
+  ],
+  "predictions_can_be_rendered_from_retained_checkpoints": true,
+  "probe_seed": 1,
+  "records": [
+    {
+      "image_id": 787,
+      "relative_path": "015.Lazuli_Bunting/Lazuli_Bunting_0085_14627.jpg"
+    },
+    {
+      "image_id": 2285,
+      "relative_path": "040.Olive_sided_Flycatcher/Olive_Sided_Flycatcher_0057_796898.jpg"
+    },
+    {
+      "image_id": 3735,
+      "relative_path": "065.Slaty_backed_Gull/Slaty_Backed_Gull_0015_796004.jpg"
+    },
+    {
+      "image_id": 5205,
+      "relative_path": "089.Hooded_Merganser/Hooded_Merganser_0072_78973.jpg"
+    },
+    {
+      "image_id": 6691,
+      "relative_path": "115.Brewer_Sparrow/Brewer_Sparrow_0072_796715.jpg"
+    },
+    {
+      "image_id": 8139,
+      "relative_path": "139.Scarlet_Tanager/Scarlet_Tanager_0009_138076.jpg"
+    },
+    {
+      "image_id": 9597,
+      "relative_path": "164.Cerulean_Warbler/Cerulean_Warbler_0093_797196.jpg"
+    },
+    {
+      "image_id": 11064,
+      "relative_path": "188.Pileated_Woodpecker/Pileated_Woodpecker_0114_180455.jpg"
+    }
+  ],
+  "selection_before_results": true
+}

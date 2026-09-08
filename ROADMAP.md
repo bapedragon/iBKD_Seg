@@ -71,20 +71,23 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided end-to-end smoke 준비.** Pet
+**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided smoke와 Teacher 완료.** Pet
 결과가 특정 데이터셋에만 의존한 것인지 확인하기 위해 CUB-200-2011에서 분류
 encoder 학습과 frozen segmentation probe를 독립적으로 반복합니다. Pet의 잠긴
 config나 결과를 섞지 않으며, CUB용 데이터·split·mask·ResNet-50 teacher·학습·평가
 계약을 full v3로 잠갔습니다. 결과와 관계없이 여섯 설정×세 encoder seed를 모두
 수행하고 설정을 바꾸지 않습니다. Smoke 시간으로 10시간 이내 shard만 정하며,
-teacher checkpoint 하나는 모든 guided student와 후속 baseline이 공유합니다. 준비 위치는
+teacher checkpoint 하나는 모든 guided student와 후속 baseline이 공유합니다. 세부 기록은
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
-현재 smoke는 scratch ResNet-50/224 teacher 1개와 batch-128 DeiT-Tiny의 LG,
-ALG-w20, iBKD-0.25/0.5를 2 epoch씩 실행하고 각 frozen encoder의 세 probe LR도
-2 epoch씩 연결합니다. 사전 확정한 전체 matrix를 변경하지 않는 조건으로 official
-test 경로까지 검사하며, 모든 smoke metric은 비과학적이고 논문 결과나 설정 선택에
-사용하지 않습니다. 이전 ResNet-56/32 v2는 본실험 미실행 상태로 보존합니다.
+Guided smoke는 `17/17`로 통과했고, v3 ResNet-50/224 scratch Teacher는 H200 issue
+722에서 200 epoch 학습과 독립 감사를 완료했습니다. Validation macro top-1으로
+선택한 epoch 165 checkpoint의 official-test macro top-1은 `41.178%`입니다. 이
+수치는 Teacher artifact 검증값이며 iBKD 주장을 판정하는 결과가 아닙니다. 다음은
+이 checkpoint 하나를 공유하는 6방법×3seed 학생 분류와 frozen probe입니다.
+
+이전 ResNet-56/32 v2 guided shard도 H200 issue 716에서 완료됐지만, v3로 교체한 뒤
+회수한 구버전 결과이므로 현재 결과와 합치지 않고 참고 자료로만 보존합니다.
 
 ## Phase 2 — 공간적 대조 실험
 

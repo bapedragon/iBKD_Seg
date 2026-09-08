@@ -1,0 +1,15 @@
+{
+  "active": null,
+  "classification_complete": 9,
+  "classification_expected": 9,
+  "failure": null,
+  "official_test_evaluations_complete": 45,
+  "official_test_evaluations_expected": 45,
+  "phase": "complete",
+  "probe_candidates_complete": 135,
+  "probe_candidates_expected": 135,
+  "probe_selections_complete": 45,
+  "probe_selections_expected": 45,
+  "shard": "guided",
+  "status": "complete"
+}

@@ -1,0 +1,179 @@
+{
+  "checkpoint_manifest": "/app/output/phase1_cub_b128_full_v2_guided/checkpoint_manifest.json",
+  "classification_rows": [
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 2,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed2/summary.json",
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 3,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed3/summary.json",
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 2,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed2/summary.json",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 3,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed3/summary.json",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 2,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed2/summary.json",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "checkpoint_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 3,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed3/summary.json",
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "config_path": "/app/scratch/input/bapedragon_716/phase1/phase1_cub/configs/cub200_b128_full_v2.json",
+  "config_sha256": "0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575",
+  "contracts": {
+    "all_encoders_strict_loaded_frozen_eval": true,
+    "all_passed": true,
+    "all_selected_probes_strict_reloaded": true,
+    "archive_bytes_md5_sha256_match": true,
+    "classification_3variants_x3seeds_complete": true,
+    "classification_and_probe_checkpoints_retained": true,
+    "config_locked": true,
+    "fixed_5394_600_5794_split": true,
+    "no_official_test_masks_accessed_before_all_selections": true,
+    "official_test_evaluated_once_per_selected_probe": true,
+    "one_teacher_shared_by_guided_students": true,
+    "probe_135_lr_candidates_complete": true,
+    "probe_45_selections_complete": true,
+    "same_initial_probe_state_per_probe_seed": true,
+    "same_initial_student_state_within_each_seed": true,
+    "same_probe_batch_order_per_seed_and_epoch": true,
+    "selection_count": true,
+    "validation_image_ids_sha256_match": true
+  },
+  "counts": {
+    "classification_students": 9,
+    "probe_lr_candidates": 135,
+    "probe_official_test_evaluations": 45,
+    "retained_checkpoints": 55,
+    "selected_probes": 45,
+    "teacher": 1
+  },
+  "elapsed_seconds": 24690.573264335282,
+  "probe_aggregates": [
+    {
+      "encoder_seed_means": {
+        "1": 0.7788906742200862,
+        "2": 0.7777849321083619,
+        "3": 0.7797974050481562
+      },
+      "independent_n": 3,
+      "mean_over_encoder_seed_means": 0.7788243371255348,
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_encoder_seed_means": 0.0010078751365800544,
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed_means": {
+        "1": 0.7732721652859712,
+        "2": 0.778133865436264,
+        "3": 0.7749861473409685
+      },
+      "independent_n": 3,
+      "mean_over_encoder_seed_means": 0.7754640593544012,
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_encoder_seed_means": 0.002465832923633842,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed_means": {
+        "1": 0.7765952505277508,
+        "2": 0.7780823280439177,
+        "3": 0.7714745562023063
+      },
+      "independent_n": 3,
+      "mean_over_encoder_seed_means": 0.7753840449246583,
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_encoder_seed_means": 0.003466399636138375,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "protocol_id": "cub200_phase1_b128_frozen_spatial_probe_full_v2",
+  "runtime": {
+    "cuda": "13.0",
+    "device": "cuda",
+    "gpu_name": "NVIDIA H200 NVL",
+    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "python": "3.10.12 (main, Mar  3 2026, 11:56:32) [GCC 11.4.0]",
+    "timm": "1.0.27",
+    "torch": "2.11.0+cu130",
+    "torchvision": "0.26.0+cu130"
+  },
+  "scientific_result": true,
+  "shard": "guided",
+  "status": "complete",
+  "teacher": {
+    "checkpoint": "/app/output/phase1_cub_b128_full_v2_guided/classification/teacher/cub_teacher_resnet56_32_b128_full_300ep_seed1/teacher_best_validation.pt",
+    "checkpoint_sha256": "f63043b0be6762315894b58dc413e17e4e503b45124ff961b7080f49331a8894",
+    "model_state_sha256": "0eab2b9b33affa8e9bc6a9c7d41fe0d76e1783a936b7423f1953c58714b2b2ae"
+  },
+  "variants": [
+    "alg_warmup20",
+    "ibkd_lambda_0.25",
+    "ibkd_lambda_0.5"
+  ]
+}

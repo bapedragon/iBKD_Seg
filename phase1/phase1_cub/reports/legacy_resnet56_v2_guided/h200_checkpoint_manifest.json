@@ -1,0 +1,433 @@
+{
+  "count": 55,
+  "entries": [
+    {
+      "kind": "teacher",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/teacher/cub_teacher_resnet56_32_b128_full_300ep_seed1/teacher_best_validation.pt",
+      "sha256": "f63043b0be6762315894b58dc413e17e4e503b45124ff961b7080f49331a8894"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "sha256": "c094c459bf2caea9bf12376991a914e244ae3a4294be3a79b333f722209a7155",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "sha256": "ab5d5721caa1476c6eb7f66661ddd53f2a5d831846925fbac2da7ce8fd517290",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_alg_warmup20_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "sha256": "c0128186c7ea50de07161bb89a8200fcb41640fc56b9ee2f36cb1fe1364832af",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "sha256": "c194f0eb17fb8b89ddb6cd3fbafb949e273bb5168369819fd4dd554810dec394",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "sha256": "b897485b7d4162622f5fa4dc9a83c41d16120a1d939a92aa9a9d08f7ea843500",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "sha256": "ea8f7433183f1bd98b6c102d3c6b4ac5346766f717963694787727cf3f727d18",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "sha256": "50770bc7977ee62c1369dd2c0a51217ecf2b63557258dec83dcfbc8d386bb62f",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "sha256": "128ff5114757b0cdb76c473fe8e25485704b4aed9fc38a4b2f01f0177f818147",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "classification_encoder",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/classification/students/cub_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "sha256": "b9ed9caac3bd37ad6f3efa2de9a2329fe323a8de40978f7cd3d8e529f68b6f3f",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed1/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "d2438bfdc1f91889582613ac31808db051a9535e711c564d758c72aa3409e431",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed1/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "068b5a5a31fc6c1fa9f0516840a76c757ed762aa07ee88b20dbc795b2313ccd8",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed1/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "f6a6e3284810a7809f081271691e08205945541144fee675da60bedeabdbc6de",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed1/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "3c061bb3a98d53f92bd2409d06b8d80f79344fc67e00feeed2e1158f103f029e",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed1/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "b809d38dd0b0017c488e9820c0831c7abf4cd48bb252a81e9252f37ea7918f6f",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed2/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "2c1bfb331b5a35c45d39a9cd15a7f9147cba72017ec243a9ee3c304c322c5d01",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed2/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "fb44894d187575d319832f48fbcc3f6052ccbd7be86af5fc1dcd2e95e8230776",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed2/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "291f8554289e8eaccde871f480f7a21429d523148d2ee83a85bf5ddb18b9c3f8",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed2/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "2bf8476a0af9f51106b3c524a796a1bfe35f2f0a195595e64c83f4e6bd0c6af2",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed2/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "3c97d895a7be9c4e57b7ba4fd1a08f231f2e2b98d71dd17c2b070fcfea0b8240",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed3/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "eae8291bc7dd67257465c33d5d2210d036aa642af3efa25be91ccd5ca618b2e2",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed3/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "d4e436662077a02828309249e8190fd38cafa72b82d131aba1c05c0244486ae4",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed3/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "088e8212d57ee7cca7c2ba9d8885eb3e57fd8cfa51ddd58e7ac1e178f7a38101",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed3/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "682cfcee0fd8499235fa7947f6e49311ca82e3f70060a417fbbf9eae33fd68c3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/alg_warmup20/encoder_seed3/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "60cb9b92f8e554b390076b3675930af4a4b0f974410961eac0c25b01d3b3f20d",
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed1/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "54107fc70d8d751ecc38faa29139c5ea4ae0172789dc3130d528e47f30396e85",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed1/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "d5ea14068c76ffed662ea1f51f92015b256661cb8e35ab8e73d5405e44db70f5",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed1/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "4900368c0c79cb4b735ae5e40625bd7b5b899efc871865a5c17056ac7f4b4a82",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed1/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "efa3c8dca2f05c644e2cf5dcb4f5f72ca46883580333a1d63d0080a7d6fb0c74",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed1/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "51a1bd6acadaf80be9e3d55526fe625a0822981eb8fbbf736cc73e84ae587c81",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed2/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "ede1cf37c4afd56e7953a26b6a8879d3256d44480bf16c1e5f7f2c235153c53a",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed2/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "abd0f14f52b973ca9cd1f7efa896aae7f83f8b21550a6198978f8edc90c85db9",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed2/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "4fd9c692b811931bfbb8bfd7a2b69f2e584fce219ae19e935f210e080b6fce4e",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed2/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "7295fdc2da205179ebee15383d0828b30c9e87a0aff3e80eb3f7bc0d77d8fcd3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed2/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "d8266d05f2e76a1324570a7e15341f15bdac78d577c825079939d8777db94e0f",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed3/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "24eae40eff6925fc1b79c29856ffba5a87111321db747cabe5d016b8688dd651",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed3/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "784a622e4e840606acd386fa9862fca0e38faf37e0d97d23760829bd897bdb37",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed3/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "bfae62de584a28288d896bbf643e0e8dd6beca6583a68e980921bc43d788a8e3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed3/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "7422ce0660d73dfed6009b557158dab0d52d4ce50d580ea870efe1a0039631d0",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.25/encoder_seed3/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "596f02347a26a083ac32f937f0d11065d7d2ec77b6c6f1997052fc2d0a213a03",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed1/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "789a74baf6b736790efa82f47b4557e777e30863671e8412cb0627ebbbf1890e",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed1/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "b3b613e2b3e74055ce08c9290594482caa21d8d2d24823c8cc26237365b61228",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed1/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "fcaa6bad97ca844be81b7a13e80951ddd41cf3bd4be6ed43186e5e7109b7fcdb",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed1/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "b66d9a419bd7046101169df128d59a7b3ead10d64788d88eb6a60baf58fd654d",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 1,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed1/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "31cae48589e291eb34223c8c63ef19cc0c0e4f10a1a98c2395174553b2496b63",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed2/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "6efb2cd932599b1f805670564445f65ff66ed43a0ab1d2d199c1ee17e202959e",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed2/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "b41cb64196e03c2b4121e06b11fdbccf78a5e487dc5b95fb54fcd2b506daf8dd",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed2/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "c7141e05c42d4e2eebc615b138549da6519f16ef10ee9be0bed9c59257addb0b",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed2/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "3c103d084fdafd2b7d942557bd6ae357faddafea41dd628e9a31c6dc28b2a729",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 2,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed2/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "0c5368e46980fed5878c08751becf496317d3c83bf61453123d5407f5d36cdf4",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed3/probe_seed1_best_validation.pt",
+      "probe_seed": 1,
+      "sha256": "31062020d5f8921bd09ed6b0d945d69286149be5e0616e81fc8fd5c87215685a",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed3/probe_seed2_best_validation.pt",
+      "probe_seed": 2,
+      "sha256": "e3bc1926fb7ac03212b49ee2b8c5e995f31fc597f6a017084e237f3f12727f40",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed3/probe_seed3_best_validation.pt",
+      "probe_seed": 3,
+      "sha256": "9b76bdeda6009b2c3e9cd9d04eb7121039c376907030d203dcac29977f6aac6f",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed3/probe_seed4_best_validation.pt",
+      "probe_seed": 4,
+      "sha256": "17a475c6856229b2d9c453c4fec823d83e0971ba60f0f2307cb7b19a8c8aab93",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "encoder_seed": 3,
+      "kind": "selected_probe",
+      "path": "/app/output/phase1_cub_b128_full_v2_guided/probe/checkpoints/ibkd_lambda_0.5/encoder_seed3/probe_seed5_best_validation.pt",
+      "probe_seed": 5,
+      "sha256": "48891d04257e85790f95115342bee37c6cd56169c48fcd1d8a4fddec49faba66",
+      "variant": "ibkd_lambda_0.5"
+    }
+  ]
+}

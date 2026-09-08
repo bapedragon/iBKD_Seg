@@ -1,0 +1,423 @@
+{
+  "protocol": {
+    "classification": {
+      "guided_teacher_view": {
+        "additional_resize": false,
+        "shared_random_geometry_between_student_and_teacher": true,
+        "source": "same_randomly_augmented_and_normalized_224x224_student_tensor"
+      },
+      "methods": {
+        "alg_warmup20": {
+          "base": "lg",
+          "beta_on": 2.5,
+          "canonical_alg_warmup0_included": false,
+          "controller_warmup_epochs": 20,
+          "derivative_smoothing_window": 50,
+          "loss_smoothing_window": 50,
+          "report_label": "ALG-w20",
+          "stop_boundary": "smoothed_derivative_greater_than_or_equal_to_threshold",
+          "stop_is_permanent": true,
+          "threshold": -0.02
+        },
+        "ibkd": {
+          "beta_on": 2.5,
+          "controller_warmup_epochs": 20,
+          "convolutional_cross_attention_heads": 4,
+          "deformable_spatial_attention_kernel": 5,
+          "derivative_smoothing_window": 50,
+          "fusion_ratio_lambdas": [
+            0.25,
+            0.5
+          ],
+          "grid_resize_mode": "bilinear_to_larger_grid_per_stage",
+          "loss_smoothing_window": 50,
+          "qkv_kernel": 1,
+          "report_both_without_posthoc_selection": true,
+          "stage_projection": "learned_1x1",
+          "stop_boundary": "smoothed_derivative_strictly_greater_than_threshold",
+          "stop_is_permanent": true,
+          "student_blocks": "all_12",
+          "teacher_stages": [
+            "layer2",
+            "layer3",
+            "layer4"
+          ],
+          "threshold": -0.02
+        },
+        "kd": {
+          "alpha": 0.9,
+          "temperature": 4.0,
+          "transfer": "teacher_class_logits"
+        },
+        "lg": {
+          "beta": 2.5,
+          "grid_alignment": "bilinear_to_larger_grid",
+          "guidance_schedule": "all_300_epochs",
+          "projection": "learned_stagewise_1x1",
+          "student_blocks": [
+            0,
+            6,
+            11
+          ],
+          "teacher_stages": [
+            "layer2",
+            "layer3",
+            "layer4"
+          ]
+        },
+        "vanilla": {
+          "loss": "cross_entropy"
+        }
+      },
+      "shared_student_input_pipeline": {
+        "evaluation": {
+          "center_crop": false,
+          "interpolation": "bilinear",
+          "normalization": "imagenet",
+          "resize": "direct_square_224",
+          "test_time_augmentation": false
+        },
+        "train": {
+          "auto_augment": "rand-m9-mstd0.5-inc1",
+          "color_jitter_argument": 0.4,
+          "horizontal_flip_probability": 0.5,
+          "interpolation": "bicubic",
+          "normalization": "imagenet",
+          "random_erasing_probability": 0.25,
+          "random_resized_crop_ratio": [
+            0.75,
+            1.3333333333333333
+          ],
+          "random_resized_crop_scale": [
+            0.08,
+            1.0
+          ],
+          "random_resized_crop_size": 224
+        }
+      },
+      "student": {
+        "architecture": "deit_tiny_patch16_224",
+        "checkpoint_forwarded_to_probe": "best_validation_classification_checkpoint",
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "epochs": 300,
+        "eval_batch_size": 200,
+        "external_pretraining": false,
+        "initialization": "scratch",
+        "input_size": 224,
+        "optimizer": {
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "epsilon": 1e-08,
+          "learning_rate": 0.0005,
+          "minimum_learning_rate": 5e-06,
+          "name": "adamw",
+          "weight_decay": 0.05
+        },
+        "precision": "float32",
+        "regularization": {
+          "cutmix": false,
+          "drop_path_rate": 0.1,
+          "dropout_rate": 0.0,
+          "gradient_clipping": null,
+          "label_smoothing": 0.0,
+          "mixup": false,
+          "model_ema": false
+        },
+        "same_initial_state_per_seed_across_all_variants": true,
+        "scheduler": {
+          "name": "cosine",
+          "warmup_epochs": 20,
+          "warmup_learning_rate": 5e-07
+        },
+        "selection_metric": "validation_macro_top1",
+        "selection_tie_break": "earlier_epoch",
+        "train_batch_size": 128
+      },
+      "teacher": {
+        "architecture": "torchvision_resnet50",
+        "backbone_initialization": "torchvision_default_random",
+        "classification_head_initialization": {
+          "bias": 0.0,
+          "weight": "normal",
+          "weight_std": 0.01
+        },
+        "epochs": 200,
+        "eval_batch_size": 200,
+        "evaluation_transform": {
+          "center_crop": 224,
+          "interpolation": "bicubic",
+          "normalization": "imagenet",
+          "resize_shorter_side": 256
+        },
+        "external_pretraining": false,
+        "feature_channels": [
+          512,
+          1024,
+          2048
+        ],
+        "feature_spatial_sizes": [
+          28,
+          14,
+          7
+        ],
+        "feature_stages": [
+          "layer2",
+          "layer3",
+          "layer4"
+        ],
+        "initialization": "scratch",
+        "input_size": 224,
+        "one_fixed_checkpoint_shared_by_all_guided_students": true,
+        "optimizer": {
+          "learning_rate": 0.05,
+          "momentum": 0.9,
+          "name": "sgd",
+          "nesterov": false,
+          "weight_decay": 0.0001,
+          "weight_decay_exclusions": [
+            "bias",
+            "normalization_parameters"
+          ]
+        },
+        "scheduler": {
+          "minimum_learning_rate": 0.0,
+          "name": "linear_warmup_then_cosine",
+          "warmup_epochs": 5,
+          "warmup_learning_rate": 0.0
+        },
+        "seed": 1,
+        "selection_metric": "validation_macro_top1",
+        "selection_tie_break": "earlier_epoch",
+        "train_batch_size": 128,
+        "train_transform": {
+          "horizontal_flip_probability": 0.5,
+          "interpolation": "bicubic",
+          "normalization": "imagenet",
+          "random_resized_crop": 224
+        }
+      },
+      "test_policy": {
+        "evaluation": "once_per_validation_selected_checkpoint",
+        "justification": "all_six_variants_x_three_seeds_are_irrevocably_committed_and_settings_are_locked",
+        "no_method_or_lambda_selection_from_test": true,
+        "official_test_reporting_enabled_before_full_matrix": true,
+        "selection_uses_official_test": false
+      },
+      "variants": [
+        "vanilla",
+        "kd",
+        "lg",
+        "alg_warmup20",
+        "ibkd_lambda_0.25",
+        "ibkd_lambda_0.5"
+      ]
+    },
+    "dataset": {
+      "classification_encoder_may_use": [
+        "rgb_image",
+        "species_label"
+      ],
+      "classification_encoder_must_not_use": [
+        "segmentation_mask",
+        "bounding_box",
+        "part_location",
+        "attribute"
+      ],
+      "image_archive": {
+        "expected_bytes": 1150585339,
+        "md5": "97eceeb196236b17998738112f37df78",
+        "sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081",
+        "url": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1"
+      },
+      "mask": {
+        "ambiguous_or_ignore_pixels": false,
+        "background_rule": "grayscale_value_equal_to_0",
+        "foreground_rule": "grayscale_value_greater_than_0",
+        "posthoc_exclusion": "none",
+        "postprocessing": "none",
+        "resize_interpolation": "nearest"
+      },
+      "name": "CUB-200-2011",
+      "num_classes": 200,
+      "official_counts": {
+        "test": 5794,
+        "total": 11788,
+        "train": 5994
+      },
+      "segmentation_archive": {
+        "expected_bytes": 39272883,
+        "md5": "4d47ba1228eae64f2fa547c47bc65255",
+        "sha256": "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f",
+        "url": "https://data.caltech.edu/records/w9d68-gec53/files/segmentations.tgz?download=1"
+      },
+      "split": {
+        "expected_counts": {
+          "test": 5794,
+          "train": 5394,
+          "validation": 600
+        },
+        "ranking_key": "sha256(f'{split_seed}:{image_id}')_then_image_id",
+        "source_test": "official_test_5794",
+        "source_train_pool": "official_train_5994",
+        "split_seed": 2027,
+        "strategy": "fixed_class_stratified_holdout",
+        "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+        "validation_per_class": 3
+      }
+    },
+    "execution": {
+      "artifacts": {
+        "raw_dataset_and_feature_cache_location": "/app/scratch",
+        "retain_all_lr_candidate_checkpoints": false,
+        "retain_classification_best_checkpoints": true,
+        "retain_dataset_archives_in_output": false,
+        "retain_raw_csv_json_and_logs": true,
+        "retain_selected_probe_checkpoints": true,
+        "retain_teacher_best_checkpoint": true,
+        "scientific_result_location": "/app/output"
+      },
+      "classification_eval_batch_size": 200,
+      "classification_num_workers": 4,
+      "device": "single_cuda_allocation",
+      "final_h200_mig_slices": "decide_only_from_v3_smoke_capacity_and_timing",
+      "precision": "float32",
+      "probe_feature_batch_size": 32,
+      "probe_num_workers": 4
+    },
+    "frozen_probe": {
+      "encoder": {
+        "checkpoint": "classification_best_validation_checkpoint",
+        "eval_mode": true,
+        "feature": {
+          "block_index": 11,
+          "channels": 192,
+          "dtype": "float32",
+          "exclude_cls_token": true,
+          "height": 14,
+          "norm": false,
+          "output_format": "NCHW",
+          "width": 14
+        },
+        "frozen": true,
+        "strict_load": true
+      },
+      "evaluation": {
+        "aggregation": "global_confusion_matrix",
+        "prediction": "bilinear_upsample_logits_14x14_to_224x224_then_argmax",
+        "primary_metric": "input_224_two_class_mean_iou",
+        "secondary_metrics": [
+          "foreground_iou",
+          "background_iou",
+          "foreground_dice",
+          "pixel_accuracy",
+          "grid_14x14_two_class_mean_iou"
+        ]
+      },
+      "image_input": {
+        "image_interpolation": "bilinear",
+        "mask_interpolation": "nearest",
+        "normalization": "imagenet",
+        "random_augmentation": false,
+        "resize": "direct_square",
+        "size": 224
+      },
+      "probe": {
+        "architecture": "Conv2d(192,2,1,bias=True)",
+        "batch_size": 64,
+        "epochs": 100,
+        "initialization": {
+          "bias": 0.0,
+          "weight": "normal",
+          "weight_std": 0.01
+        },
+        "learning_rates": [
+          0.01,
+          0.03,
+          0.1
+        ],
+        "loss": {
+          "class_weighting": "none",
+          "ignore_index": 255,
+          "name": "cross_entropy"
+        },
+        "optimizer": {
+          "momentum": 0.9,
+          "name": "sgd",
+          "nesterov": false,
+          "weight_decay": 0.0
+        },
+        "parameter_count": 386,
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "same_initial_state_and_batch_order_per_seed_across_all_encoders": true,
+        "scheduler": {
+          "minimum_learning_rate": 0.0,
+          "name": "cosine"
+        },
+        "target": {
+          "foreground_occupancy_threshold": 0.5,
+          "grid_height": 14,
+          "grid_width": 14
+        }
+      },
+      "selection": {
+        "direction": "maximize",
+        "metric": "grid_14x14_two_class_mean_iou",
+        "split": "validation",
+        "tie_break": [
+          "lower_learning_rate",
+          "earlier_epoch"
+        ]
+      },
+      "test_policy": {
+        "evaluation": "once_per_validation_selected_probe",
+        "no_probe_lr_or_epoch_selection_from_test": true,
+        "selection_uses_official_test": false
+      }
+    },
+    "matrix_commitment": {
+      "configuration_changes_after_smoke": false,
+      "encoder_seeds": [
+        1,
+        2,
+        3
+      ],
+      "method_or_lambda_selection_from_smoke_or_test": false,
+      "unconditional": true,
+      "variants": [
+        "vanilla",
+        "kd",
+        "lg",
+        "alg_warmup20",
+        "ibkd_lambda_0.25",
+        "ibkd_lambda_0.5"
+      ]
+    },
+    "protocol_id": "cub200_phase1_resnet50_224_scratch_b128_full_v3",
+    "schema_version": 1,
+    "scientific_result": true,
+    "statistics": {
+      "formal_p_value_with_three_encoder_seeds": false,
+      "independent_unit": "encoder_training_seed",
+      "primary_method_summary": "mean_and_sample_standard_deviation_of_encoder_seed_means",
+      "primary_paired_contrast": "each_ibkd_lambda_minus_alg_warmup20_by_matched_encoder_seed",
+      "probe_seed_is_not_an_independent_encoder_replication": true,
+      "report_all_raw_values": true,
+      "within_encoder_summary": "mean_and_sample_standard_deviation_over_five_probe_seeds"
+    },
+    "status": "locked_before_v3_smoke_and_full_results_2026-09-08"
+  },
+  "protocol_config": "/app/scratch/input/bapedragon_722/phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+  "protocol_config_sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+}

@@ -1,0 +1,82 @@
+{
+  "checkpoint_count": 1,
+  "dataset": "CUB-200-2011",
+  "experiment_kind": "resnet50-v3-teacher",
+  "files": [
+    {
+      "bytes": 56913,
+      "checkpoint": false,
+      "path": "h200_issue.log",
+      "sha256": "d0d8ca54fea73b13722cd673a577544187d0941019c015454f2e9d158c61e548",
+      "source_member": "bapedragon_722/bapedragon_722_result.txt"
+    },
+    {
+      "bytes": 13224,
+      "checkpoint": false,
+      "path": "protocol_snapshot.json",
+      "sha256": "1fbc79d4b0f9f4c028dcabfb8027ae2df1e12bbcebddd16f666939d322633602",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/protocol_snapshot.json"
+    },
+    {
+      "bytes": 45363,
+      "checkpoint": false,
+      "path": "run.log",
+      "sha256": "00ea9b8675bbe1a4f276b8dbe4209c8b971c519c60218a3791446a28b5aa98dd",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/run.log"
+    },
+    {
+      "bytes": 95989681,
+      "checkpoint": true,
+      "path": "teacher_best_validation.pt",
+      "sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/teacher_best_validation.pt"
+    },
+    {
+      "bytes": 30498,
+      "checkpoint": false,
+      "path": "teacher_history.csv",
+      "sha256": "7206d9f54357cfda5ae714d958a6219770485fc68784fbcf8248567cb4bc7c87",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/teacher_history.csv"
+    },
+    {
+      "bytes": 96111,
+      "checkpoint": false,
+      "path": "teacher_summary.json",
+      "sha256": "4abd263d35a392cd1d385e6935f88d8ceb62fc337cb1c88b5eab16d300a7440a",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/teacher_summary.json"
+    },
+    {
+      "bytes": 78493,
+      "checkpoint": false,
+      "path": "validation_split.json",
+      "sha256": "6aee4f9f502c18561859928c7ced96a37878fc3b4ef2543c76f8ed964815e2e5",
+      "source_member": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/validation_split.json"
+    }
+  ],
+  "h200_issue_id": "722",
+  "import_policy": {
+    "kept": [
+      "scientific summaries and CSV/JSON evidence",
+      "classification checkpoints needed for reproducibility",
+      "selected probe checkpoints when present",
+      "H200 execution logs"
+    ],
+    "omitted": [
+      "duplicate training_status.json",
+      "directory entries"
+    ]
+  },
+  "imported_bytes_excluding_this_manifest": 96310283,
+  "imported_file_count_excluding_this_manifest": 7,
+  "schema_version": 1,
+  "source_archive": {
+    "all_member_crc_verified": true,
+    "bytes": 89079782,
+    "canonical_filename": "phase1_cub_resnet50_224_teacher_v3_issue722.zip",
+    "original_filename": "bapedragon_722.zip",
+    "sha256": "c2dd7f591dcaaf4d77f870f549d12abaeff32ab413100c7a4cc04984e2aa6989",
+    "unsafe_paths_or_symlinks": false
+  },
+  "source_suite_root": "bapedragon_722/phase1_cub_r50_224_teacher_full_v3/",
+  "status": "pass"
+}
