@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import random
+import re
+import time
 import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass
@@ -46,6 +48,10 @@ DERIVED_TRAIN_COUNT = 5_394
 DERIVED_VALIDATION_COUNT = 600
 RESNET50_IMAGE_SIZE = 224
 RESNET50_EVAL_RESIZE_SIZE = 256
+DOWNLOAD_RETRIES = 8
+DOWNLOAD_TIMEOUT_SECONDS = 60
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
+DOWNLOAD_PROGRESS_BYTES = 64 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -64,40 +70,175 @@ def file_digest(path: Path, algorithm: str = "sha256") -> str:
     return digest.hexdigest()
 
 
-def _download(url: str, destination: Path, *, expected_md5: str) -> None:
+def _validate_content_range(
+    value: str | None,
+    *,
+    expected_start: int,
+    expected_bytes: int,
+) -> None:
+    match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+)", value or "")
+    if match is None:
+        raise RuntimeError(f"missing or malformed Content-Range: {value!r}")
+    start, end, total = (int(field) for field in match.groups())
+    if (
+        start != expected_start
+        or end < start
+        or end >= expected_bytes
+        or total != expected_bytes
+    ):
+        raise RuntimeError(
+            "unexpected Content-Range: "
+            f"received={value!r} expected_start={expected_start} "
+            f"expected_total={expected_bytes}"
+        )
+
+
+def _download(
+    url: str,
+    destination: Path,
+    *,
+    expected_md5: str,
+    expected_bytes: int,
+    retries: int = DOWNLOAD_RETRIES,
+) -> None:
+    if expected_bytes <= 0:
+        raise ValueError("expected_bytes must be positive")
+    if retries <= 0:
+        raise ValueError("retries must be positive")
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_suffix(destination.suffix + ".part")
-    partial.unlink(missing_ok=True)
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (iBKD-Seg Phase1 CUB smoke)",
-            "Accept-Encoding": "identity",
-        },
-    )
-    downloaded = 0
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            with partial.open("wb") as output:
-                while chunk := response.read(1024 * 1024):
-                    output.write(chunk)
-                    downloaded += len(chunk)
-                    if downloaded % (64 * 1024 * 1024) < len(chunk):
-                        print(
-                            f"[CUB_DOWNLOAD_PROGRESS] file={destination.name} "
-                            f"bytes={downloaded}",
-                            flush=True,
-                        )
+    if partial.is_file() and partial.stat().st_size > expected_bytes:
+        print(
+            f"[CUB_DOWNLOAD_RESET] file={destination.name} "
+            f"reason=oversized_partial bytes={partial.stat().st_size}",
+            flush=True,
+        )
+        partial.unlink()
+
+    if partial.is_file() and partial.stat().st_size == expected_bytes:
         actual_md5 = file_digest(partial, "md5")
-        if actual_md5 != expected_md5:
-            raise RuntimeError(
-                f"archive MD5 mismatch for {destination.name}: "
-                f"expected={expected_md5} actual={actual_md5}"
+        if actual_md5 == expected_md5:
+            partial.replace(destination)
+            print(
+                f"[CUB_DOWNLOAD_COMPLETE] file={destination.name} "
+                f"bytes={expected_bytes} source=existing_partial",
+                flush=True,
             )
-        partial.replace(destination)
-    except Exception:
-        partial.unlink(missing_ok=True)
-        raise
+            return
+        print(
+            f"[CUB_DOWNLOAD_RESET] file={destination.name} "
+            "reason=full_partial_md5_mismatch",
+            flush=True,
+        )
+        partial.unlink()
+
+    last_error: Exception | None = None
+    for attempt in range(1, retries + 1):
+        offset = partial.stat().st_size if partial.is_file() else 0
+        headers = {
+            "User-Agent": "Mozilla/5.0 (iBKD-Seg Phase1 CUB downloader)",
+            "Accept-Encoding": "identity",
+        }
+        if offset:
+            headers["Range"] = f"bytes={offset}-"
+        request = urllib.request.Request(url, headers=headers)
+        print(
+            f"[CUB_DOWNLOAD_ATTEMPT] file={destination.name} attempt={attempt}/{retries} "
+            f"resume_from={offset} expected_bytes={expected_bytes}",
+            flush=True,
+        )
+
+        try:
+            with urllib.request.urlopen(
+                request, timeout=DOWNLOAD_TIMEOUT_SECONDS
+            ) as response:
+                status = response.getcode()
+                if offset:
+                    if status != 206:
+                        raise RuntimeError(
+                            "server ignored resume Range request: "
+                            f"status={status} offset={offset}"
+                        )
+                    _validate_content_range(
+                        response.headers.get("Content-Range"),
+                        expected_start=offset,
+                        expected_bytes=expected_bytes,
+                    )
+                elif status == 206:
+                    _validate_content_range(
+                        response.headers.get("Content-Range"),
+                        expected_start=0,
+                        expected_bytes=expected_bytes,
+                    )
+                elif status != 200:
+                    raise RuntimeError(f"unexpected HTTP status: {status}")
+
+                downloaded = offset
+                next_progress = (
+                    (downloaded // DOWNLOAD_PROGRESS_BYTES) + 1
+                ) * DOWNLOAD_PROGRESS_BYTES
+                mode = "ab" if offset else "wb"
+                with partial.open(mode) as output:
+                    while chunk := response.read(DOWNLOAD_CHUNK_BYTES):
+                        output.write(chunk)
+                        downloaded += len(chunk)
+                        if downloaded > expected_bytes:
+                            raise RuntimeError(
+                                "download exceeded expected byte size: "
+                                f"actual>{expected_bytes}"
+                            )
+                        if downloaded >= next_progress:
+                            print(
+                                f"[CUB_DOWNLOAD_PROGRESS] file={destination.name} "
+                                f"bytes={downloaded}/{expected_bytes}",
+                                flush=True,
+                            )
+                            next_progress += DOWNLOAD_PROGRESS_BYTES
+
+            actual_bytes = partial.stat().st_size
+            if actual_bytes != expected_bytes:
+                raise RuntimeError(
+                    "download ended before expected byte size: "
+                    f"actual={actual_bytes} expected={expected_bytes}"
+                )
+
+            actual_md5 = file_digest(partial, "md5")
+            if actual_md5 != expected_md5:
+                partial.unlink()
+                raise RuntimeError(
+                    f"archive MD5 mismatch for {destination.name}: "
+                    f"expected={expected_md5} actual={actual_md5}; "
+                    "discarded_full_partial=true"
+                )
+            partial.replace(destination)
+            print(
+                f"[CUB_DOWNLOAD_COMPLETE] file={destination.name} "
+                f"bytes={expected_bytes} attempts={attempt}",
+                flush=True,
+            )
+            return
+        except Exception as error:
+            last_error = error
+            preserved_bytes = partial.stat().st_size if partial.is_file() else 0
+            if preserved_bytes > expected_bytes:
+                partial.unlink()
+                preserved_bytes = 0
+            if attempt < retries:
+                print(
+                    f"[CUB_DOWNLOAD_RETRY] file={destination.name} "
+                    f"attempt={attempt}/{retries} preserved_bytes={preserved_bytes} "
+                    f"error={type(error).__name__}: {error}",
+                    flush=True,
+                )
+                time.sleep(min(2 * attempt, 10))
+
+    assert last_error is not None
+    preserved_bytes = partial.stat().st_size if partial.is_file() else 0
+    raise RuntimeError(
+        f"download failed after {retries} attempts for {destination.name}; "
+        f"preserved_bytes={preserved_bytes} partial={partial}"
+    ) from last_error
 
 
 def _read_indexed_values(path: Path) -> dict[int, str]:
@@ -200,7 +341,12 @@ def ensure_cub200(root: Path, *, download: bool = True) -> Path:
         archive = root / ARCHIVE_NAME
         if not archive.is_file() or file_digest(archive, "md5") != ARCHIVE_MD5:
             archive.unlink(missing_ok=True)
-            _download(DOWNLOAD_URL, archive, expected_md5=ARCHIVE_MD5)
+            _download(
+                DOWNLOAD_URL,
+                archive,
+                expected_md5=ARCHIVE_MD5,
+                expected_bytes=ARCHIVE_BYTES,
+            )
         if archive.stat().st_size != ARCHIVE_BYTES:
             raise RuntimeError(
                 f"CUB archive byte-size mismatch: expected={ARCHIVE_BYTES} "

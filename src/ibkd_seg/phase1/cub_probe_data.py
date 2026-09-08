@@ -100,6 +100,7 @@ def ensure_cub_segmentations(
                 SEGMENTATION_DOWNLOAD_URL,
                 archive,
                 expected_md5=SEGMENTATION_ARCHIVE_MD5,
+                expected_bytes=SEGMENTATION_ARCHIVE_BYTES,
             )
         if archive.stat().st_size != SEGMENTATION_ARCHIVE_BYTES:
             raise RuntimeError(
