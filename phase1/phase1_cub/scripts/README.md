@@ -7,6 +7,11 @@
   LG, ALG-w20, iBKD-0.25, iBKD-0.5를 각각 2 epoch 실행하고 네 frozen
   encoder × 세 LR probe를 2 epoch 실행합니다. Classification과 선택된 probe의
   official test 경로, peak memory, 4방법×3seed guided block 시간 외삽까지 기록합니다.
+- `run_r50_224_teacher_full.sh`: 현재 v3 Teacher 전용 본학습. TorchVision
+  ResNet-50을 `weights=None`인 scratch 상태에서 224×224, batch 128, seed 1,
+  200 epoch 학습하고 validation macro top-1 best checkpoint를 고른 뒤 strict
+  reload와 official test 1회 평가까지 수행합니다. 기존 ResNet-56/32 본학습
+  진입점은 호출하지 않습니다.
 
 아래 두 스크립트는 미실행 ResNet-56/32 v2 보존본입니다.
 
@@ -17,5 +22,6 @@
 - `run_full_guided_b128.sh`: teacher를 한 번 학습하고 ALG-w20, iBKD-0.25,
   iBKD-0.5의 분류 3 seed와 frozen probe 전체를 실행하는 약 8시간 작업
 
-현재 v3 본실험 스크립트는 v3 smoke 결과로 MIG 용량과 10시간 분할을 정한 뒤
-추가합니다.
+v3 Teacher 본학습 스크립트는 준비됐습니다. 이후 학생·probe 본실험 스크립트는
+Teacher 결과의 checkpoint 파일 SHA-256과 model-state SHA-256을 받은 뒤 그
+동일 artifact를 강제하도록 추가합니다.

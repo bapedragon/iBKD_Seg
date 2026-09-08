@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided end-to-end smoke 준비**
+상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided smoke 통과, Teacher 본학습 준비 완료**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -34,9 +34,31 @@ Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
-## 현재 v3: ResNet-50/224 guided smoke
+## 현재 v3: ResNet-50/224 Teacher 본학습
 
-다음 smoke는 scratch ResNet-50/224 teacher 1개와 batch-128 DeiT-Tiny의 LG,
+Guided smoke는 `17/17` 작업을 완료해 실행 경로와 메모리·시간 gate를 통과했습니다.
+본실험의 첫 단계는 모든 guided student가 공유할 단 하나의 Teacher checkpoint를
+만드는 작업입니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_teacher_full.sh
+```
+
+이 전용 실행기는 TorchVision ResNet-50을 `weights=None`으로 생성해 ImageNet
+pretrained 없이 scratch로 학습합니다. 입력 224×224, train/validation
+5,394/600, batch 128, seed 1, 200 epoch 전체를 학습하며 validation macro top-1으로
+checkpoint를 고릅니다. 동률이면 이른 epoch를 선택하고, 선택 완료 및 strict
+reload 뒤 official test 5,794장을 정확히 한 번 평가합니다. 기존
+ResNet-56/32용 `train_full.py`는 호출하지 않습니다.
+
+기본 결과 경로는 `/app/output/phase1_cub_r50_224_teacher_full_v3`입니다. 공유할
+`teacher_best_validation.pt`와 파일/model-state SHA-256, epoch별 CSV,
+summary·split·protocol JSON 및 `run.log`가 남습니다. 원시 CUB 데이터는
+`/app/scratch`에만 두고 결과 폴더에 복사하지 않습니다.
+
+## v3 guided smoke 기록
+
+이 smoke는 scratch ResNet-50/224 teacher 1개와 batch-128 DeiT-Tiny의 LG,
 ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 seed 1에서 각각 2 epoch 실행합니다. 이어서
 각 encoder를 strict load·완전 동결하고 LR `[0.01, 0.03, 0.1]` probe를 각각
 2 epoch 실행합니다.
@@ -55,7 +77,9 @@ validation으로 선택한 probe의 official test 경로까지 한 번씩 실행
 기본 결과 경로는 `/app/output/phase1_cub_r50_224_b128_guided_smoke_v3`이며,
 마지막 로그에 4개 방법의 validation/test 진단값, peak CUDA memory, 실제 smoke
 시간과 4방법×3seed guided block 선형 외삽을 출력합니다. Batch 128 FP32 iBKD의
-28×28 cross-attention이 용량 gate이므로 최초 H200 요청은 MIG 2개로 둡니다.
+28×28 cross-attention이 용량 gate였습니다. Full H200에서 `17/17`로
+통과했으며, Teacher만 분리한 현재 작업은 smoke peak reserved 15.731 GB를
+기준으로 H200 1g.18gb MIG 1개에서 실행합니다.
 
 ## 이전 v2 smoke 및 미실행 본실험
 

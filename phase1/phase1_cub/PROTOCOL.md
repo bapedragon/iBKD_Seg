@@ -1,6 +1,6 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 전**
+상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 통과, Teacher 실행 준비 완료**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
@@ -31,6 +31,20 @@ Full config SHA-256:
   Official test는 선택된 각 checkpoint를 한 번 평가하며 method, lambda, LR,
   epoch 선택에는 사용하지 않습니다.
 
+## v3 Teacher 전용 본학습 실행
+
+- 실행기: `scripts/run_r50_224_teacher_full.sh`
+- 구현: `ibkd_seg.phase1.run_cub_r50_teacher_full`
+- 기존 ResNet-56/32·300 epoch용 `ibkd_seg.phase1.train_full`은 사용하지 않습니다.
+- Full config의 byte-level SHA-256과 scratch/224/batch 128/200 epoch/optimizer/
+  scheduler/split/test 규칙을 모두 실행 전에 검사하며, 하나라도 달라지면 학습을
+  시작하지 않습니다.
+- validation macro top-1 최대 checkpoint 하나만 선택하고 동률이면 이른 epoch를
+  유지합니다. 선택한 파일을 새 ResNet-50에 strict reload하고 model-state hash를
+  검증한 뒤 official test를 한 번만 평가합니다.
+- 산출물의 checkpoint SHA-256과 model-state SHA-256을 후속 LG, ALG-w20,
+  iBKD 학생 실행기에 함께 고정해 모든 guided 방법이 동일 Teacher를 사용하게 합니다.
+
 ## v3 guided end-to-end smoke 계약
 
 Smoke config SHA-256:
@@ -48,6 +62,12 @@ Smoke config SHA-256:
 - batch 128 FP32 peak memory와 단계별 시간, 4방법×3seed guided block의 선형
   외삽을 기록합니다. Smoke가 OOM이면 batch나 precision을 바꾸지 않고 필요한
   MIG 용량만 늘려 동일 설정을 다시 실행합니다.
+
+Smoke는 Full H200에서 `17/17`로 통과했습니다. Teacher 측정값은 epoch당 약
+7.56초, peak allocated 11.377 GB, peak reserved 15.731 GB였고 200 epoch 단순
+외삽은 약 25분입니다. Teacher 전용 본학습은 H200 1g.18gb MIG 1개로 요청하며,
+연산 자원 축소와 데이터·test overhead를 포함한 예상은 약 2~3시간입니다. 이
+추정은 scheduling 보장이 아니며 실제 `run.log`의 완료 시간과 peak를 최종 기록합니다.
 
 ## 고정한 항목
 
