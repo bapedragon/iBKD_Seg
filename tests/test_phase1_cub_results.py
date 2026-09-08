@@ -94,6 +94,31 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(list(R50_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(R56_REPORT.rglob("*.pt")), [])
 
+    def test_release_manifests_bind_the_remote_assets_and_checkpoint_roles(self) -> None:
+        teacher = _json(R50_REPORT / "checkpoint_release.json")
+        legacy = _json(R56_REPORT / "artifact_release.json")
+
+        self.assertEqual(teacher["size_bytes"], 89065279)
+        self.assertEqual(
+            teacher["sha256"],
+            "d7ca69d23a99e20ac3950bb8c0b954ce77dd1213245a7d707447d1997565b0b5",
+        )
+        self.assertEqual(teacher["contents"]["teacher_checkpoints"], 1)
+        self.assertEqual(
+            teacher["teacher_checkpoint"]["checkpoint_sha256"],
+            "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+        )
+        self.assertTrue(teacher["remote_asset_digest_verified"])
+
+        self.assertEqual(legacy["size_bytes"], 192296835)
+        self.assertEqual(
+            legacy["sha256"],
+            "8ce5d2e9407a0522babfd4d25a238af6d7ce3d72b2aea6d508cedf5764e54064",
+        )
+        self.assertEqual(legacy["contents"]["total_checkpoints"], 55)
+        self.assertFalse(legacy["canonical_phase1_cub_v3_result"])
+        self.assertTrue(legacy["remote_asset_digest_verified"])
+
 
 if __name__ == "__main__":
     unittest.main()

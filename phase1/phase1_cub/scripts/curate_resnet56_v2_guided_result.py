@@ -644,6 +644,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 - Teacher/encoder/probe checkpoint 55개 모두 파일 hash, strict load, 유한값 감사 통과
 - train/validation/test 5,394 / 600 / 5,794 및 validation split hash 일치
 - 전체 실행시간: {combined['elapsed_seconds'] / 3600:.2f}시간
+- 전체 checkpoint·로그 보존: [검증된 GitHub Release](artifact_release.json)
 
 ## Teacher
 

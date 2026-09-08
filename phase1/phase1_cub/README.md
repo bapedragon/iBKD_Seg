@@ -58,8 +58,9 @@ summary·split·protocol JSON 및 `run.log`가 남습니다. 원시 CUB 데이�
 `/app/scratch`에만 두고 결과 폴더에 복사하지 않습니다. 선택 epoch는 165,
 official-test macro top-1은 `41.178%`였고 상세 결과와 checkpoint hash는
 [Teacher 결과 보고서](reports/classification/resnet50_224_teacher_v3/RESULTS.md)에
-고정했습니다. 다음 단계는 이 checkpoint를 공유하는 v3 학생 분류와 frozen
-probe입니다.
+고정했습니다. 재사용할 원본은
+[checkpoint Release manifest](reports/classification/resnet50_224_teacher_v3/checkpoint_release.json)로
+식별합니다. 다음 단계는 이 checkpoint를 공유하는 v3 학생 분류와 frozen probe입니다.
 
 ## v3 guided smoke 기록
 
@@ -138,6 +139,9 @@ validation 선택이 끝난 뒤에만 official test mask를 열어 선택된 pro
 계약은 독립 감사를 통과했습니다. 구버전 조건에서 probe mIoU는 ALG-w20
 `77.882%`, iBKD λ=0.25 `77.546%`, iBKD λ=0.5 `77.538%`였습니다. 해석과 제한은
 [v2 보존 보고서](reports/legacy_resnet56_v2_guided/RESULTS.md)에 기록했습니다.
+55개 checkpoint와 로그는
+[artifact Release manifest](reports/legacy_resnet56_v2_guided/artifact_release.json)로
+식별합니다.
 
 ## 현재 주의사항
 

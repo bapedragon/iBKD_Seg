@@ -35,5 +35,6 @@ Scratch 소규모 fine-grained 분류라 선택 epoch의 train top-1과 validati
 공간정보 보존 성능을 판단할 수도 없습니다. 이 결과가 확정하는 것은 **v3 Teacher
 artifact가 정상적으로 준비됐다**는 점까지입니다.
 
-원본 checkpoint와 로그는 Git 이력이 아닌 ignored raw 경로와 GitHub Release에
-보존하고, 이 폴더에는 검증 가능한 소형 결과와 hash만 추적합니다.
+원본 checkpoint와 로그는 Git 이력이 아닌 ignored raw 경로와
+[검증된 GitHub Release](checkpoint_release.json)에 보존하고, 이 폴더에는 검증
+가능한 소형 결과와 hash만 추적합니다.

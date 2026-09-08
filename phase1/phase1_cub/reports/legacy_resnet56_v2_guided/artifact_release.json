@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "asset_type": "phase1_cub_resnet56_32_guided_v2_superseded_archive",
+  "release_tag": "phase1-cub-r56-v2-guided-issue716",
+  "release_url": "https://github.com/bapedragon/iBKD_Seg/releases/tag/phase1-cub-r56-v2-guided-issue716",
+  "asset_name": "phase1_cub_resnet56_b128_v2_guided_issue716.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-cub-r56-v2-guided-issue716/phase1_cub_resnet56_b128_v2_guided_issue716.tar.gz",
+  "size_bytes": 192296835,
+  "sha256": "8ce5d2e9407a0522babfd4d25a238af6d7ce3d72b2aea6d508cedf5764e54064",
+  "target_git_commit": "c62a9ef7b9f26e1157e2a0033b9a5041aba65297",
+  "source": {
+    "h200_job_id": 716,
+    "canonical_source_archive_name": "phase1_cub_resnet56_b128_v2_guided_issue716.zip",
+    "source_archive_sha256": "6241e1f372660066b06b9bdb43068b8925128d8b6d1804ef7ab45da15a602fef",
+    "protocol_id": "cub200_phase1_b128_frozen_spatial_probe_full_v2",
+    "protocol_config_sha256": "0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575",
+    "superseded_by": "cub200_phase1_resnet50_224_scratch_b128_full_v3"
+  },
+  "contents": {
+    "teacher_checkpoints": 1,
+    "classification_student_checkpoints": 9,
+    "selected_probe_checkpoints": 45,
+    "total_checkpoints": 55,
+    "classification_results": true,
+    "full_probe_results": true,
+    "selection_before_test_record": true,
+    "dataset_audit": true,
+    "source_artifact_manifest": true,
+    "run_log": true,
+    "h200_log": true,
+    "dataset_files": false,
+    "feature_caches": false
+  },
+  "remote_asset_digest_verified": true,
+  "storage_policy": "github_release_asset_not_git_history",
+  "canonical_phase1_cub_v3_result": false,
+  "reason": "Preserve the fully audited superseded v2 result without mixing its checkpoints into the final ResNet-50/224 v3 comparison."
+}
