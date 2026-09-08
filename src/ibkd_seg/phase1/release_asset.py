@@ -95,8 +95,23 @@ def _download(
     raise RuntimeError(f"checkpoint asset download failed after {retries} attempts") from last_error
 
 
-def _validate_members(archive: tarfile.TarFile, extraction_root: Path) -> None:
+def _is_macos_metadata(member_name: str) -> bool:
+    components = [
+        component
+        for component in member_name.split("/")
+        if component not in {"", "."}
+    ]
+    return any(
+        component == "__MACOSX" or component.startswith("._")
+        for component in components
+    )
+
+
+def _validate_members(
+    archive: tarfile.TarFile, extraction_root: Path
+) -> list[tarfile.TarInfo]:
     resolved_root = extraction_root.resolve()
+    payload_members: list[tarfile.TarInfo] = []
     for member in archive.getmembers():
         if member.issym() or member.islnk():
             raise RuntimeError(f"release archive contains a link: {member.name}")
@@ -111,6 +126,9 @@ def _validate_members(archive: tarfile.TarFile, extraction_root: Path) -> None:
             raise RuntimeError(
                 f"release archive contains path traversal: {member.name}"
             ) from error
+        if not _is_macos_metadata(member.name):
+            payload_members.append(member)
+    return payload_members
 
 
 def _file_sha256(path: Path) -> str:
@@ -203,10 +221,16 @@ def _validate_cub_r50_teacher(root: Path, manifest: dict[str, Any]) -> int:
         or artifact_manifest.get("experiment_kind") != "resnet50-v3-teacher"
     ):
         raise RuntimeError("CUB v3 teacher release completion contract failed")
-    checkpoint_paths = sorted(root.rglob("*.pt"))
-    if checkpoint_paths != [checkpoint_path]:
+    checkpoint_path_resolved = checkpoint_path.resolve(strict=True)
+    unexpected_checkpoints = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*.pt")
+        if path.is_file() and path.resolve(strict=True) != checkpoint_path_resolved
+    )
+    if unexpected_checkpoints:
         raise RuntimeError(
-            "CUB v3 teacher release must contain exactly teacher_best_validation.pt"
+            "CUB v3 teacher release contains unexpected checkpoints: "
+            + ", ".join(unexpected_checkpoints)
         )
     checkpoint_hash = _file_sha256(checkpoint_path)
     if (
@@ -290,11 +314,21 @@ def download_and_extract(
         )
         log("[CHECKPOINT_DOWNLOAD] byte_size_and_sha256=pass")
         with tarfile.open(archive_path, mode="r:gz") as archive:
-            _validate_members(archive, extraction_root)
+            payload_members = _validate_members(archive, extraction_root)
+            ignored_members = len(archive.getmembers()) - len(payload_members)
+            if ignored_members:
+                log(
+                    "[CHECKPOINT_RELEASE] "
+                    f"ignored_macos_metadata_members={ignored_members}"
+                )
             if "filter" in inspect.signature(archive.extractall).parameters:
-                archive.extractall(extraction_root, filter="data")
+                archive.extractall(
+                    extraction_root,
+                    members=payload_members,
+                    filter="data",
+                )
             else:  # Python 3.10 reference environment; members were checked above.
-                archive.extractall(extraction_root)
+                archive.extractall(extraction_root, members=payload_members)
         checkpoint_count = _validate_extracted(extraction_root, manifest)
         if destination.exists():
             destination.rmdir()

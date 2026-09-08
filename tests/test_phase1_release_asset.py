@@ -28,7 +28,13 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(_asset_kind(manifest), "cub_r50_teacher_v3")
 
-    def _write_complete_asset(self, root: Path, batch_size: int) -> Path:
+    def _write_complete_asset(
+        self,
+        root: Path,
+        batch_size: int,
+        *,
+        include_macos_metadata: bool = False,
+    ) -> Path:
         source = root / "source"
         source.mkdir()
         (source / "classification_summary.json").write_text(
@@ -49,6 +55,10 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
         teacher = source / "teacher" / "teacher_1"
         teacher.mkdir(parents=True)
         (teacher / "teacher_best_validation.pt").write_bytes(b"teacher")
+        if include_macos_metadata:
+            (source / "._student_best_validation.pt").write_bytes(
+                b"AppleDouble metadata"
+            )
 
         archive_path = root / "asset.tar.gz"
         with tarfile.open(archive_path, mode="w:gz") as archive:
@@ -71,6 +81,23 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
             encoding="utf-8",
         )
         return manifest_path
+
+    def test_macos_appledouble_members_are_ignored_before_extraction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = self._write_complete_asset(
+                root,
+                batch_size=64,
+                include_macos_metadata=True,
+            )
+            destination = root / "installed"
+            download_and_extract(manifest_path, destination, root / "downloads")
+            self.assertFalse(
+                (destination / "._student_best_validation.pt").exists()
+            )
+            self.assertEqual(
+                len(list(destination.rglob("*_best_validation.pt"))), 19
+            )
 
     def test_download_verifies_and_installs_all_nineteen_checkpoints(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
