@@ -19,9 +19,11 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 from torchvision.datasets.utils import extract_archive
+from torchvision.transforms import InterpolationMode
 
-from .data import evaluation_transform, train_transform
+from .data import IMAGENET_MEAN, IMAGENET_STD, evaluation_transform, train_transform
 
 
 DATASET_NAME = "CUB-200-2011"
@@ -42,6 +44,8 @@ SPLIT_SEED = 2027
 VALIDATION_PER_CLASS = 3
 DERIVED_TRAIN_COUNT = 5_394
 DERIVED_VALIDATION_COUNT = 600
+RESNET50_IMAGE_SIZE = 224
+RESNET50_EVAL_RESIZE_SIZE = 256
 
 
 @dataclass(frozen=True)
@@ -322,6 +326,38 @@ class CUBClassificationDataset(Dataset[tuple[Any, int]]):
         return self.transform(image), record.label
 
 
+def resnet50_train_transform() -> transforms.Compose:
+    """Conventional scratch ResNet-50 CUB training view fixed for v3."""
+
+    return transforms.Compose(
+        [
+            transforms.RandomResizedCrop(
+                RESNET50_IMAGE_SIZE,
+                interpolation=InterpolationMode.BICUBIC,
+            ),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        ]
+    )
+
+
+def resnet50_evaluation_transform() -> transforms.Compose:
+    """Resize-short-side then center-crop view for the ResNet-50 teacher."""
+
+    return transforms.Compose(
+        [
+            transforms.Resize(
+                RESNET50_EVAL_RESIZE_SIZE,
+                interpolation=InterpolationMode.BICUBIC,
+            ),
+            transforms.CenterCrop(RESNET50_IMAGE_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        ]
+    )
+
+
 def build_train_validation_loaders(
     data_dir: Path,
     *,
@@ -391,6 +427,70 @@ def build_train_validation_loaders(
     return train_loader, validation_loader, manifest
 
 
+def build_resnet50_train_validation_loaders(
+    data_dir: Path,
+    *,
+    train_batch_size: int,
+    eval_batch_size: int,
+    num_workers: int,
+    seed: int,
+    device: torch.device,
+) -> tuple[DataLoader[Any], DataLoader[Any], dict[str, Any]]:
+    """Build the fixed split with the locked ResNet-50/224 transforms."""
+
+    dataset_root = ensure_cub200(data_dir, download=True)
+    official_train = [
+        record for record in read_records(dataset_root) if record.is_train
+    ]
+    train_indices, validation_indices, manifest = build_stratified_split(
+        official_train
+    )
+    train_records = [official_train[index] for index in train_indices]
+    validation_records = [official_train[index] for index in validation_indices]
+    train_dataset = CUBClassificationDataset(
+        dataset_root,
+        train_records,
+        transform=resnet50_train_transform(),
+    )
+    validation_dataset = CUBClassificationDataset(
+        dataset_root,
+        validation_records,
+        transform=resnet50_evaluation_transform(),
+    )
+
+    def seed_worker(worker_id: int) -> None:
+        del worker_id
+        worker_seed = torch.initial_seed() % (2**32)
+        random.seed(worker_seed)
+        np.random.seed(worker_seed)
+
+    generator = torch.Generator().manual_seed(seed)
+    shared = {
+        "num_workers": num_workers,
+        "pin_memory": device.type == "cuda",
+        "worker_init_fn": seed_worker,
+        "persistent_workers": num_workers > 0,
+    }
+    return (
+        DataLoader(
+            train_dataset,
+            batch_size=train_batch_size,
+            shuffle=True,
+            drop_last=True,
+            generator=generator,
+            **shared,
+        ),
+        DataLoader(
+            validation_dataset,
+            batch_size=eval_batch_size,
+            shuffle=False,
+            drop_last=False,
+            **shared,
+        ),
+        manifest,
+    )
+
+
 def build_official_test_loader(
     data_dir: Path,
     *,
@@ -413,6 +513,37 @@ def build_official_test_loader(
     )
     return DataLoader(
         test_dataset,
+        batch_size=eval_batch_size,
+        shuffle=False,
+        drop_last=False,
+        num_workers=num_workers,
+        pin_memory=device.type == "cuda",
+        persistent_workers=num_workers > 0,
+    )
+
+
+def build_resnet50_official_test_loader(
+    data_dir: Path,
+    *,
+    eval_batch_size: int,
+    num_workers: int,
+    device: torch.device,
+) -> DataLoader[Any]:
+    """Instantiate official test with the ResNet-50 native evaluation view."""
+
+    dataset_root = ensure_cub200(data_dir, download=True)
+    test_records = [
+        record for record in read_records(dataset_root) if not record.is_train
+    ]
+    if len(test_records) != OFFICIAL_TEST_COUNT:
+        raise RuntimeError("CUB official-test count changed")
+    dataset = CUBClassificationDataset(
+        dataset_root,
+        test_records,
+        transform=resnet50_evaluation_transform(),
+    )
+    return DataLoader(
+        dataset,
         batch_size=eval_batch_size,
         shuffle=False,
         drop_last=False,

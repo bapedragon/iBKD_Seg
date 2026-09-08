@@ -15,6 +15,7 @@ import torchvision.ops
 
 
 TEACHER_CHANNELS = (16, 32, 64)
+RESNET50_TEACHER_CHANNELS = (512, 1024, 2048)
 STUDENT_CHANNELS = 192
 STUDENT_BLOCKS = 12
 LG_STUDENT_BLOCKS = (0, 6, 11)
@@ -116,6 +117,38 @@ class ResNet56(nn.Module):
         return self.head(torch.flatten(self.pool(feature), 1))
 
 
+class ResNet50CUB(nn.Module):
+    """Scratch TorchVision ResNet-50 with the locked CUB feature contract."""
+
+    def __init__(self, num_classes: int = 200) -> None:
+        super().__init__()
+        from torchvision.models import resnet50
+
+        self.backbone = resnet50(weights=None)
+        self.backbone.fc = nn.Linear(self.backbone.fc.in_features, num_classes)
+        nn.init.normal_(self.backbone.fc.weight, mean=0.0, std=0.01)
+        nn.init.zeros_(self.backbone.fc.bias)
+
+    def forward_features(
+        self, inputs: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        backbone = self.backbone
+        outputs = backbone.conv1(inputs)
+        outputs = backbone.bn1(outputs)
+        outputs = backbone.relu(outputs)
+        outputs = backbone.maxpool(outputs)
+        outputs = backbone.layer1(outputs)
+        feature2 = backbone.layer2(outputs)
+        feature3 = backbone.layer3(feature2)
+        feature4 = backbone.layer4(feature3)
+        return feature2, feature3, feature4
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        feature = self.forward_features(inputs)[-1]
+        pooled = self.backbone.avgpool(feature)
+        return self.backbone.fc(torch.flatten(pooled, 1))
+
+
 def create_student(*, num_classes: int = 37, drop_path_rate: float = 0.1) -> nn.Module:
     import timm
 
@@ -146,11 +179,12 @@ def forward_student_spatial(
 class LocalityGuidance(nn.Module):
     """Official LG projections and summed stage-mean MSE."""
 
-    def __init__(self) -> None:
+    def __init__(self, teacher_channels: Sequence[int] = TEACHER_CHANNELS) -> None:
         super().__init__()
+        self.teacher_channels = tuple(int(value) for value in teacher_channels)
         self.projections = nn.ModuleList(
             nn.Conv2d(STUDENT_CHANNELS, channels, kernel_size=1)
-            for channels in TEACHER_CHANNELS
+            for channels in self.teacher_channels
         )
 
     def forward(
@@ -309,14 +343,17 @@ class TransformerAggregationPooling(nn.Module):
 class IBKD(nn.Module):
     """Submitted Ours V1 alignment/fusion module with larger-grid resize."""
 
-    def __init__(self) -> None:
+    def __init__(self, teacher_channels: Sequence[int] = TEACHER_CHANNELS) -> None:
         super().__init__()
+        self.teacher_channels = tuple(int(value) for value in teacher_channels)
         self.aggregation = TransformerAggregationPooling()
         self.projections = nn.ModuleList(
-            nn.Conv2d(STUDENT_CHANNELS, channels, 1) for channels in TEACHER_CHANNELS
+            nn.Conv2d(STUDENT_CHANNELS, channels, 1)
+            for channels in self.teacher_channels
         )
         self.fusion = nn.ModuleList(
-            ConvCrossAttention(channels, num_heads=4) for channels in TEACHER_CHANNELS
+            ConvCrossAttention(channels, num_heads=4)
+            for channels in self.teacher_channels
         )
 
     def forward(
@@ -353,5 +390,12 @@ class IBKD(nn.Module):
         return alignment_loss, fusion_loss
 
 
-def teacher_view(images: torch.Tensor) -> torch.Tensor:
-    return F.interpolate(images, size=(32, 32), mode="bilinear", align_corners=False)
+def teacher_view(images: torch.Tensor, image_size: int = 32) -> torch.Tensor:
+    if images.shape[-2:] == (image_size, image_size):
+        return images
+    return F.interpolate(
+        images,
+        size=(image_size, image_size),
+        mode="bilinear",
+        align_corners=False,
+    )

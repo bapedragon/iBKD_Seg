@@ -1,11 +1,53 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v2 LOCK — guided 첫 실행 전**
+상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 전**
 
-이 문서는 CUB-200-2011 전용 실험 계약입니다. 아래 항목을
-`configs/cub200_b128_full_v2.json`에 고정했으며, 결과를 확인한 뒤에는 v2를
-수정하지 않습니다. 변경이 필요하면 새 버전을 만들고 비교하는 여섯 설정을 모두
-다시 실행합니다.
+이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
+`configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
+여섯 설정 × 세 encoder seed를 모두 수행하며, smoke나 official test 수치를 보고
+설정을 바꾸지 않습니다. 변경이 필요하면 현재 실행을 별도 pilot으로 분리하고
+버전을 올린 뒤 비교하는 여섯 설정을 모두 다시 실행합니다.
+
+## 잠긴 본실험 v3 계약
+
+Full config SHA-256:
+`e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`
+
+- split은 train 5,394 / validation 600 / official test 5,794이며 v2와 같습니다.
+- teacher는 TorchVision ResNet-50, scratch, 224×224, seed 1, batch 128,
+  200 epoch입니다. SGD(lr 0.05, momentum 0.9, weight decay 1e-4,
+  Nesterov 없음), 5-epoch linear warm-up 뒤 총 200-epoch cosine을 사용합니다.
+- teacher train view는 RandomResizedCrop 224(bicubic)+horizontal flip,
+  evaluation view는 shorter-side 256 resize+center crop 224입니다.
+- teacher feature는 `layer2/layer3/layer4`, channel `[512,1024,2048]`, grid
+  `[28,14,7]`입니다. 모든 guided student가 validation으로 선택한 teacher
+  checkpoint 하나를 공유합니다.
+- student, LG, ALG-w20, iBKD, frozen probe의 값은 v2와 같습니다. Teacher
+  channel projection만 ResNet-50 feature contract에 맞춥니다.
+- 최종 비교는 Vanilla, KD, LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5의
+  6설정 × encoder seed `[1,2,3]` 전부이며 결과에 따른 중단·방법 제외·lambda
+  선택을 하지 않습니다.
+- 분류 checkpoint와 probe checkpoint 선택은 validation만 사용합니다.
+  Official test는 선택된 각 checkpoint를 한 번 평가하며 method, lambda, LR,
+  epoch 선택에는 사용하지 않습니다.
+
+## v3 guided end-to-end smoke 계약
+
+Smoke config SHA-256:
+`f1239e1533f40fce10bd2f5675c19284f26d91c804709b480de1dac745a2d1a4`
+
+- teacher 1개와 LG, ALG-w20, iBKD λ=0.25/0.5 네 student를 seed 1에서
+  full train 5,394장으로 각각 2 epoch 실행합니다.
+- 각 2-epoch checkpoint의 classification validation과 official test를 각각
+  평가합니다.
+- 네 encoder를 strict load·완전 동결하고 LR 3개 × 2-epoch probe를 수행한 뒤,
+  validation으로 선택한 probe를 official test에 정확히 한 번 평가합니다.
+- official test 실행은 최종 6방법×3seed와 모든 설정을 결과와 무관하게 수행한다는
+  사전 확정 때문에 허용합니다. 모든 smoke metric은 여전히 비과학적이며 논문
+  결과나 설정 선택에 사용할 수 없습니다.
+- batch 128 FP32 peak memory와 단계별 시간, 4방법×3seed guided block의 선형
+  외삽을 기록합니다. Smoke가 OOM이면 batch나 precision을 바꾸지 않고 필요한
+  MIG 용량만 늘려 동일 설정을 다시 실행합니다.
 
 ## 고정한 항목
 
@@ -28,7 +70,10 @@ Pet은 완료된 독립 실험이므로 CUB 결과에 맞춰 Pet의 LOCK config�
 수정하지 않습니다. 가능한 조건은 Pet과 맞추되, CUB 데이터 특성 때문에 달라지는
 항목은 근거와 함께 이 문서에 명시합니다.
 
-## 잠긴 본실험 v2 계약
+## 미실행으로 보존한 본실험 v2 계약
+
+아래 ResNet-56/32 v2는 결과가 나오기 전에 v3로 대체했으며, v3 결과와 비교하거나
+합치지 않습니다.
 
 Full config SHA-256:
 `0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575`

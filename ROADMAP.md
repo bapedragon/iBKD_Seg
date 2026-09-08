@@ -71,20 +71,20 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: batch 128 통합 smoke 통과, 본실험 v2 LOCK·guided 첫 실행 준비.** Pet 결과가 특정 데이터셋에만 의존한
-것인지 확인하기 위해 CUB-200-2011에서 분류 encoder 학습과 frozen segmentation
-probe를 독립적으로 반복할 예정입니다. Pet의 잠긴 config나 결과를 그대로 섞지
-않으며, CUB용 데이터·split·mask 대응·학습 설정·평가 계약을 full v2로 잠갔습니다.
-10시간 제한을 피하도록 여섯 설정을 두 H200 shard로 나누되, 첫 guided shard에서
-학습한 teacher checkpoint 하나를 두 번째 baseline shard가 그대로 사용합니다.
-준비 위치는
+**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided end-to-end smoke 준비.** Pet
+결과가 특정 데이터셋에만 의존한 것인지 확인하기 위해 CUB-200-2011에서 분류
+encoder 학습과 frozen segmentation probe를 독립적으로 반복합니다. Pet의 잠긴
+config나 결과를 섞지 않으며, CUB용 데이터·split·mask·ResNet-50 teacher·학습·평가
+계약을 full v3로 잠갔습니다. 결과와 관계없이 여섯 설정×세 encoder seed를 모두
+수행하고 설정을 바꾸지 않습니다. Smoke 시간으로 10시간 이내 shard만 정하며,
+teacher checkpoint 하나는 모든 guided student와 후속 baseline이 공유합니다. 준비 위치는
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
-통과한 smoke는 공식 test를 열지 않고 scratch ResNet-56 teacher 1개,
-batch-128 DeiT-Tiny 분류 6설정(Vanilla, KD, LG, ALG-w20, iBKD-0.25/0.5)과 각
-frozen encoder의 세 probe LR을 2 epoch씩
-연결해 데이터·mask·checkpoint·freeze·메모리·시간 경로만 검사합니다. Smoke
-metric은 과학적 결과나 본실험 설정 선택에 사용하지 않습니다.
+현재 smoke는 scratch ResNet-50/224 teacher 1개와 batch-128 DeiT-Tiny의 LG,
+ALG-w20, iBKD-0.25/0.5를 2 epoch씩 실행하고 각 frozen encoder의 세 probe LR도
+2 epoch씩 연결합니다. 사전 확정한 전체 matrix를 변경하지 않는 조건으로 official
+test 경로까지 검사하며, 모든 smoke metric은 비과학적이고 논문 결과나 설정 선택에
+사용하지 않습니다. 이전 ResNet-56/32 v2는 본실험 미실행 상태로 보존합니다.
 
 ## Phase 2 — 공간적 대조 실험
 

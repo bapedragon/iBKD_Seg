@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **batch 128 통합 smoke 통과 — 본실험 v2 LOCK·guided 첫 실행 준비**
+상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided end-to-end smoke 준비**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -20,8 +20,9 @@
 5. validation으로 probe를 선택한 뒤 test를 최종 평가합니다.
 
 Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 포함한 CUB용
-프로토콜은 v2로 별도 고정했습니다. Pet 결과나 checkpoint는 CUB 본실험에
-섞지 않습니다.
+프로토콜은 별도로 고정합니다. ResNet-56/32 v2는 결과가 나오기 전에 중단했고,
+현재 본실험은 더 보편적인 scratch ResNet-50/224 teacher를 쓰는 v3입니다. Pet
+결과나 checkpoint는 CUB 본실험에 섞지 않습니다.
 
 ## 디렉터리
 
@@ -33,7 +34,30 @@ Pet과 질문 및 비교 원칙은 같지만, 데이터 split과 mask 출처를 
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
-## Batch 128 분류 → frozen probe 통합 smoke
+## 현재 v3: ResNet-50/224 guided smoke
+
+다음 smoke는 scratch ResNet-50/224 teacher 1개와 batch-128 DeiT-Tiny의 LG,
+ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 seed 1에서 각각 2 epoch 실행합니다. 이어서
+각 encoder를 strict load·완전 동결하고 LR `[0.01, 0.03, 0.1]` probe를 각각
+2 epoch 실행합니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_guided_smoke_b128.sh
+```
+
+최종 v3는 smoke 결과와 관계없이 Vanilla, KD, LG, ALG-w20, iBKD λ=0.25,
+iBKD λ=0.5의 6설정 × encoder seed `[1,2,3]`을 모두 수행하며 설정을 변경하지
+않는 것으로 사전 고정했습니다. 이에 따라 이번 smoke는 분류 checkpoint와
+validation으로 선택한 probe의 official test 경로까지 한 번씩 실행합니다. 단,
+2-epoch 분류 정확도와 IoU는 모두 비과학적 진단값이고 선택이나 논문 결과에
+사용할 수 없습니다.
+
+기본 결과 경로는 `/app/output/phase1_cub_r50_224_b128_guided_smoke_v3`이며,
+마지막 로그에 4개 방법의 validation/test 진단값, peak CUDA memory, 실제 smoke
+시간과 4방법×3seed guided block 선형 외삽을 출력합니다. Batch 128 FP32 iBKD의
+28×28 cross-attention이 용량 gate이므로 최초 H200 요청은 MIG 2개로 둡니다.
+
+## 이전 v2 smoke 및 미실행 본실험
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류
 checkpoint 저장·strict load, encoder freeze, feature cache 및 probe 학습 경로를 한
@@ -61,10 +85,10 @@ feature cache는 `/app/scratch`입니다. 마지막 로그에는 여섯 분류 v
 없습니다. Smoke는 `25/25`로 통과했으며 이 진단값은 본실험 설정 선택에 사용하지
 않았습니다.
 
-## 단일 teacher를 공유하는 두 단계 본실험
+### v2 단일 teacher를 공유하는 두 단계 본실험
 
-10시간 실행 제한을 피하면서 teacher가 달라지는 문제를 막기 위해 순차적인 두
-작업으로 나눴습니다. 지금 실행 가능한 첫 작업은 다음과 같습니다.
+이 v2 작업은 실행하지 않았으며 v3로 대체했습니다. 기록 재현을 위해 코드와
+설정은 보존합니다.
 
 ```bash
 bash phase1/phase1_cub/scripts/run_full_guided_b128.sh
@@ -88,9 +112,10 @@ mask archive, feature cache는 `/app/scratch`에만 두므로 결과 ZIP에 포�
 
 ## 현재 주의사항
 
-- 이미지와 segmentation archive의 byte size·MD5·SHA-256, split, binary mask
-  mapping, teacher/student, 여섯 방법, seed, checkpoint와 test-once 규칙은
-  [full v2 config](configs/cub200_b128_full_v2.json)에 고정했습니다.
+- 현재 실험의 이미지와 segmentation archive, split, binary mask mapping,
+  ResNet-50/224 scratch teacher, student, 여섯 방법, seed, checkpoint와 test
+  규칙은 [full v3 config](configs/cub200_r50_224_b128_full_v3.json)에 고정했습니다.
+- v2 설정은 미실행 기록이며 v3 결과와 섞지 않습니다.
 - Baseline shard는 guided shard의 teacher checkpoint가 hash로 고정되기 전에는
   실행할 수 없습니다. 두 결과의 seed별 초기 student state와 split/config hash도
   일치하는지 확인한 뒤에만 하나의 6설정 결과로 병합합니다.

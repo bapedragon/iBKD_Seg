@@ -1,5 +1,18 @@
 # CUB-200-2011 설정
 
+현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
+`e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.
+Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation-only
+선택 및 official-test 평가 규칙을 담습니다.
+
+`cub200_r50_224_b128_guided_smoke_v3.json`은 teacher+LG+ALG-w20+iBKD 두 lambda의
+2-epoch 분류→frozen probe 실행시간·메모리 smoke입니다. SHA-256은
+`f1239e1533f40fce10bd2f5675c19284f26d91c804709b480de1dac745a2d1a4`입니다.
+사전 고정한 전체 matrix를 변경하지 않는 조건으로 official test 경로도 검증하지만,
+모든 smoke 수치는 비과학적입니다.
+
+## 미실행 v2 보존본
+
 CUB 전용 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은
 `0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575`입니다.
 
