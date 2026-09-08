@@ -16,6 +16,9 @@ from pathlib import Path
 from typing import Any
 
 
+CUB_R50_TEACHER_ASSET_TYPE = "phase1_cub_resnet50_224_scratch_teacher_v3"
+
+
 def log(message: str) -> None:
     print(message, flush=True)
 
@@ -97,6 +100,10 @@ def _validate_members(archive: tarfile.TarFile, extraction_root: Path) -> None:
     for member in archive.getmembers():
         if member.issym() or member.islnk():
             raise RuntimeError(f"release archive contains a link: {member.name}")
+        if not member.isdir() and not member.isfile():
+            raise RuntimeError(
+                f"release archive contains a special file: {member.name}"
+            )
         target = (extraction_root / member.name).resolve()
         try:
             target.relative_to(resolved_root)
@@ -106,7 +113,24 @@ def _validate_members(archive: tarfile.TarFile, extraction_root: Path) -> None:
             ) from error
 
 
-def _validate_extracted(root: Path, manifest: dict[str, Any]) -> None:
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _asset_kind(manifest: dict[str, Any]) -> str:
+    asset_type = manifest.get("asset_type")
+    if asset_type == CUB_R50_TEACHER_ASSET_TYPE:
+        return "cub_r50_teacher_v3"
+    if asset_type is None and "classification_batch_size" in manifest["source"]:
+        return "pet_classification"
+    raise RuntimeError(f"unsupported checkpoint release asset type: {asset_type!r}")
+
+
+def _validate_pet_classification(root: Path, manifest: dict[str, Any]) -> int:
     source = manifest["source"]
     batch_size = int(source["classification_batch_size"])
     if batch_size not in (64, 128):
@@ -138,6 +162,83 @@ def _validate_extracted(root: Path, manifest: dict[str, Any]) -> None:
             "release checkpoint roles are incomplete: "
             f"student={student_count} teacher={teacher_count}"
         )
+    return expected_count
+
+
+def _validate_cub_r50_teacher(root: Path, manifest: dict[str, Any]) -> int:
+    import torch
+
+    from .run_cub_r50_teacher_full import (
+        EXPECTED_CONFIG_SHA256,
+        load_scientific_teacher,
+    )
+
+    source = manifest["source"]
+    checkpoint_contract = manifest.get("teacher_checkpoint", {})
+    if (
+        source.get("h200_job_id") != 722
+        or source.get("protocol_id")
+        != "cub200_phase1_resnet50_224_scratch_b128_full_v3"
+        or source.get("protocol_config_sha256") != EXPECTED_CONFIG_SHA256
+    ):
+        raise RuntimeError("CUB v3 teacher release source contract mismatch")
+    summary_path = root / "teacher_summary.json"
+    checkpoint_path = root / "teacher_best_validation.pt"
+    artifact_manifest_path = root / "artifact_manifest.json"
+    if not all(
+        path.is_file()
+        for path in (summary_path, checkpoint_path, artifact_manifest_path)
+    ):
+        raise RuntimeError("CUB v3 teacher release is missing required artifacts")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    artifact_manifest = json.loads(
+        artifact_manifest_path.read_text(encoding="utf-8")
+    )
+    if (
+        summary.get("status") != "complete"
+        or summary.get("scientific_result") is not True
+        or summary.get("official_test_evaluations") != 1
+        or summary.get("official_test_used_for_training_or_selection") is not False
+        or artifact_manifest.get("status") != "pass"
+        or artifact_manifest.get("experiment_kind") != "resnet50-v3-teacher"
+    ):
+        raise RuntimeError("CUB v3 teacher release completion contract failed")
+    checkpoint_paths = sorted(root.rglob("*.pt"))
+    if checkpoint_paths != [checkpoint_path]:
+        raise RuntimeError(
+            "CUB v3 teacher release must contain exactly teacher_best_validation.pt"
+        )
+    checkpoint_hash = _file_sha256(checkpoint_path)
+    if (
+        checkpoint_path.stat().st_size != checkpoint_contract.get("size_bytes")
+        or checkpoint_hash != checkpoint_contract.get("checkpoint_sha256")
+        or checkpoint_hash != summary.get("checkpoint_sha256")
+    ):
+        raise RuntimeError("CUB v3 teacher checkpoint byte contract mismatch")
+    model, _, loaded_hash, state_hash = load_scientific_teacher(
+        checkpoint_path, device=torch.device("cpu")
+    )
+    del model
+    if (
+        loaded_hash != checkpoint_hash
+        or state_hash != checkpoint_contract.get("model_state_sha256")
+        or state_hash != summary.get("model_state_sha256")
+    ):
+        raise RuntimeError("CUB v3 teacher checkpoint model-state contract mismatch")
+    return 1
+
+
+def _validate_extracted(root: Path, manifest: dict[str, Any]) -> int:
+    kind = _asset_kind(manifest)
+    if kind == "cub_r50_teacher_v3":
+        return _validate_cub_r50_teacher(root, manifest)
+    return _validate_pet_classification(root, manifest)
+
+
+def _existing_marker(destination: Path, kind: str) -> Path:
+    if kind == "cub_r50_teacher_v3":
+        return destination / "teacher_best_validation.pt"
+    return destination / "classification_summary.json"
 
 
 def download_and_extract(
@@ -148,9 +249,10 @@ def download_and_extract(
     """Fetch a release asset, verify it, and atomically install its contents."""
 
     manifest = _load_manifest(manifest_path)
-    batch_size = int(manifest["source"]["classification_batch_size"])
-    if (destination / "classification_summary.json").is_file():
-        _validate_extracted(destination, manifest)
+    kind = _asset_kind(manifest)
+    batch_size = manifest["source"].get("classification_batch_size")
+    if _existing_marker(destination, kind).is_file():
+        checkpoint_count = _validate_extracted(destination, manifest)
         log(f"[CHECKPOINT_RELEASE] existing audited input: {destination}")
         return manifest
     if destination.exists() and any(destination.iterdir()):
@@ -160,8 +262,13 @@ def download_and_extract(
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     download_dir.mkdir(parents=True, exist_ok=True)
+    prefix = (
+        "phase1_cub_r50_teacher_v3_"
+        if kind == "cub_r50_teacher_v3"
+        else f"phase1_pet_b{int(batch_size)}_"
+    )
     with tempfile.NamedTemporaryFile(
-        prefix=f"phase1_pet_b{batch_size}_",
+        prefix=prefix,
         suffix=".tar.gz",
         dir=download_dir,
         delete=False,
@@ -169,7 +276,7 @@ def download_and_extract(
         archive_path = Path(handle.name)
     extraction_root = Path(
         tempfile.mkdtemp(
-            prefix=f".phase1_pet_b{batch_size}_extract_",
+            prefix=f".{prefix}extract_",
             dir=destination.parent,
         )
     )
@@ -188,13 +295,13 @@ def download_and_extract(
                 archive.extractall(extraction_root, filter="data")
             else:  # Python 3.10 reference environment; members were checked above.
                 archive.extractall(extraction_root)
-        _validate_extracted(extraction_root, manifest)
+        checkpoint_count = _validate_extracted(extraction_root, manifest)
         if destination.exists():
             destination.rmdir()
         extraction_root.replace(destination)
         log(
             "[CHECKPOINT_RELEASE_DONE] "
-            f"destination={destination} checkpoints=19 status=pass"
+            f"destination={destination} checkpoints={checkpoint_count} status=pass"
         )
         return manifest
     finally:

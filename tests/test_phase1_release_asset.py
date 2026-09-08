@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ibkd_seg.phase1.release_asset import download_and_extract
+from ibkd_seg.phase1.release_asset import _asset_kind, download_and_extract
 
 
 def _sha256(path: Path) -> str:
@@ -20,6 +20,14 @@ def _sha256(path: Path) -> str:
 
 
 class Phase1ReleaseAssetTest(unittest.TestCase):
+    def test_cub_r50_teacher_manifest_is_supported(self) -> None:
+        manifest_path = (
+            Path(__file__).resolve().parents[1]
+            / "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(_asset_kind(manifest), "cub_r50_teacher_v3")
+
     def _write_complete_asset(self, root: Path, batch_size: int) -> Path:
         source = root / "source"
         source.mkdir()

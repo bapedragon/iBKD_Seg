@@ -221,6 +221,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--run-name", type=str, required=True)
     parser.add_argument("--teacher-checkpoint", type=Path)
+    parser.add_argument(
+        "--scientific-cub-r50-teacher",
+        action="store_true",
+        help=(
+            "Load the audited Phase 1 CUB ResNet-50/224 v3 teacher instead of "
+            "a two-epoch timing-only teacher. CUB student timing only."
+        ),
+    )
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=1)
@@ -247,6 +255,9 @@ def validate_args(args: argparse.Namespace) -> None:
         getattr(args, "teacher_architecture", "resnet56_32")
     )
     access_official_test = bool(getattr(args, "access_official_test", False))
+    scientific_cub_teacher = bool(
+        getattr(args, "scientific_cub_r50_teacher", False)
+    )
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
     if access_official_test and not (
@@ -262,6 +273,8 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.seed != 1:
         raise ValueError("Phase 1 timing is fixed to seed 1")
     if args.kind == "teacher":
+        if scientific_cub_teacher:
+            raise ValueError("Teacher timing cannot consume a scientific teacher")
         if args.alg_controller_warmup_epochs != 0:
             raise ValueError("Teacher timing does not accept ALG controller warm-up")
         if args.save_student_checkpoint:
@@ -280,6 +293,14 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError("Only iBKD accepts --fusion-ratio")
         if args.method != "vanilla" and args.teacher_checkpoint is None:
             raise ValueError("Guided student timing requires --teacher-checkpoint")
+        if scientific_cub_teacher and not (
+            dataset_key == "cub"
+            and teacher_architecture == "resnet50_224_scratch"
+            and args.teacher_checkpoint is not None
+        ):
+            raise ValueError(
+                "Scientific teacher reuse is restricted to CUB ResNet-50/224 students"
+            )
         if args.method == "alg":
             if args.alg_controller_warmup_epochs not in {0, 20}:
                 raise ValueError(
@@ -586,7 +607,7 @@ def load_timing_teacher(
     dataset_name: str = "Oxford-IIIT Pet",
     num_classes: int = PET_NUM_CLASSES,
 ) -> tuple[nn.Module, dict[str, Any], str]:
-    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     metadata = payload.get("metadata", {})
     expected = {
         "purpose": "phase1_timing_only_not_scientific",
@@ -649,23 +670,38 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     teacher: nn.Module | None = None
     teacher_metadata: dict[str, Any] | None = None
     teacher_hash: str | None = None
+    teacher_model_state_hash: str | None = None
     guidance: nn.Module | None = None
     controller: GuidanceController | None = None
     if args.method != "vanilla":
         assert args.teacher_checkpoint is not None
-        teacher, teacher_metadata, teacher_hash = load_timing_teacher(
-            args.teacher_checkpoint,
-            validation_hash=manifest["validation_image_ids_sha256"],
-            device=device,
-            teacher_architecture=str(
-                getattr(args, "teacher_architecture", "resnet56_32")
-            ),
-            official_test_accessed=bool(
-                getattr(args, "access_official_test", False)
-            ),
-            dataset_name=dataset_name,
-            num_classes=num_classes,
-        )
+        if bool(getattr(args, "scientific_cub_r50_teacher", False)):
+            from .run_cub_r50_teacher_full import load_scientific_teacher
+
+            (
+                teacher,
+                teacher_metadata,
+                teacher_hash,
+                teacher_model_state_hash,
+            ) = load_scientific_teacher(
+                args.teacher_checkpoint,
+                device=device,
+                validation_hash=manifest["validation_image_ids_sha256"],
+            )
+        else:
+            teacher, teacher_metadata, teacher_hash = load_timing_teacher(
+                args.teacher_checkpoint,
+                validation_hash=manifest["validation_image_ids_sha256"],
+                device=device,
+                teacher_architecture=str(
+                    getattr(args, "teacher_architecture", "resnet56_32")
+                ),
+                official_test_accessed=bool(
+                    getattr(args, "access_official_test", False)
+                ),
+                dataset_name=dataset_name,
+                num_classes=num_classes,
+            )
     if args.method in {"lg", "alg"}:
         guidance = LocalityGuidance(
             teacher_channels=_teacher_channels(args)
@@ -880,6 +916,15 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "teacher_architecture": str(
                         getattr(args, "teacher_architecture", "resnet56_32")
                     ),
+                    "teacher_checkpoint_kind": (
+                        "cub_r50_v3_scientific"
+                        if bool(
+                            getattr(args, "scientific_cub_r50_teacher", False)
+                        )
+                        else "timing_smoke"
+                    ),
+                    "teacher_checkpoint_sha256": teacher_hash,
+                    "teacher_model_state_sha256": teacher_model_state_hash,
                     "controller_warmup_epochs": args.alg_controller_warmup_epochs,
                     "guidance_controller_warmup_epochs": (
                         None if controller is None else controller.warmup_epochs
@@ -925,6 +970,14 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "official_test_seconds": official_test_seconds,
         "initial_student_state_sha256": initial_hash,
         "teacher_checkpoint_sha256": teacher_hash,
+        "teacher_model_state_sha256": teacher_model_state_hash,
+        "teacher_checkpoint_kind": (
+            "cub_r50_v3_scientific"
+            if bool(getattr(args, "scientific_cub_r50_teacher", False))
+            else "timing_smoke"
+            if teacher is not None
+            else None
+        ),
         "teacher_metadata": teacher_metadata,
         "controller": None if controller is None else controller.state_dict(),
         "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,

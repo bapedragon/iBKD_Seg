@@ -86,6 +86,23 @@ validation으로 선택한 probe의 official test 경로까지 한 번씩 실행
 28×28 cross-attention이 용량 gate였습니다. Full H200에서 `17/17`로
 통과했으며, Teacher 본학습은 25분 42초에 완료됐습니다.
 
+## Batch 128·64 guided→probe profile smoke
+
+완료된 issue 722 Teacher 하나를 그대로 공유하면서 LG, ALG-w20, iBKD λ=0.25,
+iBKD λ=0.5의 분류→frozen probe 실행 경로를 batch 128과 64에서 모두 점검하는
+통합 smoke를 별도로 준비했습니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_guided_probe_smoke_b128_b64.sh
+```
+
+Teacher release archive와 checkpoint의 SHA-256 및 model-state SHA-256을 검증한
+뒤 batch 128을 먼저, batch 64를 다음에 실행합니다. 각 조건은 seed 1, 분류 2
+epoch, probe LR `[0.01, 0.03, 0.1]` × 2 epoch이며, 마지막 로그에 두 배치의 전체
+결과·peak memory·선형 시간 외삽과 `32/32` 완료 여부가 나옵니다. 이 smoke는
+capacity와 실행시간 확인용입니다. 잠긴 v3 주 비교는 계속 batch 128이고, batch
+64 수치나 2-epoch 정확도·IoU로 설정을 선택하거나 논문 결론을 내리지 않습니다.
+
 ## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류

@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "smoke_id": "cub200_phase1_r50_224_b64_b128_guided_classification_to_probe_smoke_v4",
+  "status": "locked_non_scientific_batch_profile_smoke_2026-09-09",
+  "full_protocol_status": "batch128_v3_locked_batch64_sensitivity_not_confirmatory",
+  "full_protocol_config": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+  "full_protocol_config_sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc",
+  "purpose": "measure_batch64_and_batch128_runtime_memory_release_teacher_reuse_checkpoint_freeze_and_probe_path",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "batch_or_method_selection_from_smoke_forbidden": true,
+  "official_test_accessed": true,
+  "official_test_access_justification": "the_batch128_matrix_is_precommitted_and_the_batch64_run_is_labeled_non_scientific_sensitivity_plumbing",
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "image_archive": {
+      "url": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
+      "expected_bytes": 1150585339,
+      "md5": "97eceeb196236b17998738112f37df78",
+      "sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081"
+    },
+    "segmentation_archive": {
+      "url": "https://data.caltech.edu/records/w9d68-gec53/files/segmentations.tgz?download=1",
+      "expected_bytes": 39272883,
+      "md5": "4d47ba1228eae64f2fa547c47bc65255",
+      "sha256": "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f"
+    },
+    "official_counts": {"train": 5994, "test": 5794, "total": 11788},
+    "split": {
+      "source": "official_train_with_fixed_holdout_plus_official_test",
+      "strategy": "fixed_class_stratified_holdout",
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "ranking_key": "sha256(f'{split_seed}:{image_id}')_then_image_id",
+      "counts": {"train": 5394, "validation": 600, "test": 5794},
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "mask": {
+      "source": "official_separate_segmentations_archive",
+      "foreground_rule": "grayscale_value_greater_than_0",
+      "background_rule": "grayscale_value_equal_to_0",
+      "ambiguous_or_ignore_pixels": false,
+      "resize_interpolation": "nearest"
+    }
+  },
+  "classification": {
+    "teacher": {
+      "train_in_smoke": false,
+      "reuse_h200_issue": 722,
+      "architecture": "torchvision_resnet50",
+      "initialization": "scratch",
+      "external_pretraining": false,
+      "input_size": 224,
+      "training_batch_size": 128,
+      "training_epochs": 200,
+      "seed": 1,
+      "feature_stages": ["layer2", "layer3", "layer4"],
+      "feature_channels": [512, 1024, 2048],
+      "feature_spatial_sizes": [28, 14, 7],
+      "release_manifest": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+      "release_manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+      "checkpoint_relative_path": "teacher_best_validation.pt",
+      "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+      "shared_by_all_batches_and_guided_students": true
+    },
+    "student": {
+      "architecture": "deit_tiny_patch16_224",
+      "initialization": "scratch",
+      "input_size": 224,
+      "actual_epochs": 2,
+      "planned_epochs": 300,
+      "batch_sizes": [128, 64],
+      "encoder_seed": 1,
+      "same_initial_state_across_variants_and_batch_profiles": true,
+      "batch_profile_roles": {
+        "128": "locked_v3_primary_profile_timing_recheck",
+        "64": "non_scientific_sensitivity_profile_capacity_and_timing_only"
+      }
+    },
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "controller": {
+      "lg": "all_epochs",
+      "alg_warmup_epochs": 20,
+      "canonical_alg_warmup0_included": false,
+      "ibkd_warmup_epochs": 20
+    },
+    "guided_teacher_view": {
+      "source": "same_randomly_augmented_and_normalized_224x224_student_tensor",
+      "additional_resize": false,
+      "shared_random_geometry_between_student_and_teacher": true
+    },
+    "checkpoint": "two_epoch_latest_smoke_only_not_validation_selected",
+    "evaluation": {
+      "validation": true,
+      "official_test": true,
+      "official_test_evaluations_per_smoke_checkpoint": 1,
+      "metrics_are_non_scientific": true
+    }
+  },
+  "frozen_probe": {
+    "image_input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "random_augmentation": false,
+      "normalization": "imagenet"
+    },
+    "encoder": {
+      "strict_load": true,
+      "frozen": true,
+      "eval_mode": true,
+      "feature": {
+        "block_index": 11,
+        "norm": false,
+        "exclude_cls_token": true,
+        "output_format": "NCHW",
+        "channels": 192,
+        "height": 14,
+        "width": 14,
+        "dtype": "float32"
+      }
+    },
+    "probe": {
+      "architecture": "Conv2d(192,2,1,bias=True)",
+      "parameter_count": 386,
+      "initialization": {"weight": "normal", "weight_std": 0.01, "bias": 0.0},
+      "target": {
+        "grid_height": 14,
+        "grid_width": 14,
+        "foreground_occupancy_threshold": 0.5
+      },
+      "loss": {"name": "cross_entropy", "ignore_index": 255, "class_weighting": "none"},
+      "optimizer": {"name": "sgd", "momentum": 0.9, "weight_decay": 0.0, "nesterov": false},
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2,
+      "planned_epochs": 100,
+      "batch_size": 64,
+      "scheduler": {"name": "cosine", "minimum_learning_rate": 0.0},
+      "probe_seeds": [1],
+      "planned_probe_seeds": [1, 2, 3, 4, 5]
+    },
+    "selection": {
+      "split": "validation",
+      "metric": "grid_14x14_two_class_mean_iou",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"],
+      "smoke_selection_has_scientific_meaning": false
+    },
+    "evaluation": {
+      "validation": true,
+      "official_test": true,
+      "official_test_evaluations_per_selected_smoke_probe": 1,
+      "prediction": "bilinear_upsample_logits_14x14_to_224x224_then_argmax",
+      "primary_metric": "input_224_two_class_mean_iou"
+    }
+  },
+  "task_count": {
+    "teacher_download_and_audit": 1,
+    "batch_profiles": 2,
+    "classification_students_per_batch": 4,
+    "probe_lr_candidates_per_batch": 12,
+    "logical_gpu_tasks_per_batch": 16,
+    "logical_gpu_tasks_total": 32
+  },
+  "runtime": {
+    "device": "single_cuda_allocation",
+    "precision": "float32",
+    "classification_num_workers": 4,
+    "classification_eval_batch_size": 200,
+    "probe_feature_batch_size": 32,
+    "requested_mig_slices": 7,
+    "full_h200_required_for_comparable_timing": true,
+    "report_peak_cuda_memory_per_epoch": true,
+    "retry_with_changed_batch_or_precision": false
+  }
+}

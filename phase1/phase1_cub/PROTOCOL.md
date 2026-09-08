@@ -74,6 +74,19 @@ Smoke는 Full H200에서 `17/17`로 통과했습니다. Teacher 측정값은 epo
 7.56초, peak allocated 11.377 GB, peak reserved 15.731 GB였습니다. 실제 Teacher
 본학습은 25분 42초에 완료됐고 동일한 peak memory를 기록했습니다.
 
+### Batch 128·64 비과학적 profile smoke
+
+후속 실행시간과 메모리를 같은 Teacher 조건에서 비교하기 위한 v4 smoke config는
+`configs/cub200_r50_224_b64_b128_guided_smoke_v4.json`이며 SHA-256은
+`dd8e61c94f085096fed18615af217dd9b9e35bda0d79bdb19154d168c92ef211`입니다.
+Issue 722 Teacher를 다시 학습하지 않고 release에서 받아 checkpoint SHA-256
+`ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3`와
+model-state SHA-256
+`96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7`을 확인합니다.
+그 하나를 네 guided 방법과 두 student batch가 모두 공유합니다. Batch 64는
+비과학적 sensitivity profile이며 이 smoke는 잠긴 batch-128 v3 계약을 변경하지
+않습니다.
+
 ## 고정한 항목
 
 - 공식 이미지·분류 annotation·segmentation mask의 출처, byte size, SHA-256

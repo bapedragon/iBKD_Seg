@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Run the locked CUB ResNet-50/224 guided timing smoke end to end.
+"""Run a locked CUB ResNet-50/224 guided timing smoke end to end.
 
 This is deliberately non-scientific: a two-epoch scratch ResNet-50 teacher and
 four two-epoch guided DeiT-Tiny students are used only to measure runtime,
 memory, and artifact plumbing.  The user precommitted the complete six-method
 by three-seed v3 matrix, so this smoke also exercises official-test inference.
 No smoke metric may change any v3 setting or decide whether a run is performed.
+The batch-profile v4 mode reuses the audited scientific teacher and measures
+the otherwise identical batch-128 and batch-64 student/probe paths.
 """
 
 from __future__ import annotations
@@ -57,6 +59,18 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/configs/cub200_r50_224_b128_guided_smoke_v3.json"
+)
+BATCH_PROFILE_SMOKE_ID = (
+    "cub200_phase1_r50_224_b64_b128_guided_classification_to_probe_smoke_v4"
+)
+EXPECTED_BATCH_PROFILE_CONFIG_SHA256 = (
+    "dd8e61c94f085096fed18615af217dd9b9e35bda0d79bdb19154d168c92ef211"
+)
+EXPECTED_SCIENTIFIC_TEACHER_SHA256 = (
+    "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
+)
+EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256 = (
+    "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
 )
 EXPECTED_VARIANTS = (
     "lg",
@@ -250,6 +264,114 @@ def _validate_configs(
         raise RuntimeError("invalid CUB v3 smoke/full contract: " + ", ".join(failures))
 
 
+def _validate_batch_profile_configs(
+    smoke: dict[str, Any], full: dict[str, Any], *, batch_size: int
+) -> None:
+    teacher = smoke.get("classification", {}).get("teacher", {})
+    student = smoke.get("classification", {}).get("student", {})
+    probe = smoke.get("frozen_probe", {}).get("probe", {})
+    checks = {
+        "smoke_id": smoke.get("smoke_id") == BATCH_PROFILE_SMOKE_ID,
+        "smoke_non_scientific": smoke.get("scientific_result") is False,
+        "selection_forbidden": smoke.get("selection_from_smoke_metrics_forbidden")
+        is True
+        and smoke.get("batch_or_method_selection_from_smoke_forbidden") is True,
+        "official_test_enabled": smoke.get("official_test_accessed") is True,
+        "profile_status": smoke.get("full_protocol_status")
+        == "batch128_v3_locked_batch64_sensitivity_not_confirmatory",
+        "dataset": smoke.get("dataset", {}).get("name") == DATASET_NAME,
+        "classes": smoke.get("dataset", {}).get("num_classes") == NUM_CLASSES,
+        "official_counts": smoke.get("dataset", {}).get("official_counts")
+        == {
+            "train": OFFICIAL_TRAIN_COUNT,
+            "test": OFFICIAL_TEST_COUNT,
+            "total": OFFICIAL_TRAIN_COUNT + OFFICIAL_TEST_COUNT,
+        },
+        "derived_counts": smoke.get("dataset", {}).get("split", {}).get(
+            "counts"
+        )
+        == {
+            "train": DERIVED_TRAIN_COUNT,
+            "validation": DERIVED_VALIDATION_COUNT,
+            "test": OFFICIAL_TEST_COUNT,
+        },
+        "archives": smoke.get("dataset", {}).get("image_archive", {}).get("md5")
+        == ARCHIVE_MD5
+        and smoke.get("dataset", {}).get("segmentation_archive", {}).get("md5")
+        == SEGMENTATION_ARCHIVE_MD5,
+        "split": smoke.get("dataset", {}).get("split", {}).get(
+            "validation_per_class"
+        )
+        == 3
+        and smoke.get("dataset", {}).get("split", {}).get("split_seed") == 2027,
+        "teacher_reused": teacher.get("train_in_smoke") is False
+        and teacher.get("reuse_h200_issue") == 722
+        and teacher.get("architecture") == "torchvision_resnet50"
+        and teacher.get("initialization") == "scratch"
+        and teacher.get("external_pretraining") is False
+        and teacher.get("input_size") == 224
+        and teacher.get("training_epochs") == 200
+        and teacher.get("checkpoint_sha256")
+        == EXPECTED_SCIENTIFIC_TEACHER_SHA256
+        and teacher.get("model_state_sha256")
+        == EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256,
+        "teacher_features": teacher.get("feature_channels") == [512, 1024, 2048]
+        and teacher.get("feature_spatial_sizes") == [28, 14, 7],
+        "student": student.get("architecture") == "deit_tiny_patch16_224"
+        and student.get("actual_epochs") == 2
+        and student.get("planned_epochs") == 300
+        and student.get("batch_sizes") == [128, 64]
+        and batch_size in student.get("batch_sizes", [])
+        and student.get("encoder_seed") == 1,
+        "variants": tuple(smoke.get("classification", {}).get("variants", ()))
+        == EXPECTED_VARIANTS,
+        "shared_guided_view": smoke.get("classification", {}).get(
+            "guided_teacher_view", {}
+        ).get("additional_resize")
+        is False
+        and smoke.get("classification", {}).get("guided_teacher_view", {}).get(
+            "shared_random_geometry_between_student_and_teacher"
+        )
+        is True,
+        "probe": probe.get("learning_rates") == [0.01, 0.03, 0.1]
+        and probe.get("epochs") == 2
+        and probe.get("planned_epochs") == 100
+        and probe.get("probe_seeds") == [1]
+        and probe.get("planned_probe_seeds") == [1, 2, 3, 4, 5],
+        "task_count": smoke.get("task_count")
+        == {
+            "teacher_download_and_audit": 1,
+            "batch_profiles": 2,
+            "classification_students_per_batch": 4,
+            "probe_lr_candidates_per_batch": 12,
+            "logical_gpu_tasks_per_batch": 16,
+            "logical_gpu_tasks_total": 32,
+        },
+        "full_id": full.get("protocol_id")
+        == "cub200_phase1_resnet50_224_scratch_b128_full_v3",
+        "full_hash_bound": smoke.get("full_protocol_config_sha256")
+        == "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc",
+        "full_teacher_match": full.get("classification", {}).get(
+            "teacher", {}
+        ).get("architecture")
+        == "torchvision_resnet50"
+        and full.get("classification", {}).get("teacher", {}).get("epochs")
+        == 200,
+        "full_batch128_remains_primary": full.get("classification", {}).get(
+            "student", {}
+        ).get("train_batch_size")
+        == 128
+        and student.get("batch_profile_roles", {}).get("64")
+        == "non_scientific_sensitivity_profile_capacity_and_timing_only",
+        "full_h200": smoke.get("runtime", {}).get("requested_mig_slices") == 7,
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid CUB v4 batch-profile smoke contract: " + ", ".join(failures)
+        )
+
+
 def _write_status(
     output_dir: Path,
     *,
@@ -258,6 +380,7 @@ def _write_status(
     classification_complete: int,
     probe_candidates_complete: int,
     selected_probes_complete: int,
+    student_batch_size: int | None = None,
     active_variant: str | None = None,
     failure: str | None = None,
 ) -> None:
@@ -271,6 +394,7 @@ def _write_status(
             "probe_candidates_expected": 12,
             "selected_probes_complete": selected_probes_complete,
             "selected_probes_expected": 4,
+            "student_batch_size": student_batch_size,
             "active_variant": active_variant,
             "scientific_result": False,
             "official_test_accessed": True,
@@ -303,6 +427,8 @@ def _load_encoder(
     *,
     variant: str,
     validation_hash: str,
+    batch_size: int = 128,
+    scientific_teacher: bool = False,
     device: torch.device,
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
@@ -316,7 +442,7 @@ def _load_encoder(
         "num_classes": NUM_CLASSES,
         "architecture": "deit_tiny_patch16_224",
         "method": method,
-        "batch_size": 128,
+        "batch_size": batch_size,
         "seed": 1,
         "actual_epochs": 2,
         "planned_epochs": 300,
@@ -326,6 +452,16 @@ def _load_encoder(
         "validation_image_ids_sha256": validation_hash,
         "official_test_evaluations_at_checkpoint_write": 1,
     }
+    if scientific_teacher:
+        expected.update(
+            {
+                "teacher_checkpoint_kind": "cub_r50_v3_scientific",
+                "teacher_checkpoint_sha256": EXPECTED_SCIENTIFIC_TEACHER_SHA256,
+                "teacher_model_state_sha256": (
+                    EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256
+                ),
+            }
+        )
     for key, value in expected.items():
         if metadata.get(key) != value:
             raise RuntimeError(
@@ -381,9 +517,45 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     smoke_config = _load_json(args.config)
     full_config_path = _resolve_full_config(smoke_config)
     full_config = _load_json(full_config_path)
-    _validate_configs(smoke_config, full_config)
     smoke_config_sha256 = file_sha256(args.config)
     full_config_sha256 = file_sha256(full_config_path)
+    batch_profile_mode = smoke_config.get("smoke_id") == BATCH_PROFILE_SMOKE_ID
+    student_batch_size = int(getattr(args, "student_batch_size", 128))
+    supplied_teacher_checkpoint = getattr(args, "teacher_checkpoint", None)
+    if batch_profile_mode:
+        if student_batch_size not in {64, 128}:
+            raise ValueError("CUB v4 batch-profile smoke requires batch 64 or 128")
+        if supplied_teacher_checkpoint is None:
+            raise ValueError("CUB v4 batch-profile smoke requires --teacher-checkpoint")
+        _validate_batch_profile_configs(
+            smoke_config, full_config, batch_size=student_batch_size
+        )
+        if smoke_config_sha256 != EXPECTED_BATCH_PROFILE_CONFIG_SHA256:
+            raise RuntimeError("locked CUB v4 smoke-config SHA-256 mismatch")
+        if full_config_sha256 != smoke_config["full_protocol_config_sha256"]:
+            raise RuntimeError("locked CUB v3 full-config SHA-256 mismatch")
+        release_manifest_value = Path(
+            smoke_config["classification"]["teacher"]["release_manifest"]
+        )
+        release_manifest_path = (
+            release_manifest_value
+            if release_manifest_value.is_absolute()
+            else REPOSITORY_ROOT / release_manifest_value
+        )
+        if (
+            not release_manifest_path.is_file()
+            or file_sha256(release_manifest_path)
+            != smoke_config["classification"]["teacher"][
+                "release_manifest_sha256"
+            ]
+        ):
+            raise RuntimeError("audited CUB v3 teacher release-manifest mismatch")
+    else:
+        if student_batch_size != 128:
+            raise ValueError("legacy CUB v3 smoke is fixed to batch 128")
+        if supplied_teacher_checkpoint is not None:
+            raise ValueError("legacy CUB v3 smoke trains its own timing teacher")
+        _validate_configs(smoke_config, full_config)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.cache_dir.mkdir(parents=True, exist_ok=True)
     _write_status(
@@ -393,14 +565,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         classification_complete=0,
         probe_candidates_complete=0,
         selected_probes_complete=0,
+        student_batch_size=student_batch_size,
     )
 
     log("=" * 96)
-    log("CUB PHASE 1 v3 — RESNET-50/224 GUIDED CLASSIFICATION -> PROBE SMOKE")
+    log("CUB PHASE 1 — RESNET-50/224 GUIDED CLASSIFICATION -> PROBE SMOKE")
     log("=" * 96)
     log(
         "[CUB_R50_SMOKE_POLICY] scientific_result=false "
         "official_test_accessed=true smoke_selection_forbidden=true "
+        f"student_batch_size={student_batch_size} "
+        f"teacher_reused={str(batch_profile_mode).lower()} "
         "full_matrix_precommitted=6variants_x3seeds"
     )
 
@@ -437,51 +612,86 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
 
     classification_root = args.output_dir / "classification"
-    teacher_root = classification_root / "teacher"
-    teacher_name = "cub_teacher_resnet50_224_scratch_b128_smoke_2ep_seed1"
-    teacher_dir = teacher_root / teacher_name
-    teacher_checkpoint = teacher_dir / "timing_teacher_latest.pt"
-    teacher_command = [
-        sys.executable,
-        "-m",
-        "ibkd_seg.phase1.train_timing",
-        "--timing-run",
-        "--dataset",
-        "cub",
-        "--kind",
-        "teacher",
-        "--teacher-architecture",
-        "resnet50_224_scratch",
-        "--access-official-test",
-        "--batch-size",
-        "128",
-        "--data-dir",
-        str(args.data_dir),
-        "--output-dir",
-        str(teacher_root),
-        "--run-name",
-        teacher_name,
-        "--num-workers",
-        str(args.num_workers),
-        "--eval-batch-size",
-        str(args.eval_batch_size),
-        "--seed",
-        "1",
-    ]
-    _run_command(teacher_command, label="teacher_resnet50_224_scratch_seed1")
-    teacher_summary = _complete_summary(teacher_dir / "summary.json")
-    teacher_contract = teacher_summary.get("teacher_contract", {})
-    if (
-        teacher_summary.get("dataset") != DATASET_NAME
-        or teacher_summary.get("planned_epochs") != 200
-        or teacher_contract.get("feature_channels") != [512, 1024, 2048]
-        or teacher_summary.get("split_manifest", {}).get(
-            "validation_image_ids_sha256"
+    if batch_profile_mode:
+        from .run_cub_r50_teacher_full import load_scientific_teacher
+
+        teacher_checkpoint = Path(supplied_teacher_checkpoint)
+        teacher_model, teacher_metadata, teacher_hash, teacher_state_hash = (
+            load_scientific_teacher(
+                teacher_checkpoint,
+                device=device,
+                validation_hash=validation_hash,
+            )
         )
-        != validation_hash
-        or not teacher_checkpoint.is_file()
-    ):
-        raise RuntimeError("CUB v3 teacher contract failed")
+        del teacher_model
+        if device.type == "cuda":
+            torch.cuda.empty_cache()
+        if (
+            teacher_hash != EXPECTED_SCIENTIFIC_TEACHER_SHA256
+            or teacher_state_hash != EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256
+        ):
+            raise RuntimeError("audited CUB v3 teacher checkpoint hash mismatch")
+        teacher_summary = {
+            "status": "complete",
+            "source_h200_issue": 722,
+            "reused": True,
+            "checkpoint_path": str(teacher_checkpoint.resolve()),
+            "checkpoint_sha256": teacher_hash,
+            "model_state_sha256": teacher_state_hash,
+            "metadata": teacher_metadata,
+            "strict_loaded_frozen_eval": True,
+            "trained_in_smoke": False,
+        }
+        log(
+            "[CUB_R50_TEACHER_REUSED] issue=722 strict_load=true frozen=true "
+            f"checkpoint_sha256={teacher_hash} model_state_sha256={teacher_state_hash}"
+        )
+    else:
+        teacher_root = classification_root / "teacher"
+        teacher_name = "cub_teacher_resnet50_224_scratch_b128_smoke_2ep_seed1"
+        teacher_dir = teacher_root / teacher_name
+        teacher_checkpoint = teacher_dir / "timing_teacher_latest.pt"
+        teacher_command = [
+            sys.executable,
+            "-m",
+            "ibkd_seg.phase1.train_timing",
+            "--timing-run",
+            "--dataset",
+            "cub",
+            "--kind",
+            "teacher",
+            "--teacher-architecture",
+            "resnet50_224_scratch",
+            "--access-official-test",
+            "--batch-size",
+            "128",
+            "--data-dir",
+            str(args.data_dir),
+            "--output-dir",
+            str(teacher_root),
+            "--run-name",
+            teacher_name,
+            "--num-workers",
+            str(args.num_workers),
+            "--eval-batch-size",
+            str(args.eval_batch_size),
+            "--seed",
+            "1",
+        ]
+        _run_command(teacher_command, label="teacher_resnet50_224_scratch_seed1")
+        teacher_summary = _complete_summary(teacher_dir / "summary.json")
+        teacher_contract = teacher_summary.get("teacher_contract", {})
+        if (
+            teacher_summary.get("dataset") != DATASET_NAME
+            or teacher_summary.get("planned_epochs") != 200
+            or teacher_contract.get("feature_channels") != [512, 1024, 2048]
+            or teacher_summary.get("split_manifest", {}).get(
+                "validation_image_ids_sha256"
+            )
+            != validation_hash
+            or not teacher_checkpoint.is_file()
+        ):
+            raise RuntimeError("CUB v3 teacher contract failed")
 
     student_root = classification_root / "students"
     classification_rows: list[dict[str, Any]] = []
@@ -493,10 +703,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             classification_complete=len(classification_rows),
             probe_candidates_complete=0,
             selected_probes_complete=0,
+            student_batch_size=student_batch_size,
             active_variant=variant,
         )
         method, fusion_ratio, controller_warmup = VARIANT_ARGUMENTS[variant]
-        run_name = f"cub_r50_224_{variant}_deit_tiny_b128_smoke_2ep_seed1"
+        run_name = (
+            f"cub_r50_224_{variant}_deit_tiny_b{student_batch_size}_"
+            "smoke_2ep_seed1"
+        )
         run_dir = student_root / run_name
         command = [
             sys.executable,
@@ -513,7 +727,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "resnet50_224_scratch",
             "--access-official-test",
             "--batch-size",
-            "128",
+            str(student_batch_size),
             "--data-dir",
             str(args.data_dir),
             "--output-dir",
@@ -530,6 +744,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "1",
             "--save-student-checkpoint",
         ]
+        if batch_profile_mode:
+            command.append("--scientific-cub-r50-teacher")
         if fusion_ratio is not None:
             command.extend(["--fusion-ratio", str(fusion_ratio)])
         if method == "alg":
@@ -543,13 +759,25 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         expected = {
             "dataset": DATASET_NAME,
             "method": method,
-            "batch_size": 128,
+            "batch_size": student_batch_size,
             "seed": 1,
             "fusion_ratio_lambda": fusion_ratio,
             "actual_epochs": 2,
             "alg_controller_warmup_epochs": 20 if method == "alg" else 0,
             "guidance_controller_warmup_epochs": controller_warmup,
         }
+        if batch_profile_mode:
+            expected.update(
+                {
+                    "teacher_checkpoint_kind": "cub_r50_v3_scientific",
+                    "teacher_checkpoint_sha256": (
+                        EXPECTED_SCIENTIFIC_TEACHER_SHA256
+                    ),
+                    "teacher_model_state_sha256": (
+                        EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256
+                    ),
+                }
+            )
         for key, value in expected.items():
             if summary.get(key) != value:
                 raise RuntimeError(f"CUB v3 classification mismatch {variant}:{key}")
@@ -657,6 +885,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             classification_complete=4,
             probe_candidates_complete=len(probe_rows) * len(learning_rates),
             selected_probes_complete=len(probe_rows),
+            student_batch_size=student_batch_size,
             active_variant=variant,
         )
         if device.type == "cuda":
@@ -666,6 +895,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             classification["summary"],
             variant=variant,
             validation_hash=validation_hash,
+            batch_size=student_batch_size,
+            scientific_teacher=batch_profile_mode,
             device=device,
         )
         feature_started = time.monotonic()
@@ -757,12 +988,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         probe_path = args.output_dir / "probes" / f"{variant}_seed1_smoke.pt"
         _atomic_torch_save(
             {
-                "purpose": "phase1_cub_r50_224_frozen_probe_smoke_v3",
+                "purpose": (
+                    "phase1_cub_r50_224_batch_profile_frozen_probe_smoke_v4"
+                    if batch_profile_mode
+                    else "phase1_cub_r50_224_frozen_probe_smoke_v3"
+                ),
                 "scientific_result": False,
                 "official_test_accessed": True,
                 "config_sha256": smoke_config_sha256,
                 "full_protocol_config_sha256": full_config_sha256,
                 "variant": variant,
+                "student_batch_size": student_batch_size,
                 "encoder_seed": 1,
                 "encoder_checkpoint_sha256": encoder_audit[
                     "checkpoint_sha256"
@@ -873,7 +1109,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         for row in classification_rows
     )
     teacher_estimate_seconds = (
-        float(teacher_summary["avg_epoch_seconds"]) * 200
+        0.0
+        if batch_profile_mode
+        else float(teacher_summary["avg_epoch_seconds"]) * 200
         + float(teacher_summary["official_test_seconds"])
     )
     probe_training_estimate_seconds = sum(
@@ -899,6 +1137,23 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         + probe_training_estimate_seconds
         + probe_feature_and_test_estimate_seconds
     )
+    one_seed_classification_estimate_seconds = sum(
+        float(row["summary"]["avg_epoch_seconds"]) * 300
+        + float(row["summary"]["official_test_seconds"])
+        for row in classification_rows
+    )
+    one_encoder_probe_estimate_seconds = sum(
+        float(row["timing"]["probe_training_and_validation_seconds"])
+        * (int(probe_config["planned_epochs"]) / probe_epochs)
+        * 5
+        + float(row["timing"]["feature_cache_seconds"])
+        + float(row["timing"]["official_test_evaluation_seconds"]) * 5
+        for row in probe_rows
+    )
+    one_seed_four_variant_estimate_seconds = (
+        one_seed_classification_estimate_seconds
+        + one_encoder_probe_estimate_seconds
+    )
     peak_by_variant = {
         row["variant"]: max(
             int(epoch.get("peak_cuda_memory_bytes") or 0)
@@ -913,13 +1168,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         )
         for row in classification_rows
     }
-    teacher_peak = max(
-        int(epoch.get("peak_cuda_memory_bytes") or 0)
-        for epoch in teacher_summary["epochs"]
+    teacher_peak = (
+        0
+        if batch_profile_mode
+        else max(
+            int(epoch.get("peak_cuda_memory_bytes") or 0)
+            for epoch in teacher_summary["epochs"]
+        )
     )
-    teacher_reserved = max(
-        int(epoch.get("peak_cuda_memory_reserved_bytes") or 0)
-        for epoch in teacher_summary["epochs"]
+    teacher_reserved = (
+        0
+        if batch_profile_mode
+        else max(
+            int(epoch.get("peak_cuda_memory_reserved_bytes") or 0)
+            for epoch in teacher_summary["epochs"]
+        )
     )
     contracts = {
         "config_validated": True,
@@ -932,6 +1195,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             for row in classification_rows
         ),
         "teacher_completed": teacher_summary["status"] == "complete",
+        "scientific_teacher_reuse_contract": (
+            teacher_summary.get("checkpoint_sha256")
+            == EXPECTED_SCIENTIFIC_TEACHER_SHA256
+            and teacher_summary.get("model_state_sha256")
+            == EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256
+            if batch_profile_mode
+            else True
+        ),
         "four_guided_students_completed": len(classification_rows) == 4,
         "same_initial_student_state_across_variants": len(initial_hashes) == 1,
         "one_teacher_shared_by_all_guided_students": len(teacher_hashes) == 1,
@@ -974,6 +1245,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "status": status,
         "completed_at_utc": _utc_now(),
         "smoke_id": smoke_config["smoke_id"],
+        "batch_profile_mode": batch_profile_mode,
+        "student_batch_size": student_batch_size,
         "scientific_result": False,
         "selection_from_smoke_metrics_forbidden": True,
         "official_test_accessed": True,
@@ -1005,7 +1278,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "largest_peak_cuda_memory_reserved_bytes": max(
                 teacher_reserved, *reserved_by_variant.values()
             ),
-            "requested_batch_size": 128,
+            "requested_batch_size": student_batch_size,
             "precision": "float32",
         },
         "timing": {
@@ -1023,6 +1296,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "total_seconds": guided_full_estimate_seconds,
                 "warning": "linear_extrapolation_for_job_partitioning_only",
             },
+            "rough_one_encoder_seed_four_variant_estimate": {
+                "teacher_seconds": 0.0 if batch_profile_mode else teacher_estimate_seconds,
+                "classification_4variants_x1seed_x300ep_seconds": (
+                    one_seed_classification_estimate_seconds
+                ),
+                "probe_4encoders_x5probe_seeds_x3lr_x100ep_seconds": (
+                    one_encoder_probe_estimate_seconds
+                ),
+                "total_seconds": one_seed_four_variant_estimate_seconds
+                + (0.0 if batch_profile_mode else teacher_estimate_seconds),
+                "warning": "linear_extrapolation_for_job_partitioning_only",
+            },
         },
         "runtime": _runtime(device),
     }
@@ -1035,6 +1320,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         classification_complete=len(classification_rows),
         probe_candidates_complete=len(probe_rows) * 3,
         selected_probes_complete=len(probe_rows),
+        student_batch_size=student_batch_size,
     )
 
     log("[CUB_R50_SMOKE_FINAL_CLASSIFICATION_RESULTS]")
@@ -1043,6 +1329,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         official = row["summary"]["official_test"]
         log(
             f"[CUB_R50_CLASSIFICATION_SMOKE_RESULT] variant={row['variant']} "
+            f"batch={student_batch_size} "
             f"epoch2_val_macro_top1={final_epoch['validation']['macro_top1']:.4f} "
             f"epoch2_test_macro_top1={official['macro_top1']:.4f} "
             f"avg_epoch_seconds={row['summary']['avg_epoch_seconds']:.3f} "
@@ -1055,6 +1342,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     for row in probe_rows:
         log(
             f"[CUB_R50_PROBE_SMOKE_RESULT] variant={row['variant']} "
+            f"encoder_batch={student_batch_size} "
             f"selected_lr={row['selection']['learning_rate']:g} "
             f"selected_epoch={row['selection']['epoch']} "
             "validation_input_miou="
@@ -1073,15 +1361,27 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "linear_extrapolation_only=true"
     )
     log(
-        f"[CUB_R50_GUIDED_SMOKE_DONE] status={status} teacher=1/1 "
+        "[CUB_R50_ROUGH_ONE_SEED_FOUR_VARIANT_ESTIMATE] "
+        f"batch={student_batch_size} "
+        f"total={format_duration(one_seed_four_variant_estimate_seconds)} "
+        f"classification={format_duration(one_seed_classification_estimate_seconds)} "
+        f"probe={format_duration(one_encoder_probe_estimate_seconds)} "
+        "teacher_reused=true linear_extrapolation_only=true"
+        if batch_profile_mode
+        else "[CUB_R50_ROUGH_ONE_SEED_FOUR_VARIANT_ESTIMATE] not_applicable=true"
+    )
+    log(
+        f"[CUB_R50_GUIDED_SMOKE_DONE] status={status} "
+        f"batch={student_batch_size} teacher={'reused' if batch_profile_mode else '1/1'} "
         f"classification={len(classification_rows)}/4 "
         f"probe_candidates={len(probe_rows) * 3}/12 "
-        f"selected_probes={len(probe_rows)}/4 tasks=17/17 "
+        f"selected_probes={len(probe_rows)}/4 "
+        f"tasks={'16/16' if batch_profile_mode else '17/17'} "
         "scientific_result=false official_test_accessed=true "
         f"seconds={elapsed_seconds:.2f} summary={summary_path.resolve()}"
     )
     if status != "pass":
-        raise RuntimeError("CUB v3 guided smoke failed one or more contracts")
+        raise RuntimeError("CUB guided smoke failed one or more contracts")
     return summary
 
 
@@ -1092,6 +1392,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cache-dir", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument(
+        "--student-batch-size",
+        type=int,
+        choices=(64, 128),
+        default=128,
+        help="Student batch for the v4 batch-profile smoke; v3 remains fixed to 128.",
+    )
+    parser.add_argument(
+        "--teacher-checkpoint",
+        type=Path,
+        help="Audited issue-722 teacher checkpoint required by v4 batch-profile smoke.",
+    )
     parser.add_argument("--device", choices=("cuda",), default="cuda")
     parser.add_argument("--feature-batch-size", type=int, default=32)
     parser.add_argument("--eval-batch-size", type=int, default=200)
@@ -1122,6 +1434,7 @@ def main() -> None:
             selected_probes_complete=int(
                 previous.get("selected_probes_complete", 0)
             ),
+            student_batch_size=getattr(args, "student_batch_size", None),
             active_variant=previous.get("active_variant"),
             failure=f"{type(error).__name__}: {error}",
         )

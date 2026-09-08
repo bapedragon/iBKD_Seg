@@ -12,6 +12,12 @@
   200 epoch 학습하고 validation macro top-1 best checkpoint를 고른 뒤 strict
   reload와 official test 1회 평가까지 수행합니다. 기존 ResNet-56/32 본학습
   진입점은 호출하지 않습니다.
+- `run_r50_224_guided_probe_smoke_b128_b64.sh`: issue 722에서 완료한 동일
+  Teacher checkpoint를 release manifest의 byte/model-state SHA-256으로 검증해
+  재사용합니다. LG, ALG-w20, iBKD-0.25, iBKD-0.5의 2-epoch 분류와 공통 frozen
+  probe smoke를 batch 128, 64 순서로 수행하고, 마지막에 두 배치의 시간·peak
+  memory·진단값과 선형 본실험 시간 외삽을 한 번에 출력합니다. Teacher를 다시
+  학습하지 않으며 모든 smoke metric은 비과학적입니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 
