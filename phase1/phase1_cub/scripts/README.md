@@ -18,6 +18,12 @@
   probe smoke를 batch 128, 64 순서로 수행하고, 마지막에 두 배치의 시간·peak
   memory·진단값과 선형 본실험 시간 외삽을 한 번에 출력합니다. Teacher를 다시
   학습하지 않으며 모든 smoke metric은 비과학적입니다.
+- `run_r50_224_guided_probe_full_b128_b64_seed1.sh`: 통과한 batch profile smoke의
+  full-epoch 실행기입니다. Issue 722 Teacher를 내려받아 strict 검증한 뒤 batch
+  128을 먼저 완결하고 batch 64를 이어서 수행합니다. 각 batch에서 guided 4방법 ×
+  encoder seed 1 분류 300 epoch, frozen probe 5 seed × 3 LR × 100 epoch와
+  validation 선택·official test 1회 평가를 실행합니다. 각 분류/probe checkpoint를
+  즉시 `/app/output`에 저장하고 마지막에 두 batch 결과를 모두 나열합니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 

@@ -19,6 +19,15 @@ release에서 내려받아 strict 검증한 뒤, LG·ALG-w20·iBKD λ=0.25/0.5�
 Batch 128이 잠긴 v3 주 실험이고 batch 64는 sensitivity 후보의 실행 가능성만
 확인하므로, smoke 결과로 batch·방법·lambda를 선택하지 않습니다.
 
+`cub200_r50_224_b128_b64_guided_seed1_full_v4.json`은 위 smoke 뒤 사전 고정한
+full-epoch batch profile입니다. SHA-256은
+`bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633`입니다.
+Issue 722 Teacher 하나를 공유해 LG, ALG-w20, iBKD λ=0.25/0.5를 encoder seed 1,
+300 epoch로 batch 128과 64에서 모두 학습한 뒤, encoder마다 5 probe seed × 3 LR ×
+100 epoch를 수행합니다. Batch 128은 잠긴 v3 6방법×3seed 매트릭스에 편입 가능한
+일부 셀이고, batch 64는 별도 sensitivity 결과입니다. 이 실행 하나만으로 최종
+6방법×3seed 매트릭스가 완료됐다고 표시하지 않습니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은

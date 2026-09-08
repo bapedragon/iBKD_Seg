@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import gc
+import json
 import time
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,7 @@ from .data import (
 from .models import (
     IBKD,
     LocalityGuidance,
+    RESNET50_TEACHER_CHANNELS,
     ResNet56,
     create_student,
     forward_student_spatial,
@@ -54,6 +56,10 @@ from .train_timing import (
 
 
 METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
+TEACHER_ARCHITECTURES = ("resnet56_32", "resnet50_224_scratch")
+CUB_R50_BATCH_PROFILE_CONFIG_SHA256 = (
+    "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633"
+)
 ALG_WARMUP20_DIAGNOSTIC_ID = (
     "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1"
 )
@@ -94,6 +100,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--run-name", type=str, required=True)
     parser.add_argument("--teacher-checkpoint", type=Path)
+    parser.add_argument(
+        "--teacher-architecture",
+        choices=TEACHER_ARCHITECTURES,
+        default="resnet56_32",
+    )
+    parser.add_argument(
+        "--scientific-cub-r50-teacher",
+        action="store_true",
+        help="Strictly reuse the audited issue-722 CUB ResNet-50/224 teacher.",
+    )
+    parser.add_argument(
+        "--protocol-config",
+        type=Path,
+        help="Locked batch-profile protocol snapshot bound to this student run.",
+    )
+    parser.add_argument(
+        "--batch-profile-role",
+        choices=("locked_v3_partial_cell", "batch64_sensitivity"),
+    )
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=1)
@@ -113,11 +138,21 @@ def parse_args() -> argparse.Namespace:
 
 def validate_args(args: argparse.Namespace) -> None:
     dataset_key = _dataset_key(args)
+    teacher_architecture = str(getattr(args, "teacher_architecture", "resnet56_32"))
+    scientific_cub_r50 = bool(getattr(args, "scientific_cub_r50_teacher", False))
+    protocol_config = getattr(args, "protocol_config", None)
+    batch_profile_role = getattr(args, "batch_profile_role", None)
     if args.batch_size not in {64, 128}:
         raise ValueError("Phase 1 full-run batch must be 64 or 128")
     if args.eval_batch_size <= 0 or args.num_workers < 0:
         raise ValueError("Invalid evaluation batch size or worker count")
     if args.kind == "teacher":
+        if scientific_cub_r50 or protocol_config is not None:
+            raise ValueError("Legacy teacher training cannot use the CUB R50 student flags")
+        if teacher_architecture != "resnet56_32":
+            raise ValueError("Use run_cub_r50_teacher_full for a ResNet-50 teacher")
+        if batch_profile_role is not None:
+            raise ValueError("Teacher does not accept a batch-profile role")
         if args.alg_controller_warmup_epochs != 0:
             raise ValueError("Teacher does not accept ALG controller warm-up")
         if args.posthoc_diagnostic_id is not None:
@@ -129,6 +164,41 @@ def validate_args(args: argparse.Namespace) -> None:
         return
     if args.seed not in {1, 2, 3}:
         raise ValueError("Student seed must be 1, 2, or 3")
+    if teacher_architecture == "resnet50_224_scratch":
+        if not scientific_cub_r50 or dataset_key != "cub":
+            raise ValueError(
+                "ResNet-50/224 full students require --scientific-cub-r50-teacher on CUB"
+            )
+        if protocol_config is None or batch_profile_role is None:
+            raise ValueError(
+                "CUB ResNet-50/224 full students require protocol config and profile role"
+            )
+        profile = json.loads(protocol_config.read_text(encoding="utf-8"))
+        if file_sha256(protocol_config) != CUB_R50_BATCH_PROFILE_CONFIG_SHA256:
+            raise ValueError("CUB ResNet-50/224 batch-profile protocol SHA-256 changed")
+        if profile.get("protocol_id") != (
+            "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
+        ):
+            raise ValueError("Unexpected CUB ResNet-50/224 batch-profile protocol")
+        expected_role = (
+            "locked_v3_partial_cell" if args.batch_size == 128 else "batch64_sensitivity"
+        )
+        if batch_profile_role != expected_role:
+            raise ValueError("Batch size and batch-profile role disagree")
+        if args.seed != 1:
+            raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
+        allowed = profile.get("result_scope", {}).get("variants", [])
+        variant = (
+            f"ibkd_lambda_{args.fusion_ratio}"
+            if args.method == "ibkd"
+            else "alg_warmup20"
+            if args.method == "alg"
+            else args.method
+        )
+        if variant not in allowed:
+            raise ValueError(f"Method is outside the locked v4 profile: {variant}")
+    elif scientific_cub_r50 or protocol_config is not None or batch_profile_role:
+        raise ValueError("CUB R50 flags require --teacher-architecture resnet50_224_scratch")
     if args.method is None:
         raise ValueError("Student run requires --method")
     if args.method == "ibkd":
@@ -146,7 +216,7 @@ def validate_args(args: argparse.Namespace) -> None:
         if dataset_key == "cub":
             if args.alg_controller_warmup_epochs != 20:
                 raise ValueError("CUB confirmatory ALG is fixed to warm-up 20")
-            if args.batch_size != 128:
+            if args.batch_size != 128 and not scientific_cub_r50:
                 raise ValueError("CUB ALG warm-up-20 is fixed to batch 128")
             if args.posthoc_diagnostic_id is not None:
                 raise ValueError("CUB ALG-w20 is prespecified, not a Pet diagnostic")
@@ -430,7 +500,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     status_path = run_dir / "training_status.json"
     checkpoint_path = run_dir / "student_best_validation.pt"
 
-    teacher: ResNet56 | None = None
+    scientific_cub_r50 = bool(args.scientific_cub_r50_teacher)
+    protocol_config_sha256 = (
+        file_sha256(args.protocol_config) if args.protocol_config is not None else None
+    )
+    teacher: nn.Module | None = None
     teacher_metadata: dict[str, Any] | None = None
     teacher_checkpoint_hash: str | None = None
     teacher_state_hash: str | None = None
@@ -438,20 +512,38 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     controller: GuidanceController | None = None
     if args.method != "vanilla":
         assert args.teacher_checkpoint is not None
-        (
-            teacher,
-            teacher_metadata,
-            teacher_checkpoint_hash,
-            teacher_state_hash,
-        ) = load_full_teacher(
-            args.teacher_checkpoint,
-            validation_hash=manifest["validation_image_ids_sha256"],
-            device=device,
-            dataset_name=dataset_name,
-            num_classes=num_classes,
-        )
+        if scientific_cub_r50:
+            from .run_cub_r50_teacher_full import load_scientific_teacher
+
+            (
+                teacher,
+                teacher_metadata,
+                teacher_checkpoint_hash,
+                teacher_state_hash,
+            ) = load_scientific_teacher(
+                args.teacher_checkpoint,
+                validation_hash=manifest["validation_image_ids_sha256"],
+                device=device,
+            )
+        else:
+            (
+                teacher,
+                teacher_metadata,
+                teacher_checkpoint_hash,
+                teacher_state_hash,
+            ) = load_full_teacher(
+                args.teacher_checkpoint,
+                validation_hash=manifest["validation_image_ids_sha256"],
+                device=device,
+                dataset_name=dataset_name,
+                num_classes=num_classes,
+            )
     if args.method in {"lg", "alg"}:
-        guidance = LocalityGuidance().to(device)
+        guidance = LocalityGuidance(
+            teacher_channels=(
+                RESNET50_TEACHER_CHANNELS if scientific_cub_r50 else (16, 32, 64)
+            )
+        ).to(device)
         controller = GuidanceController(
             kind=args.method,
             warmup_epochs=(
@@ -459,7 +551,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             ),
         )
     elif args.method == "ibkd":
-        guidance = IBKD().to(device)
+        guidance = IBKD(
+            teacher_channels=(
+                RESNET50_TEACHER_CHANNELS if scientific_cub_r50 else (16, 32, 64)
+            )
+        ).to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
 
     parameters = list(student.parameters())
@@ -513,7 +609,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             teacher_logits: torch.Tensor | None = None
             if teacher is not None:
                 with torch.no_grad():
-                    teacher_inputs = teacher_view(images)
+                    teacher_inputs = teacher_view(
+                        images, image_size=224 if scientific_cub_r50 else 32
+                    )
                     if args.method == "kd":
                         teacher_logits = teacher(teacher_inputs)
                     elif beta > 0.0:
@@ -634,7 +732,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     )
     metadata = {
         "purpose": (
-            "phase1_posthoc_alg_warmup20_full_student"
+            "phase1_cub_r50_224_batch_profile_full_student_v4"
+            if scientific_cub_r50
+            else "phase1_posthoc_alg_warmup20_full_student"
             if is_alg_warmup20_diagnostic
             else "phase1_scientific_full_student"
         ),
@@ -657,6 +757,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "student_state_sha256": selected_student_hash,
         "initial_student_state_sha256": initial_hash,
         "teacher_model_state_sha256": teacher_state_hash,
+        "teacher_checkpoint_sha256": teacher_checkpoint_hash,
+        "teacher_architecture": args.teacher_architecture,
+        "protocol_config_sha256": protocol_config_sha256,
+        "batch_profile_role": args.batch_profile_role,
+        "eligible_locked_v3_matrix_cell": scientific_cub_r50 and args.batch_size == 128,
+        "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_warmup_epochs": args.alg_controller_warmup_epochs,
         "guidance_controller_warmup_epochs": (
             None if controller is None else controller.warmup_epochs
@@ -707,7 +813,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     summary = {
         "status": "complete",
         "scientific_result": True,
-        "confirmatory_main_result": not is_alg_warmup20_diagnostic,
+        "confirmatory_main_result": (
+            args.batch_size == 128
+            if scientific_cub_r50
+            else not is_alg_warmup20_diagnostic
+        ),
         "posthoc_diagnostic": is_alg_warmup20_diagnostic,
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
@@ -732,6 +842,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_checkpoint_sha256": teacher_checkpoint_hash,
         "teacher_model_state_sha256": teacher_state_hash,
         "teacher_metadata": teacher_metadata,
+        "teacher_architecture": args.teacher_architecture,
+        "protocol_config_sha256": protocol_config_sha256,
+        "batch_profile_role": args.batch_profile_role,
+        "eligible_locked_v3_matrix_cell": scientific_cub_r50 and args.batch_size == 128,
+        "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_final": None if controller is None else controller.state_dict(),
         "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
         "guidance_controller_warmup_epochs": (
@@ -765,6 +880,7 @@ def main() -> None:
             f"[PHASE1_FULL_START] dataset={_dataset_contract(args)[0]} "
             f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
+            f"teacher_architecture={args.teacher_architecture} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
         )
@@ -803,6 +919,8 @@ def main() -> None:
                 "seed": args.seed,
                 "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
                 "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
+                "teacher_architecture": args.teacher_architecture,
+                "batch_profile_role": args.batch_profile_role,
                 "failure_kind": failure_kind,
                 "error_type": type(error).__name__,
                 "error": message,

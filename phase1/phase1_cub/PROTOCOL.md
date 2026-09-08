@@ -87,6 +87,21 @@ model-state SHA-256
 비과학적 sensitivity profile이며 이 smoke는 잠긴 batch-128 v3 계약을 변경하지
 않습니다.
 
+### Batch 128·64 guided seed-1 full-epoch profile LOCK
+
+Full profile config는
+`configs/cub200_r50_224_b128_b64_guided_seed1_full_v4.json`이며 SHA-256은
+`bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633`입니다.
+
+- 범위는 LG, ALG-w20, iBKD λ=0.25/0.5 × encoder seed 1 × student batch
+  `[128,64]`입니다. Teacher는 issue 722의 동일 checkpoint 하나입니다.
+- 학생은 300 epoch, probe는 encoder마다 5 seed × LR 3개 × 100 epoch입니다.
+- Batch 128은 v3 주 매트릭스의 일부 셀이고 batch 64는 sensitivity입니다. 전체
+  6방법×3seed 완료로 해석하지 않습니다.
+- 각 batch의 probe 20개를 validation으로 모두 선택한 뒤에만 그 batch의 official
+  test mask를 열며, test는 선택이나 설정 변경에 사용하지 않습니다.
+- 분류 best checkpoint 8개와 선택 probe checkpoint 40개를 보존합니다.
+
 ## 고정한 항목
 
 - 공식 이미지·분류 annotation·segmentation mask의 출처, byte size, SHA-256
