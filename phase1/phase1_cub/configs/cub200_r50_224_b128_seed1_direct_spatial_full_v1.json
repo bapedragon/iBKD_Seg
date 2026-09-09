@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v1",
+  "status": "locked_after_smoke_pass_before_seed1_full_results_2026-09-10",
+  "scientific_result": true,
+  "result_scope": "precommitted_encoder_seed1_shard_pending_encoder_seeds2_3_for_final_statistics",
+  "claim_under_test": "classification-trained iBKD encoders retain more directly measurable spatial information than LG and ALG-w20 encoders",
+  "scope": {
+    "student_batch_size": 128,
+    "encoder_seeds_in_this_run": [1],
+    "eventual_encoder_seeds": [1, 2, 3],
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "method_lambda_or_protocol_selection_from_smoke": false,
+    "seed1_alone_is_not_final_encoder_seed_inference": true
+  },
+  "locked_metric_protocol": {
+    "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json",
+    "sha256": "55ac0598c11a4065f3b1416022e8fbb3de35b21cad94780ace2e2036d5430bc6"
+  },
+  "checkpoint_sources": {
+    "students": {
+      "manifest_path": "phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/artifact_release.json",
+      "manifest_sha256": "86902a5c2639e1e36191898646c40f51c19ff6f0321282fa62acaf1d5a4c6879",
+      "source_h200_issue": 727,
+      "encoder_seed": 1,
+      "expected_checkpoint_inputs": 4,
+      "checkpoint_inputs_from_locked_metric_protocol": true
+    },
+    "teacher": {
+      "manifest_path": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+      "manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+      "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+      "source_h200_issue": 722
+    }
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "input_size": 224,
+    "resize": "direct_square",
+    "normalization": "imagenet",
+    "part_count": 15,
+    "visible_parts_only": true,
+    "foreground_mask_rule": "segmentation_grayscale_value_greater_than_0"
+  },
+  "part_localization_probe": {
+    "feature": "deit_block11_pre_final_norm_patch_tokens_192x14x14",
+    "head": "Conv2d(192,15,1,bias=True)",
+    "target": "visible_part_gaussian_heatmap_sigma_1_grid_pixel",
+    "loss": "visible_part_masked_mean_squared_error",
+    "optimizer": "sgd",
+    "momentum": 0.9,
+    "weight_decay": 0.0,
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "scheduler": "cosine_to_zero",
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "validation_selection": "maximum_micro_PCK_at_0.1_then_lower_lr_then_earlier_epoch",
+    "official_test_metric": "visible_keypoint_micro_PCK_at_0.1",
+    "official_test_once_per_validation_selected_probe": true
+  },
+  "spatial_cka": {
+    "split": "fixed_validation_600",
+    "student_blocks": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "teacher_feature": "resnet50_layer3_1024x14x14",
+    "metric": "centered_linear_CKA",
+    "accumulator_dtype": "float64",
+    "official_test_used": false
+  },
+  "attention_gt": {
+    "split": "official_test_5794",
+    "rollout": "all_12_layers_head_mean_add_identity_row_normalize",
+    "primary_metric": "global_micro_patch_average_precision",
+    "secondary_metrics": [
+      "pointing_game_peak_inside_mask",
+      "foreground_attention_mass_mean"
+    ],
+    "qualitative_test_image_ids": [787, 2285, 3735, 5205, 6691, 8139, 9597, 11064],
+    "official_test_once_per_encoder": true
+  },
+  "official_test_policy": {
+    "all_20_part_probe_validation_selections_complete_before_test_open": true,
+    "selection_uses_official_test": false,
+    "no_method_lambda_lr_epoch_or_protocol_change_from_test": true,
+    "seed2_3_will_use_identical_locked_settings_regardless_of_seed1_results": true
+  },
+  "statistics": {
+    "probe_seed_is_nested_within_encoder_seed": true,
+    "report_probe_seed_values_mean_and_sample_standard_deviation": true,
+    "independent_encoder_seed_n_in_this_run": 1,
+    "encoder_seed_standard_deviation_not_estimable": true,
+    "final_mean_sd_and_claim_wait_for_encoder_seeds_2_3": true
+  },
+  "execution": {
+    "device": "single_cuda_mig_slice",
+    "requested_mig_slices": 1,
+    "precision": "float32_model_float64_cka_accumulators",
+    "feature_batch_size": 16,
+    "cka_batch_size": 8,
+    "attention_batch_size": 16,
+    "num_workers": 4,
+    "retain_selected_part_probe_checkpoints": true,
+    "retain_metric_json_csv_and_qualitative_png": true,
+    "retain_dataset_or_feature_cache_in_output": false
+  },
+  "completion_gate": {
+    "checkpoint_strict_loads": 4,
+    "part_probe_lr_candidates": 60,
+    "part_probe_validation_selections": 20,
+    "part_probe_official_test_evaluations": 20,
+    "spatial_cka_values": 48,
+    "attention_metric_rows": 4,
+    "attention_official_test_evaluations": 4,
+    "qualitative_pngs": 32,
+    "official_test_evaluations": 24
+  }
+}

@@ -1,16 +1,17 @@
 # Phase 1 CUB 직접 공간정보 진단 프로토콜
 
-상태: **v1 지표·smoke 계약 LOCK — smoke 결과 확인 전 고정**
+상태: **v1 지표·본실험 계약 LOCK — seed 1 smoke 통과, seed 1 본실험 대기**
 
 이 프로토콜은 분류 정확도나 frozen segmentation mIoU만으로 공간정보 보존을
 간접 추론하지 않고, 동일한 classification-best encoder에서 위치 정보를 직접
 측정하기 위한 후속 진단입니다. 주 비교는 잠긴 CUB v3와 같은 batch 128이며,
 batch 64 sensitivity는 섞지 않습니다.
 
-현재 실행 가능한 smoke 입력은 H200 issue 727의 encoder seed 1 네 개입니다.
-진행 중인 batch-128 seed 2·3 결과를 회수하고 checkpoint hash를 고정한 뒤 같은
-정의를 그대로 본실험으로 확장합니다. Smoke 값으로 방법, lambda, 지표 정의,
-학습률 또는 본실험 범위를 선택하지 않습니다.
+H200 issue 727의 encoder seed 1 네 개로 smoke 실행 계약을 통과했습니다. 따라서
+고정된 전체 데이터·100 epoch·probe seed 5개 설정으로 seed 1 본실험 shard를 먼저
+수행합니다. 이후 batch-128 seed 2·3 checkpoint hash를 고정하면 결과와 관계없이
+같은 정의를 그대로 적용합니다. Smoke 값으로 방법, lambda, 지표 정의, 학습률 또는
+본실험 범위를 선택하지 않았습니다.
 
 Machine-readable 계약은
 [`configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json`](configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json)에
@@ -114,5 +115,35 @@ validation에서 클래스별 가장 작은 image ID 한 장씩, 각각 200장�
 ```
 
 Smoke의 PCK·CKA·AP 수치는 코드와 좌표계가 실행된다는 진단값일 뿐 논문 결과가
-아닙니다. 본실험 config는 진행 중인 seed 2·3 checkpoint의 파일·state SHA-256을
-회수한 뒤 생성하며, 이 문서의 지표·split·학습·test 규칙은 변경하지 않습니다.
+아닙니다. 이 문서의 지표·split·학습·test 규칙은 본실험에서 변경하지 않습니다.
+
+## Seed 1 본실험 shard
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seed1.sh
+```
+
+Machine-readable 실행 계약은
+[`configs/cub200_r50_224_b128_seed1_direct_spatial_full_v1.json`](configs/cub200_r50_224_b128_seed1_direct_spatial_full_v1.json)에
+있으며 SHA-256은
+`aeb2e17c76f6139b17bab8e0d2d4699a928f2607edcf5f7a346d648565384548`입니다.
+
+- encoder: batch-128 seed 1의 `LG`, `ALG-w20`, `iBKD λ=0.25`, `iBKD λ=0.5`
+- part probe: 4 encoder × probe seed 5개 × LR 3개 × 100 epoch = 후보 60개
+- validation 선택: 20개를 모두 완료하고 marker를 쓴 뒤 official test를 처음 엶
+- part test: validation-selected probe 20개를 각각 한 번 평가
+- spatial CKA: validation 600장 × 4 encoder × 12 block = 48개 값
+- attention–GT: official test 5,794장 × 4 encoder = 4개 row
+- 정성 결과: 고정 test image ID 8장 × 4 encoder = PNG 32개
+- official test evaluation count: part 20 + attention 4 = 24
+- 요청 자원: H200 MIG slice `1`개
+
+마지막 성공 marker는 다음과 같습니다.
+
+```text
+[DIRECT_SPATIAL_FULL_SEED1_DONE] status=complete encoder_seed=1 strict_loads=4 part_candidates=60 part_selections=20 part_test=20 cka_values=48 attention_rows=4 qualitative_pngs=32 official_test=24 final_encoder_seed_inference=false ...
+```
+
+이 shard는 protocol에 맞는 scientific result이지만 독립 encoder seed가 하나이므로
+encoder-seed 표준편차나 최종 방법 우위는 확정하지 않습니다. Seed 2·3을 같은 설정으로
+추가한 뒤 세 encoder seed의 평균과 표본 표준편차로 최종 해석합니다.
