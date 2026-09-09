@@ -28,6 +28,19 @@ Issue 722 Teacher 하나를 공유해 LG, ALG-w20, iBKD λ=0.25/0.5를 encoder s
 일부 셀이고, batch 64는 별도 sensitivity 결과입니다. 이 실행 하나만으로 최종
 6방법×3seed 매트릭스가 완료됐다고 표시하지 않습니다.
 
+`cub200_r50_224_b128_s23_b64_s2_guided_full_v5.json`은 seed-1 profile 결과를
+확인한 뒤 고정한 후속 범위입니다. Batch 128은 원래 v3에서 확정했던 encoder seed
+2·3을 이어서 수행해 seed `[1,2,3]`을 완성하고, batch 64는 encoder seed 2만
+추가해 seed `[1,2]`의 탐색적 sensitivity로 보고합니다. Guided 네 방법의 학습과
+probe 값은 v3/v4에서 변경하지 않습니다. Full config SHA-256은
+`f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9`입니다.
+
+`cub200_r50_224_b128_s23_b64_s2_guided_smoke_v5.json`은 위 후속 범위의 정확한
+세 `(batch, encoder seed)` 조합을 각각 2-epoch 분류와 probe seed 1 × LR 3개 ×
+2 epoch로 점검하는 비과학적 smoke입니다. Batch 64 seed 3이나 seed 1 재실행은
+계약에서 거부합니다. Smoke config SHA-256은
+`1cfaad0e7395e54dcc70560b0fb05b4240b66636e16b41bd8746388e079ea570`입니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은

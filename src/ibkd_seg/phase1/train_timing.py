@@ -229,6 +229,14 @@ def parse_args() -> argparse.Namespace:
             "a two-epoch timing-only teacher. CUB student timing only."
         ),
     )
+    parser.add_argument(
+        "--seed-extension-smoke",
+        action="store_true",
+        help=(
+            "Allow encoder seed 2 or 3 only for the locked CUB ResNet-50/224 "
+            "student seed-extension smoke."
+        ),
+    )
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=1)
@@ -258,6 +266,7 @@ def validate_args(args: argparse.Namespace) -> None:
     scientific_cub_teacher = bool(
         getattr(args, "scientific_cub_r50_teacher", False)
     )
+    seed_extension_smoke = bool(getattr(args, "seed_extension_smoke", False))
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
     if access_official_test and not (
@@ -270,8 +279,23 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("Timing matrix batch size must be 64 or 128")
     if args.eval_batch_size <= 0 or args.num_workers < 0:
         raise ValueError("Invalid eval batch size or worker count")
-    if args.seed != 1:
-        raise ValueError("Phase 1 timing is fixed to seed 1")
+    if args.seed != 1 and not (
+        seed_extension_smoke
+        and args.seed in {2, 3}
+        and dataset_key == "cub"
+        and args.kind == "student"
+        and args.method in {"lg", "alg", "ibkd"}
+        and teacher_architecture == "resnet50_224_scratch"
+        and scientific_cub_teacher
+        and access_official_test
+        and args.teacher_checkpoint is not None
+        and args.save_student_checkpoint
+    ):
+        raise ValueError(
+            "Non-default timing seeds are restricted to the locked CUB seed-extension smoke"
+        )
+    if seed_extension_smoke and args.seed not in {2, 3}:
+        raise ValueError("CUB seed-extension timing smoke requires seed 2 or 3")
     if args.kind == "teacher":
         if scientific_cub_teacher:
             raise ValueError("Teacher timing cannot consume a scientific teacher")
@@ -911,6 +935,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "method": args.method,
                     "batch_size": args.batch_size,
                     "seed": args.seed,
+                    "seed_extension_smoke": bool(
+                        getattr(args, "seed_extension_smoke", False)
+                    ),
                     "actual_epochs": ACTUAL_EPOCHS,
                     "planned_epochs": PLANNED_EPOCHS,
                     "teacher_architecture": str(
@@ -961,6 +988,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "method": args.method,
         "batch_size": args.batch_size,
         "seed": args.seed,
+        "seed_extension_smoke": bool(
+            getattr(args, "seed_extension_smoke", False)
+        ),
         "fusion_ratio_lambda": args.fusion_ratio,
         "actual_epochs": ACTUAL_EPOCHS,
         "planned_epochs": PLANNED_EPOCHS,

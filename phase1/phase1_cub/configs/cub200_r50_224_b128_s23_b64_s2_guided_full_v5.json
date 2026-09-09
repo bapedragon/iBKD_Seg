@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5",
+  "status": "locked_after_seed1_results_before_seed_extension_smoke_2026-09-09",
+  "scientific_result": true,
+  "result_scope": {
+    "purpose": "complete_batch128_guided_encoder_seeds_and_check_one_additional_batch64_sensitivity_seed",
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "batch_seed_order": [
+      {"batch_size": 128, "encoder_seeds": [2, 3]},
+      {"batch_size": 64, "encoder_seeds": [2]}
+    ],
+    "batch_profiles": {
+      "128": {
+        "role": "locked_v3_confirmatory_continuation",
+        "existing_encoder_seeds": [1],
+        "new_encoder_seeds": [2, 3],
+        "combined_encoder_seeds": [1, 2, 3],
+        "eligible_for_locked_v3_matrix": true
+      },
+      "64": {
+        "role": "posthoc_exploratory_batch_sensitivity",
+        "existing_encoder_seeds": [1],
+        "new_encoder_seeds": [2],
+        "combined_encoder_seeds": [1, 2],
+        "eligible_for_locked_v3_matrix": false,
+        "confirmatory_claim_forbidden": true
+      }
+    },
+    "guided_four_variant_matrix_only": true,
+    "final_six_variant_three_seed_matrix_complete": false,
+    "vanilla_and_kd_not_in_this_run": true,
+    "method_lambda_or_batch_selection_from_seed1_results": false,
+    "batch64_extension_decided_after_seed1_and_labeled_exploratory": true,
+    "configuration_changes_after_smoke": false,
+    "direct_spatial_diagnostics_in_this_run": false
+  },
+  "protocol_provenance": {
+    "base_v3": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc",
+      "protocol_id": "cub200_phase1_resnet50_224_scratch_b128_full_v3"
+    },
+    "seed1_batch_profile_v4": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_b64_guided_seed1_full_v4.json",
+      "sha256": "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+      "protocol_id": "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
+    },
+    "inherit_training_and_probe_settings_without_change": true
+  },
+  "teacher": {
+    "train_in_this_run": false,
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50",
+    "initialization": "scratch",
+    "external_pretraining": false,
+    "input_size": 224,
+    "training_batch_size": 128,
+    "training_epochs": 200,
+    "seed": 1,
+    "release_manifest": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+    "release_manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+    "checkpoint_relative_path": "teacher_best_validation.pt",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "shared_by_all_new_students": true
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "image_archive_md5": "97eceeb196236b17998738112f37df78",
+    "image_archive_sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081",
+    "segmentation_archive_md5": "4d47ba1228eae64f2fa547c47bc65255",
+    "segmentation_archive_sha256": "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f",
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "classification_encoder_uses_masks_boxes_parts_or_attributes": false
+  },
+  "classification": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "input_size": 224,
+    "epochs": 300,
+    "precision": "float32",
+    "optimizer": "adamw_lr0.0005_minlr0.000005_weight_decay0.05",
+    "scheduler": "linear_warmup20_then_cosine",
+    "drop_path_rate": 0.1,
+    "same_initial_state_across_variants_within_encoder_seed": true,
+    "same_seed2_initial_state_across_batch128_and_batch64": true,
+    "guided_teacher_view": "same_augmented_224_tensor_as_student",
+    "alg_controller_warmup_epochs": 20,
+    "ibkd_controller_warmup_epochs": 20,
+    "ibkd_fusion_ratio_lambdas": [0.25, 0.5],
+    "selection_metric": "validation_macro_top1",
+    "selection_tie_break": "earlier_epoch",
+    "official_test": "once_per_validation_selected_checkpoint"
+  },
+  "frozen_probe": {
+    "encoder_checkpoint": "best_validation_classification_checkpoint",
+    "encoder_frozen_eval_strict_load": true,
+    "feature": "block11_pre_norm_patch_tokens_nchw_192x14x14",
+    "head": "Conv2d(192,2,1,bias=True)",
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "selection_split": "validation",
+    "selection_metric": "grid_14x14_two_class_mean_iou",
+    "selection_tie_break": ["lower_learning_rate", "earlier_epoch"],
+    "open_official_test_only_after_all_selections_within_batch_and_encoder_seed": true,
+    "official_test": "once_per_validation_selected_probe",
+    "primary_metric": "input_224_two_class_mean_iou"
+  },
+  "statistics": {
+    "probe_seeds_are_nested_within_encoder_seed": true,
+    "first_average_over_five_probe_seeds_per_encoder": true,
+    "batch128_primary_report": "mean_and_sample_sd_over_encoder_seeds_1_2_3",
+    "batch64_report": "exploratory_values_over_encoder_seeds_1_2_no_confirmatory_test",
+    "do_not_flatten_probe_seeds_as_independent_encoder_runs": true
+  },
+  "task_count": {
+    "teacher_download_and_audit": 1,
+    "batch_encoder_profiles": 3,
+    "classification_students_total": 12,
+    "probe_lr_candidates_total": 180,
+    "selected_probes_total": 60,
+    "classification_official_test_evaluations": 12,
+    "probe_official_test_evaluations": 60,
+    "retained_new_checkpoints": 72
+  },
+  "execution": {
+    "device": "single_cuda_allocation",
+    "requested_mig_slices": 7,
+    "full_h200_required_for_comparable_timing": true,
+    "recommended_full_job_partition": [
+      "batch128_encoder_seeds_2_3",
+      "batch64_encoder_seed_2"
+    ],
+    "retain_classification_best_checkpoints": true,
+    "retain_selected_probe_checkpoints": true,
+    "retain_dataset_archives_in_output": false
+  }
+}

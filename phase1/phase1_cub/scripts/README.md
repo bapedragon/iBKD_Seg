@@ -24,6 +24,12 @@
   encoder seed 1 분류 300 epoch, frozen probe 5 seed × 3 LR × 100 epoch와
   validation 선택·official test 1회 평가를 실행합니다. 각 분류/probe checkpoint를
   즉시 `/app/output`에 저장하고 마지막에 두 batch 결과를 모두 나열합니다.
+- `run_r50_224_guided_probe_seed_extension_smoke.sh`: 동일한 issue 722 Teacher를
+  재사용해 `(batch 128, seed 2)`, `(batch 128, seed 3)`, `(batch 64, seed 2)`를
+  순서대로 점검합니다. 각 profile은 guided 네 방법의 2-epoch 분류와 frozen probe
+  seed 1 × LR 3개 × 2 epoch를 수행합니다. 마지막에 12개 분류·12개 선택 probe,
+  peak memory와 `batch128 seeds 2·3`/`batch64 seed 2` 본실험 시간 외삽을 모두
+  출력합니다. 모든 smoke 수치는 비과학적입니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 

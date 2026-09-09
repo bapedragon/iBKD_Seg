@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "smoke_id": "cub200_phase1_r50_224_b128_s23_b64_s2_guided_classification_to_probe_smoke_v5",
+  "status": "locked_non_scientific_seed_extension_smoke_2026-09-09",
+  "full_protocol_status": "batch128_confirmatory_seed_extension_and_batch64_posthoc_sensitivity_v5",
+  "full_protocol_config": "phase1/phase1_cub/configs/cub200_r50_224_b128_s23_b64_s2_guided_full_v5.json",
+  "full_protocol_config_sha256": "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9",
+  "purpose": "verify_exact_seed2_seed3_classification_to_frozen_probe_plumbing_capacity_and_runtime",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "method_lambda_batch_or_seed_selection_from_smoke_forbidden": true,
+  "official_test_accessed": true,
+  "official_test_access_justification": "batch128_seeds2_3_are_precommitted_and_batch64_seed2_is_explicitly_posthoc_exploratory_but_the_full_test_path_must_be_smoked",
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "image_archive": {
+      "md5": "97eceeb196236b17998738112f37df78",
+      "sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081"
+    },
+    "segmentation_archive": {
+      "md5": "4d47ba1228eae64f2fa547c47bc65255",
+      "sha256": "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f"
+    },
+    "counts": {"train": 5394, "validation": 600, "test": 5794},
+    "split": {
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    }
+  },
+  "classification": {
+    "teacher": {
+      "train_in_smoke": false,
+      "reuse_h200_issue": 722,
+      "architecture": "torchvision_resnet50",
+      "initialization": "scratch",
+      "external_pretraining": false,
+      "input_size": 224,
+      "training_batch_size": 128,
+      "training_epochs": 200,
+      "seed": 1,
+      "feature_channels": [512, 1024, 2048],
+      "feature_spatial_sizes": [28, 14, 7],
+      "release_manifest": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+      "release_manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+      "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+    },
+    "student": {
+      "architecture": "deit_tiny_patch16_224",
+      "initialization": "scratch",
+      "input_size": 224,
+      "actual_epochs": 2,
+      "planned_epochs": 300,
+      "batch_seed_profiles": [
+        {
+          "batch_size": 128,
+          "encoder_seeds": [2, 3],
+          "role": "locked_v3_confirmatory_continuation"
+        },
+        {
+          "batch_size": 64,
+          "encoder_seeds": [2],
+          "role": "posthoc_exploratory_batch_sensitivity"
+        }
+      ],
+      "same_initial_state_across_variants_within_encoder_seed": true,
+      "same_seed2_initial_state_across_batches": true
+    },
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "controller": {
+      "lg": "all_epochs",
+      "alg_warmup_epochs": 20,
+      "canonical_alg_warmup0_included": false,
+      "ibkd_warmup_epochs": 20
+    },
+    "guided_teacher_view": {
+      "source": "same_randomly_augmented_and_normalized_224x224_student_tensor",
+      "additional_resize": false,
+      "shared_random_geometry_between_student_and_teacher": true
+    },
+    "checkpoint": "two_epoch_latest_smoke_only_not_validation_selected",
+    "evaluation": {
+      "validation": true,
+      "official_test": true,
+      "official_test_evaluations_per_smoke_checkpoint": 1,
+      "metrics_are_non_scientific": true
+    }
+  },
+  "frozen_probe": {
+    "image_input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "random_augmentation": false,
+      "normalization": "imagenet"
+    },
+    "encoder": {
+      "strict_load": true,
+      "frozen": true,
+      "eval_mode": true,
+      "feature": "block11_pre_norm_patch_tokens_nchw_192x14x14"
+    },
+    "probe": {
+      "architecture": "Conv2d(192,2,1,bias=True)",
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2,
+      "planned_epochs": 100,
+      "batch_size": 64,
+      "loss": {"name": "cross_entropy", "ignore_index": 255, "class_weighting": "none"},
+      "probe_seeds": [1],
+      "planned_probe_seeds": [1, 2, 3, 4, 5]
+    },
+    "selection": {
+      "split": "validation",
+      "metric": "grid_14x14_two_class_mean_iou",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"],
+      "smoke_selection_has_scientific_meaning": false
+    },
+    "evaluation": {
+      "official_test": true,
+      "official_test_evaluations_per_selected_smoke_probe": 1,
+      "primary_metric": "input_224_two_class_mean_iou"
+    }
+  },
+  "task_count": {
+    "teacher_download_and_audit": 1,
+    "batch_encoder_profiles": 3,
+    "classification_students_per_profile": 4,
+    "classification_students_total": 12,
+    "probe_lr_candidates_per_profile": 12,
+    "probe_lr_candidates_total": 36,
+    "selected_probes_total": 12,
+    "logical_gpu_tasks_per_profile": 16,
+    "logical_gpu_tasks_total": 48
+  },
+  "runtime": {
+    "device": "single_cuda_allocation",
+    "precision": "float32",
+    "classification_num_workers": 4,
+    "classification_eval_batch_size": 200,
+    "probe_feature_batch_size": 32,
+    "requested_mig_slices": 7,
+    "full_h200_required_for_comparable_timing": true,
+    "report_peak_cuda_memory_per_epoch": true,
+    "retry_with_changed_batch_or_precision": false
+  }
+}

@@ -129,6 +129,30 @@ best checkpoint 8개, 선택 probe checkpoint 40개, CSV/JSON/status와 전체
 있습니다. Batch 64는 sensitivity 결과이며, 어느 쪽도 encoder seed가 하나뿐이므로
 이 실행만으로 최종 방법 우위나 encoder-seed 표준편차를 주장하지 않습니다.
 
+## Guided encoder-seed 후속 smoke
+
+Batch 128의 guided 네 방법은 기존 seed 1에 seed 2·3을 추가해 주 실험의 독립
+encoder seed 세 개를 완성합니다. Batch 64는 seed 2만 추가하며, seed-1 결과를 본
+뒤 결정한 범위이므로 탐색적 sensitivity로만 보고합니다. 정확한 후속 조합을 먼저
+다음 smoke로 확인합니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_guided_probe_seed_extension_smoke.sh
+```
+
+Smoke는 issue 722 Teacher를 재사용하고 `(128,2)`, `(128,3)`, `(64,2)`마다 LG,
+ALG-w20, iBKD λ=0.25/0.5를 2 epoch 실행합니다. 각 smoke encoder를 strict
+load·freeze한 뒤 probe seed 1, LR `[0.01,0.03,0.1]`, 2 epoch를 수행합니다.
+마지막 로그의 완료 기준은 분류 `12/12`, probe 후보 `36/36`, 선택 probe
+`12/12`, GPU 작업 `48/48`입니다. Smoke 수치로 방법·lambda·batch·seed를
+선택하지 않습니다.
+
+본실험에서는 각 encoder마다 probe seed `[1,2,3,4,5]`를 그대로 수행합니다.
+Batch 128은 먼저 encoder별 5개 probe 평균을 계산한 뒤 encoder seed 1·2·3 간
+평균과 표준편차를 보고합니다. Batch 64의 seed 1·2 결과에는 확증적 통계 검정을
+적용하지 않습니다. Part localization, spatial CKA와 attention 진단은 이 실행에
+섞지 않고 본실험 checkpoint archive를 회수한 뒤 별도 고정 프로토콜로 수행합니다.
+
 ## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류

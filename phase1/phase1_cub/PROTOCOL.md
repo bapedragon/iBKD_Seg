@@ -102,6 +102,33 @@ Full profile config는
   test mask를 열며, test는 선택이나 설정 변경에 사용하지 않습니다.
 - 분류 best checkpoint 8개와 선택 probe checkpoint 40개를 보존합니다.
 
+### Guided encoder-seed 후속 범위 LOCK
+
+Seed-1 profile 로그를 확인한 뒤 다음 후속 범위를 고정했습니다. Full config는
+`configs/cub200_r50_224_b128_s23_b64_s2_guided_full_v5.json`, SHA-256은
+`f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9`입니다.
+
+- Batch 128은 guided 네 방법의 encoder seed 2·3을 추가합니다. 기존 seed 1과
+  합쳐 `[1,2,3]`이 되며 잠긴 v3 주 매트릭스의 일부로 사용할 수 있습니다.
+- Batch 64는 encoder seed 2만 추가합니다. Seed-1 결과 확인 뒤 결정했으므로
+  `[1,2]` 모두 탐색적 batch sensitivity이고 확증적 주장에 사용하지 않습니다.
+- Teacher, split, 학생 초기화 방식, 300 epoch 학습값, ALG/iBKD controller,
+  lambda 두 개, validation checkpoint 선택 및 test-once 규칙을 변경하지 않습니다.
+- 각 encoder에는 probe seed 5개 × LR 3개 × 100 epoch를 동일하게 수행합니다.
+  Probe seed를 독립 encoder 실행처럼 펼치지 않고 encoder 내부에서 먼저 평균냅니다.
+- 이 범위는 guided 네 방법만 포함하므로 최종 Vanilla/KD 포함 6방법×3seed
+  매트릭스 완료로 표시하지 않습니다.
+- Part localization, spatial CKA 및 attention–GT 진단은 checkpoint archive 회수
+  뒤 별도 프로토콜로 고정하며 이번 분류→probe 실행에는 포함하지 않습니다.
+
+선행 비과학적 smoke config는
+`configs/cub200_r50_224_b128_s23_b64_s2_guided_smoke_v5.json`, SHA-256은
+`1cfaad0e7395e54dcc70560b0fb05b4240b66636e16b41bd8746388e079ea570`입니다. 정확히
+`(128,2)`, `(128,3)`, `(64,2)`만 허용하고 각 profile에서 guided 네 방법 ×
+2-epoch 분류와 probe seed 1 × LR 3개 × 2 epoch를 검사합니다. 같은 encoder seed
+내 네 방법의 초기 state와 seed 2의 두 batch 간 초기 state가 같고, seed 2와 3의
+초기 state는 다른지 hash로 검증합니다. 모든 smoke metric은 비과학적입니다.
+
 ## 고정한 항목
 
 - 공식 이미지·분류 annotation·segmentation mask의 출처, byte size, SHA-256
