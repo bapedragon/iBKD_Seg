@@ -35,6 +35,13 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
+분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
+attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는
+[DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 별도로 잠갔습니다.
+현재 확보된 batch-128 seed-1 네 guided encoder로 test를 열지 않는 smoke를 먼저
+실행하고, 진행 중인 seed 2·3 checkpoint를 회수한 뒤 동일 정의를 본실험으로
+확장합니다.
+
 ## 현재 v3: ResNet-50/224 Teacher 본학습 완료
 
 Guided smoke는 `17/17` 작업을 완료해 실행 경로와 메모리·시간 gate를 통과했습니다.
@@ -178,6 +185,20 @@ Batch 128은 먼저 encoder별 5개 probe 평균을 계산한 뒤 encoder seed 1
 평균과 표준편차를 보고합니다. Batch 64의 seed 1·2 결과에는 확증적 통계 검정을
 적용하지 않습니다. Part localization, spatial CKA와 attention 진단은 이 실행에
 섞지 않고 본실험 checkpoint archive를 회수한 뒤 별도 고정 프로토콜로 수행합니다.
+
+## Batch 128 seed-1 직접 공간정보 진단 smoke
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_smoke_b128_seed1.sh
+```
+
+Issue 727 Release의 batch-128 seed-1 `LG`, `ALG-w20`, `iBKD λ=0.25/0.5`
+encoder와 issue 722 Teacher를 내려받아 strict 검증한 뒤, visible-part linear
+heatmap probe, ResNet-50 layer3 대비 12-block spatial CKA, residual-aware
+attention rollout과 GT mask 정렬을 한 번에 점검합니다. 클래스당 한 장의 고정
+train/validation smoke subset만 쓰며 official test는 열지 않습니다. 마지막 로그에
+네 방법의 smoke PCK, block-11 CKA, patch AP와 pointing-game 값 및 전체 완료
+marker가 나옵니다. 값은 비과학적이며 방법·lambda 선택에 사용할 수 없습니다.
 
 ## 이전 v2 smoke 및 보존 결과
 

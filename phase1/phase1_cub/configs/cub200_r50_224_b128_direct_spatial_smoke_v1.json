@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_direct_spatial_smoke_v1",
+  "status": "locked_before_direct_spatial_smoke_results_2026-09-09",
+  "scientific_result": false,
+  "purpose": "execution_and_metric_contract_smoke_only",
+  "claim_under_test": "classification-trained iBKD encoders retain more directly measurable spatial information than LG and ALG-w20 encoders",
+  "comparison_scope": {
+    "primary_student_batch_size": 128,
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "eventual_encoder_seeds": [1, 2, 3],
+    "smoke_encoder_seeds": [1],
+    "batch64_included": false,
+    "reason_batch64_excluded": "batch64_is_an_exploratory_sensitivity_profile_not_the_locked_primary_matrix",
+    "method_or_lambda_selection_from_smoke": false
+  },
+  "protocol_provenance": {
+    "base_v3": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "seed1_encoder_release": {
+      "manifest_path": "phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/artifact_release.json",
+      "manifest_sha256": "86902a5c2639e1e36191898646c40f51c19ff6f0321282fa62acaf1d5a4c6879",
+      "release_asset_sha256": "9d9f7b4554b588bed69abf5e435149222af4f70d9a0fd8159d47d37319fdbc96",
+      "source_h200_issue": 727
+    },
+    "teacher_release": {
+      "manifest_path": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+      "manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+      "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+      "source_h200_issue": 722
+    }
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "annotations": {
+      "parts": "parts/part_locs.txt",
+      "part_names": "parts/parts.txt",
+      "part_count": 15,
+      "visibility_rule": "visible_equals_1_only",
+      "bounding_boxes": "bounding_boxes.txt",
+      "segmentation_masks": "official_CaltechDATA_segmentations"
+    },
+    "image_view": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear_antialias",
+      "mask_interpolation": "nearest",
+      "normalization": "imagenet",
+      "random_augmentation": false
+    }
+  },
+  "encoder": {
+    "architecture": "deit_tiny_patch16_224",
+    "checkpoint": "validation_selected_classification_checkpoint",
+    "strict_load": true,
+    "frozen": true,
+    "eval_mode": true,
+    "drop_path_disabled_by_eval": true,
+    "patch_grid": [14, 14],
+    "patch_channels": 192,
+    "prefix_tokens": 1
+  },
+  "part_localization_probe": {
+    "role": "primary_direct_spatial_metric",
+    "feature": {
+      "student_block": 11,
+      "norm": false,
+      "exclude_cls_token": true,
+      "shape": [192, 14, 14]
+    },
+    "head": {
+      "architecture": "Conv2d(192,15,1,bias=True)",
+      "parameter_count": 2895,
+      "initialization": {
+        "weight": "normal",
+        "weight_std": 0.01,
+        "bias": 0.0
+      }
+    },
+    "target": {
+      "type": "per_part_2d_gaussian_heatmap",
+      "grid": [14, 14],
+      "sigma_grid_pixels": 1.0,
+      "peak_value": 1.0,
+      "original_to_grid_coordinate": "x_grid=x_original*14/image_width-0.5;y_grid=y_original*14/image_height-0.5",
+      "missing_or_occluded_parts": "excluded_from_loss_and_metrics"
+    },
+    "loss": "visible_part_masked_mean_squared_error",
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "nesterov": false
+    },
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "scheduler": {
+      "name": "cosine",
+      "minimum_learning_rate": 0.0
+    },
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "matched_initialization_and_batch_order_across_encoders": true,
+    "decoder": "argmax_row_col_then_x_original=(col+0.5)*image_width/14_and_y_original=(row+0.5)*image_height/14",
+    "selection": {
+      "split": "validation",
+      "metric": "visible_keypoint_micro_PCK_at_0.1",
+      "direction": "maximize",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"]
+    },
+    "evaluation": {
+      "primary_metric": "visible_keypoint_micro_PCK_at_0.1",
+      "correct_if": "euclidean_error_leq_0.1_times_max_ground_truth_bbox_width_height",
+      "coordinate_convention": "use_official_floating_coordinates_as_stored_without_rounding_or_origin_shift",
+      "secondary_metrics": ["per_part_PCK_at_0.1", "mean_localization_error_normalized_by_max_bbox_side"]
+    },
+    "official_test_policy": {
+      "selection_uses_official_test": false,
+      "open_only_after_all_validation_selections_for_all_encoders": true,
+      "evaluation": "once_per_validation_selected_probe",
+      "no_lr_epoch_method_or_lambda_selection_from_test": true
+    }
+  },
+  "spatial_cka": {
+    "role": "training_free_auxiliary_alignment_metric_not_a_standalone_spatial_utility_claim",
+    "split": "fixed_validation_600",
+    "image_augmentation": false,
+    "student_features": "pre_final_norm_patch_tokens_blocks_0_through_11",
+    "teacher": {
+      "architecture": "torchvision_resnet50_scratch_issue722",
+      "feature": "layer3_output",
+      "shape": [1024, 14, 14]
+    },
+    "observation_unit": "aligned_image_and_14x14_spatial_position",
+    "metric": "centered_linear_CKA",
+    "centering": "global_over_all_image_position_observations",
+    "accumulator_dtype": "float64",
+    "report": "one_value_per_student_block_and_layerwise_heatmap",
+    "official_test_used": false
+  },
+  "attention_gt_localization": {
+    "role": "training_free_auxiliary_localization_metric",
+    "attention_rollout": {
+      "layers": "all_12",
+      "head_fusion": "arithmetic_mean",
+      "residual_handling": "add_identity_then_row_normalize_each_layer",
+      "composition": "left_multiply_from_earliest_to_latest_layer",
+      "map": "final_joint_CLS_to_196_patch_attention",
+      "negative_value_handling": "not_applicable_softmax_attention"
+    },
+    "ground_truth": {
+      "foreground": "segmentation_grayscale_value_greater_than_0",
+      "patch_positive": "foreground_occupancy_greater_than_or_equal_to_0.5"
+    },
+    "primary_metric": "global_micro_patch_average_precision",
+    "secondary_metrics": [
+      "pointing_game_peak_inside_224_mask",
+      "foreground_attention_mass_using_fractional_patch_occupancy"
+    ],
+    "full_split": "official_test_5794_once_after_protocol_lock",
+    "qualitative_test_image_ids": [787, 2285, 3735, 5205, 6691, 8139, 9597, 11064],
+    "qualitative_selection_is_result_independent": true,
+    "no_threshold_tuning": true
+  },
+  "statistics": {
+    "independent_unit": "encoder_seed",
+    "part_probe_seeds_are_nested_within_encoder_seed": true,
+    "aggregate_part_probe_within_encoder_before_across_encoder_seeds": true,
+    "cka_and_attention_are_deterministic_per_encoder_checkpoint": true,
+    "report_seedwise_values_mean_and_sample_standard_deviation": true,
+    "no_significance_claim_from_smoke_or_single_encoder_seed": true
+  },
+  "smoke": {
+    "official_test_accessed": false,
+    "subset": {
+      "train": "lowest_image_id_per_class_from_locked_train",
+      "validation": "lowest_image_id_per_class_from_locked_validation",
+      "train_count": 200,
+      "validation_count": 200
+    },
+    "part_probe": {
+      "probe_seeds": [1],
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2
+    },
+    "spatial_cka_validation_images": 200,
+    "attention_validation_images": 200,
+    "qualitative_examples": "four_lowest_image_ids_from_smoke_validation",
+    "qualitative_examples_per_variant": 4,
+    "all_metrics_non_scientific": true
+  },
+  "checkpoint_inputs": [
+    {
+      "variant": "lg",
+      "batch_size": 128,
+      "encoder_seed": 1,
+      "relative_path": "batch128/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "bytes": 25075695,
+      "checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+      "model_state_sha256": "ed12d72166eb48d9897f1d37d7b81ebed3ccabb67adec3ef81480f1f690c0068"
+    },
+    {
+      "variant": "alg_warmup20",
+      "batch_size": 128,
+      "encoder_seed": 1,
+      "relative_path": "batch128/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "bytes": 25075055,
+      "checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+      "model_state_sha256": "ead91c40f3222482fcb3f91942e0cacbee8681cd1afcb02f02389b4b6fec44f2"
+    },
+    {
+      "variant": "ibkd_lambda_0.25",
+      "batch_size": 128,
+      "encoder_seed": 1,
+      "relative_path": "batch128/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "bytes": 116028605,
+      "checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+      "model_state_sha256": "d2f3d0e6789d2e0ffcadf4a1aa27ca69dce5674580e1aa14fb95ec525cf1b681"
+    },
+    {
+      "variant": "ibkd_lambda_0.5",
+      "batch_size": 128,
+      "encoder_seed": 1,
+      "relative_path": "batch128/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "bytes": 116025213,
+      "checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+      "model_state_sha256": "7a4cc97388c8b6856ba8240c3560e9cf8e53a52de24ec2507a3bb27cba85146d"
+    }
+  ],
+  "execution": {
+    "device": "single_cuda_mig_slice",
+    "requested_mig_slices": 1,
+    "precision": "float32_model_float64_cka_accumulators",
+    "feature_batch_size": 16,
+    "cka_batch_size": 8,
+    "attention_batch_size": 16,
+    "num_workers": 4,
+    "retain_smoke_part_probe_checkpoints": true,
+    "retain_metric_json_csv_and_qualitative_png": true,
+    "retain_dataset_or_feature_cache_in_output": false
+  },
+  "completion_gate": {
+    "checkpoint_strict_loads": 4,
+    "part_probe_lr_candidates": 12,
+    "part_probe_validation_selections": 4,
+    "spatial_cka_values": 48,
+    "attention_metric_rows": 4,
+    "qualitative_pngs": 16,
+    "official_test_evaluations": 0
+  }
+}

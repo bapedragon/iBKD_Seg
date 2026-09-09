@@ -89,6 +89,13 @@ Teacher를 공유한 LG, ALG-w20, iBKD λ=0.25/0.5의 batch-128/64 encoder seed 
 Vanilla/KD를 같은 잠긴 계약으로 채운 뒤 최종 판정합니다. 상세 수치는
 [seed-1 결과 보고서](phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에 있습니다.
 
+Segmentation mIoU만으로 공간정보 보존을 간접 해석하지 않도록 visible-part
+PCK@0.1, spatial linear CKA, attention rollout–GT mask 정렬을 묶은
+[직접 공간정보 진단 프로토콜](phase1/phase1_cub/DIRECT_SPATIAL_PROTOCOL.md)도
+결과 확인 전에 잠갔습니다. 먼저 batch-128 seed-1 네 guided encoder로 official
+test를 열지 않는 smoke를 수행하고, 진행 중인 seed 2·3 checkpoint를 회수한 뒤
+동일한 정의로 확장합니다.
+
 이전 ResNet-56/32 v2 guided shard도 H200 issue 716에서 완료됐지만, v3로 교체한 뒤
 회수한 구버전 결과이므로 현재 결과와 합치지 않고 참고 자료로만 보존합니다.
 

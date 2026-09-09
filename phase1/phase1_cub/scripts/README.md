@@ -36,6 +36,11 @@
   validation 선택 및 official-test 1회까지 수행합니다. 새 분류 checkpoint 8개와
   선택 probe checkpoint 40개를 `/app/output`에 보존하며 마지막 로그에 두 encoder
   seed의 전체 분류 및 probe 평균을 나열합니다.
+- `run_r50_224_direct_spatial_smoke_b128_seed1.sh`: issue 722 Teacher와 issue 727
+  batch-128 seed-1 네 encoder를 검증된 Release에서 받아 visible-part heatmap
+  probe, 12-block spatial linear CKA, attention rollout–GT mask 지표와 정성 PNG를
+  생성합니다. 클래스당 한 장의 train/validation subset만 사용하고 official test는
+  열지 않습니다. H200 MIG slice 1개용 비과학적 실행 점검입니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 

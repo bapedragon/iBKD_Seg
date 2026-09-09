@@ -8,6 +8,13 @@
 설정을 바꾸지 않습니다. 변경이 필요하면 현재 실행을 별도 pilot으로 분리하고
 버전을 올린 뒤 비교하는 여섯 설정을 모두 다시 실행합니다.
 
+분류→frozen segmentation probe 이후의 직접 공간정보 진단은 결과를 보기 전에
+[DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 v1으로 고정했습니다.
+Part localization PCK@0.1을 주 직접 지표로, spatial linear CKA와 attention–GT를
+보조 지표로 사용합니다. Seed-1 smoke는 official test를 열지 않으며, 진행 중인
+batch-128 encoder seed 2·3 checkpoint hash를 회수한 뒤 같은 정의로 본실험을
+확장합니다.
+
 ## 잠긴 본실험 v3 계약
 
 Full config SHA-256:

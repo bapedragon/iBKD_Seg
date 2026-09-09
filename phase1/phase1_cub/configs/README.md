@@ -41,6 +41,15 @@ probe 값은 v3/v4에서 변경하지 않습니다. Full config SHA-256은
 계약에서 거부합니다. Smoke config SHA-256은
 `6160cdcb19f2225e574bf9f397b1c99be27c95c006ba7dfc88d9e41344042162`입니다.
 
+`cub200_r50_224_b128_direct_spatial_smoke_v1.json`은 issue 727의 batch-128
+encoder seed 1 네 개를 입력으로 visible-part localization probe, spatial CKA,
+attention–GT rollout을 검증하는 비과학적 smoke 계약입니다. Part target은
+`14×14`, Gaussian `σ=1`, visible-only MSE이고 주 지표는 bbox 최대 변으로
+정규화한 PCK@0.1입니다. CKA는 validation의 ResNet-50 layer3와 DeiT block
+`0..11`, attention은 residual-aware rollout과 patch AP를 사용합니다. Official
+test는 열지 않으며 smoke config SHA-256은
+`55ac0598c11a4065f3b1416022e8fbb3de35b21cad94780ace2e2036d5430bc6`입니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은
