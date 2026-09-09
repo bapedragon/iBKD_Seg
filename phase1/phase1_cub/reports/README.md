@@ -7,7 +7,10 @@ checkpoint, feature cache와 원시 실행 결과는 Git에 포함하지 않습�
 Teacher 결과와 checkpoint hash는
 [분류 보고서](classification/resnet50_224_teacher_v3/RESULTS.md)에 고정했습니다.
 후속 v3 학생·probe는 이 Teacher의 파일 hash와 model-state hash를 모두 확인한 뒤
-실행합니다.
+실행합니다. H200 issue 727의 guided 네 방법 batch-128/64 seed-1 분류·probe는
+[v4 부분 결과 보고서](frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에
+정리했습니다. 이는 감사된 scientific cell이지만 아직 6방법×3 encoder seed 전체
+매트릭스가 아닙니다.
 
 H200 issue 716의 ResNet-56/32 v2 guided 결과는 제출 시점의 계약대로 완결됐지만,
 v3 확정 전의 구버전입니다. 결과와 55개 checkpoint는

@@ -1,0 +1,15 @@
+{
+  "active": null,
+  "active_batch_size": null,
+  "classification_complete": 8,
+  "classification_expected": 8,
+  "failure": null,
+  "official_test_evaluations_complete": 40,
+  "official_test_evaluations_expected": 40,
+  "phase": "complete",
+  "probe_candidates_complete": 120,
+  "probe_candidates_expected": 120,
+  "probe_selections_complete": 40,
+  "probe_selections_expected": 40,
+  "status": "complete"
+}

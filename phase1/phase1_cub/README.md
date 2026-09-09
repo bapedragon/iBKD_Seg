@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **ResNet-50/224 scratch 본실험 v3 LOCK — guided smoke 및 Teacher 본학습·감사 완료**
+상태: **ResNet-50/224 v3 LOCK — guided seed-1 batch128/64 분류·probe 감사 완료**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -60,7 +60,7 @@ official-test macro top-1은 `41.178%`였고 상세 결과와 checkpoint hash는
 [Teacher 결과 보고서](reports/classification/resnet50_224_teacher_v3/RESULTS.md)에
 고정했습니다. 재사용할 원본은
 [checkpoint Release manifest](reports/classification/resnet50_224_teacher_v3/checkpoint_release.json)로
-식별합니다. 다음 단계는 이 checkpoint를 공유하는 v3 학생 분류와 frozen probe입니다.
+식별합니다. Guided 학생과 probe는 모두 이 checkpoint를 공유합니다.
 
 ## v3 guided smoke 기록
 
@@ -103,7 +103,7 @@ epoch, probe LR `[0.01, 0.03, 0.1]` × 2 epoch이며, 마지막 로그에 두 �
 capacity와 실행시간 확인용입니다. 잠긴 v3 주 비교는 계속 batch 128이고, batch
 64 수치나 2-epoch 정확도·IoU로 설정을 선택하거나 논문 결론을 내리지 않습니다.
 
-## Batch 128·64 guided seed-1 full-epoch profile
+## Batch 128·64 guided seed-1 full-epoch profile — 완료
 
 Smoke에서 확인한 정확히 같은 범위를 한 H200 작업에서 full epoch로 실행합니다.
 
@@ -118,16 +118,22 @@ Issue 722의 ResNet-50/224 scratch Teacher를 다시 학습하지 않고 공유�
 `[0.01,0.03,0.1]`, 100 epoch를 수행합니다. 각 batch의 20개 validation 선택이
 완료된 뒤에만 official test mask를 열고 선택 probe를 각각 한 번 평가합니다.
 
+H200 issue 727에서 아래 기본 결과 경로의 전체 실행을 `7시간 05분`에 완료했습니다.
+
 기본 결과 경로는
 `/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4`입니다. 분류
 best checkpoint 8개, 선택 probe checkpoint 40개, CSV/JSON/status와 전체
 `run.log`가 남습니다. Smoke 선형 외삽은 약 9시간 10분이어서 10시간 제한 여유가
 크지 않습니다. 중간 산출물을 매 조건마다 기록하고 batch 128을 먼저 끝내지만,
-환경·다운로드 편차로 제한을 넘을 가능성은 남아 있습니다.
+환경·다운로드 편차에도 10시간 제한 안에서 끝났습니다.
 
-이 결과의 batch 128 네 셀은 동일 설정으로 후속 v3 전체 매트릭스에 편입할 수
-있습니다. Batch 64는 sensitivity 결과이며, 어느 쪽도 encoder seed가 하나뿐이므로
-이 실행만으로 최종 방법 우위나 encoder-seed 표준편차를 주장하지 않습니다.
+8개 encoder와 선택 probe 40개를 독립 감사했습니다. Seed-1 probe mIoU는 batch
+128에서 LG `73.695%`, ALG-w20 `70.299%`, iBKD-0.25 `71.972%`, iBKD-0.5
+`63.993%`였고, batch 64에서는 각각 `74.007%`, `72.402%`, `71.198%`,
+`68.533%`였습니다. Batch 128 네 셀은 후속 v3 전체 매트릭스에 편입하고 batch
+64는 sensitivity로만 보존합니다. 독립 encoder seed가 하나뿐이므로 이 결과만으로
+방법 우위나 encoder-seed 표준편차를 주장하지 않습니다. 전체 수치·계약·제한은
+[issue 727 결과 보고서](reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에 있습니다.
 
 ## Guided encoder-seed 후속 smoke
 

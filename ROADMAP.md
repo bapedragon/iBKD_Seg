@@ -71,7 +71,7 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided smoke와 Teacher 완료.** Pet
+**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided seed-1 부분 결과 감사 완료.** Pet
 결과가 특정 데이터셋에만 의존한 것인지 확인하기 위해 CUB-200-2011에서 분류
 encoder 학습과 frozen segmentation probe를 독립적으로 반복합니다. Pet의 잠긴
 config나 결과를 섞지 않으며, CUB용 데이터·split·mask·ResNet-50 teacher·학습·평가
@@ -81,10 +81,13 @@ teacher checkpoint 하나는 모든 guided student와 후속 baseline이 공유�
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
 Guided smoke는 `17/17`로 통과했고, v3 ResNet-50/224 scratch Teacher는 H200 issue
-722에서 200 epoch 학습과 독립 감사를 완료했습니다. Validation macro top-1으로
-선택한 epoch 165 checkpoint의 official-test macro top-1은 `41.178%`입니다. 이
-수치는 Teacher artifact 검증값이며 iBKD 주장을 판정하는 결과가 아닙니다. 다음은
-이 checkpoint 하나를 공유하는 6방법×3seed 학생 분류와 frozen probe입니다.
+722에서 200 epoch 학습과 독립 감사를 완료했습니다. H200 issue 727에서는 이
+Teacher를 공유한 LG, ALG-w20, iBKD λ=0.25/0.5의 batch-128/64 encoder seed 1
+분류·frozen probe를 완료하고 48개 새 checkpoint를 감사했습니다. Seed 1에서는
+두 batch 모두 LG probe가 가장 높았고 iBKD λ=0.25의 ALG 대비 방향은 batch에 따라
+달랐습니다. 따라서 아직 iBKD 우위를 주장하지 않으며, batch-128 seed 2·3과
+Vanilla/KD를 같은 잠긴 계약으로 채운 뒤 최종 판정합니다. 상세 수치는
+[seed-1 결과 보고서](phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에 있습니다.
 
 이전 ResNet-56/32 v2 guided shard도 H200 issue 716에서 완료됐지만, v3로 교체한 뒤
 회수한 구버전 결과이므로 현재 결과와 합치지 않고 참고 자료로만 보존합니다.

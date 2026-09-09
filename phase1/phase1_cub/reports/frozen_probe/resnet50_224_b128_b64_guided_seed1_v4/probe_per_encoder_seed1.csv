@@ -1,0 +1,9 @@
+batch_size,batch_profile_role,confirmatory_main_result,variant,encoder_seed,independent_encoder_n,probe_seeds_per_encoder,test_input_224_mean_iou_probe_seed_mean,test_input_224_mean_iou_probe_seed_sample_sd,encoder_seed_standard_deviation_estimable
+128,locked_v3_partial_cell,True,lg,1,1,5,0.736954398657864,0.0014729530118822013,False
+128,locked_v3_partial_cell,True,alg_warmup20,1,1,5,0.702993463258754,0.0025210655552261197,False
+128,locked_v3_partial_cell,True,ibkd_lambda_0.25,1,1,5,0.7197203787525142,0.0025818067536024555,False
+128,locked_v3_partial_cell,True,ibkd_lambda_0.5,1,1,5,0.6399286440919942,0.0025475942790823074,False
+64,batch64_sensitivity,False,lg,1,1,5,0.7400689865672868,0.0018823777683616622,False
+64,batch64_sensitivity,False,alg_warmup20,1,1,5,0.7240183969922707,0.002291007152952984,False
+64,batch64_sensitivity,False,ibkd_lambda_0.25,1,1,5,0.7119813564954546,0.001452892015901537,False
+64,batch64_sensitivity,False,ibkd_lambda_0.5,1,1,5,0.6853332170830955,0.0019369208767373181,False

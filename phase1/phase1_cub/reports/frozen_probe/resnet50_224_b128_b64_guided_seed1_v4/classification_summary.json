@@ -1,0 +1,159 @@
+{
+  "batch128_role": "locked_v3_partial_cell",
+  "batch64_role": "batch64_sensitivity",
+  "cells": [
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 0,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "lg",
+      "selected_epoch": 208,
+      "test_macro_top1": 24.315351247787476,
+      "test_overall_top1": 23.990334829133587,
+      "test_top5": 48.84363134276838,
+      "validation_macro_top1": 26.333335041999817,
+      "variant": "lg"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "selected_epoch": 108,
+      "test_macro_top1": 21.382255852222443,
+      "test_overall_top1": 21.211598205039696,
+      "test_top5": 47.3593372454263,
+      "validation_macro_top1": 23.000001907348633,
+      "variant": "alg_warmup20"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "selected_epoch": 239,
+      "test_macro_top1": 27.03605890274048,
+      "test_overall_top1": 26.855367621677598,
+      "test_top5": 52.67518122195374,
+      "validation_macro_top1": 27.666667103767395,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "selected_epoch": 58,
+      "test_macro_top1": 11.612388491630554,
+      "test_overall_top1": 11.511908871246117,
+      "test_top5": 31.08387987573352,
+      "validation_macro_top1": 12.000001221895218,
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "batch_profile_role": "batch64_sensitivity",
+      "batch_size": 64,
+      "checkpoint_sha256": "62169858cae75b021c93f57c1ac83552bceab5aa2fed6fbf6a014440b546e963",
+      "confirmatory_main_result": false,
+      "controller_warmup_epochs": 0,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "lg",
+      "selected_epoch": 214,
+      "test_macro_top1": 25.86154043674469,
+      "test_overall_top1": 25.647221263375908,
+      "test_top5": 51.0700724887815,
+      "validation_macro_top1": 28.166666626930237,
+      "variant": "lg"
+    },
+    {
+      "batch_profile_role": "batch64_sensitivity",
+      "batch_size": 64,
+      "checkpoint_sha256": "495acc03d96958ef31b95105b22bd055cba3fd7e9b8643c771272027db9ecfb7",
+      "confirmatory_main_result": false,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "selected_epoch": 105,
+      "test_macro_top1": 24.640914797782898,
+      "test_overall_top1": 24.37003797031412,
+      "test_top5": 50.62133241284087,
+      "validation_macro_top1": 26.499998569488525,
+      "variant": "alg_warmup20"
+    },
+    {
+      "batch_profile_role": "batch64_sensitivity",
+      "batch_size": 64,
+      "checkpoint_sha256": "1235ec4d31e8ee79a9ba35609cae16eba6673a96870ce5007a26c948741653f1",
+      "confirmatory_main_result": false,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "selected_epoch": 239,
+      "test_macro_top1": 26.030713319778442,
+      "test_overall_top1": 25.698998964445977,
+      "test_top5": 51.24266482568174,
+      "validation_macro_top1": 26.499998569488525,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "batch_profile_role": "batch64_sensitivity",
+      "batch_size": 64,
+      "checkpoint_sha256": "68072b50a13e52feb6f4e2dc2093461074995c0e1d29717c3fa4e4b1ce684438",
+      "confirmatory_main_result": false,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "selected_epoch": 283,
+      "test_macro_top1": 19.131197035312653,
+      "test_overall_top1": 19.036934760096653,
+      "test_top5": 43.33793579565067,
+      "validation_macro_top1": 19.499999284744263,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "descriptive_batch64_minus_batch128": {
+    "alg_warmup20": {
+      "test_macro_top1_percentage_points": 3.2586589455604553
+    },
+    "ibkd_lambda_0.25": {
+      "test_macro_top1_percentage_points": -1.0053455829620361
+    },
+    "ibkd_lambda_0.5": {
+      "test_macro_top1_percentage_points": 7.518808543682098
+    },
+    "lg": {
+      "test_macro_top1_percentage_points": 1.5461891889572144
+    }
+  },
+  "encoder_seed": 1,
+  "encoder_seed_standard_deviation_estimable": false,
+  "final_six_method_three_seed_matrix_complete": false,
+  "independent_encoder_n_per_batch": 1,
+  "independent_unit": "encoder_seed",
+  "initial_student_state_sha256": "34e2122bcf137af67b7a52981980aa503446331c5e207cccfeb326a7140b684d",
+  "matched_initial_student_state_across_variants_and_batches": true,
+  "official_test_evaluations": 8,
+  "protocol_id": "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4",
+  "schema_version": 1,
+  "status": "complete_audited_partial_v4"
+}

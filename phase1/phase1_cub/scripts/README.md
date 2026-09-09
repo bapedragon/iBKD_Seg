@@ -61,6 +61,10 @@
 - `curate_resnet56_v2_guided_result.py`: issue 716의 Teacher, guided encoder와
   선택된 probe checkpoint 55개를 모두 감사하고, encoder seed 기준 분류·probe
   집계와 v2 보존 보고서를 생성합니다.
+- `curate_r50_v4_guided_seed1_result.py`: issue 727의 batch-128/64 guided seed-1
+  encoder 8개와 선택 probe 40개를 `weights_only=True`로 strict load하고 파일·state
+  hash, 유한값, split 및 selection-before-test 계약을 재검산해 v4 부분 보고서를
+  생성합니다.
 
 ```bash
 PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
@@ -71,6 +75,15 @@ PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
 PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_teacher_result.py \
   --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_teacher_v3_issue722 \
   --report-dir phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
+  ARCHIVE.zip --kind resnet50-v4-guided-seed1 --issue-id 727 \
+  --output-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_b64_guided_seed1_v4_issue727 \
+  --canonical-bundle-filename phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.zip
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_v4_guided_seed1_result.py \
+  --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_b64_guided_seed1_v4_issue727 \
+  --report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4
 ```
 
 v3 Teacher는 완료됐습니다. 이후 학생·probe 본실험 실행기는 checkpoint 파일

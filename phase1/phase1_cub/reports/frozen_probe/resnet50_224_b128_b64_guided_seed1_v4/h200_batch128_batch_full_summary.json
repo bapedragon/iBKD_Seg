@@ -1,0 +1,268 @@
+{
+  "batch_profile_role": "locked_v3_partial_cell",
+  "batch_size": 128,
+  "checkpoint_manifest": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/checkpoint_manifest.json",
+  "classification_results": [
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 0,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "lg",
+      "selected_epoch": 208,
+      "test_macro_top1": 24.315351247787476,
+      "test_overall_top1": 23.990334829133587,
+      "test_top5": 48.84363134276838,
+      "validation_macro_top1": 26.333335041999817,
+      "variant": "lg"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "selected_epoch": 108,
+      "test_macro_top1": 21.382255852222443,
+      "test_overall_top1": 21.211598205039696,
+      "test_top5": 47.3593372454263,
+      "validation_macro_top1": 23.000001907348633,
+      "variant": "alg_warmup20"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "selected_epoch": 239,
+      "test_macro_top1": 27.03605890274048,
+      "test_overall_top1": 26.855367621677598,
+      "test_top5": 52.67518122195374,
+      "validation_macro_top1": 27.666667103767395,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+      "confirmatory_main_result": true,
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "selected_epoch": 58,
+      "test_macro_top1": 11.612388491630554,
+      "test_overall_top1": 11.511908871246117,
+      "test_top5": 31.08387987573352,
+      "validation_macro_top1": 12.000001221895218,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "classification_results_csv": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification_results.csv",
+  "classification_rows": [
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 0,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "lg",
+      "summary_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "lg"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": null,
+      "method": "alg",
+      "summary_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "alg_warmup20"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.25,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "batch_profile_role": "locked_v3_partial_cell",
+      "batch_size": 128,
+      "checkpoint_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+      "controller_warmup_epochs": 20,
+      "encoder_seed": 1,
+      "fusion_ratio_lambda": 0.5,
+      "method": "ibkd",
+      "summary_path": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/summary.json",
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "config_sha256": "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+  "confirmatory_main_result": true,
+  "counts": {
+    "classification_students": 4,
+    "new_checkpoints": 24,
+    "probe_lr_candidates": 60,
+    "probe_official_test_evaluations": 20,
+    "selected_probes": 20
+  },
+  "elapsed_seconds": 12534.197665724903,
+  "encoder_seed": 1,
+  "final_confirmatory_matrix_complete": false,
+  "initial_student_state_sha256": "34e2122bcf137af67b7a52981980aa503446331c5e207cccfeb326a7140b684d",
+  "official_test_source": {
+    "dataset": "CUB-200-2011",
+    "dataset_root": "/app/scratch/phase1_cub_data/CUB_200_2011",
+    "image_archive_bytes": 1150585339,
+    "image_archive_md5": "97eceeb196236b17998738112f37df78",
+    "image_archive_name": "CUB_200_2011.tgz",
+    "image_archive_sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081",
+    "segmentation_archive_bytes": 39272883,
+    "segmentation_archive_md5": "4d47ba1228eae64f2fa547c47bc65255",
+    "segmentation_archive_name": "segmentations.tgz",
+    "segmentation_archive_sha256": "dc77f6cffea0cbe2e41d4201115c8f29a6320ecb04fffd2444f51b8066e4b84f",
+    "segmentation_root": "/app/scratch/phase1_cub_data/segmentations"
+  },
+  "official_test_used_for_selection": false,
+  "probe_aggregates": [
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_n": 1,
+      "mean_over_probe_seeds": 0.736954398657864,
+      "probe_seed_values": [
+        0.7386250855317381,
+        0.7352021309618357,
+        0.7363208848002097,
+        0.7362727863412701,
+        0.7383511056542664
+      ],
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_probe_seeds": 0.0014729530118822013,
+      "variant": "lg"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_n": 1,
+      "mean_over_probe_seeds": 0.702993463258754,
+      "probe_seed_values": [
+        0.7048765674536694,
+        0.70248237224578,
+        0.699703533707545,
+        0.7018366529481515,
+        0.7060681899386241
+      ],
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_probe_seeds": 0.0025210655552261197,
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_n": 1,
+      "mean_over_probe_seeds": 0.7197203787525142,
+      "probe_seed_values": [
+        0.7183798638610789,
+        0.7180523745095184,
+        0.7172652899406242,
+        0.7217002787580169,
+        0.7232040866933325
+      ],
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_probe_seeds": 0.002581806753602455,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_n": 1,
+      "mean_over_probe_seeds": 0.6399286440919942,
+      "probe_seed_values": [
+        0.6400946063964605,
+        0.6427737041135728,
+        0.6360944552667076,
+        0.6415232807934239,
+        0.6391571738898064
+      ],
+      "probe_seeds_per_encoder": 5,
+      "sample_standard_deviation_over_probe_seeds": 0.0025475942790823074,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "probe_results_json": "/app/output/phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/batch128/probe/results.json",
+  "protocol_id": "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4",
+  "scientific_result": true,
+  "selection_contracts": {
+    "all_selected_probes_strict_reloaded": true,
+    "same_initial_probe_state_per_probe_seed": true,
+    "same_probe_batch_order_per_seed_and_epoch": true,
+    "selection_count": true,
+    "three_lr_candidates_per_selection": true
+  },
+  "status": "complete",
+  "teacher": {
+    "checkpoint": "/app/scratch/phase1_cub_r50_224_teacher_v3_issue722/teacher_best_validation.pt",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "metadata": {
+      "architecture": "torchvision_resnet50",
+      "batch_size": 128,
+      "dataset": "CUB-200-2011",
+      "epochs": 200,
+      "external_pretraining": false,
+      "full_config_sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc",
+      "initialization": "scratch",
+      "input_size": 224,
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+      "num_classes": 200,
+      "official_test_evaluations_at_checkpoint_write": 0,
+      "official_test_policy": "once_after_validation_selection_and_strict_reload",
+      "one_fixed_checkpoint_shared_by_all_guided_students": true,
+      "purpose": "phase1_cub_r50_224_scientific_teacher_v3",
+      "scientific_result": true,
+      "seed": 1,
+      "selected_epoch": 165,
+      "selected_validation": {
+        "macro_top1": 42.666664719581604,
+        "overall_top1": 42.666666666666664,
+        "samples": 600,
+        "top5": 64.83333333333333
+      },
+      "selection_metric": "validation_macro_top1",
+      "selection_tie_break": "earlier_epoch",
+      "torchvision_weights_argument": null,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "reused": true,
+    "source_h200_issue": 722
+  },
+  "variants": [
+    "lg",
+    "alg_warmup20",
+    "ibkd_lambda_0.25",
+    "ibkd_lambda_0.5"
+  ]
+}

@@ -12,6 +12,11 @@ R50_REPORT = (
     / "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3"
 )
 R56_REPORT = ROOT / "phase1/phase1_cub/reports/legacy_resnet56_v2_guided"
+R50_V4_REPORT = (
+    ROOT
+    / "phase1/phase1_cub/reports/frozen_probe/"
+    "resnet50_224_b128_b64_guided_seed1_v4"
+)
 
 
 def _json(path: Path) -> dict:
@@ -93,6 +98,70 @@ class Phase1CubResultTest(unittest.TestCase):
     def test_binary_checkpoints_are_not_tracked_inside_report_directories(self) -> None:
         self.assertEqual(list(R50_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(R56_REPORT.rglob("*.pt")), [])
+        self.assertEqual(list(R50_V4_REPORT.rglob("*.pt")), [])
+
+    def test_r50_v4_guided_seed1_profiles_are_audited_but_partial(self) -> None:
+        classification = _json(R50_V4_REPORT / "classification_summary.json")
+        probe = _json(R50_V4_REPORT / "probe_summary.json")
+        audit = _json(R50_V4_REPORT / "checkpoint_audit.json")
+        source = _json(R50_V4_REPORT / "source_manifest.json")
+
+        self.assertEqual(classification["status"], "complete_audited_partial_v4")
+        self.assertEqual(probe["status"], "complete_audited_partial_v4")
+        self.assertEqual(classification["independent_encoder_n_per_batch"], 1)
+        self.assertFalse(classification["encoder_seed_standard_deviation_estimable"])
+        self.assertTrue(probe["probe_seed_is_not_independent_replication"])
+        self.assertEqual(probe["probe_seeds_per_encoder"], 5)
+        self.assertFalse(probe["final_six_method_three_seed_matrix_complete"])
+        self.assertEqual(probe["official_test_evaluations"], 40)
+
+        cells = {
+            (cell["batch_size"], cell["variant"]): cell for cell in probe["cells"]
+        }
+        self.assertTrue(
+            math.isclose(
+                cells[(128, "lg")]["test_input_224_mean_iou_probe_seed_mean"],
+                0.736954398657864,
+                rel_tol=0.0,
+                abs_tol=1e-15,
+            )
+        )
+        self.assertTrue(
+            math.isclose(
+                cells[(128, "ibkd_lambda_0.25")][
+                    "test_input_224_mean_iou_probe_seed_mean"
+                ],
+                0.7197203787525142,
+                rel_tol=0.0,
+                abs_tol=1e-15,
+            )
+        )
+        self.assertGreater(
+            cells[(128, "lg")]["test_input_224_mean_iou_probe_seed_mean"],
+            cells[(128, "ibkd_lambda_0.25")][
+                "test_input_224_mean_iou_probe_seed_mean"
+            ],
+        )
+        self.assertGreater(
+            cells[(64, "alg_warmup20")]["test_input_224_mean_iou_probe_seed_mean"],
+            cells[(64, "ibkd_lambda_0.25")][
+                "test_input_224_mean_iou_probe_seed_mean"
+            ],
+        )
+
+        self.assertEqual(audit["new_checkpoint_count"], 48)
+        self.assertEqual(audit["classification_encoder_checkpoint_count"], 8)
+        self.assertEqual(audit["selected_probe_checkpoint_count"], 40)
+        self.assertTrue(audit["all_file_hashes_match"])
+        self.assertTrue(audit["all_strict_loads_passed"])
+        self.assertTrue(audit["all_floating_tensors_finite"])
+        self.assertEqual(source["h200_issue_id"], "727")
+        self.assertEqual(source["checkpoint_count"], 48)
+        self.assertEqual(
+            source["source_archive"]["canonical_filename"],
+            "phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.zip",
+        )
+        self.assertTrue(source["source_archive"]["all_member_crc_verified"])
 
     def test_release_manifests_bind_the_remote_assets_and_checkpoint_roles(self) -> None:
         teacher = _json(R50_REPORT / "checkpoint_release.json")

@@ -1,6 +1,6 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v3 LOCK — ResNet-50/224 guided smoke 및 Teacher 실행·감사 완료**
+상태: **본실험 v3 LOCK — Teacher 및 guided seed-1 batch profile 실행·감사 완료**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
@@ -101,6 +101,12 @@ Full profile config는
 - 각 batch의 probe 20개를 validation으로 모두 선택한 뒤에만 그 batch의 official
   test mask를 열며, test는 선택이나 설정 변경에 사용하지 않습니다.
 - 분류 best checkpoint 8개와 선택 probe checkpoint 40개를 보존합니다.
+
+H200 issue 727은 이 계약을 변경하지 않고 완료됐습니다. 분류 `8/8`, probe LR
+후보 `120/120`, validation 선택·official test `40/40`이며 새 checkpoint 48개가
+모두 파일 hash, strict load와 유한값 감사를 통과했습니다. Seed-1 수치는
+[v4 부분 결과 보고서](reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에
+고정했습니다. 이 결과를 보고 v5 범위나 방법·lambda를 바꾸지 않습니다.
 
 ### Guided encoder-seed 후속 범위 LOCK
 

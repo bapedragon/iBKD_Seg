@@ -17,12 +17,25 @@ from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO
 
 
-KINDS = ("resnet56-v2-guided", "resnet50-v3-teacher")
+KINDS = (
+    "resnet56-v2-guided",
+    "resnet50-v3-teacher",
+    "resnet50-v4-guided-seed1",
+)
 V2_CONFIG_SHA256 = (
     "0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575"
 )
 V3_CONFIG_SHA256 = (
     "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+)
+V4_CONFIG_SHA256 = (
+    "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633"
+)
+R50_TEACHER_CHECKPOINT_SHA256 = (
+    "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
+)
+R50_TEACHER_STATE_SHA256 = (
+    "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
 )
 
 
@@ -137,6 +150,70 @@ def _validate_v3_teacher(summary: dict[str, Any]) -> None:
         raise RuntimeError("invalid completed CUB v3 teacher result: " + ", ".join(failures))
 
 
+def _validate_v4_guided_seed1(summary: dict[str, Any]) -> None:
+    expected_counts = {
+        "classification_official_test_evaluations": 8,
+        "classification_students": 8,
+        "new_checkpoints": 48,
+        "probe_lr_candidates": 120,
+        "probe_official_test_evaluations": 40,
+        "selected_probes": 40,
+        "teacher_reused": 1,
+    }
+    expected_batch_counts = {
+        "classification_students": 4,
+        "new_checkpoints": 24,
+        "probe_lr_candidates": 60,
+        "probe_official_test_evaluations": 20,
+        "selected_probes": 20,
+    }
+    batches = summary.get("batches", [])
+    by_batch = {
+        batch.get("batch_size"): batch
+        for batch in batches
+        if isinstance(batch, dict)
+    }
+    teacher = summary.get("teacher", {})
+    checks = {
+        "status": summary.get("status") == "complete",
+        "scientific": summary.get("scientific_result") is True,
+        "protocol": summary.get("protocol_id")
+        == "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4",
+        "config": summary.get("config_sha256") == V4_CONFIG_SHA256,
+        "batches": summary.get("batch_order") == [128, 64]
+        and set(by_batch) == {64, 128},
+        "variants": summary.get("variants")
+        == ["lg", "alg_warmup20", "ibkd_lambda_0.25", "ibkd_lambda_0.5"],
+        "seeds": summary.get("encoder_seeds") == [1],
+        "counts": summary.get("counts") == expected_counts,
+        "initialization": summary.get("same_initial_student_state_across_variants_and_batches")
+        is True,
+        "partial": summary.get("final_confirmatory_matrix_complete") is False,
+        "roles": by_batch.get(128, {}).get("batch_profile_role")
+        == "locked_v3_partial_cell"
+        and by_batch.get(128, {}).get("confirmatory_main_result") is True
+        and by_batch.get(64, {}).get("batch_profile_role") == "batch64_sensitivity"
+        and by_batch.get(64, {}).get("confirmatory_main_result") is False,
+        "batch_counts": all(
+            by_batch.get(batch_size, {}).get("counts") == expected_batch_counts
+            for batch_size in (128, 64)
+        ),
+        "batch_selection_contracts": all(
+            all(by_batch.get(batch_size, {}).get("selection_contracts", {}).values())
+            for batch_size in (128, 64)
+        ),
+        "teacher": teacher.get("reused") is True
+        and teacher.get("source_h200_issue") == 722
+        and teacher.get("checkpoint_sha256") == R50_TEACHER_CHECKPOINT_SHA256
+        and teacher.get("model_state_sha256") == R50_TEACHER_STATE_SHA256,
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid completed CUB v4 guided seed-1 result: " + ", ".join(failures)
+        )
+
+
 def _v2_selection(
     source_zip: zipfile.ZipFile, names: set[str]
 ) -> tuple[str, list[tuple[str, Path]], list[str]]:
@@ -248,6 +325,97 @@ def _v3_teacher_selection(
     return suite_root, selected, omitted
 
 
+def _v4_guided_seed1_selection(
+    source_zip: zipfile.ZipFile, names: set[str]
+) -> tuple[str, list[tuple[str, Path]], list[str]]:
+    suite_name = "phase1_cub_r50_224_b128_b64_guided_probe_seed1_full_v4/"
+    summary_member = _unique_suffix(names, "/" + suite_name + "combined_full_summary.json")
+    _validate_v4_guided_seed1(_read_json(source_zip, summary_member))
+    suite_root = summary_member.rsplit("/", 1)[0] + "/"
+    issue_root = suite_root[: -len(suite_name)]
+
+    selected: list[tuple[str, Path]] = []
+    root_files = (
+        "checkpoint_manifest.json",
+        "combined_full_summary.json",
+        "dataset_audit.json",
+        "run.log",
+        "sequence_status.json",
+    )
+    batch_files = (
+        "batch_full_summary.json",
+        "checkpoint_manifest.json",
+        "classification_results.csv",
+        "probe/raw_results.csv",
+        "probe/results.json",
+        "probe/selection_complete_before_test.json",
+        "probe/validation_selections.json",
+    )
+    for relative in root_files:
+        member = suite_root + relative
+        if member not in names:
+            raise RuntimeError(f"required v4 artifact is missing: {member}")
+        selected.append((member, Path(relative)))
+    for batch_size in (128, 64):
+        for relative in batch_files:
+            canonical = Path(f"batch{batch_size}") / relative
+            member = suite_root + canonical.as_posix()
+            if member not in names:
+                raise RuntimeError(f"required v4 artifact is missing: {member}")
+            selected.append((member, canonical))
+
+    summaries = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root)
+        and "/classification/students/" in name
+        and name.endswith("/summary.json")
+    )
+    classification_checkpoints = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root)
+        and "/classification/students/" in name
+        and name.endswith("/student_best_validation.pt")
+    )
+    probe_checkpoints = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root)
+        and "/probe/checkpoints/" in name
+        and name.endswith("_best_validation.pt")
+    )
+    if (len(summaries), len(classification_checkpoints), len(probe_checkpoints)) != (
+        8,
+        8,
+        40,
+    ):
+        raise RuntimeError(
+            "unexpected v4 reusable artifact counts: "
+            f"summaries={len(summaries)} classification_checkpoints="
+            f"{len(classification_checkpoints)} probe_checkpoints={len(probe_checkpoints)}"
+        )
+    for member in summaries + classification_checkpoints + probe_checkpoints:
+        selected.append((member, Path(PurePosixPath(member).relative_to(suite_root))))
+
+    validation_split = _unique_suffix(
+        names,
+        "/batch128/classification/students/"
+        "cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/validation_split.json",
+    )
+    selected.append((validation_split, Path("validation_split.json")))
+    issue_log = _unique_suffix(names, "_result.txt")
+    if not issue_log.startswith(issue_root):
+        raise RuntimeError("v4 H200 issue log is outside the expected archive root")
+    selected.append((issue_log, Path("h200_issue.log")))
+    omitted = [
+        "duplicate per-student training_status.json",
+        "duplicate per-student validation_split.json except one canonical copy",
+        "directory entries",
+    ]
+    return suite_root, selected, omitted
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
@@ -276,8 +444,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         names = {info.filename for info in infos}
         if args.kind == "resnet56-v2-guided":
             suite_root, selected, omitted = _v2_selection(source_zip, names)
-        else:
+        elif args.kind == "resnet50-v3-teacher":
             suite_root, selected, omitted = _v3_teacher_selection(source_zip, names)
+        else:
+            suite_root, selected, omitted = _v4_guided_seed1_selection(
+                source_zip, names
+            )
         if len({str(relative) for _, relative in selected}) != len(selected):
             raise RuntimeError("selected archive artifacts collide after canonicalization")
 
