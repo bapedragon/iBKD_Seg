@@ -11,6 +11,9 @@ Teacher 결과와 checkpoint hash는
 [v4 부분 결과 보고서](frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에
 정리했습니다. 이는 감사된 scientific cell이지만 아직 6방법×3 encoder seed 전체
 매트릭스가 아닙니다.
+48개 checkpoint와 전체 원시 로그는 Git history가 아닌 보고서에 연결한 검증된
+[Release 자산](frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/artifact_release.json)으로
+보존합니다.
 
 H200 issue 716의 ResNet-56/32 v2 guided 결과는 제출 시점의 계약대로 완결됐지만,
 v3 확정 전의 구버전입니다. 결과와 55개 checkpoint는

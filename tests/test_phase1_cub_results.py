@@ -166,6 +166,7 @@ class Phase1CubResultTest(unittest.TestCase):
     def test_release_manifests_bind_the_remote_assets_and_checkpoint_roles(self) -> None:
         teacher = _json(R50_REPORT / "checkpoint_release.json")
         legacy = _json(R56_REPORT / "artifact_release.json")
+        v4 = _json(R50_V4_REPORT / "artifact_release.json")
 
         self.assertEqual(teacher["size_bytes"], 89065279)
         self.assertEqual(
@@ -187,6 +188,18 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(legacy["contents"]["total_checkpoints"], 55)
         self.assertFalse(legacy["canonical_phase1_cub_v3_result"])
         self.assertTrue(legacy["remote_asset_digest_verified"])
+
+        self.assertEqual(v4["size_bytes"], 524076632)
+        self.assertEqual(
+            v4["sha256"],
+            "9d9f7b4554b588bed69abf5e435149222af4f70d9a0fd8159d47d37319fdbc96",
+        )
+        self.assertEqual(v4["contents"]["classification_student_checkpoints"], 8)
+        self.assertEqual(v4["contents"]["selected_probe_checkpoints"], 40)
+        self.assertEqual(v4["contents"]["total_checkpoints"], 48)
+        self.assertTrue(v4["canonical_phase1_cub_v3_partial_result"])
+        self.assertFalse(v4["final_six_method_three_seed_matrix_complete"])
+        self.assertTrue(v4["remote_asset_digest_verified"])
 
 
 if __name__ == "__main__":

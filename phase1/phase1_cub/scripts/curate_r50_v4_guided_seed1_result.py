@@ -787,7 +787,8 @@ sensitivity profile입니다. 아직 Vanilla/KD와 batch-128 encoder seed 2·3�
 - 새 checkpoint: encoder 8개 + 선택 probe 40개 = 48개
 - 48개 모두 파일 SHA-256, `weights_only=True`, strict load, 유한값 감사 통과
 - 공용 Teacher hash와 train/validation/test `5,394 / 600 / 5,794` split hash 일치
-- 원시 checkpoint는 ignored raw 경로에 보존하며 Git에는 hash·요약만 기록
+- 원시 checkpoint는 [검증된 GitHub Release](artifact_release.json)에 보존하고
+  Git history에는 hash·요약만 기록
 
 ## 200종 분류
 

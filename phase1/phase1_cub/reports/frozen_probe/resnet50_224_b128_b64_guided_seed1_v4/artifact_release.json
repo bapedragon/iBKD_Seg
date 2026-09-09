@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "asset_type": "phase1_cub_resnet50_224_guided_seed1_batch_profiles_v4",
+  "release_tag": "phase1-cub-r50-224-guided-seed1-v4-issue727",
+  "release_url": "https://github.com/bapedragon/iBKD_Seg/releases/tag/phase1-cub-r50-224-guided-seed1-v4-issue727",
+  "asset_name": "phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-cub-r50-224-guided-seed1-v4-issue727/phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.tar.gz",
+  "size_bytes": 524076632,
+  "sha256": "9d9f7b4554b588bed69abf5e435149222af4f70d9a0fd8159d47d37319fdbc96",
+  "target_git_commit": "839189a07af5ab1e7c1f426c07049ac70236b5bb",
+  "source": {
+    "h200_job_id": 727,
+    "canonical_source_archive_name": "phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.zip",
+    "source_archive_sha256": "4439567a384033f7854a63f0817a7a7aeadac35b4f26c803070437fe68853465",
+    "protocol_id": "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4",
+    "protocol_config_sha256": "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+    "shared_teacher_h200_job_id": 722,
+    "shared_teacher_checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
+  },
+  "batch_profiles": {
+    "128": "locked_v3_partial_cell",
+    "64": "batch64_sensitivity"
+  },
+  "contents": {
+    "external_teacher_checkpoint": false,
+    "classification_student_checkpoints": 8,
+    "selected_probe_checkpoints": 40,
+    "total_checkpoints": 48,
+    "classification_results": true,
+    "full_probe_results": true,
+    "selection_before_test_records": true,
+    "dataset_audit": true,
+    "source_artifact_manifest": true,
+    "run_log": true,
+    "h200_log": true,
+    "dataset_files": false,
+    "feature_caches": false
+  },
+  "remote_asset_digest_verified": true,
+  "storage_policy": "github_release_asset_not_git_history",
+  "canonical_phase1_cub_v3_partial_result": true,
+  "final_six_method_three_seed_matrix_complete": false,
+  "role": "preserve_issue727_seed1_encoders_and_selected_probes_for_matrix_completion_and_direct_spatial_diagnostics"
+}
