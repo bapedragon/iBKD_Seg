@@ -376,6 +376,35 @@ def _existing_marker(destination: Path, kind: str) -> Path:
     return destination / "classification_summary.json"
 
 
+def _resolve_payload_root(extraction_root: Path, kind: str) -> Path:
+    """Locate one release payload and normalize an optional wrapper directory."""
+
+    marker_name = _existing_marker(Path("."), kind).name
+    marker_candidates = sorted(
+        path
+        for path in extraction_root.rglob(marker_name)
+        if path.is_file()
+    )
+    if len(marker_candidates) != 1:
+        raise RuntimeError(
+            "release archive must contain exactly one payload marker "
+            f"{marker_name}; found {len(marker_candidates)}"
+        )
+
+    payload_root = marker_candidates[0].parent
+    files_outside_payload = sorted(
+        path.relative_to(extraction_root).as_posix()
+        for path in extraction_root.rglob("*")
+        if path.is_file() and not path.is_relative_to(payload_root)
+    )
+    if files_outside_payload:
+        raise RuntimeError(
+            "release archive contains files outside its detected payload root: "
+            + ", ".join(files_outside_payload)
+        )
+    return payload_root
+
+
 def download_and_extract(
     manifest_path: Path,
     destination: Path,
@@ -441,10 +470,17 @@ def download_and_extract(
                 )
             else:  # Python 3.10 reference environment; members were checked above.
                 archive.extractall(extraction_root, members=payload_members)
-        checkpoint_count = _validate_extracted(extraction_root, manifest)
+        payload_root = _resolve_payload_root(extraction_root, kind)
+        if payload_root != extraction_root:
+            relative_payload_root = payload_root.relative_to(extraction_root)
+            log(
+                "[CHECKPOINT_RELEASE] "
+                f"normalized_payload_root={relative_payload_root.as_posix()}"
+            )
+        checkpoint_count = _validate_extracted(payload_root, manifest)
         if destination.exists():
             destination.rmdir()
-        extraction_root.replace(destination)
+        payload_root.replace(destination)
         log(
             "[CHECKPOINT_RELEASE_DONE] "
             f"destination={destination} checkpoints={checkpoint_count} status=pass"

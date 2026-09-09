@@ -34,6 +34,7 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
         batch_size: int,
         *,
         include_macos_metadata: bool = False,
+        wrapper: str | None = None,
     ) -> Path:
         source = root / "source"
         source.mkdir()
@@ -63,7 +64,9 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
         archive_path = root / "asset.tar.gz"
         with tarfile.open(archive_path, mode="w:gz") as archive:
             for path in sorted(source.rglob("*")):
-                archive.add(path, arcname=path.relative_to(source))
+                relative = path.relative_to(source)
+                arcname = Path(wrapper) / relative if wrapper else relative
+                archive.add(path, arcname=arcname)
         manifest_path = root / "manifest.json"
         manifest_path.write_text(
             json.dumps(
@@ -109,6 +112,20 @@ class Phase1ReleaseAssetTest(unittest.TestCase):
             self.assertEqual(len(list(destination.rglob("*_best_validation.pt"))), 19)
             # A second call validates and reuses the installed result.
             download_and_extract(manifest_path, destination, root / "downloads")
+
+    def test_single_top_level_directory_is_normalized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = self._write_complete_asset(
+                root,
+                batch_size=64,
+                wrapper="release_wrapper",
+            )
+            destination = root / "installed"
+            download_and_extract(manifest_path, destination, root / "downloads")
+            self.assertTrue((destination / "classification_summary.json").is_file())
+            self.assertFalse((destination / "release_wrapper").exists())
+            self.assertEqual(len(list(destination.rglob("*_best_validation.pt"))), 19)
 
     def test_batch128_asset_is_supported(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
