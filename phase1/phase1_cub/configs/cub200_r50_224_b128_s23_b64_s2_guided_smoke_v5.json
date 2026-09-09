@@ -106,15 +106,33 @@
       "strict_load": true,
       "frozen": true,
       "eval_mode": true,
-      "feature": "block11_pre_norm_patch_tokens_nchw_192x14x14"
+      "feature": {
+        "block_index": 11,
+        "norm": false,
+        "exclude_cls_token": true,
+        "output_format": "NCHW",
+        "channels": 192,
+        "height": 14,
+        "width": 14,
+        "dtype": "float32"
+      }
     },
     "probe": {
       "architecture": "Conv2d(192,2,1,bias=True)",
+      "parameter_count": 386,
+      "initialization": {"weight": "normal", "weight_std": 0.01, "bias": 0.0},
+      "target": {
+        "grid_height": 14,
+        "grid_width": 14,
+        "foreground_occupancy_threshold": 0.5
+      },
+      "loss": {"name": "cross_entropy", "ignore_index": 255, "class_weighting": "none"},
+      "optimizer": {"name": "sgd", "momentum": 0.9, "weight_decay": 0.0, "nesterov": false},
       "learning_rates": [0.01, 0.03, 0.1],
       "epochs": 2,
       "planned_epochs": 100,
       "batch_size": 64,
-      "loss": {"name": "cross_entropy", "ignore_index": 255, "class_weighting": "none"},
+      "scheduler": {"name": "cosine", "minimum_learning_rate": 0.0},
       "probe_seeds": [1],
       "planned_probe_seeds": [1, 2, 3, 4, 5]
     },
@@ -125,8 +143,10 @@
       "smoke_selection_has_scientific_meaning": false
     },
     "evaluation": {
+      "validation": true,
       "official_test": true,
       "official_test_evaluations_per_selected_smoke_probe": 1,
+      "prediction": "bilinear_upsample_logits_14x14_to_224x224_then_argmax",
       "primary_metric": "input_224_two_class_mean_iou"
     }
   },

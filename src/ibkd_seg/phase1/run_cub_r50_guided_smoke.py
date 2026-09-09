@@ -71,7 +71,7 @@ SEED_EXTENSION_SMOKE_ID = (
     "classification_to_probe_smoke_v5"
 )
 EXPECTED_SEED_EXTENSION_CONFIG_SHA256 = (
-    "1cfaad0e7395e54dcc70560b0fb05b4240b66636e16b41bd8746388e079ea570"
+    "6160cdcb19f2225e574bf9f397b1c99be27c95c006ba7dfc88d9e41344042162"
 )
 EXPECTED_SEED_EXTENSION_FULL_CONFIG_SHA256 = (
     "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
@@ -279,7 +279,10 @@ def _validate_batch_profile_configs(
 ) -> None:
     teacher = smoke.get("classification", {}).get("teacher", {})
     student = smoke.get("classification", {}).get("student", {})
-    probe = smoke.get("frozen_probe", {}).get("probe", {})
+    frozen_probe = smoke.get("frozen_probe", {})
+    probe = frozen_probe.get("probe", {})
+    feature = frozen_probe.get("encoder", {}).get("feature", {})
+    target = probe.get("target", {})
     checks = {
         "smoke_id": smoke.get("smoke_id") == BATCH_PROFILE_SMOKE_ID,
         "smoke_non_scientific": smoke.get("scientific_result") is False,
@@ -348,6 +351,34 @@ def _validate_batch_profile_configs(
         and probe.get("planned_epochs") == 100
         and probe.get("probe_seeds") == [1]
         and probe.get("planned_probe_seeds") == [1, 2, 3, 4, 5],
+        "probe_runtime_schema": feature
+        == {
+            "block_index": 11,
+            "norm": False,
+            "exclude_cls_token": True,
+            "output_format": "NCHW",
+            "channels": 192,
+            "height": 14,
+            "width": 14,
+            "dtype": "float32",
+        }
+        and target
+        == {
+            "grid_height": 14,
+            "grid_width": 14,
+            "foreground_occupancy_threshold": 0.5,
+        }
+        and probe.get("initialization")
+        == {"weight": "normal", "weight_std": 0.01, "bias": 0.0}
+        and probe.get("optimizer")
+        == {
+            "name": "sgd",
+            "momentum": 0.9,
+            "weight_decay": 0.0,
+            "nesterov": False,
+        }
+        and probe.get("scheduler")
+        == {"name": "cosine", "minimum_learning_rate": 0.0},
         "task_count": smoke.get("task_count")
         == {
             "teacher_download_and_audit": 1,
@@ -391,7 +422,10 @@ def _validate_seed_extension_configs(
 ) -> None:
     teacher = smoke.get("classification", {}).get("teacher", {})
     student = smoke.get("classification", {}).get("student", {})
-    probe = smoke.get("frozen_probe", {}).get("probe", {})
+    frozen_probe = smoke.get("frozen_probe", {})
+    probe = frozen_probe.get("probe", {})
+    feature = frozen_probe.get("encoder", {}).get("feature", {})
+    target = probe.get("target", {})
     profiles = student.get("batch_seed_profiles", [])
     expected_profiles = [
         {
@@ -479,6 +513,34 @@ def _validate_seed_extension_configs(
         and probe.get("planned_epochs") == 100
         and probe.get("probe_seeds") == [1]
         and probe.get("planned_probe_seeds") == [1, 2, 3, 4, 5],
+        "probe_runtime_schema": feature
+        == {
+            "block_index": 11,
+            "norm": False,
+            "exclude_cls_token": True,
+            "output_format": "NCHW",
+            "channels": 192,
+            "height": 14,
+            "width": 14,
+            "dtype": "float32",
+        }
+        and target
+        == {
+            "grid_height": 14,
+            "grid_width": 14,
+            "foreground_occupancy_threshold": 0.5,
+        }
+        and probe.get("initialization")
+        == {"weight": "normal", "weight_std": 0.01, "bias": 0.0}
+        and probe.get("optimizer")
+        == {
+            "name": "sgd",
+            "momentum": 0.9,
+            "weight_decay": 0.0,
+            "nesterov": False,
+        }
+        and probe.get("scheduler")
+        == {"name": "cosine", "minimum_learning_rate": 0.0},
         "task_count": smoke.get("task_count")
         == {
             "teacher_download_and_audit": 1,

@@ -126,6 +126,22 @@ class Phase1CubR50SeedExtensionSmokeTest(unittest.TestCase):
         self.assertEqual(
             file_sha256(FULL_CONFIG), EXPECTED_SEED_EXTENSION_FULL_CONFIG_SHA256
         )
+        feature = smoke["frozen_probe"]["encoder"]["feature"]
+        probe = smoke["frozen_probe"]["probe"]
+        self.assertEqual(
+            (feature["channels"], feature["height"], feature["width"]),
+            (192, 14, 14),
+        )
+        self.assertEqual(
+            probe["target"],
+            {
+                "grid_height": 14,
+                "grid_width": 14,
+                "foreground_occupancy_threshold": 0.5,
+            },
+        )
+        self.assertEqual(probe["optimizer"]["name"], "sgd")
+        self.assertEqual(probe["scheduler"]["name"], "cosine")
 
     def test_unplanned_batch_seed_pair_is_rejected(self) -> None:
         smoke = json.loads(CONFIG.read_text(encoding="utf-8"))
@@ -133,6 +149,15 @@ class Phase1CubR50SeedExtensionSmokeTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "requested_profile"):
             _validate_seed_extension_configs(
                 smoke, full, batch_size=64, encoder_seed=3
+            )
+
+    def test_incomplete_probe_runtime_schema_is_rejected_before_training(self) -> None:
+        smoke = json.loads(CONFIG.read_text(encoding="utf-8"))
+        full = json.loads(FULL_CONFIG.read_text(encoding="utf-8"))
+        del smoke["frozen_probe"]["probe"]["target"]
+        with self.assertRaisesRegex(RuntimeError, "probe_runtime_schema"):
+            _validate_seed_extension_configs(
+                smoke, full, batch_size=128, encoder_seed=2
             )
 
     def test_student_timing_accepts_each_new_profile(self) -> None:

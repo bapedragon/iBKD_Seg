@@ -123,7 +123,7 @@ Seed-1 profile 로그를 확인한 뒤 다음 후속 범위를 고정했습니�
 
 선행 비과학적 smoke config는
 `configs/cub200_r50_224_b128_s23_b64_s2_guided_smoke_v5.json`, SHA-256은
-`1cfaad0e7395e54dcc70560b0fb05b4240b66636e16b41bd8746388e079ea570`입니다. 정확히
+`6160cdcb19f2225e574bf9f397b1c99be27c95c006ba7dfc88d9e41344042162`입니다. 정확히
 `(128,2)`, `(128,3)`, `(64,2)`만 허용하고 각 profile에서 guided 네 방법 ×
 2-epoch 분류와 probe seed 1 × LR 3개 × 2 epoch를 검사합니다. 같은 encoder seed
 내 네 방법의 초기 state와 seed 2의 두 batch 간 초기 state가 같고, seed 2와 3의

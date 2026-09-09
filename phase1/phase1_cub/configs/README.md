@@ -39,7 +39,7 @@ probe 값은 v3/v4에서 변경하지 않습니다. Full config SHA-256은
 세 `(batch, encoder seed)` 조합을 각각 2-epoch 분류와 probe seed 1 × LR 3개 ×
 2 epoch로 점검하는 비과학적 smoke입니다. Batch 64 seed 3이나 seed 1 재실행은
 계약에서 거부합니다. Smoke config SHA-256은
-`1cfaad0e7395e54dcc70560b0fb05b4240b66636e16b41bd8746388e079ea570`입니다.
+`6160cdcb19f2225e574bf9f397b1c99be27c95c006ba7dfc88d9e41344042162`입니다.
 
 ## 대체된 v2 보존본
 
