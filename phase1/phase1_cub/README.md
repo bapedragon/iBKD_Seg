@@ -147,6 +147,26 @@ load·freeze한 뒤 probe seed 1, LR `[0.01,0.03,0.1]`, 2 epoch를 수행합니�
 `12/12`, GPU 작업 `48/48`입니다. Smoke 수치로 방법·lambda·batch·seed를
 선택하지 않습니다.
 
+이 smoke는 세 profile `3/3`, 전체 GPU 작업 `48/48`로 통과했습니다. 선형 외삽은
+batch 128 seed 2·3을 분류부터 probe까지 약 9시간 4분으로 추정했습니다.
+
+## Batch 128 guided encoder seed 2·3 본학습
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_guided_probe_full_b128_seeds2_3.sh
+```
+
+이 분할은 batch 128의 LG, ALG-w20, iBKD λ=0.25/0.5를 encoder seed 2와 3에서
+각각 300 epoch 학습합니다. 각 validation-best encoder를 strict load·완전 동결한
+뒤 probe seed 5개 × LR 3개 × 100 epoch를 실행하고, 각 probe seed의 LR/epoch를
+validation으로 고른 뒤 official test를 한 번 평가합니다. 분류 checkpoint 8개와
+선택 probe checkpoint 40개, 총 48개 새 checkpoint 및 CSV/JSON/전체 로그를
+`/app/output/phase1_cub_r50_224_b128_guided_probe_seeds2_3_full_v5`에 보존합니다.
+
+선형 예상 9시간 4분에 최초 데이터 다운로드·target cache 시간이 추가되므로 10시간
+제한 여유는 작습니다. 이 실행의 마지막 완료 기준은 분류 `8/8`, probe 후보
+`120/120`, 선택·test probe `40/40`, 새 checkpoint `48`입니다.
+
 본실험에서는 각 encoder마다 probe seed `[1,2,3,4,5]`를 그대로 수행합니다.
 Batch 128은 먼저 encoder별 5개 probe 평균을 계산한 뒤 encoder seed 1·2·3 간
 평균과 표준편차를 보고합니다. Batch 64의 seed 1·2 결과에는 확증적 통계 검정을

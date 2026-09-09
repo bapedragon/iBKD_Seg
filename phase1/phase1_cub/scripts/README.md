@@ -30,6 +30,12 @@
   seed 1 × LR 3개 × 2 epoch를 수행합니다. 마지막에 12개 분류·12개 선택 probe,
   peak memory와 `batch128 seeds 2·3`/`batch64 seed 2` 본실험 시간 외삽을 모두
   출력합니다. 모든 smoke 수치는 비과학적입니다.
+- `run_r50_224_guided_probe_full_b128_seeds2_3.sh`: 통과한 v5 smoke 뒤 batch 128의
+  encoder seed 2·3만 실행하는 첫 번째 full partition입니다. Guided 네 방법을
+  각각 300 epoch 학습하고 encoder마다 probe seed 5개 × LR 3개 × 100 epoch를
+  validation 선택 및 official-test 1회까지 수행합니다. 새 분류 checkpoint 8개와
+  선택 probe checkpoint 40개를 `/app/output`에 보존하며 마지막 로그에 두 encoder
+  seed의 전체 분류 및 probe 평균을 나열합니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 

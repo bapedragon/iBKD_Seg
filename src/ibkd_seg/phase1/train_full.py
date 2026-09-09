@@ -60,6 +60,9 @@ TEACHER_ARCHITECTURES = ("resnet56_32", "resnet50_224_scratch")
 CUB_R50_BATCH_PROFILE_CONFIG_SHA256 = (
     "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633"
 )
+CUB_R50_SEED_EXTENSION_CONFIG_SHA256 = (
+    "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+)
 ALG_WARMUP20_DIAGNOSTIC_ID = (
     "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1"
 )
@@ -111,13 +114,23 @@ def parse_args() -> argparse.Namespace:
         help="Strictly reuse the audited issue-722 CUB ResNet-50/224 teacher.",
     )
     parser.add_argument(
+        "--seed-extension-full",
+        action="store_true",
+        help="Run one cell from the locked CUB R50/224 v5 seed extension.",
+    )
+    parser.add_argument(
         "--protocol-config",
         type=Path,
         help="Locked batch-profile protocol snapshot bound to this student run.",
     )
     parser.add_argument(
         "--batch-profile-role",
-        choices=("locked_v3_partial_cell", "batch64_sensitivity"),
+        choices=(
+            "locked_v3_partial_cell",
+            "batch64_sensitivity",
+            "locked_v3_confirmatory_continuation",
+            "posthoc_exploratory_batch_sensitivity",
+        ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=200)
     parser.add_argument("--num-workers", type=int, default=4)
@@ -140,6 +153,7 @@ def validate_args(args: argparse.Namespace) -> None:
     dataset_key = _dataset_key(args)
     teacher_architecture = str(getattr(args, "teacher_architecture", "resnet56_32"))
     scientific_cub_r50 = bool(getattr(args, "scientific_cub_r50_teacher", False))
+    seed_extension_full = bool(getattr(args, "seed_extension_full", False))
     protocol_config = getattr(args, "protocol_config", None)
     batch_profile_role = getattr(args, "batch_profile_role", None)
     if args.batch_size not in {64, 128}:
@@ -147,7 +161,7 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.eval_batch_size <= 0 or args.num_workers < 0:
         raise ValueError("Invalid evaluation batch size or worker count")
     if args.kind == "teacher":
-        if scientific_cub_r50 or protocol_config is not None:
+        if scientific_cub_r50 or seed_extension_full or protocol_config is not None:
             raise ValueError("Legacy teacher training cannot use the CUB R50 student flags")
         if teacher_architecture != "resnet56_32":
             raise ValueError("Use run_cub_r50_teacher_full for a ResNet-50 teacher")
@@ -174,19 +188,39 @@ def validate_args(args: argparse.Namespace) -> None:
                 "CUB ResNet-50/224 full students require protocol config and profile role"
             )
         profile = json.loads(protocol_config.read_text(encoding="utf-8"))
-        if file_sha256(protocol_config) != CUB_R50_BATCH_PROFILE_CONFIG_SHA256:
-            raise ValueError("CUB ResNet-50/224 batch-profile protocol SHA-256 changed")
-        if profile.get("protocol_id") != (
-            "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
-        ):
-            raise ValueError("Unexpected CUB ResNet-50/224 batch-profile protocol")
-        expected_role = (
-            "locked_v3_partial_cell" if args.batch_size == 128 else "batch64_sensitivity"
-        )
-        if batch_profile_role != expected_role:
-            raise ValueError("Batch size and batch-profile role disagree")
-        if args.seed != 1:
-            raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
+        if seed_extension_full:
+            if file_sha256(protocol_config) != CUB_R50_SEED_EXTENSION_CONFIG_SHA256:
+                raise ValueError("CUB ResNet-50/224 v5 seed-extension protocol SHA-256 changed")
+            if profile.get("protocol_id") != (
+                "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5"
+            ):
+                raise ValueError("Unexpected CUB ResNet-50/224 seed-extension protocol")
+            allowed_pairs = {(128, 2), (128, 3), (64, 2)}
+            if (args.batch_size, args.seed) not in allowed_pairs:
+                raise ValueError("Batch/seed pair is outside the locked v5 extension")
+            expected_role = (
+                "locked_v3_confirmatory_continuation"
+                if args.batch_size == 128
+                else "posthoc_exploratory_batch_sensitivity"
+            )
+            if batch_profile_role != expected_role:
+                raise ValueError("Batch size and v5 seed-extension role disagree")
+        else:
+            if file_sha256(protocol_config) != CUB_R50_BATCH_PROFILE_CONFIG_SHA256:
+                raise ValueError("CUB ResNet-50/224 batch-profile protocol SHA-256 changed")
+            if profile.get("protocol_id") != (
+                "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
+            ):
+                raise ValueError("Unexpected CUB ResNet-50/224 batch-profile protocol")
+            expected_role = (
+                "locked_v3_partial_cell"
+                if args.batch_size == 128
+                else "batch64_sensitivity"
+            )
+            if batch_profile_role != expected_role:
+                raise ValueError("Batch size and batch-profile role disagree")
+            if args.seed != 1:
+                raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
         allowed = profile.get("result_scope", {}).get("variants", [])
         variant = (
             f"ibkd_lambda_{args.fusion_ratio}"
@@ -197,7 +231,12 @@ def validate_args(args: argparse.Namespace) -> None:
         )
         if variant not in allowed:
             raise ValueError(f"Method is outside the locked v4 profile: {variant}")
-    elif scientific_cub_r50 or protocol_config is not None or batch_profile_role:
+    elif (
+        scientific_cub_r50
+        or seed_extension_full
+        or protocol_config is not None
+        or batch_profile_role
+    ):
         raise ValueError("CUB R50 flags require --teacher-architecture resnet50_224_scratch")
     if args.method is None:
         raise ValueError("Student run requires --method")
@@ -501,6 +540,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     checkpoint_path = run_dir / "student_best_validation.pt"
 
     scientific_cub_r50 = bool(args.scientific_cub_r50_teacher)
+    seed_extension_full = bool(args.seed_extension_full)
     protocol_config_sha256 = (
         file_sha256(args.protocol_config) if args.protocol_config is not None else None
     )
@@ -732,7 +772,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     )
     metadata = {
         "purpose": (
-            "phase1_cub_r50_224_batch_profile_full_student_v4"
+            "phase1_cub_r50_224_seed_extension_full_student_v5"
+            if scientific_cub_r50 and seed_extension_full
+            else "phase1_cub_r50_224_batch_profile_full_student_v4"
             if scientific_cub_r50
             else "phase1_posthoc_alg_warmup20_full_student"
             if is_alg_warmup20_diagnostic
@@ -741,6 +783,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic": is_alg_warmup20_diagnostic,
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
+        "seed_extension_full": seed_extension_full,
         "dataset": dataset_name,
         "num_classes": num_classes,
         "architecture": "deit_tiny_patch16_224",
@@ -821,6 +864,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic": is_alg_warmup20_diagnostic,
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
+        "seed_extension_full": seed_extension_full,
         "kind": "student",
         "dataset": dataset_name,
         "num_classes": num_classes,
@@ -881,6 +925,7 @@ def main() -> None:
             f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"teacher_architecture={args.teacher_architecture} "
+            f"seed_extension_full={args.seed_extension_full} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
         )

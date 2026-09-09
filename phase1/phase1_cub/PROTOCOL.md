@@ -129,6 +129,14 @@ Seed-1 profile 로그를 확인한 뒤 다음 후속 범위를 고정했습니�
 내 네 방법의 초기 state와 seed 2의 두 batch 간 초기 state가 같고, seed 2와 3의
 초기 state는 다른지 hash로 검증합니다. 모든 smoke metric은 비과학적입니다.
 
+Smoke는 profile `3/3`, 분류 `12/12`, probe 후보 `36/36`, 선택 probe `12/12`,
+GPU 작업 `48/48`로 통과했습니다. 고정한 H200 분할 중 batch 128 seed 2·3은
+`scripts/run_r50_224_guided_probe_full_b128_seeds2_3.sh`로 함께 실행합니다. 이
+분할의 새 산출물은 분류 checkpoint 8개와 선택 probe checkpoint 40개이며, 마지막
+완료 gate는 `classification=8/8`, `probe_candidates=120/120`, `selections=40/40`,
+`test_once=40/40`, `new_checkpoints=48`입니다. Smoke 선형 외삽은 약 9시간 4분이고
+데이터 다운로드·최초 target cache overhead는 별도이므로 10시간 제한에 가깝습니다.
+
 ## 고정한 항목
 
 - 공식 이미지·분류 annotation·segmentation mask의 출처, byte size, SHA-256
