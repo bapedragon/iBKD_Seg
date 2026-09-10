@@ -1,6 +1,6 @@
 # Phase 1 CUB 직접 공간정보 진단 프로토콜
 
-상태: **v2 본실험 계약 LOCK — seed 1 실행·감사 완료, seed 2·3 미실행**
+상태: **v2 본실험 계약 LOCK — seed 1 실행·감사 완료, seed 2·3 smoke 통과·본실험 미실행**
 
 이 프로토콜은 분류 정확도나 frozen segmentation mIoU만으로 공간정보 보존을
 간접 추론하지 않고, 동일한 classification-best encoder에서 위치 정보를 직접
@@ -200,3 +200,41 @@ byte/state hash로 감사하고 strict-load합니다. 진단 정의는 seed-1 v2
 이 smoke 값은 논문 결과가 아니며 seed-1 결과 재확인, 방법·lambda 선택 또는
 프로토콜 변경에 사용하지 않습니다. 통과 뒤 seed 2·3 본실험은 seed-1과 같은
 probe seed 5개, LR 3개, 100 epoch 및 validation-before-test 규칙을 사용합니다.
+
+H200 issue 738에서 `170.43`초, peak allocated `405,430,784` bytes, peak reserved
+`501,219,328` bytes로 통과했습니다. Strict-load `8`, part 후보 `24`, 선택 `8`,
+CKA `96`, attention row `8`, 정성 PNG `32`, official test `0`을 모두 충족했습니다.
+이 수치의 방법별 순위는 본실험 설정이나 실행 여부를 바꾸는 데 사용하지 않았습니다.
+
+## Seed 2·3 본실험 shard
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seeds2_3.sh
+```
+
+Machine-readable 계약은
+[`configs/cub200_r50_224_b128_seed2_3_direct_spatial_full_v2.json`](configs/cub200_r50_224_b128_seed2_3_direct_spatial_full_v2.json)에
+있으며 SHA-256은
+`54980771cf910543a3aba24c0a5ff86de6a0dce34866c662025409ab3abd0691`입니다.
+
+- encoder: batch-128 seed 2·3의 네 방법, 총 8개
+- part probe: 8 encoder × probe seed 5개 × LR 3개 × 100 epoch = 후보 120개
+- validation 선택: 40개를 모두 완료하고 marker를 쓴 뒤 official test를 처음 엶
+- part test: validation-selected probe 40개를 각각 한 번 평가
+- spatial CKA: validation 600장 × 8 encoder × 12 block = 96개 값
+- attention–GT: official test 5,794장 × 8 encoder = 8개 row
+- 정성 결과: 고정 test image ID 8장 × 8 encoder = PNG 64개
+- official test evaluation count: part 40 + attention 8 = 48
+- 요청 자원: H200 MIG slice `1`개
+
+마지막 성공 marker는 다음과 같습니다.
+
+```text
+[DIRECT_SPATIAL_FULL_SEED23_DONE] status=complete encoder_seeds=2,3 strict_loads=8 part_candidates=120 part_selections=40 part_test=40 cka_values=96 attention_rows=8 qualitative_pngs=64 official_test=48 final_encoder_seed_inference=false ...
+```
+
+Issue 737 seed-1 실행이 `1,232.68`초였으므로 동일 장비의 순수 본실험 시간은 약
+`2,465`초, 즉 약 41분으로 예상합니다. 최초 Release·CUB 다운로드와 설치를 포함하면
+약 45~60분을 잡으면 충분하며 10시간 제한과는 큰 차이가 있습니다. 이 shard 결과를
+회수·감사한 뒤 issue 737 seed 1과 결합해 encoder seed `[1,2,3]` 최종 평균과 표본
+표준편차를 계산합니다.

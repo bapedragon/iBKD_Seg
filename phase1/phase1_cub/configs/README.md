@@ -67,6 +67,15 @@ batch-128 encoder seed 2·3, 총 8개 checkpoint에 seed-1 본실험과 같은 �
 않습니다. SHA-256은
 `bd71b02ebcca3240c7278819b4a34416a131914bd442887afcce6251a7e366d1`입니다.
 
+`cub200_r50_224_b128_seed2_3_direct_spatial_full_v2.json`은 issue 738 smoke가
+통과한 뒤 고정한 seed 2·3 본실험 shard입니다. Seed-1 issue 737과 동일하게
+encoder마다 probe seed 5개 × LR 3개 × 100 epoch를 validation으로 선택하고,
+8개 encoder의 선택 40개가 모두 끝난 뒤에만 official test를 엽니다. CKA는
+validation 600장, attention은 official test 5,794장과 사전 고정한 정성 image
+ID를 사용합니다. 이 shard는 단독으로 최종 3-seed 결론을 내리지 않고 issue 737의
+감사된 seed-1 결과와 합친 뒤 최종 집계합니다. SHA-256은
+`54980771cf910543a3aba24c0a5ff86de6a0dce34866c662025409ab3abd0691`입니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은

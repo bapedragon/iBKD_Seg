@@ -248,6 +248,23 @@ smoke 값은 비과학적입니다. 마지막 로그에는 seed·방법별 Part 
 오차, CKA block 11, attention patch AP·pointing·foreground mass를 모두 나열합니다.
 H200 MIG slice 1개를 요청합니다.
 
+H200 issue 738에서 170.43초에 완료했습니다. Strict-load 8개, part 후보 24개,
+선택 8개, CKA 96개, attention row 8개, 정성 PNG 32개를 모두 생성했고 official
+test 접근은 0회였습니다.
+
+## Batch 128 seed 2·3 직접 공간정보 진단 본실험 v2
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seeds2_3.sh
+```
+
+Issue 730의 batch-128 seed 2·3 encoder 8개에 issue 737 seed-1과 동일한 v2
+프로토콜을 적용합니다. Part 후보 120개 중 validation으로 40개를 선택한 뒤에만
+official test를 열고, part test 40회와 attention test 8회를 수행합니다. CKA 96개,
+정성 PNG 64개와 선택 probe checkpoint 40개를 함께 보존합니다. 한 MIG에서 순수
+실행 약 41분, 최초 다운로드 포함 약 45~60분으로 예상합니다. 이 shard 단독으로
+최종 우위를 선언하지 않고 결과 회수 후 issue 737 seed 1과 결합합니다.
+
 ## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류

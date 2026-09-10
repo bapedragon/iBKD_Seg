@@ -46,6 +46,11 @@
   모두 strict-load하고 seed-1과 같은 v2 좌표·part·CKA·attention 경로를 축소
   실행합니다. Part 후보 24개, CKA 96개, attention row 8개와 정성 PNG 32개를
   만들며 official test는 열지 않습니다. H200 MIG slice 1개용 비과학적 smoke입니다.
+- `run_r50_224_direct_spatial_full_b128_seeds2_3.sh`: issue 738 smoke 통과 뒤
+  잠근 seed 2·3 본실험 실행기입니다. Issue 730 encoder 8개에 seed-1과 동일한
+  part probe 5 seed × LR 3개 × 100 epoch, validation CKA와 official-test
+  attention을 적용합니다. Validation 선택 40개를 모두 완료한 뒤 test를 열고,
+  선택 probe checkpoint 40개와 정성 PNG 64개를 `/app/output`에 보존합니다.
 - `run_r50_224_direct_spatial_full_b128_seed1.sh`: 직접 공간정보 진단 v2 seed-1
   본실험 실행기입니다. 두 Release를 같은 hash로 검증하고 4 encoder × part-probe
   seed 5개 × LR 3개 × 100 epoch, validation CKA와 official-test attention을
