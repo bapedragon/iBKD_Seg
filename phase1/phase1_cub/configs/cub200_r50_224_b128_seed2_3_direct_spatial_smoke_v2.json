@@ -1,0 +1,277 @@
+{
+  "schema_version": 2,
+  "protocol_id": "cub200_phase1_r50_224_b128_seed2_3_direct_spatial_smoke_v2",
+  "status": "locked_before_seed2_3_direct_spatial_smoke_results_2026-09-10",
+  "scientific_result": false,
+  "purpose": "execution_memory_time_and_metric_contract_smoke_only",
+  "claim_under_test": "classification-trained iBKD encoders retain more directly measurable spatial information than LG and ALG-warmup20 encoders",
+  "comparison_scope": {
+    "primary_student_batch_size": 128,
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "eventual_encoder_seeds": [1, 2, 3],
+    "smoke_encoder_seeds": [2, 3],
+    "batch64_included": false,
+    "method_lambda_or_protocol_selection_from_smoke": false,
+    "seed1_result_must_not_change_seed2_3_settings": true
+  },
+  "protocol_provenance": {
+    "direct_spatial_full_v2": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_seed1_direct_spatial_full_v2.json",
+      "sha256": "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017"
+    },
+    "seed2_3_encoder_release": {
+      "manifest_path": "phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/artifact_release.json",
+      "manifest_sha256": "d54719127a737c62e4a54a49dfaab6e613227e4d6fc402f941edcc8cdb4dadf7",
+      "release_asset_sha256": "9f1aeabf002cf1ba728b105b53601cbc59158e1fe11fa8a61672612fcaff6212",
+      "source_h200_issue": 730
+    },
+    "teacher_release": {
+      "manifest_path": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+      "manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+      "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+      "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+      "source_h200_issue": 722
+    }
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "annotations": {
+      "parts": "parts/part_locs.txt",
+      "part_names": "parts/parts.txt",
+      "part_count": 15,
+      "visibility_rule": "official_visible_and_in_image_bounds",
+      "out_of_frame_visible_action": "exclude_without_clipping",
+      "bounding_boxes": "bounding_boxes.txt",
+      "segmentation_masks": "official_CaltechDATA_segmentations"
+    },
+    "image_view": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear_antialias",
+      "mask_interpolation": "nearest",
+      "normalization": "imagenet",
+      "random_augmentation": false
+    }
+  },
+  "encoder": {
+    "architecture": "deit_tiny_patch16_224",
+    "checkpoint": "validation_selected_classification_checkpoint",
+    "checkpoint_purpose": "phase1_cub_r50_224_seed_extension_full_student_v5",
+    "checkpoint_protocol_config_sha256": "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9",
+    "strict_load": true,
+    "frozen": true,
+    "eval_mode": true,
+    "drop_path_disabled_by_eval": true,
+    "patch_grid": [14, 14],
+    "patch_channels": 192,
+    "prefix_tokens": 1
+  },
+  "part_localization_probe": {
+    "role": "primary_direct_spatial_metric",
+    "feature": {
+      "student_block": 11,
+      "norm": false,
+      "exclude_cls_token": true,
+      "shape": [192, 14, 14]
+    },
+    "head": {
+      "architecture": "Conv2d(192,15,1,bias=True)",
+      "parameter_count": 2895,
+      "initialization": "normal_weight_std_0.01_zero_bias"
+    },
+    "target": {
+      "type": "per_part_2d_gaussian_heatmap",
+      "grid": [14, 14],
+      "sigma_grid_pixels": 1.0,
+      "validity": "official_visible_and_in_image_bounds",
+      "out_of_frame_visible_action": "exclude_without_clipping"
+    },
+    "loss": "visible_part_masked_mean_squared_error",
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "nesterov": false
+    },
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "scheduler": "cosine_to_zero",
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "selection": {
+      "split": "validation",
+      "metric": "valid_visible_keypoint_micro_PCK_at_0.1",
+      "direction": "maximize",
+      "tie_break": ["lower_learning_rate", "earlier_epoch"]
+    },
+    "evaluation": {
+      "primary_metric": "valid_visible_keypoint_micro_PCK_at_0.1",
+      "correct_if": "euclidean_error_leq_0.1_times_max_ground_truth_bbox_width_height",
+      "secondary_metric": "mean_localization_error_normalized_by_max_bbox_side"
+    }
+  },
+  "spatial_cka": {
+    "role": "training_free_auxiliary_alignment_metric_not_a_standalone_spatial_utility_claim",
+    "split": "fixed_validation_600",
+    "student_features": "pre_final_norm_patch_tokens_blocks_0_through_11",
+    "teacher_feature": "resnet50_layer3_output_14x14",
+    "observation_unit": "aligned_image_and_14x14_spatial_position",
+    "metric": "centered_linear_CKA",
+    "accumulator_dtype": "float64",
+    "official_test_used": false
+  },
+  "attention_gt_localization": {
+    "role": "training_free_auxiliary_localization_metric",
+    "attention_rollout": {
+      "layers": "all_12",
+      "head_fusion": "arithmetic_mean",
+      "residual_handling": "add_identity_then_row_normalize_each_layer",
+      "composition": "left_multiply_from_earliest_to_latest_layer"
+    },
+    "ground_truth": {
+      "foreground": "segmentation_grayscale_value_greater_than_0",
+      "patch_positive": "foreground_occupancy_greater_than_or_equal_to_0.5"
+    },
+    "primary_metric": "global_micro_patch_average_precision",
+    "secondary_metrics": [
+      "pointing_game_peak_inside_224_mask",
+      "foreground_attention_mass_using_fractional_patch_occupancy"
+    ],
+    "smoke_split": "fixed_validation_subset_only",
+    "no_threshold_tuning": true
+  },
+  "statistics": {
+    "independent_unit": "encoder_seed",
+    "part_probe_seeds_are_nested_within_encoder_seed": true,
+    "aggregate_part_probe_within_encoder_before_across_encoder_seeds": true,
+    "smoke_values_are_non_scientific": true
+  },
+  "smoke": {
+    "official_test_accessed": false,
+    "subset": {
+      "train": "lowest_image_id_per_class_from_locked_train",
+      "validation": "lowest_image_id_per_class_from_locked_validation",
+      "train_count": 200,
+      "validation_count": 200
+    },
+    "part_probe": {
+      "probe_seeds": [1],
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2
+    },
+    "spatial_cka_validation_images": 200,
+    "attention_validation_images": 200,
+    "qualitative_examples": "four_lowest_image_ids_from_smoke_validation",
+    "qualitative_examples_per_encoder": 4,
+    "all_metrics_non_scientific": true
+  },
+  "checkpoint_inputs": [
+    {
+      "variant": "lg",
+      "batch_size": 128,
+      "encoder_seed": 2,
+      "relative_path": "batch128_seed2/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "bytes": 25075823,
+      "checkpoint_sha256": "c3cd2401cd2f2e41ed096593d06b43a15340fb1105bd44a543ec71790e62b605",
+      "model_state_sha256": "9e7e526c7d724b2d7d5967ed57ee7fdc12e7efc3523d721860bda2cc1e7eb6cb"
+    },
+    {
+      "variant": "alg_warmup20",
+      "batch_size": 128,
+      "encoder_seed": 2,
+      "relative_path": "batch128_seed2/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "bytes": 25076847,
+      "checkpoint_sha256": "dd58c8818d9479094babfe22f43c59981024975a97b770074d2126fb320d1d66",
+      "model_state_sha256": "647a752df642e3478cb6793f9fa4209429f72db534e8d631276cb2b51b15bc2a"
+    },
+    {
+      "variant": "ibkd_lambda_0.25",
+      "batch_size": 128,
+      "encoder_seed": 2,
+      "relative_path": "batch128_seed2/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "bytes": 116028477,
+      "checkpoint_sha256": "1c1bf6f6141f1efc0e21fe48e60be9e6a1ef3a126c60d81b6903d462fdc86410",
+      "model_state_sha256": "6380dc6022896cdd9d41ad0c9f3f4c0cb37ad46dcd3af04161e61a35d0b77bba"
+    },
+    {
+      "variant": "ibkd_lambda_0.5",
+      "batch_size": 128,
+      "encoder_seed": 2,
+      "relative_path": "batch128_seed2/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "bytes": 116028669,
+      "checkpoint_sha256": "bf3eade3a6ee2fca0b9d0e1335a2ab89468a0abb97f04620670a8b3a6c03cf09",
+      "model_state_sha256": "778cd31863c04f12435be7d88e9186d5898006d8c3bcdaca5876315bb2657982"
+    },
+    {
+      "variant": "lg",
+      "batch_size": 128,
+      "encoder_seed": 3,
+      "relative_path": "batch128_seed3/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "bytes": 25075055,
+      "checkpoint_sha256": "9c1ecc76ccbc5cc0b3cad6e7bcb0289a189628e38687ae272be677074ee36da8",
+      "model_state_sha256": "dbd600696822e36c65e5cee7b44d520f670af6072fe8b961ede83769d9f6e880"
+    },
+    {
+      "variant": "alg_warmup20",
+      "batch_size": 128,
+      "encoder_seed": 3,
+      "relative_path": "batch128_seed3/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "bytes": 25075567,
+      "checkpoint_sha256": "445d8b7c301b1a586702582364d9047f447ec99d610b6d97aef43ccac98c41c6",
+      "model_state_sha256": "43cbe4626d6d38cbd21ca8052f04c993761a947d3542d377262bd69c1b342f38"
+    },
+    {
+      "variant": "ibkd_lambda_0.25",
+      "batch_size": 128,
+      "encoder_seed": 3,
+      "relative_path": "batch128_seed3/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "bytes": 116028925,
+      "checkpoint_sha256": "87f73dfbc0cb9b8dc6475c61ecbd9dcf270269a3f746105aa6d2de3aa8fd2980",
+      "model_state_sha256": "09daa33b9e4835f484ef000a902c68e6d179f9f8d36719071704a840b7e2439a"
+    },
+    {
+      "variant": "ibkd_lambda_0.5",
+      "batch_size": 128,
+      "encoder_seed": 3,
+      "relative_path": "batch128_seed3/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "bytes": 116028477,
+      "checkpoint_sha256": "fea3f7a6512e0670db906877a4b764f2e7ab8cd86964b3a45b9b1c66663bd043",
+      "model_state_sha256": "11ab1ce2215a7e92d3a15ee031c71291223cc929192d47b830063f59782fbf51"
+    }
+  ],
+  "execution": {
+    "device": "single_cuda_mig_slice",
+    "requested_mig_slices": 1,
+    "precision": "float32_model_float64_cka_accumulators",
+    "feature_batch_size": 16,
+    "cka_batch_size": 8,
+    "attention_batch_size": 16,
+    "num_workers": 4,
+    "retain_smoke_part_probe_checkpoints": true,
+    "retain_metric_json_csv_and_qualitative_png": true,
+    "retain_dataset_or_feature_cache_in_output": false
+  },
+  "completion_gate": {
+    "checkpoint_strict_loads": 8,
+    "part_probe_lr_candidates": 24,
+    "part_probe_validation_selections": 8,
+    "spatial_cka_values": 96,
+    "attention_metric_rows": 8,
+    "qualitative_pngs": 32,
+    "official_test_evaluations": 0
+  }
+}

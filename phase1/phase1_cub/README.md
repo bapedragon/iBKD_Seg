@@ -233,6 +233,21 @@ Attention AP는 iBKD-0.25가 가장 높았지만 다른 attention 지표와 순�
 32개 정성 이미지는
 [issue 737 보고서](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에 있습니다.
 
+## Batch 128 seed 2·3 직접 공간정보 진단 smoke v2
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_smoke_b128_seeds2_3.sh
+```
+
+Issue 730 Release의 batch-128 seed 2·3 `LG`, `ALG-w20`, `iBKD λ=0.25/0.5`
+encoder 8개에 seed-1과 동일한 v2 좌표 유효성, part probe, spatial CKA와
+attention–GT 정의를 적용하는 실행 점검입니다. 클래스별 한 장의 고정
+train/validation subset만 사용하며, part 후보 24개, CKA 96개, attention row
+8개와 정성 PNG 32개를 생성해야 통과합니다. Official test는 열지 않고 모든
+smoke 값은 비과학적입니다. 마지막 로그에는 seed·방법별 Part PCK, 정규화 위치
+오차, CKA block 11, attention patch AP·pointing·foreground mass를 모두 나열합니다.
+H200 MIG slice 1개를 요청합니다.
+
 ## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류

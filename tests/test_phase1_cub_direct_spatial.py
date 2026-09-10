@@ -26,6 +26,7 @@ from ibkd_seg.phase1.models import create_student
 from ibkd_seg.phase1.release_asset import _asset_kind
 from ibkd_seg.phase1.run_cub_direct_spatial_smoke import (
     EXPECTED_CONFIG_SHA256,
+    SEED23_CONFIG_SHA256,
     _validate_config,
 )
 from ibkd_seg.phase1.train_timing import file_sha256
@@ -39,6 +40,16 @@ CONFIG_PATH = (
 SHELL_PATH = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/scripts/run_r50_224_direct_spatial_smoke_b128_seed1.sh"
+)
+SEED23_CONFIG_PATH = (
+    REPOSITORY_ROOT
+    / "phase1/phase1_cub/configs/"
+    "cub200_r50_224_b128_seed2_3_direct_spatial_smoke_v2.json"
+)
+SEED23_SHELL_PATH = (
+    REPOSITORY_ROOT
+    / "phase1/phase1_cub/scripts/"
+    "run_r50_224_direct_spatial_smoke_b128_seeds2_3.sh"
 )
 
 
@@ -83,6 +94,48 @@ class CubDirectSpatialProtocolTest(unittest.TestCase):
         )
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(_asset_kind(manifest), "cub_r50_guided_seed1_v4")
+
+    def test_seed23_locked_config_and_smoke_gate(self) -> None:
+        config = json.loads(SEED23_CONFIG_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(file_sha256(SEED23_CONFIG_PATH), SEED23_CONFIG_SHA256)
+        _validate_config(config, SEED23_CONFIG_PATH)
+        self.assertFalse(config["scientific_result"])
+        self.assertEqual(config["comparison_scope"]["smoke_encoder_seeds"], [2, 3])
+        self.assertFalse(config["smoke"]["official_test_accessed"])
+        self.assertEqual(
+            config["completion_gate"],
+            {
+                "checkpoint_strict_loads": 8,
+                "part_probe_lr_candidates": 24,
+                "part_probe_validation_selections": 8,
+                "spatial_cka_values": 96,
+                "attention_metric_rows": 8,
+                "qualitative_pngs": 32,
+                "official_test_evaluations": 0,
+            },
+        )
+
+    def test_seed23_shell_downloads_issue730_release_and_runs_locked_config(self) -> None:
+        text = SEED23_SHELL_PATH.read_text(encoding="utf-8")
+        self.assertIn("resnet50_224_b128_guided_3seed_v5/artifact_release.json", text)
+        self.assertIn("checkpoint_release.json", text)
+        self.assertEqual(text.count("python -m ibkd_seg.phase1.release_asset"), 2)
+        self.assertIn("python -m ibkd_seg.phase1.run_cub_direct_spatial_smoke", text)
+        self.assertIn(
+            "cub200_r50_224_b128_seed2_3_direct_spatial_smoke_v2.json", text
+        )
+        self.assertIn("--feature-batch-size 16", text)
+        self.assertIn("--cka-batch-size 8", text)
+        self.assertIn("--attention-batch-size 16", text)
+
+    def test_guided_issue730_release_kind_is_supported(self) -> None:
+        manifest_path = (
+            REPOSITORY_ROOT
+            / "phase1/phase1_cub/reports/frozen_probe/"
+            "resnet50_224_b128_guided_3seed_v5/artifact_release.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(_asset_kind(manifest), "cub_r50_guided_seed23_v5")
 
 
 class CubDirectSpatialMetricTest(unittest.TestCase):

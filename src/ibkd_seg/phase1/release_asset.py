@@ -20,8 +20,14 @@ CUB_R50_TEACHER_ASSET_TYPE = "phase1_cub_resnet50_224_scratch_teacher_v3"
 CUB_R50_GUIDED_SEED1_ASSET_TYPE = (
     "phase1_cub_resnet50_224_guided_seed1_batch_profiles_v4"
 )
+CUB_R50_GUIDED_SEED23_ASSET_TYPE = (
+    "phase1_cub_resnet50_224_guided_seeds2_3_v5"
+)
 CUB_R50_GUIDED_SEED1_AUDIT_SHA256 = (
     "82264ed949643c55124981fc8008f8dc368ad257673781d2510d01ccf1cc0516"
+)
+CUB_R50_GUIDED_SEED23_AUDIT_SHA256 = (
+    "ef8179527840a67a007936f1ba7d2cef0adff5fef405c6c15b87d6dd1b60c716"
 )
 
 
@@ -151,6 +157,8 @@ def _asset_kind(manifest: dict[str, Any]) -> str:
         return "cub_r50_teacher_v3"
     if asset_type == CUB_R50_GUIDED_SEED1_ASSET_TYPE:
         return "cub_r50_guided_seed1_v4"
+    if asset_type == CUB_R50_GUIDED_SEED23_ASSET_TYPE:
+        return "cub_r50_guided_seed23_v5"
     if asset_type is None and "classification_batch_size" in manifest["source"]:
         return "pet_classification"
     raise RuntimeError(f"unsupported checkpoint release asset type: {asset_type!r}")
@@ -359,12 +367,121 @@ def _validate_cub_r50_guided_seed1(root: Path, manifest: dict[str, Any]) -> int:
     return 48
 
 
+def _validate_cub_r50_guided_seed23(root: Path, manifest: dict[str, Any]) -> int:
+    """Audit issue-730 bytes and strict-load its eight seed-2/3 encoders."""
+
+    import torch
+
+    from .models import create_student
+    from .train_timing import state_dict_sha256
+
+    repository_root = Path(__file__).resolve().parents[3]
+    audit_path = (
+        repository_root
+        / "phase1/phase1_cub/reports/frozen_probe/"
+        "resnet50_224_b128_guided_3seed_v5/checkpoint_audit.json"
+    )
+    if (
+        not audit_path.is_file()
+        or _file_sha256(audit_path) != CUB_R50_GUIDED_SEED23_AUDIT_SHA256
+    ):
+        raise RuntimeError("CUB v5 committed checkpoint audit is missing or changed")
+
+    source = manifest.get("source", {})
+    contents = manifest.get("contents", {})
+    if (
+        source.get("h200_job_id") != 730
+        or source.get("protocol_id")
+        != "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5"
+        or source.get("protocol_config_sha256")
+        != "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+        or contents.get("classification_student_checkpoints") != 8
+        or contents.get("selected_probe_checkpoints") != 40
+        or contents.get("total_checkpoints") != 48
+        or manifest.get("remote_asset_digest_verified") is not True
+    ):
+        raise RuntimeError("CUB v5 guided seed-2/3 release source contract mismatch")
+
+    combined_path = root / "combined_full_summary.json"
+    artifact_manifest_path = root / "artifact_manifest.json"
+    if not combined_path.is_file() or not artifact_manifest_path.is_file():
+        raise RuntimeError("CUB v5 guided release is missing completion evidence")
+    combined = json.loads(combined_path.read_text(encoding="utf-8"))
+    artifact_manifest = json.loads(
+        artifact_manifest_path.read_text(encoding="utf-8")
+    )
+    if (
+        combined.get("status") != "complete"
+        or combined.get("scientific_result") is not True
+        or combined.get("encoder_seeds") != [2, 3]
+        or combined.get("counts", {}).get("new_checkpoints") != 48
+        or combined.get("counts", {}).get("classification_students") != 8
+        or combined.get("counts", {}).get("selected_probes") != 40
+        or artifact_manifest.get("status") != "pass"
+        or artifact_manifest.get("experiment_kind")
+        != "resnet50-v5-guided-seeds2-3"
+    ):
+        raise RuntimeError("CUB v5 guided release completion contract failed")
+
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    entries = audit.get("entries", [])
+    if (
+        audit.get("status") != "pass"
+        or audit.get("issue730_new_checkpoint_count") != 48
+        or len(entries) != 48
+    ):
+        raise RuntimeError("CUB v5 committed checkpoint audit is incomplete")
+
+    expected_paths: set[Path] = set()
+    encoder_count = 0
+    encoder_seeds: set[int] = set()
+    for entry in entries:
+        relative = Path(str(entry.get("path_under_ignored_raw_root", "")))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise RuntimeError(f"unsafe CUB v5 checkpoint path: {relative}")
+        checkpoint_path = root / relative
+        expected_paths.add(checkpoint_path.resolve())
+        if (
+            not checkpoint_path.is_file()
+            or checkpoint_path.stat().st_size != entry.get("bytes")
+            or _file_sha256(checkpoint_path) != entry.get("checkpoint_sha256")
+        ):
+            raise RuntimeError(f"CUB v5 checkpoint byte contract mismatch: {relative}")
+        if entry.get("kind") != "classification_encoder":
+            continue
+
+        payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        model = create_student(num_classes=200, drop_path_rate=0.1)
+        incompatible = model.load_state_dict(payload["student"], strict=True)
+        state_hash = state_dict_sha256(model)
+        if (
+            incompatible.missing_keys
+            or incompatible.unexpected_keys
+            or state_hash != entry.get("model_state_sha256")
+        ):
+            raise RuntimeError(f"CUB v5 encoder strict-load contract failed: {relative}")
+        encoder_count += 1
+        encoder_seeds.add(int(entry["encoder_seed"]))
+        del model, payload
+
+    actual_paths = {path.resolve() for path in root.rglob("*.pt") if path.is_file()}
+    if actual_paths != expected_paths or encoder_count != 8 or encoder_seeds != {2, 3}:
+        raise RuntimeError(
+            "CUB v5 release checkpoint inventory mismatch: "
+            f"expected={len(expected_paths)} actual={len(actual_paths)} "
+            f"encoders={encoder_count} seeds={sorted(encoder_seeds)}"
+        )
+    return 48
+
+
 def _validate_extracted(root: Path, manifest: dict[str, Any]) -> int:
     kind = _asset_kind(manifest)
     if kind == "cub_r50_teacher_v3":
         return _validate_cub_r50_teacher(root, manifest)
     if kind == "cub_r50_guided_seed1_v4":
         return _validate_cub_r50_guided_seed1(root, manifest)
+    if kind == "cub_r50_guided_seed23_v5":
+        return _validate_cub_r50_guided_seed23(root, manifest)
     return _validate_pet_classification(root, manifest)
 
 
@@ -372,6 +489,8 @@ def _existing_marker(destination: Path, kind: str) -> Path:
     if kind == "cub_r50_teacher_v3":
         return destination / "teacher_best_validation.pt"
     if kind == "cub_r50_guided_seed1_v4":
+        return destination / "combined_full_summary.json"
+    if kind == "cub_r50_guided_seed23_v5":
         return destination / "combined_full_summary.json"
     return destination / "classification_summary.json"
 
@@ -430,6 +549,8 @@ def download_and_extract(
         prefix = "phase1_cub_r50_teacher_v3_"
     elif kind == "cub_r50_guided_seed1_v4":
         prefix = "phase1_cub_r50_guided_seed1_v4_"
+    elif kind == "cub_r50_guided_seed23_v5":
+        prefix = "phase1_cub_r50_guided_seed23_v5_"
     else:
         prefix = f"phase1_pet_b{int(batch_size)}_"
     with tempfile.NamedTemporaryFile(

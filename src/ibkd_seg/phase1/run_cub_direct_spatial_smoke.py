@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke the locked CUB direct-spatial diagnostics on audited seed-1 encoders."""
+"""Smoke locked CUB direct-spatial diagnostics on audited guided encoders."""
 
 from __future__ import annotations
 
@@ -45,6 +45,7 @@ DEFAULT_CONFIG = (
     / "phase1/phase1_cub/configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json"
 )
 EXPECTED_CONFIG_SHA256 = "55ac0598c11a4065f3b1416022e8fbb3de35b21cad94780ace2e2036d5430bc6"
+SEED23_CONFIG_SHA256 = "bd71b02ebcca3240c7278819b4a34416a131914bd442887afcce6251a7e366d1"
 EXPECTED_VALIDATION_SHA256 = "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
 EXPECTED_VARIANTS = (
     "lg",
@@ -96,7 +97,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _validate_config(config: dict[str, Any], path: Path) -> None:
+def _validate_seed1_config(config: dict[str, Any], path: Path) -> None:
     scope = config.get("comparison_scope", {})
     dataset = config.get("dataset", {})
     encoder = config.get("encoder", {})
@@ -206,6 +207,147 @@ def _validate_config(config: dict[str, Any], path: Path) -> None:
             raise RuntimeError(f"direct-spatial provenance changed: {source_name}")
 
 
+def _validate_seed23_config(config: dict[str, Any], path: Path) -> None:
+    scope = config.get("comparison_scope", {})
+    dataset = config.get("dataset", {})
+    encoder = config.get("encoder", {})
+    part = config.get("part_localization_probe", {})
+    cka = config.get("spatial_cka", {})
+    attention = config.get("attention_gt_localization", {})
+    smoke = config.get("smoke", {})
+    execution = config.get("execution", {})
+    inputs = config.get("checkpoint_inputs", [])
+    gate = config.get("completion_gate", {})
+    checks = {
+        "config_hash": file_sha256(path) == SEED23_CONFIG_SHA256,
+        "protocol_id": config.get("protocol_id")
+        == "cub200_phase1_r50_224_b128_seed2_3_direct_spatial_smoke_v2",
+        "locked_before_results": config.get("status")
+        == "locked_before_seed2_3_direct_spatial_smoke_results_2026-09-10",
+        "non_scientific": config.get("scientific_result") is False,
+        "scope": scope.get("primary_student_batch_size") == 128
+        and tuple(scope.get("variants", ())) == EXPECTED_VARIANTS
+        and scope.get("eventual_encoder_seeds") == [1, 2, 3]
+        and scope.get("smoke_encoder_seeds") == [2, 3]
+        and scope.get("batch64_included") is False
+        and scope.get("method_lambda_or_protocol_selection_from_smoke") is False
+        and scope.get("seed1_result_must_not_change_seed2_3_settings") is True,
+        "dataset": dataset.get("name") == DATASET_NAME
+        and dataset.get("num_classes") == NUM_CLASSES
+        and dataset.get("split")
+        == {
+            "train": 5394,
+            "validation": 600,
+            "official_test": 5794,
+            "validation_per_class": 3,
+            "split_seed": 2027,
+            "validation_image_ids_sha256": EXPECTED_VALIDATION_SHA256,
+        }
+        and dataset.get("annotations", {}).get("visibility_rule")
+        == "official_visible_and_in_image_bounds"
+        and dataset.get("annotations", {}).get("out_of_frame_visible_action")
+        == "exclude_without_clipping",
+        "encoder": encoder.get("architecture") == "deit_tiny_patch16_224"
+        and encoder.get("checkpoint_purpose")
+        == "phase1_cub_r50_224_seed_extension_full_student_v5"
+        and encoder.get("checkpoint_protocol_config_sha256")
+        == "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+        and encoder.get("strict_load") is True
+        and encoder.get("frozen") is True
+        and encoder.get("eval_mode") is True
+        and encoder.get("patch_grid") == [14, 14]
+        and encoder.get("patch_channels") == 192,
+        "part": part.get("role") == "primary_direct_spatial_metric"
+        and part.get("feature", {}).get("student_block") == 11
+        and part.get("head", {}).get("architecture") == "Conv2d(192,15,1,bias=True)"
+        and part.get("head", {}).get("parameter_count") == 2895
+        and part.get("target", {}).get("sigma_grid_pixels") == 1.0
+        and part.get("target", {}).get("validity")
+        == "official_visible_and_in_image_bounds"
+        and part.get("target", {}).get("out_of_frame_visible_action")
+        == "exclude_without_clipping"
+        and part.get("loss") == "visible_part_masked_mean_squared_error"
+        and part.get("learning_rates") == [0.01, 0.03, 0.1]
+        and part.get("epochs") == 100
+        and part.get("batch_size") == 64
+        and part.get("probe_seeds") == [1, 2, 3, 4, 5]
+        and part.get("selection", {}).get("split") == "validation",
+        "cka": cka.get("split") == "fixed_validation_600"
+        and cka.get("student_features")
+        == "pre_final_norm_patch_tokens_blocks_0_through_11"
+        and cka.get("metric") == "centered_linear_CKA"
+        and cka.get("accumulator_dtype") == "float64"
+        and cka.get("official_test_used") is False,
+        "attention": attention.get("attention_rollout", {}).get("layers") == "all_12"
+        and attention.get("attention_rollout", {}).get("head_fusion")
+        == "arithmetic_mean"
+        and attention.get("primary_metric")
+        == "global_micro_patch_average_precision"
+        and attention.get("smoke_split") == "fixed_validation_subset_only"
+        and attention.get("no_threshold_tuning") is True,
+        "smoke": smoke.get("official_test_accessed") is False
+        and smoke.get("subset", {}).get("train_count") == 200
+        and smoke.get("subset", {}).get("validation_count") == 200
+        and smoke.get("part_probe")
+        == {"probe_seeds": [1], "learning_rates": [0.01, 0.03, 0.1], "epochs": 2}
+        and smoke.get("spatial_cka_validation_images") == 200
+        and smoke.get("attention_validation_images") == 200
+        and smoke.get("qualitative_examples_per_encoder") == 4
+        and smoke.get("all_metrics_non_scientific") is True,
+        "inputs": len(inputs) == 8
+        and [(item.get("encoder_seed"), item.get("variant")) for item in inputs]
+        == [(seed, variant) for seed in (2, 3) for variant in EXPECTED_VARIANTS]
+        and all(item.get("batch_size") == 128 for item in inputs),
+        "execution": execution.get("requested_mig_slices") == 1
+        and execution.get("feature_batch_size") == 16
+        and execution.get("cka_batch_size") == 8
+        and execution.get("attention_batch_size") == 16
+        and execution.get("num_workers") == 4,
+        "gate": gate
+        == {
+            "checkpoint_strict_loads": 8,
+            "part_probe_lr_candidates": 24,
+            "part_probe_validation_selections": 8,
+            "spatial_cka_values": 96,
+            "attention_metric_rows": 8,
+            "qualitative_pngs": 32,
+            "official_test_evaluations": 0,
+        },
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid CUB seed-2/3 direct-spatial smoke config: "
+            + ", ".join(failures)
+        )
+
+    provenance = config["protocol_provenance"]
+    for source_name in (
+        "direct_spatial_full_v2",
+        "seed2_3_encoder_release",
+        "teacher_release",
+    ):
+        source = provenance[source_name]
+        source_path = _resolve_repository_path(
+            source.get("path", source.get("manifest_path"))
+        )
+        digest_key = (
+            "sha256" if source_name == "direct_spatial_full_v2" else "manifest_sha256"
+        )
+        if not source_path.is_file() or file_sha256(source_path) != source[digest_key]:
+            raise RuntimeError(f"direct-spatial provenance changed: {source_name}")
+
+
+def _validate_config(config: dict[str, Any], path: Path) -> None:
+    digest = file_sha256(path)
+    if digest == EXPECTED_CONFIG_SHA256:
+        _validate_seed1_config(config, path)
+    elif digest == SEED23_CONFIG_SHA256:
+        _validate_seed23_config(config, path)
+    else:
+        raise RuntimeError(f"unsupported CUB direct-spatial smoke config hash: {digest}")
+
+
 def _validate_cli(args: argparse.Namespace, config: dict[str, Any]) -> None:
     execution = config["execution"]
     actual = {
@@ -235,6 +377,7 @@ def _load_student(
     root: Path,
     item: dict[str, Any],
     *,
+    config: dict[str, Any],
     device: torch.device,
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
     checkpoint = root / item["relative_path"]
@@ -247,8 +390,12 @@ def _load_student(
     payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
     metadata = payload.get("metadata", {})
     method, fusion_ratio, warmup = _variant_metadata(item["variant"])
+    encoder_contract = config["encoder"]
     expected = {
-        "purpose": "phase1_cub_r50_224_batch_profile_full_student_v4",
+        "purpose": encoder_contract.get(
+            "checkpoint_purpose",
+            "phase1_cub_r50_224_batch_profile_full_student_v4",
+        ),
         "dataset": DATASET_NAME,
         "num_classes": NUM_CLASSES,
         "architecture": "deit_tiny_patch16_224",
@@ -256,10 +403,13 @@ def _load_student(
         "fusion_ratio_lambda": fusion_ratio,
         "batch_size": 128,
         "epochs": 300,
-        "seed": 1,
+        "seed": int(item["encoder_seed"]),
         "guidance_controller_warmup_epochs": warmup,
         "validation_image_ids_sha256": EXPECTED_VALIDATION_SHA256,
-        "protocol_config_sha256": "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+        "protocol_config_sha256": encoder_contract.get(
+            "checkpoint_protocol_config_sha256",
+            "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+        ),
         "official_test_evaluations_at_checkpoint_write": 0,
     }
     failures = [key for key, value in expected.items() if metadata.get(key) != value]
@@ -288,6 +438,7 @@ def _load_student(
         raise RuntimeError(f"direct-spatial encoder was not frozen: {item['variant']}")
     return model, {
         "variant": item["variant"],
+        "encoder_seed": int(item["encoder_seed"]),
         "checkpoint_path": str(checkpoint.resolve()),
         "checkpoint_bytes": checkpoint.stat().st_size,
         "checkpoint_sha256": item["checkpoint_sha256"],
@@ -334,12 +485,14 @@ def _extract_last_features(
 def _part_smoke(
     *,
     variant: str,
+    encoder_seed: int,
     model: torch.nn.Module,
     train_records: Sequence[CubProbeRecord],
     validation_records: Sequence[CubProbeRecord],
     train_supervision: dict[str, torch.Tensor],
     validation_supervision: dict[str, torch.Tensor],
     config: dict[str, Any],
+    config_sha256: str,
     output_dir: Path,
     device: torch.device,
     feature_batch_size: int,
@@ -378,7 +531,8 @@ def _part_smoke(
         initial_hashes.add(result["initial_probe_state_sha256"])
         log(
             "[DIRECT_PART_CANDIDATE] "
-            f"variant={variant} lr={learning_rate} best_epoch={result['best_epoch']} "
+            f"variant={variant} encoder_seed={encoder_seed} lr={learning_rate} "
+            f"best_epoch={result['best_epoch']} "
             f"val_pck={result['best_validation']['micro_pck_at_0.1']:.6f}"
         )
         candidates.append(result)
@@ -406,18 +560,29 @@ def _part_smoke(
     )
     if reevaluated != selected["best_validation"]:
         raise RuntimeError("selected part probe re-evaluation changed")
-    checkpoint = output_dir / "part_probe" / "checkpoints" / f"{variant}_seed1.pt"
+    legacy_seed1_smoke = config_sha256 == EXPECTED_CONFIG_SHA256
+    checkpoint_name = (
+        f"{variant}_seed1.pt"
+        if legacy_seed1_smoke
+        else f"{variant}_encoder_seed{encoder_seed}_probe_seed1.pt"
+    )
+    checkpoint = output_dir / "part_probe" / "checkpoints" / checkpoint_name
     _atomic_torch_save(
         {
             "probe": selected["probe_state"],
             "metadata": {
-                "purpose": "non_scientific_cub_direct_spatial_smoke_part_probe_v1",
+                "purpose": (
+                    "non_scientific_cub_direct_spatial_smoke_part_probe_v1"
+                    if legacy_seed1_smoke
+                    else f"{config['protocol_id']}_selected_part_probe"
+                ),
                 "variant": variant,
+                "encoder_seed": encoder_seed,
                 "probe_seed": 1,
                 "learning_rate": selected["learning_rate"],
                 "selected_epoch": selected["best_epoch"],
                 "official_test_evaluations": 0,
-                "config_sha256": EXPECTED_CONFIG_SHA256,
+                "config_sha256": config_sha256,
             },
         },
         checkpoint,
@@ -425,6 +590,7 @@ def _part_smoke(
     candidate_rows = [
         {
             "variant": variant,
+            "encoder_seed": encoder_seed,
             "probe_seed": value["seed"],
             "learning_rate": value["learning_rate"],
             "best_epoch": value["best_epoch"],
@@ -439,6 +605,7 @@ def _part_smoke(
     ]
     summary = {
         "variant": variant,
+        "encoder_seed": encoder_seed,
         "probe_seed": 1,
         "candidate_count": len(candidates),
         "same_initial_probe_state_across_learning_rates": True,
@@ -460,6 +627,7 @@ def _part_smoke(
 def _cka_smoke(
     *,
     variant: str,
+    encoder_seed: int,
     student: torch.nn.Module,
     teacher: torch.nn.Module,
     records: Sequence[CubProbeRecord],
@@ -499,6 +667,7 @@ def _cka_smoke(
         rows.append(
             {
                 "variant": variant,
+                "encoder_seed": encoder_seed,
                 "student_block": block,
                 "teacher_feature": "resnet50_layer3",
                 "images": image_count,
@@ -509,7 +678,8 @@ def _cka_smoke(
         )
     log(
         "[DIRECT_CKA_DONE] "
-        f"variant={variant} values=12 block11={rows[-1]['centered_linear_cka']:.6f}"
+        f"variant={variant} encoder_seed={encoder_seed} values=12 "
+        f"block11={rows[-1]['centered_linear_cka']:.6f}"
     )
     return rows
 
@@ -518,6 +688,7 @@ def _cka_smoke(
 def _attention_smoke(
     *,
     variant: str,
+    encoder_seed: int,
     student: torch.nn.Module,
     records: Sequence[CubProbeRecord],
     batch_size: int,
@@ -556,7 +727,7 @@ def _attention_smoke(
                         output_dir
                         / "attention_gt"
                         / "qualitative"
-                        / f"{variant}_image{record.image_id}.png"
+                        / f"{variant}_encoder_seed{encoder_seed}_image{record.image_id}.png"
                     ),
                 )
         rollout_values.append(batch_rollout)
@@ -571,6 +742,7 @@ def _attention_smoke(
         assert_probability(metrics[key], name=f"{variant}/{key}")
     result = {
         "variant": variant,
+        "encoder_seed": encoder_seed,
         **metrics,
         "attention_rollout_layers": 12,
         "qualitative_image_ids": sorted(qualitative_ids),
@@ -580,7 +752,8 @@ def _attention_smoke(
     }
     log(
         "[DIRECT_ATTENTION_DONE] "
-        f"variant={variant} patch_ap={metrics['global_micro_patch_average_precision']:.6f} "
+        f"variant={variant} encoder_seed={encoder_seed} "
+        f"patch_ap={metrics['global_micro_patch_average_precision']:.6f} "
         f"pointing={metrics['pointing_game_peak_inside_mask']:.6f}"
     )
     return result
@@ -599,12 +772,24 @@ def _write_csv(rows: Sequence[dict[str, Any]], path: Path) -> None:
 
 
 def _save_cka_heatmap(rows: Sequence[dict[str, Any]], path: Path) -> None:
-    lookup = {(row["variant"], row["student_block"]): row["centered_linear_cka"] for row in rows}
+    lookup = {
+        (int(row["encoder_seed"]), row["variant"], row["student_block"]): row[
+            "centered_linear_cka"
+        ]
+        for row in rows
+    }
+    encoder_keys = sorted(
+        {
+            (int(row["encoder_seed"]), row["variant"])
+            for row in rows
+        },
+        key=lambda value: (value[0], EXPECTED_VARIANTS.index(value[1])),
+    )
     cell_width, cell_height = 54, 42
     margin_left, margin_top = 130, 34
     canvas = Image.new(
         "RGB",
-        (margin_left + 12 * cell_width, margin_top + 4 * cell_height),
+        (margin_left + 12 * cell_width, margin_top + len(encoder_keys) * cell_height),
         "white",
     )
     draw = ImageDraw.Draw(canvas)
@@ -616,11 +801,17 @@ def _save_cka_heatmap(rows: Sequence[dict[str, Any]], path: Path) -> None:
         "ibkd_lambda_0.25": "iBKD-0.25",
         "ibkd_lambda_0.5": "iBKD-0.5",
     }
-    for row_index, variant in enumerate(EXPECTED_VARIANTS):
+    show_encoder_seed = len({seed for seed, _variant in encoder_keys}) > 1
+    for row_index, (encoder_seed, variant) in enumerate(encoder_keys):
         y = margin_top + row_index * cell_height
-        draw.text((8, y + 14), labels[variant], fill="black")
+        label = (
+            f"{labels[variant]} s{encoder_seed}"
+            if show_encoder_seed
+            else labels[variant]
+        )
+        draw.text((8, y + 14), label, fill="black")
         for block in range(12):
-            value = float(lookup[(variant, block)])
+            value = float(lookup[(encoder_seed, variant, block)])
             color = (int(255 * value), 45, int(255 * (1.0 - value)))
             x = margin_left + block * cell_width
             draw.rectangle((x, y, x + cell_width - 1, y + cell_height - 1), fill=color)
@@ -634,6 +825,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     config = _load_json(config_path)
     _validate_config(config, config_path)
     _validate_cli(args, config)
+    config_sha256 = file_sha256(config_path)
+    checkpoint_inputs = config["checkpoint_inputs"]
+    encoder_seeds = sorted({int(item["encoder_seed"]) for item in checkpoint_inputs})
 
     import timm
 
@@ -655,7 +849,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "status": "running",
             "phase": "dataset_and_checkpoint_audit",
             "started_at_utc": started_at,
-            "config_sha256": EXPECTED_CONFIG_SHA256,
+            "config_sha256": config_sha256,
             "official_test_accessed": False,
         },
         status_path,
@@ -718,29 +912,36 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     for index, item in enumerate(config["checkpoint_inputs"], 1):
         variant = item["variant"]
+        encoder_seed = int(item["encoder_seed"])
         _atomic_json_save(
             {
                 "status": "running",
                 "phase": "direct_spatial_diagnostics",
                 "active_variant": variant,
+                "active_encoder_seed": encoder_seed,
                 "variants_complete": index - 1,
-                "variants_expected": 4,
+                "variants_expected": len(checkpoint_inputs),
                 "official_test_accessed": False,
             },
             status_path,
         )
         student, audit = _load_student(
-            args.student_release_dir.expanduser().resolve(), item, device=device
+            args.student_release_dir.expanduser().resolve(),
+            item,
+            config=config,
+            device=device,
         )
         checkpoint_audits.append(audit)
         candidate_rows, part_summary = _part_smoke(
             variant=variant,
+            encoder_seed=encoder_seed,
             model=student,
             train_records=train_records,
             validation_records=validation_records,
             train_supervision=train_supervision,
             validation_supervision=validation_supervision,
             config=config,
+            config_sha256=config_sha256,
             output_dir=output_dir,
             device=device,
             feature_batch_size=args.feature_batch_size,
@@ -752,6 +953,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         cka_rows.extend(
             _cka_smoke(
                 variant=variant,
+                encoder_seed=encoder_seed,
                 student=student,
                 teacher=teacher,
                 records=validation_records,
@@ -763,6 +965,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         attention_rows.append(
             _attention_smoke(
                 variant=variant,
+                encoder_seed=encoder_seed,
                 student=student,
                 records=validation_records,
                 batch_size=args.attention_batch_size,
@@ -843,11 +1046,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "status": "complete",
         "protocol_id": config["protocol_id"],
         "config_path": str(config_path),
-        "config_sha256": EXPECTED_CONFIG_SHA256,
+        "config_sha256": config_sha256,
         "scientific_result": False,
         "smoke_metrics_must_not_select_method_lambda_or_protocol": True,
         "student_batch_size": 128,
-        "encoder_seed": 1,
+        "encoder_seeds": encoder_seeds,
         "variants": list(EXPECTED_VARIANTS),
         "runtime": {
             **_runtime(device),
@@ -870,6 +1073,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "attention_qualitative_pngs": len(qualitative_pngs),
         },
     }
+    if encoder_seeds == [1]:
+        summary["encoder_seed"] = 1
     _atomic_json_save(summary, output_dir / "summary.json")
     _atomic_json_save(
         {
@@ -885,22 +1090,46 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     log("")
     log("[DIRECT_SPATIAL_SMOKE_RESULTS]")
-    part_lookup = {row["variant"]: row for row in part_summaries}
-    cka_lookup = {(row["variant"], row["student_block"]): row for row in cka_rows}
-    attention_lookup = {row["variant"]: row for row in attention_rows}
-    for variant in EXPECTED_VARIANTS:
+    part_lookup = {
+        (row["encoder_seed"], row["variant"]): row for row in part_summaries
+    }
+    cka_lookup = {
+        (row["encoder_seed"], row["variant"], row["student_block"]): row
+        for row in cka_rows
+    }
+    attention_lookup = {
+        (row["encoder_seed"], row["variant"]): row for row in attention_rows
+    }
+    for item in checkpoint_inputs:
+        variant = item["variant"]
+        encoder_seed = int(item["encoder_seed"])
         log(
-            f"[DIRECT_SPATIAL_RESULT] variant={variant} "
-            f"part_val_pck={part_lookup[variant]['validation']['micro_pck_at_0.1']:.6f} "
-            f"cka_block11={cka_lookup[(variant, 11)]['centered_linear_cka']:.6f} "
+            f"[DIRECT_SPATIAL_RESULT] variant={variant} encoder_seed={encoder_seed} "
+            f"part_val_pck={part_lookup[(encoder_seed, variant)]['validation']['micro_pck_at_0.1']:.6f} "
+            "part_val_normalized_error="
+            f"{part_lookup[(encoder_seed, variant)]['validation']['mean_normalized_localization_error']:.6f} "
+            f"cka_block11={cka_lookup[(encoder_seed, variant, 11)]['centered_linear_cka']:.6f} "
             "attention_patch_ap="
-            f"{attention_lookup[variant]['global_micro_patch_average_precision']:.6f} "
-            f"attention_pointing={attention_lookup[variant]['pointing_game_peak_inside_mask']:.6f}"
+            f"{attention_lookup[(encoder_seed, variant)]['global_micro_patch_average_precision']:.6f} "
+            "attention_pointing="
+            f"{attention_lookup[(encoder_seed, variant)]['pointing_game_peak_inside_mask']:.6f} "
+            "foreground_attention_mass="
+            f"{attention_lookup[(encoder_seed, variant)]['foreground_attention_mass_mean']:.6f}"
         )
+    seed_marker = (
+        ""
+        if encoder_seeds == [1]
+        else f"encoder_seeds={','.join(str(seed) for seed in encoder_seeds)} "
+    )
     log(
         "[DIRECT_SPATIAL_SMOKE_DONE] status=pass "
-        "strict_loads=4 part_candidates=12 part_selections=4 cka_values=48 "
-        "attention_rows=4 qualitative_pngs=16 official_test=0 "
+        f"{seed_marker}"
+        f"strict_loads={gate['checkpoint_strict_loads']} "
+        f"part_candidates={gate['part_probe_lr_candidates']} "
+        f"part_selections={gate['part_probe_validation_selections']} "
+        f"cka_values={gate['spatial_cka_values']} "
+        f"attention_rows={gate['attention_metric_rows']} "
+        f"qualitative_pngs={gate['qualitative_pngs']} official_test=0 "
         f"elapsed_seconds={elapsed:.2f} "
         f"peak_allocated_bytes={summary['runtime']['peak_allocated_bytes']} "
         f"peak_reserved_bytes={summary['runtime']['peak_reserved_bytes']}"

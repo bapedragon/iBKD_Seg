@@ -41,6 +41,11 @@
   probe, 12-block spatial linear CKA, attention rollout–GT mask 지표와 정성 PNG를
   생성합니다. 클래스당 한 장의 train/validation subset만 사용하고 official test는
   열지 않습니다. H200 MIG slice 1개용 비과학적 실행 점검입니다.
+- `run_r50_224_direct_spatial_smoke_b128_seeds2_3.sh`: issue 730 Release의
+  batch-128 seed 2·3 `LG`, `ALG-w20`, `iBKD-0.25`, `iBKD-0.5` encoder 8개를
+  모두 strict-load하고 seed-1과 같은 v2 좌표·part·CKA·attention 경로를 축소
+  실행합니다. Part 후보 24개, CKA 96개, attention row 8개와 정성 PNG 32개를
+  만들며 official test는 열지 않습니다. H200 MIG slice 1개용 비과학적 smoke입니다.
 - `run_r50_224_direct_spatial_full_b128_seed1.sh`: 직접 공간정보 진단 v2 seed-1
   본실험 실행기입니다. 두 Release를 같은 hash로 검증하고 4 encoder × part-probe
   seed 5개 × LR 3개 × 100 epoch, validation CKA와 official-test attention을

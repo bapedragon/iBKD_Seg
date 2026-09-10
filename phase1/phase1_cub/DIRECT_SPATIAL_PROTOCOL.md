@@ -167,3 +167,36 @@ H200 issue 737에서 완료 gate를 모두 충족하고 20개 part-probe checkpo
 [seed-1 결과 보고서](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에
 고정했습니다. 주 Part PCK와 CKA block11은 LG가 가장 높았고 attention 지표는
 엇갈렸으므로, seed 1은 iBKD의 전반적 공간정보 우위를 지지하지 않습니다.
+
+## Seed 2·3 실행 전 smoke
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_smoke_b128_seeds2_3.sh
+```
+
+Machine-readable 계약은
+[`configs/cub200_r50_224_b128_seed2_3_direct_spatial_smoke_v2.json`](configs/cub200_r50_224_b128_seed2_3_direct_spatial_smoke_v2.json)에
+있으며 SHA-256은
+`bd71b02ebcca3240c7278819b4a34416a131914bd442887afcce6251a7e366d1`입니다.
+
+Issue 730 Release의 batch-128 seed 2·3 encoder 8개와 issue 722 Teacher를
+byte/state hash로 감사하고 strict-load합니다. 진단 정의는 seed-1 v2에서 바꾸지
+않고, 실행·메모리·출력 계약만 다음 축소 범위에서 확인합니다.
+
+- part probe: 8 encoder × LR 3개 × probe seed 1 × 2 epoch = 후보 24개
+- validation 선택: encoder마다 1개, 총 8개
+- spatial CKA: 8 encoder × 12 block = 96개 값
+- attention–GT: validation subset의 8개 metric row
+- 정성 결과: encoder별 고정 validation 4장, 총 PNG 32개
+- official test image/mask decode와 평가: `0`회
+- 요청 자원: H200 MIG slice `1`개
+
+마지막 성공 marker는 다음과 같습니다.
+
+```text
+[DIRECT_SPATIAL_SMOKE_DONE] status=pass encoder_seeds=2,3 strict_loads=8 part_candidates=24 part_selections=8 cka_values=96 attention_rows=8 qualitative_pngs=32 official_test=0 ...
+```
+
+이 smoke 값은 논문 결과가 아니며 seed-1 결과 재확인, 방법·lambda 선택 또는
+프로토콜 변경에 사용하지 않습니다. 통과 뒤 seed 2·3 본실험은 seed-1과 같은
+probe seed 5개, LR 3개, 100 epoch 및 validation-before-test 규칙을 사용합니다.

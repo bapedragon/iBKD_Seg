@@ -58,6 +58,15 @@ CUB image `5007`의 out-of-frame visible part를 발견해 중단됐습니다. v
 seed 5개, LR 3개, 100 epoch, CKA와 attention 계약은 v1과 같습니다. SHA-256은
 `90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017`입니다.
 
+`cub200_r50_224_b128_seed2_3_direct_spatial_smoke_v2.json`은 issue 730의
+batch-128 encoder seed 2·3, 총 8개 checkpoint에 seed-1 본실험과 같은 직접
+공간정보 진단 v2 정의를 적용하기 전 실행 경로를 점검하는 비과학적 smoke
+계약입니다. 클래스별 한 장의 train/validation subset, part-probe seed 1 × LR
+3개 × 2 epoch, validation CKA와 attention만 사용하고 official test는 열지
+않습니다. Seed-1 결과로 설정을 바꾸거나 smoke 값으로 방법·lambda를 선택하지
+않습니다. SHA-256은
+`bd71b02ebcca3240c7278819b4a34416a131914bd442887afcce6251a7e366d1`입니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은
