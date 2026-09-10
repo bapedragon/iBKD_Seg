@@ -19,6 +19,7 @@ LG, ALG-w20, iBKD λ=0.25/0.5의 encoder seed `[1,2,3]`가 모두 채워졌습�
 - seed 2·3 분류 8/8, probe 후보 120/120, validation 선택 40/40, official test 40/40
 - issue 730의 새 checkpoint 48개 모두 SHA-256, `weights_only=True`, strict load, 유한값 검사 통과
 - seed 1 checkpoint는 issue 727 Release를 재사용하며 이 Release에 중복하지 않음
+- seed 2·3 원시 checkpoint와 로그는 [검증된 GitHub Release](artifact_release.json)에 보존
 - 분류 official test 총 12회(4방법×3seed), probe official test 총 60회(4×3×5)
 
 ## 해석

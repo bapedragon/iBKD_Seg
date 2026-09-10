@@ -252,6 +252,8 @@ class Phase1CubResultTest(unittest.TestCase):
         teacher = _json(R50_REPORT / "checkpoint_release.json")
         legacy = _json(R56_REPORT / "artifact_release.json")
         v4 = _json(R50_V4_REPORT / "artifact_release.json")
+        v5 = _json(R50_V5_REPORT / "artifact_release.json")
+        direct = _json(DIRECT_V2_REPORT / "artifact_release.json")
 
         self.assertEqual(teacher["size_bytes"], 89065279)
         self.assertEqual(
@@ -285,6 +287,29 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertTrue(v4["canonical_phase1_cub_v3_partial_result"])
         self.assertFalse(v4["final_six_method_three_seed_matrix_complete"])
         self.assertTrue(v4["remote_asset_digest_verified"])
+
+        self.assertEqual(v5["size_bytes"], 524004112)
+        self.assertEqual(
+            v5["sha256"],
+            "9f1aeabf002cf1ba728b105b53601cbc59158e1fe11fa8a61672612fcaff6212",
+        )
+        self.assertEqual(v5["contents"]["classification_student_checkpoints"], 8)
+        self.assertEqual(v5["contents"]["selected_probe_checkpoints"], 40)
+        self.assertEqual(v5["contents"]["total_checkpoints"], 48)
+        self.assertTrue(v5["canonical_phase1_cub_v3_guided_block_complete"])
+        self.assertFalse(v5["final_six_method_three_seed_matrix_complete"])
+        self.assertTrue(v5["remote_asset_digest_verified"])
+
+        self.assertEqual(direct["size_bytes"], 5959912)
+        self.assertEqual(
+            direct["sha256"],
+            "534c863ea7bddd3db706ea44f108d89fdd24428370f6cfdac887e24f844630a2",
+        )
+        self.assertEqual(direct["contents"]["part_probe_checkpoints"], 20)
+        self.assertEqual(direct["contents"]["qualitative_pngs"], 32)
+        self.assertEqual(direct["contents"]["total_checkpoints"], 20)
+        self.assertFalse(direct["final_encoder_seed_inference"])
+        self.assertTrue(direct["remote_asset_digest_verified"])
 
 
 if __name__ == "__main__":

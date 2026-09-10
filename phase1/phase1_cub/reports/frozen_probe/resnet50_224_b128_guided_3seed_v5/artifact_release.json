@@ -1,0 +1,38 @@
+{
+  "asset_name": "phase1_cub_resnet50_224_b128_guided_seeds2_3_v5_issue730.tar.gz",
+  "asset_type": "phase1_cub_resnet50_224_guided_seeds2_3_v5",
+  "canonical_phase1_cub_v3_guided_block_complete": true,
+  "contents": {
+    "classification_results": true,
+    "classification_student_checkpoints": 8,
+    "dataset_files": false,
+    "feature_caches": false,
+    "full_probe_results": true,
+    "h200_log": true,
+    "selected_probe_checkpoints": 40,
+    "selection_before_test_records": true,
+    "shared_teacher_checkpoint": false,
+    "source_artifact_manifest": true,
+    "total_checkpoints": 48
+  },
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-cub-r50-224-guided-seeds2-3-v5-issue730/phase1_cub_resnet50_224_b128_guided_seeds2_3_v5_issue730.tar.gz",
+  "final_six_method_three_seed_matrix_complete": false,
+  "release_tag": "phase1-cub-r50-224-guided-seeds2-3-v5-issue730",
+  "release_url": "https://github.com/bapedragon/iBKD_Seg/releases/tag/phase1-cub-r50-224-guided-seeds2-3-v5-issue730",
+  "remote_asset_digest_verified": true,
+  "role": "preserve_issue730_encoder_seeds2_3_and_selected_probes; combine_with_issue727_seed1_without_duplication",
+  "schema_version": 1,
+  "sha256": "9f1aeabf002cf1ba728b105b53601cbc59158e1fe11fa8a61672612fcaff6212",
+  "size_bytes": 524004112,
+  "source": {
+    "canonical_source_archive_name": "phase1_cub_r50_224_issue730_guided_s23_and_issue737_direct_spatial_v2.zip",
+    "h200_job_id": 730,
+    "protocol_config_sha256": "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9",
+    "protocol_id": "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5",
+    "shared_teacher_h200_job_id": 722,
+    "source_archive_bytes": 530537040,
+    "source_archive_sha256": "76bf34f4687346acf6d4b3f4d6fb9d0f5172222cb46f87e40102425f95b43e0e"
+  },
+  "storage_policy": "github_release_asset_not_git_history",
+  "target_git_commit": "1205ffbf3bc18036775ee90ec18453134d2000aa"
+}

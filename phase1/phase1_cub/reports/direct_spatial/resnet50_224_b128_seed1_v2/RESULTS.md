@@ -18,6 +18,7 @@ encoder에서 학습한 5개 part-probe seed의 sample SD이며 독립 encoder �
 - 실행시간: 20.54분
 - encoder 4개는 issue 727의 감사된 batch128 seed-1 checkpoint hash와 일치
 - part-probe checkpoint 20개 모두 SHA-256, `weights_only=True`, strict load, 유한값 검사 통과
+- 원시 part-probe checkpoint와 history는 [검증된 GitHub Release](artifact_release.json)에 보존
 - validation으로 20개 선택을 끝낸 뒤 official test를 열었으며 test는 선택에 사용하지 않음
 - Part probe 20회 + attention 4회 = official test 평가 총 24회
 - CKA는 validation 600장만 사용해 official test를 사용하지 않음
