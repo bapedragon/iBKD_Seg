@@ -1,0 +1,9 @@
+{
+  "all_variants_and_probe_seeds_selected": true,
+  "config_sha256": "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017",
+  "expected_selections": 20,
+  "official_test_accessed": false,
+  "part_probe_validation_selections": 20,
+  "selection_uses_official_test": false,
+  "status": "complete"
+}

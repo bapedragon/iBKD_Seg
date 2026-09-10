@@ -1,0 +1,928 @@
+{
+  "checkpoint_count": 20,
+  "dataset": "CUB-200-2011",
+  "experiment_kind": "resnet50-direct-spatial-v2-seed1",
+  "files": [
+    {
+      "bytes": 227541,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image11064.png",
+      "sha256": "c69bf5925df24f6a846cabb8e84aa2a10a7b67787ed7a125869005dccb99bae0",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image11064.png"
+    },
+    {
+      "bytes": 123672,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image2285.png",
+      "sha256": "64cc9a4b0cc48ea0af0944e1bdb9b1162d9344132ca00c6038516db6ae2411dd",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image2285.png"
+    },
+    {
+      "bytes": 228921,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image3735.png",
+      "sha256": "2461875dc66b99f7f6930b5cd0bed19c49847ccdc745ce23eb7a500365c3cd7b",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image3735.png"
+    },
+    {
+      "bytes": 133226,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image5205.png",
+      "sha256": "c906ff6cc5ad1d78f6c60cd12fef9edf592eaaf6b164727c1bfb52cb32f473c1",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image5205.png"
+    },
+    {
+      "bytes": 189183,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image6691.png",
+      "sha256": "445d5de0ff788b91104ebfb7fd7650ac46dd4504a731b199e41af981ab8e17ef",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image6691.png"
+    },
+    {
+      "bytes": 136776,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image787.png",
+      "sha256": "aeaf353e4a4a4395d8a6f2e8b038e9566514a9439082e49c24e2e580fab6846a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image787.png"
+    },
+    {
+      "bytes": 162482,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image8139.png",
+      "sha256": "670445dbf5db5eebc819dbe6bc8206b35bfe3fb3e3deea8cc0e65a92b04f6b17",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image8139.png"
+    },
+    {
+      "bytes": 104217,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed1_image9597.png",
+      "sha256": "b7755cc0b7c7252040101bfce34bfd467c361e36bc7628558a1b0d8a5e2ee58f",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed1_image9597.png"
+    },
+    {
+      "bytes": 229429,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image11064.png",
+      "sha256": "3b793dfe859b271199bc020f19a5e0d44d2ccd7a104cd56de2c02d2379672427",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image11064.png"
+    },
+    {
+      "bytes": 122546,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image2285.png",
+      "sha256": "62d2fdd7f834ee066ebb472ac49e186e4b547f8e962019f1c42726b197ba1f5a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image2285.png"
+    },
+    {
+      "bytes": 229129,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image3735.png",
+      "sha256": "dc66cf650bf4fdb6e34ddf6a6527cd6dc219e6e2324c7c1e5283edcb4771a26f",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image3735.png"
+    },
+    {
+      "bytes": 132074,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image5205.png",
+      "sha256": "4192184e1b0b656ab15f8ad1e17c5feee4606cc0fbe817e9b5c1cc1ed640e025",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image5205.png"
+    },
+    {
+      "bytes": 188753,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image6691.png",
+      "sha256": "e191e4a60d3701213bc51eadc674c89ff4b2a11864e2f61265e21a1e288dfa81",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image6691.png"
+    },
+    {
+      "bytes": 131329,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image787.png",
+      "sha256": "09bbeaf3de0bd384939c40c2098ce990b75d1dab5ba8df40d1ead9d724e66153",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image787.png"
+    },
+    {
+      "bytes": 163910,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image8139.png",
+      "sha256": "025e22952498cd4c1d613ecd08f3055722cd298282910ff029d26292bff1c1a7",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image8139.png"
+    },
+    {
+      "bytes": 104045,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image9597.png",
+      "sha256": "f4ca9fd50d3dfd2aa6a12a1561388d92b169fca3d341d9aa1f40d3a61e99878c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed1_image9597.png"
+    },
+    {
+      "bytes": 181436,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image11064.png",
+      "sha256": "ce097b5c9ed06a16697e618bd3a579428cf872dbbd35d30222b2dc84038e2eda",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image11064.png"
+    },
+    {
+      "bytes": 124418,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image2285.png",
+      "sha256": "a9f4e55387e92ef88062cb95385ff17a28de4650da1aba23c309e99a08a07b66",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image2285.png"
+    },
+    {
+      "bytes": 200068,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image3735.png",
+      "sha256": "fab4c6ddd5c797da563d3f8471de41aa4fc24a4ffaea1ce0b19500da79176b19",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image3735.png"
+    },
+    {
+      "bytes": 109590,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image5205.png",
+      "sha256": "d1d9b6f3d533b857e8e9752236d7d5eeb1d6a819dcd91174cb79d1542436f896",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image5205.png"
+    },
+    {
+      "bytes": 161211,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image6691.png",
+      "sha256": "d2d3fa27496f4fed4362f7f476347c13b4daacf2fc21094e508e97dc95628adb",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image6691.png"
+    },
+    {
+      "bytes": 121311,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image787.png",
+      "sha256": "fa58b07e784a2f47fcda428ef167c20e91693679ee98b25818d4b80d19f63a0a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image787.png"
+    },
+    {
+      "bytes": 150923,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image8139.png",
+      "sha256": "0b48783c693004df28f7729ecbe5d8ba8150a08ed041e255b37e714bb1f7afe5",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image8139.png"
+    },
+    {
+      "bytes": 89945,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image9597.png",
+      "sha256": "f8fa96c8605a1e5841d53b4a14a9340e3b4c49add936be1cc275748bb3d8b491",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed1_image9597.png"
+    },
+    {
+      "bytes": 228080,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image11064.png",
+      "sha256": "98a22cf1ad810a28440835352717b4cba3ac9ff911fac428df9a50fabc958487",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image11064.png"
+    },
+    {
+      "bytes": 122659,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image2285.png",
+      "sha256": "911cd3079d1f5e81e06e1317ebd2e7920f5bc3eb74c022e0bdda668cc1b6689b",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image2285.png"
+    },
+    {
+      "bytes": 227072,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image3735.png",
+      "sha256": "7fb378d36882dad68a18fb1d4aeff0919fc1083747117d8b8fb0985068297949",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image3735.png"
+    },
+    {
+      "bytes": 138292,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image5205.png",
+      "sha256": "0e13e66b78f02f94663c644495a012fb50287c8532940bd1839b308ad6ba483c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image5205.png"
+    },
+    {
+      "bytes": 189864,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image6691.png",
+      "sha256": "c0879c501e28a96ca27d9f64ddfde0d82c4fb908040c313302a47cbbe40cd13e",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image6691.png"
+    },
+    {
+      "bytes": 137768,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image787.png",
+      "sha256": "2e2a1dcaa66dc40a7c8b8f20db575d822d115a98a12193a8e55a189b2d058ca9",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image787.png"
+    },
+    {
+      "bytes": 163941,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image8139.png",
+      "sha256": "5eb20151d98c2f02badbf161eb415c194f2f8f037d558adaeef98d0cbe4dab06",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image8139.png"
+    },
+    {
+      "bytes": 102796,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed1_image9597.png",
+      "sha256": "7a7c5be177b1b8b6c815f7d333c8da5e689c5f754bab91c057d8390b95c33ec8",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed1_image9597.png"
+    },
+    {
+      "bytes": 886,
+      "checkpoint": false,
+      "path": "attention_gt/results.csv",
+      "sha256": "9d5b268c3e8c9af505961aaf647ed44d3020f132a8b585175e1305259b78388e",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/results.csv"
+    },
+    {
+      "bytes": 2643,
+      "checkpoint": false,
+      "path": "attention_gt/results.json",
+      "sha256": "42fb91b6a94388afa9bc9112f6c398c937de818c477f87157d3abc6b9fc14b78",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/attention_gt/results.json"
+    },
+    {
+      "bytes": 2732,
+      "checkpoint": false,
+      "path": "checkpoint_audit.json",
+      "sha256": "56feb3b785734cad25b9ae1a985e662f8e8527401a9936211cda470ffec08931",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/checkpoint_audit.json"
+    },
+    {
+      "bytes": 96375,
+      "checkpoint": false,
+      "path": "dataset_audit.json",
+      "sha256": "42672b35faf17505d2b9105c0a1cd023a8c04c5f4ce30972d9e026c017097d7a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/dataset_audit.json"
+    },
+    {
+      "bytes": 26980,
+      "checkpoint": false,
+      "path": "h200_issue.log",
+      "sha256": "a1dc7f137e29ce6e8314c0a3e75b5189d7bd3356166998a6f97757e18318ff41",
+      "source_member": "kau-aimslab_737/kau-aimslab_737_result.txt"
+    },
+    {
+      "bytes": 1867,
+      "checkpoint": false,
+      "path": "part_probe/annotation_validity_audit.json",
+      "sha256": "00b718e41c4c1bcb8ed1767b00079c6b1e91a42a5d514f7af4542a46eae595f1",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/annotation_validity_audit.json"
+    },
+    {
+      "bytes": 4551,
+      "checkpoint": false,
+      "path": "part_probe/candidates.csv",
+      "sha256": "a35c79f9dcd6095927823caa7716eed680c24d2340dbb2caa423d4eae6ac2403",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/candidates.csv"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed1_best_validation.pt",
+      "sha256": "2012f1aaa2043675adcaa8a83f87ac2b7fbad1c1148c3bf81b22c2299c62232d",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed2_best_validation.pt",
+      "sha256": "c683ee6e6f871ca988e1a88458edb647b414e8cf57b17a699daca4c09c6b4beb",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed3_best_validation.pt",
+      "sha256": "191a07808042ed579e2df619887f214e3f9e79d97fe1cc20714db046609571ba",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed4_best_validation.pt",
+      "sha256": "7126033bdbe9d37d2db311d46cc93d038ee4cf3f3ddb784190ec10dd0f20e827",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed5_best_validation.pt",
+      "sha256": "7554b06f0ee998e831a4384309efa4168e488dc1b527c899d870ebb1b6d427ae",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed1_best_validation.pt",
+      "sha256": "d30fe3ecc8ab2c98933aa8ccc88dce159bd1c11e73a9030327e66317562cbf78",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed2_best_validation.pt",
+      "sha256": "3018aa818e227dbc1ebfebb65f4d8875871190432c96d481cf4cfa6cec6c6216",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed3_best_validation.pt",
+      "sha256": "650341f9d45414646c1bdb7f88e725605765c144987d48a05b97ae4f494d208c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed4_best_validation.pt",
+      "sha256": "d3e5419a2d850c0d9abdd09bc9d875bdaa2cbcafeab31b64c22eceb48860caf6",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed5_best_validation.pt",
+      "sha256": "bdca45aa59257cce009521a1d7e2b2febe8c31258c2af51d8fa36db36cc6fb8a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed1_best_validation.pt",
+      "sha256": "65c8840ca907b0147b2c36eb7af94193dc242e803dafe8f893ac80adf4ee2863",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed2_best_validation.pt",
+      "sha256": "2359ef32636eecb53caec87d5486650e21e33eae411afc6f02fbaba7d5ff9a39",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed3_best_validation.pt",
+      "sha256": "5c016bb41c1a014be70c60269cffac4faefbbb2c759bb3505906f4b173ed80e3",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed4_best_validation.pt",
+      "sha256": "3522e53238d07e2be4c0daa72313a1febecd8de5b837872ea0d543ab5c593c1a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed5_best_validation.pt",
+      "sha256": "7ddd231170434415a10fecba120a66828525b4c1f706e4dcc2882de3e5b58630",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed1_probe_seed1_best_validation.pt",
+      "sha256": "95528f58ce5186f94cc0d88a0ffb28752942080cd39e2b0bb5c28d82989f7a05",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed1_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed1_probe_seed2_best_validation.pt",
+      "sha256": "33ed74bc1b3edcfbb5bccced46ae3adba482ed55f87c9930f8c121ed8f449296",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed1_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed1_probe_seed3_best_validation.pt",
+      "sha256": "438934fd9f6e11bfc52dbe07c32f567f0262a17566087608157654bd630391ed",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed1_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed1_probe_seed4_best_validation.pt",
+      "sha256": "8fa111f22336ef0601216fc70de0aed38a43a29394cb23051cb5994c58a99073",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed1_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed1_probe_seed5_best_validation.pt",
+      "sha256": "f6a99ef68fd3ea8a728af2f051d7d64fd49df2ca3ef62ee938e3f26ff4383a8e",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed1_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 113427,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed1_lr0p01.json",
+      "sha256": "4d3ee61e0707e71973e5170581fa47e9108a30cc91202a224518828d25b37119",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113337,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed1_lr0p03.json",
+      "sha256": "989a8342f6148dd01b02bc53d5d4b1aa95e021125b27c2fbe24f03ec9320f2e2",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113325,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed1_lr0p1.json",
+      "sha256": "b17618f0d70ee95be45c94f928a2dfb46b032860a047d2fdb7135d90fa0b2982",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113592,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed2_lr0p01.json",
+      "sha256": "bb687cf94d1646d9a91198349ddea5e23dbc550b4624282e19895748ef4e67e1",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113387,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed2_lr0p03.json",
+      "sha256": "4817ed9d14a2cbff39b63d9725bbaeb51dc0524dae7127c894a3802300df3157",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113327,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed2_lr0p1.json",
+      "sha256": "0dd7d23ab6faf47f138e359a104ed96cebcda3e6157fb854df6f29ba62c4988c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113572,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed3_lr0p01.json",
+      "sha256": "54661d6a998a2b74b44eea1570f4ff26262e6427e8414f68e3a9e5b53cc345bf",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113153,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed3_lr0p03.json",
+      "sha256": "3a5483df318d40a1cf0342e1f6d789219e335dde4e15621f5be94366e267533e",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113296,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed3_lr0p1.json",
+      "sha256": "5641001c7cfa57d39fb699cdcdd7e5a0a709f57235f2ec3bd239ad7b71b5e9d0",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113323,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed4_lr0p01.json",
+      "sha256": "83e40e23c424dc5dcef9ee261b9ce9cf122bf016ff261292a6479ae93564497b",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113199,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed4_lr0p03.json",
+      "sha256": "111dc8555a93b9f3250130053b4eade1fc7f80b27d76449ff2963e95940d4cd6",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113390,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed4_lr0p1.json",
+      "sha256": "c9bb45111728f319369def9a945a6ee3be3366e43b11eb77ea9a1c1e5460a62c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113334,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed5_lr0p01.json",
+      "sha256": "8e639fa914252f5d12fac6d4d31cd6328b3647811048275e9b95fc1c99de7cd6",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113144,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed5_lr0p03.json",
+      "sha256": "a9b2a840470a5ea09bda2325b46b5799b0377cc8f2c8d7420638767346066a3c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113388,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_probe_seed5_lr0p1.json",
+      "sha256": "8e8306299944520f279224ff2cceb42237cda1704cf88bca08a88a125873193c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/alg_warmup20_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113219,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p01.json",
+      "sha256": "b709fe3f0709322bdf0b26378d9d48a57a9f8d69b2911c0c97eaf08ee4186aad",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113635,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p03.json",
+      "sha256": "376ee762ea5af1cb49ba04bc6fc879c14e612a62d779fe82e759832b3eeebc5c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113473,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p1.json",
+      "sha256": "89ca41a00afb9e29aa60f3119e3264b4f03f7149711ac2380f37d20e84c6e66f",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113647,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p01.json",
+      "sha256": "3a9b9f71a2a3250ab9a1bfa42f1e9ec535e9f61d07dca4d2ceaecc4094d1d60a",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113393,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p03.json",
+      "sha256": "c86098bbe2ca47fc75ff57da5656f8e9f6a9e90d787f29758e986a94429b4142",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113469,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p1.json",
+      "sha256": "e1c67ac7e918339c8555d2935f5304babc75548ce8dd3a4800e3493d34bc5786",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113469,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p01.json",
+      "sha256": "f2297f3d4b5b66bc13e39003d1c377afb2f14479105ffde874ad2defecd8c844",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113492,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p03.json",
+      "sha256": "82cd31c4cd4fde6f42afb3a042f1f5e96cbe0a53866c430aa0115be2033b1aa5",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113370,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p1.json",
+      "sha256": "b81fccd447930798256b49c91493061baaee58e6d3c550bdea6f283b4ac8d2b4",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113460,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p01.json",
+      "sha256": "408a7d1509a4a5929d7dee0fe2b49c43d30c22dfa54bd50f970f14c8377255b7",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113342,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p03.json",
+      "sha256": "3aa305b4a728b46c563c9a2fefe2f03c2c650a31e2fdf7acd9ca3464ba4114d1",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113571,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p1.json",
+      "sha256": "f81cc66a11543a4c44461e1bbbc1ed7a0459081c4f802769075e4b668572cdb2",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113195,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p01.json",
+      "sha256": "c08174b4a336edf9a0fd8a4cb8798b3510a843229760f401c0172280f77ee17e",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113472,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p03.json",
+      "sha256": "61708f88c2f3fd43543b984aeaa17205b141dac8dc3d094c00fb912c403bcfc4",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113441,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p1.json",
+      "sha256": "a301762ed23d05df99508410fc7efda09945af928abc8b09ea755969517babc2",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113564,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p01.json",
+      "sha256": "18e2a953d9d48d53417d5028e532f28cb636b216e7fd81752b79ac505406cf28",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113605,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p03.json",
+      "sha256": "92853c186be60a4b921652d73f3221fb9e15b20d966e39126c993224fc87f6a6",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 101434,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p1.json",
+      "sha256": "02af944a2ed72f9aa15d4a113324962d82b6bec50428020169ebbbfb6205b5d9",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113449,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p01.json",
+      "sha256": "8f8ad326e410d3f7f8137b55b6a4294c0c68b687f01210c0a61a26053ebedf1b",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113509,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p03.json",
+      "sha256": "c6bef4cfbba43c799e0b9503ec273571e13450694585a1f4f30ba6a9980eda32",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 101727,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p1.json",
+      "sha256": "a15c98cc7811c6e59fd464f6534728b9c9681c8dab720bea85421077aa4f3338",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113287,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p01.json",
+      "sha256": "67b6110a278a492059594e1a0774cb8ee8bdb0048342b7a566e37c9dd6ced9f6",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113373,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p03.json",
+      "sha256": "7a70e8a7d1a826bcc74fb0ad67e5ae92adbac53ee2290c4bc111d56504ce21eb",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 101446,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p1.json",
+      "sha256": "4a77d824942cca17847fb31b10b0012757ce238d04a11ea9250fe5617aeed95d",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113847,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p01.json",
+      "sha256": "a3eb5a8f3949710c11c0036b6bcedae4c23c3e7668c1f70c70e53f103d979721",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113207,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p03.json",
+      "sha256": "04a945c5372101060f1f6634bee93378f98cf8f63f57fe10a5ef5b1c9e236bc7",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 101587,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p1.json",
+      "sha256": "fa1e695d528e6b6740d339f892a4bcbb48829f967f7ba0477f819fb5f9c04152",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113288,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p01.json",
+      "sha256": "0a561d8f50d5589cb40c3c1186730ca6ebfb226c904a4fe59a795917ff45ee07",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113139,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p03.json",
+      "sha256": "c9493a9f0938ffeedf04ead3d1b454d4d1b6dfa2419eabc2572b279b471b6a63",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 101573,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p1.json",
+      "sha256": "398712d58b7bf5a37c466a9e005744feb576ec604942cccb94e8c97907135ae2",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 112766,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed1_lr0p01.json",
+      "sha256": "ee7dcb3ad4b127c1a81e298d58196d729d061e52eb73f9e35e6d198479336932",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113383,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed1_lr0p03.json",
+      "sha256": "5dd3df5b238e2079917f145010266c7014d563cd6695186ef0989ffd30731f34",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 112990,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed1_lr0p1.json",
+      "sha256": "eae57d67f9ec7337a8bd7b1805d85a4474087d75cd8855f632def902fdd3ac55",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 112553,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed2_lr0p01.json",
+      "sha256": "46c608597d838d211d9628faf9381ed68af1ebf0f98f5cd8f91a11d1f88e9dc5",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113090,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed2_lr0p03.json",
+      "sha256": "2ca89d8088d4b34cb2d859ef56e117f62af82ac09c5cae867825b9c9b32da0e1",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 112915,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed2_lr0p1.json",
+      "sha256": "9f63d2e0698762e8346a44801a52747db9994d294acdf2b380b691bb3fabe470",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 112760,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed3_lr0p01.json",
+      "sha256": "b43a0acb5a13e243918b9f4aa76e14970a9efbfebcea31b49d6824550d16b8e7",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113285,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed3_lr0p03.json",
+      "sha256": "64ef133562f0b9d61bda2dce0962531c7173cf2ec3173ba586fca9d6ef7decfd",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 112794,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed3_lr0p1.json",
+      "sha256": "d0551c4a6321f65c319e82a7f0f0992979301b6c5401ee35c15e4e918530b780",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 112718,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed4_lr0p01.json",
+      "sha256": "9c19f9cb3f062060cc1fa5a88d07b03b56713f6c194d54b9a974ef7a48127f87",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113336,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed4_lr0p03.json",
+      "sha256": "43b6973b96e9a1ae17e33eda529f643733211df7ed6aebfa6488503569d302ff",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 112867,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed4_lr0p1.json",
+      "sha256": "e0b654db3c8b3ee1d247b32e1b8fa67c4404467c81d792ce552fb9594c59d5ac",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 112712,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed5_lr0p01.json",
+      "sha256": "3207efd406713a62c528d8dc455b92735221c88c7b999de51bc9d69348d14e15",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113282,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed5_lr0p03.json",
+      "sha256": "04b7ce4dde11a5e2ee86a52e5e0ed739ec8facac3197f53f478665defb01bf05",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 112888,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_probe_seed5_lr0p1.json",
+      "sha256": "88f793f5ada498f9055a5d5580327255a9593e9270c76ed0cf6a71aae569e78f",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/histories/lg_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 1444,
+      "checkpoint": false,
+      "path": "part_probe/official_test_results.csv",
+      "sha256": "7613eca6c67b22f4594bf8ea4b4c55572e82cdd21ff62ad936b1dc3fdbf52e0c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/official_test_results.csv"
+    },
+    {
+      "bytes": 80079,
+      "checkpoint": false,
+      "path": "part_probe/results.json",
+      "sha256": "948d855a3b599567ae449c758c239f210b2e2702a29dc1b7a85777640006d94c",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/results.json"
+    },
+    {
+      "bytes": 310,
+      "checkpoint": false,
+      "path": "part_probe/selection_complete_before_test.json",
+      "sha256": "f286e49d5879f375a8c3bd609bc3ae57119c8b3da5e54d6c0469eeb5b8df199d",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/part_probe/selection_complete_before_test.json"
+    },
+    {
+      "bytes": 26980,
+      "checkpoint": false,
+      "path": "run.log",
+      "sha256": "a1dc7f137e29ce6e8314c0a3e75b5189d7bd3356166998a6f97757e18318ff41",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/run.log"
+    },
+    {
+      "bytes": 567,
+      "checkpoint": false,
+      "path": "sequence_status.json",
+      "sha256": "f372710094bdd213d11ac57321521281c8eea88f29a074789c1fd2d14e3740a3",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/sequence_status.json"
+    },
+    {
+      "bytes": 19227,
+      "checkpoint": false,
+      "path": "spatial_cka/layerwise_heatmap.png",
+      "sha256": "19d948ca1aa5d372c5ea535b3735227cd1d25abd06bbd729eda3a07f4825bf32",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/spatial_cka/layerwise_heatmap.png"
+    },
+    {
+      "bytes": 3371,
+      "checkpoint": false,
+      "path": "spatial_cka/results.csv",
+      "sha256": "5e4b0ae52730709f4199ec988b19c742f8776e3e507b645d7251b0adf0831cc7",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/spatial_cka/results.csv"
+    },
+    {
+      "bytes": 13581,
+      "checkpoint": false,
+      "path": "spatial_cka/results.json",
+      "sha256": "c5e53bc2cf2901e9735d4db05803e65dd52125e05846c74e0780a2b287bc8715",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/spatial_cka/results.json"
+    },
+    {
+      "bytes": 21855,
+      "checkpoint": false,
+      "path": "summary.json",
+      "sha256": "a18ebbed5173662c268c32f1e0b5e9b4af5da3de0e055e2d329a4542897ce731",
+      "source_member": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/summary.json"
+    }
+  ],
+  "h200_issue_id": "737",
+  "import_policy": {
+    "kept": [
+      "scientific summaries and CSV/JSON evidence",
+      "classification checkpoints needed for reproducibility",
+      "selected probe checkpoints when present",
+      "H200 execution logs"
+    ],
+    "omitted": [
+      "directory entries"
+    ]
+  },
+  "imported_bytes_excluding_this_manifest": 12387531,
+  "imported_file_count_excluding_this_manifest": 128,
+  "schema_version": 1,
+  "source_archive": {
+    "all_member_crc_verified": true,
+    "bytes": 530537040,
+    "canonical_filename": "phase1_cub_r50_224_issue730_guided_s23_and_issue737_direct_spatial_v2.zip",
+    "original_filename": "kau-aimslab_737.zip",
+    "sha256": "76bf34f4687346acf6d4b3f4d6fb9d0f5172222cb46f87e40102425f95b43e0e",
+    "unsafe_paths_or_symlinks": false
+  },
+  "source_suite_root": "kau-aimslab_737/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2/",
+  "status": "pass"
+}

@@ -1,0 +1,16 @@
+{
+  "batch_size": 128,
+  "completed_probe_selections": 20,
+  "config_sha256": "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9",
+  "encoder_seed": 3,
+  "expected_probe_selections": 20,
+  "official_test_masks_accessed": false,
+  "selection_contracts": {
+    "all_selected_probes_strict_reloaded": true,
+    "same_initial_probe_state_per_probe_seed": true,
+    "same_probe_batch_order_per_seed_and_epoch": true,
+    "selection_count": true,
+    "three_lr_candidates_per_selection": true
+  },
+  "status": "complete"
+}

@@ -9,11 +9,18 @@ Teacher 결과와 checkpoint hash는
 후속 v3 학생·probe는 이 Teacher의 파일 hash와 model-state hash를 모두 확인한 뒤
 실행합니다. H200 issue 727의 guided 네 방법 batch-128/64 seed-1 분류·probe는
 [v4 부분 결과 보고서](frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)에
-정리했습니다. 이는 감사된 scientific cell이지만 아직 6방법×3 encoder seed 전체
-매트릭스가 아닙니다.
+정리했습니다. Issue 730의 batch-128 seed 2·3을 합친
+[guided 4방법 3-seed 결과](frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md)도
+감사를 완료했습니다. Guided 블록은 완성됐지만 Vanilla/KD가 없어 아직 6방법×3
+encoder seed 전체 매트릭스는 아닙니다.
 48개 checkpoint와 전체 원시 로그는 Git history가 아닌 보고서에 연결한 검증된
 [Release 자산](frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/artifact_release.json)으로
 보존합니다.
+
+H200 issue 737의 seed-1 part localization, spatial CKA, attention–GT 결과는
+[직접 공간정보 진단 보고서](direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에
+정리했습니다. Part PCK와 CKA 모두 LG가 가장 높았고 attention 지표는 서로
+엇갈렸으므로, 현재 결과는 iBKD의 전반적 공간정보 우위를 지지하지 않습니다.
 
 H200 issue 716의 ResNet-56/32 v2 guided 결과는 제출 시점의 계약대로 완결됐지만,
 v3 확정 전의 구버전입니다. 결과와 55개 checkpoint는

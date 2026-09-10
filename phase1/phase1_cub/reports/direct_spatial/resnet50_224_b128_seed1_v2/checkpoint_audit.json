@@ -1,0 +1,286 @@
+{
+  "part_probes": {
+    "all_file_hashes_match": true,
+    "all_floating_tensors_finite": true,
+    "all_strict_loads_passed": true,
+    "entries": [
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14309,
+        "checkpoint_sha256": "95528f58ce5186f94cc0d88a0ffb28752942080cd39e2b0bb5c28d82989f7a05",
+        "encoder_seed": 1,
+        "model_state_sha256": "9e59a9ab26f0fdf074de9fbc1fab83423046e7bc7bffe95db3e93d3502ca6c6d",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/lg_encoder_seed1_probe_seed1_best_validation.pt",
+        "probe_seed": 1,
+        "strict_load": true,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14309,
+        "checkpoint_sha256": "33ed74bc1b3edcfbb5bccced46ae3adba482ed55f87c9930f8c121ed8f449296",
+        "encoder_seed": 1,
+        "model_state_sha256": "94b9193d61837d4da361c38fc2fd90cade95850de3fc8282504cb5d2503136b9",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/lg_encoder_seed1_probe_seed2_best_validation.pt",
+        "probe_seed": 2,
+        "strict_load": true,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14309,
+        "checkpoint_sha256": "438934fd9f6e11bfc52dbe07c32f567f0262a17566087608157654bd630391ed",
+        "encoder_seed": 1,
+        "model_state_sha256": "84ce441af03f6bd8ca2931171d73105a3568aa50b79ca86b8c66cecae4d47238",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/lg_encoder_seed1_probe_seed3_best_validation.pt",
+        "probe_seed": 3,
+        "strict_load": true,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14309,
+        "checkpoint_sha256": "8fa111f22336ef0601216fc70de0aed38a43a29394cb23051cb5994c58a99073",
+        "encoder_seed": 1,
+        "model_state_sha256": "167fa05663c9e0ca53d30894ca2919069dd3354598a1f09f5733a88250059add",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/lg_encoder_seed1_probe_seed4_best_validation.pt",
+        "probe_seed": 4,
+        "strict_load": true,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14309,
+        "checkpoint_sha256": "f6a99ef68fd3ea8a728af2f051d7d64fd49df2ca3ef62ee938e3f26ff4383a8e",
+        "encoder_seed": 1,
+        "model_state_sha256": "c66eaa3c62ac9a48680ee2f6b995c3bc2c4a98c9dbab15c7d0766f0d82816a06",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/lg_encoder_seed1_probe_seed5_best_validation.pt",
+        "probe_seed": 5,
+        "strict_load": true,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14453,
+        "checkpoint_sha256": "2012f1aaa2043675adcaa8a83f87ac2b7fbad1c1148c3bf81b22c2299c62232d",
+        "encoder_seed": 1,
+        "model_state_sha256": "84cae3950e605a34f553f890b1c5c2e86a63cc8119052440476306147312a61d",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed1_best_validation.pt",
+        "probe_seed": 1,
+        "strict_load": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14453,
+        "checkpoint_sha256": "c683ee6e6f871ca988e1a88458edb647b414e8cf57b17a699daca4c09c6b4beb",
+        "encoder_seed": 1,
+        "model_state_sha256": "8f845a4a2fb66dea0784180015639f9816c3bb61934701b5d771ceceb6d04d3f",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed2_best_validation.pt",
+        "probe_seed": 2,
+        "strict_load": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14453,
+        "checkpoint_sha256": "191a07808042ed579e2df619887f214e3f9e79d97fe1cc20714db046609571ba",
+        "encoder_seed": 1,
+        "model_state_sha256": "0915923ae565e2b79fd34c2a737e2dc54433b87926d31f9041fb20dfa5e54f68",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed3_best_validation.pt",
+        "probe_seed": 3,
+        "strict_load": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14453,
+        "checkpoint_sha256": "7126033bdbe9d37d2db311d46cc93d038ee4cf3f3ddb784190ec10dd0f20e827",
+        "encoder_seed": 1,
+        "model_state_sha256": "312b8215951d95cce26ab03ac8e65fe18080eb6532c55b2255236bef7374d0e1",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed4_best_validation.pt",
+        "probe_seed": 4,
+        "strict_load": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14453,
+        "checkpoint_sha256": "7554b06f0ee998e831a4384309efa4168e488dc1b527c899d870ebb1b6d427ae",
+        "encoder_seed": 1,
+        "model_state_sha256": "e822b67fe98fe39c9de48b615bec0df3329244b8d5189eaac2b462073d0a6896",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/alg_warmup20_encoder_seed1_probe_seed5_best_validation.pt",
+        "probe_seed": 5,
+        "strict_load": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14549,
+        "checkpoint_sha256": "d30fe3ecc8ab2c98933aa8ccc88dce159bd1c11e73a9030327e66317562cbf78",
+        "encoder_seed": 1,
+        "model_state_sha256": "d0c3b818a0677d6dc759355647b745e2b0715b107ba86153cecaf8419e20ab1d",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed1_best_validation.pt",
+        "probe_seed": 1,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14549,
+        "checkpoint_sha256": "3018aa818e227dbc1ebfebb65f4d8875871190432c96d481cf4cfa6cec6c6216",
+        "encoder_seed": 1,
+        "model_state_sha256": "3be85e07347a09037596413d68e41c804fe35a9987c918e882a935b8d1d79d9b",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed2_best_validation.pt",
+        "probe_seed": 2,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14549,
+        "checkpoint_sha256": "650341f9d45414646c1bdb7f88e725605765c144987d48a05b97ae4f494d208c",
+        "encoder_seed": 1,
+        "model_state_sha256": "2625a80746b6a06301054ed738f126b75e8713bcdc4e4422398fc9cc42c38ae8",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed3_best_validation.pt",
+        "probe_seed": 3,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14549,
+        "checkpoint_sha256": "d3e5419a2d850c0d9abdd09bc9d875bdaa2cbcafeab31b64c22eceb48860caf6",
+        "encoder_seed": 1,
+        "model_state_sha256": "6329c4a0c2f6a610db6ab1f2368bf9c77bde6d46ff401927634adc61ef7bbf23",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed4_best_validation.pt",
+        "probe_seed": 4,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14549,
+        "checkpoint_sha256": "bdca45aa59257cce009521a1d7e2b2febe8c31258c2af51d8fa36db36cc6fb8a",
+        "encoder_seed": 1,
+        "model_state_sha256": "b691546e30b04f91a7bff4bd3ed0b731ed093c9e6790d7cc94790a83042a31a6",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed1_probe_seed5_best_validation.pt",
+        "probe_seed": 5,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14541,
+        "checkpoint_sha256": "65c8840ca907b0147b2c36eb7af94193dc242e803dafe8f893ac80adf4ee2863",
+        "encoder_seed": 1,
+        "model_state_sha256": "b45a0c11f2563ce571e62e0516bf1ca046510731e1a4c8b6657be9b60794beac",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed1_best_validation.pt",
+        "probe_seed": 1,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14541,
+        "checkpoint_sha256": "2359ef32636eecb53caec87d5486650e21e33eae411afc6f02fbaba7d5ff9a39",
+        "encoder_seed": 1,
+        "model_state_sha256": "a9d8988f340eeb1ee711fa254ecc09fa6d29f439c544a496c60ac4cfacf38f29",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed2_best_validation.pt",
+        "probe_seed": 2,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14541,
+        "checkpoint_sha256": "5c016bb41c1a014be70c60269cffac4faefbbb2c759bb3505906f4b173ed80e3",
+        "encoder_seed": 1,
+        "model_state_sha256": "6d7f66f5aeca26f4ed117ca1156a556b961dbcfb3768f5c993bc5e7be7bb8439",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed3_best_validation.pt",
+        "probe_seed": 3,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14541,
+        "checkpoint_sha256": "3522e53238d07e2be4c0daa72313a1febecd8de5b837872ea0d543ab5c593c1a",
+        "encoder_seed": 1,
+        "model_state_sha256": "be9910fa309cbc1fc98758793004158f79328d9b8fb94b73208933f57ff05468",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed4_best_validation.pt",
+        "probe_seed": 4,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "bytes": 14541,
+        "checkpoint_sha256": "7ddd231170434415a10fecba120a66828525b4c1f706e4dcc2882de3e5b58630",
+        "encoder_seed": 1,
+        "model_state_sha256": "b835d09eb745231a4c5b9ba1a5ea983f399d6c1cfd8b999ab4ebeb89cb2b5f02",
+        "path_under_ignored_raw_root": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed1_probe_seed5_best_validation.pt",
+        "probe_seed": 5,
+        "strict_load": true,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "selected_part_probe_checkpoint_count": 20
+  },
+  "reused_encoders": {
+    "checkpoints_reused_from_issue727_release_not_duplicated": true,
+    "encoder_checkpoint_count": 4,
+    "hashes_match_audited_issue727_batch128_seed1": true,
+    "source_h200_issue": 727,
+    "strict_load_eval_frozen_on_h200": true,
+    "students": [
+      {
+        "all_floating_tensors_finite": true,
+        "checkpoint_bytes": 25075695,
+        "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed1_v4_issue727/batch128/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+        "checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+        "eval_mode": true,
+        "model_state_sha256": "ed12d72166eb48d9897f1d37d7b81ebed3ccabb67adec3ef81480f1f690c0068",
+        "strict_load": true,
+        "trainable_parameters": 0,
+        "variant": "lg"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "checkpoint_bytes": 25075055,
+        "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed1_v4_issue727/batch128/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+        "checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+        "eval_mode": true,
+        "model_state_sha256": "ead91c40f3222482fcb3f91942e0cacbee8681cd1afcb02f02389b4b6fec44f2",
+        "strict_load": true,
+        "trainable_parameters": 0,
+        "variant": "alg_warmup20"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "checkpoint_bytes": 116028605,
+        "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed1_v4_issue727/batch128/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+        "checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+        "eval_mode": true,
+        "model_state_sha256": "d2f3d0e6789d2e0ffcadf4a1aa27ca69dce5674580e1aa14fb95ec525cf1b681",
+        "strict_load": true,
+        "trainable_parameters": 0,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "all_floating_tensors_finite": true,
+        "checkpoint_bytes": 116025213,
+        "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed1_v4_issue727/batch128/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed1/student_best_validation.pt",
+        "checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+        "eval_mode": true,
+        "model_state_sha256": "7a4cc97388c8b6856ba8240c3560e9cf8e53a52de24ec2507a3bb27cba85146d",
+        "strict_load": true,
+        "trainable_parameters": 0,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ]
+  },
+  "safe_torch_load": "weights_only_true",
+  "schema_version": 1,
+  "status": "pass"
+}

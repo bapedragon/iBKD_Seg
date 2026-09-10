@@ -1,0 +1,64 @@
+{
+  "config_sha256": "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017",
+  "coordinate_clipping": false,
+  "official_test": {
+    "affected_image_count": 0,
+    "affected_image_ids": [],
+    "excluded_landmarks": [],
+    "excluded_out_of_frame_visible_keypoints": 0,
+    "images_without_valid_keypoints": [],
+    "official_visible_keypoints": 69546,
+    "records": 5794,
+    "valid_visible_keypoints": 69546
+  },
+  "official_test_accessed": true,
+  "rule": {
+    "audit": "per_split_counts_image_ids_part_ids_coordinates_and_image_sizes",
+    "coordinate_clipping": false,
+    "coordinate_domain": "continuous_original_image_0_le_x_le_width_and_0_le_y_le_height",
+    "official_test_audited_only_after_all_validation_selections": true,
+    "out_of_frame_visible_action": "exclude_from_part_probe_loss_validation_selection_and_pck",
+    "train_validation_audited_before_probe_training": true,
+    "validity": "official_visible_and_in_image_bounds"
+  },
+  "status": "complete",
+  "train": {
+    "affected_image_count": 1,
+    "affected_image_ids": [
+      5007
+    ],
+    "excluded_landmarks": [
+      {
+        "coordinates": [
+          [
+            405.0,
+            344.0
+          ]
+        ],
+        "image_id": 5007,
+        "image_size": [
+          500.0,
+          333.0
+        ],
+        "part_ids": [
+          4
+        ]
+      }
+    ],
+    "excluded_out_of_frame_visible_keypoints": 1,
+    "images_without_valid_keypoints": [],
+    "official_visible_keypoints": 64697,
+    "records": 5394,
+    "valid_visible_keypoints": 64696
+  },
+  "validation": {
+    "affected_image_count": 0,
+    "affected_image_ids": [],
+    "excluded_landmarks": [],
+    "excluded_out_of_frame_visible_keypoints": 0,
+    "images_without_valid_keypoints": [],
+    "official_visible_keypoints": 7164,
+    "records": 600,
+    "valid_visible_keypoints": 7164
+  }
+}

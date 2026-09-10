@@ -1,6 +1,6 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v3 LOCK — Teacher 및 guided seed-1 batch profile 실행·감사 완료**
+상태: **본실험 v3 LOCK — batch128 guided 4방법×3seed 실행·감사 완료**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
@@ -11,9 +11,8 @@
 분류→frozen segmentation probe 이후의 직접 공간정보 진단은 결과를 보기 전에
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 v1으로 고정했습니다.
 Part localization PCK@0.1을 주 직접 지표로, spatial linear CKA와 attention–GT를
-보조 지표로 사용합니다. Seed-1 smoke는 official test를 열지 않으며, 진행 중인
-batch-128 encoder seed 2·3 checkpoint hash를 회수한 뒤 같은 정의로 본실험을
-확장합니다.
+보조 지표로 사용합니다. Seed-1 본실험은 issue 737에서 완료됐으며, 후속 seed 2·3도
+같은 v2 정의를 유지해야 합니다.
 
 ## 잠긴 본실험 v3 계약
 
@@ -149,6 +148,11 @@ GPU 작업 `48/48`로 통과했습니다. 고정한 H200 분할 중 batch 128 se
 완료 gate는 `classification=8/8`, `probe_candidates=120/120`, `selections=40/40`,
 `test_once=40/40`, `new_checkpoints=48`입니다. Smoke 선형 외삽은 약 9시간 4분이고
 데이터 다운로드·최초 target cache overhead는 별도이므로 10시간 제한에 가깝습니다.
+
+H200 issue 730은 7시간 25분 54초에 위 완료 gate를 모두 충족했습니다. Issue 727의
+seed 1과 합쳐 batch-128 guided 네 방법의 encoder seed `[1,2,3]`가 완성됐고 3-seed
+집계는 [v5 결과 보고서](reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md)에
+고정했습니다. 이 결과를 보고 Vanilla/KD나 직접진단 설정을 변경하지 않습니다.
 
 ## 고정한 항목
 

@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **ResNet-50/224 v3 LOCK — guided seed-1 batch128/64 분류·probe 감사 완료**
+상태: **ResNet-50/224 v3 LOCK — batch128 guided 4방법×3seed 및 seed-1 직접진단 감사 완료**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -31,6 +31,7 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 - `scripts/`: 데이터 감사, smoke, 본실험 및 결과 정리 진입점
 - `reports/classification/`: 200종 분류 결과와 checkpoint manifest
 - `reports/frozen_probe/`: frozen segmentation probe 정량·정성 결과
+- `reports/direct_spatial/`: part PCK, spatial CKA, attention–GT 직접 진단 결과
 - `results/raw/`: 로컬 원시 산출물 전용 경로이며 Git에는 포함하지 않음
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
@@ -38,9 +39,10 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 별도로 잠갔습니다.
-현재 확보된 batch-128 seed-1 네 guided encoder로 test를 열지 않는 smoke를 먼저
-실행하고, 진행 중인 seed 2·3 checkpoint를 회수한 뒤 동일 정의를 본실험으로
-확장합니다.
+Batch-128 seed-1 네 guided encoder의 본실험 결과는 issue 737에서 완료됐습니다.
+상세 수치와 제한은
+[직접 공간정보 진단 결과](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에
+정리했습니다.
 
 ## 현재 v3: ResNet-50/224 Teacher 본학습 완료
 
@@ -176,9 +178,13 @@ validation으로 고른 뒤 official test를 한 번 평가합니다. 분류 che
 선택 probe checkpoint 40개, 총 48개 새 checkpoint 및 CSV/JSON/전체 로그를
 `/app/output/phase1_cub_r50_224_b128_guided_probe_seeds2_3_full_v5`에 보존합니다.
 
-선형 예상 9시간 4분에 최초 데이터 다운로드·target cache 시간이 추가되므로 10시간
-제한 여유는 작습니다. 이 실행의 마지막 완료 기준은 분류 `8/8`, probe 후보
-`120/120`, 선택·test probe `40/40`, 새 checkpoint `48`입니다.
+H200 issue 730에서 7시간 25분 54초에 완료했습니다. 분류 `8/8`, probe 후보
+`120/120`, 선택·test probe `40/40`, 새 checkpoint `48`을 모두 충족했고 독립
+감사도 통과했습니다. Seed 1과 합친 batch-128 guided 3-seed frozen mIoU는 LG
+`73.470±0.673%`, ALG-w20 `70.955±1.150%`, iBKD-0.25 `70.318±1.491%`,
+iBKD-0.5 `66.042±2.826%`입니다. 상세 결과는
+[guided 3-seed 보고서](reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md)에
+있습니다.
 
 본실험에서는 각 encoder마다 probe seed `[1,2,3,4,5]`를 그대로 수행합니다.
 Batch 128은 먼저 encoder별 5개 probe 평균을 계산한 뒤 encoder seed 1·2·3 간
@@ -218,6 +224,14 @@ probe seed 5개 × LR 3개 × 100 epoch를 적용하고 validation 선택 20개�
 끝난 뒤 official test를 엽니다. CKA 48개, attention row 4개, 정성 PNG 32개와
 official-test 평가 24회를 완료해야 성공 marker가 출력됩니다. 이 seed-1 shard만으로
 최종 방법 우위를 확정하지 않으며 seed 2·3에 동일한 v2 규칙을 적용합니다.
+
+H200 issue 737에서 20분 33초에 완료하고 20개 part-probe checkpoint를 모두
+감사했습니다. 주 지표 Part PCK는 LG `28.174%`, iBKD-0.25 `22.393%`, ALG-w20
+`19.945%`, iBKD-0.5 `14.394%` 순서였고 CKA block11도 LG가 가장 높았습니다.
+Attention AP는 iBKD-0.25가 가장 높았지만 다른 attention 지표와 순서가 엇갈립니다.
+따라서 seed 1 결과는 iBKD의 전반적 공간정보 우위를 지지하지 않습니다. 상세 결과와
+32개 정성 이미지는
+[issue 737 보고서](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에 있습니다.
 
 ## 이전 v2 smoke 및 보존 결과
 

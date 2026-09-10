@@ -1,0 +1,183 @@
+{
+  "aggregates": [
+    {
+      "encoder_seed_values": [
+        24.315351247787476,
+        24.98922199010849,
+        22.45151698589325
+      ],
+      "independent_encoder_n": 3,
+      "mean": 23.918696741263073,
+      "sample_standard_deviation": 1.31452948626661,
+      "variant": "lg"
+    },
+    {
+      "encoder_seed_values": [
+        21.382255852222443,
+        23.803286254405975,
+        21.466927230358124
+      ],
+      "independent_encoder_n": 3,
+      "mean": 22.217489778995514,
+      "sample_standard_deviation": 1.3739924150580418,
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed_values": [
+        27.03605890274048,
+        22.533656656742096,
+        23.71707707643509
+      ],
+      "independent_encoder_n": 3,
+      "mean": 24.42893087863922,
+      "sample_standard_deviation": 2.3340861965611253,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed_values": [
+        11.612388491630554,
+        21.530695259571075,
+        18.09936910867691
+      ],
+      "independent_encoder_n": 3,
+      "mean": 17.080817619959515,
+      "sample_standard_deviation": 5.036991923471787,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "batch_size": 128,
+  "cells": [
+    {
+      "checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+      "encoder_seed": 1,
+      "selected_epoch": 208,
+      "test_macro_top1": 24.315351247787476,
+      "test_overall_top1": 23.990334829133587,
+      "test_top5": 48.84363134276838,
+      "validation_macro_top1": 26.333335041999817,
+      "variant": "lg"
+    },
+    {
+      "checkpoint_sha256": "c3cd2401cd2f2e41ed096593d06b43a15340fb1105bd44a543ec71790e62b605",
+      "encoder_seed": 2,
+      "selected_epoch": 214,
+      "test_macro_top1": 24.98922199010849,
+      "test_overall_top1": 24.697963410424578,
+      "test_top5": 49.77562996202968,
+      "validation_macro_top1": 25.833332538604736,
+      "variant": "lg"
+    },
+    {
+      "checkpoint_sha256": "9c1ecc76ccbc5cc0b3cad6e7bcb0289a189628e38687ae272be677074ee36da8",
+      "encoder_seed": 3,
+      "selected_epoch": 176,
+      "test_macro_top1": 22.45151698589325,
+      "test_overall_top1": 22.17811529168105,
+      "test_top5": 46.18570935450466,
+      "validation_macro_top1": 24.833333492279053,
+      "variant": "lg"
+    },
+    {
+      "checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+      "encoder_seed": 1,
+      "selected_epoch": 108,
+      "test_macro_top1": 21.382255852222443,
+      "test_overall_top1": 21.211598205039696,
+      "test_top5": 47.3593372454263,
+      "validation_macro_top1": 23.000001907348633,
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_sha256": "dd58c8818d9479094babfe22f43c59981024975a97b770074d2126fb320d1d66",
+      "encoder_seed": 2,
+      "selected_epoch": 245,
+      "test_macro_top1": 23.803286254405975,
+      "test_overall_top1": 23.541594753192957,
+      "test_top5": 48.10148429409734,
+      "validation_macro_top1": 27.166667580604553,
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_sha256": "445d8b7c301b1a586702582364d9047f447ec99d610b6d97aef43ccac98c41c6",
+      "encoder_seed": 3,
+      "selected_epoch": 157,
+      "test_macro_top1": 21.466927230358124,
+      "test_overall_top1": 21.332412840869864,
+      "test_top5": 45.44356230583362,
+      "validation_macro_top1": 23.666667938232422,
+      "variant": "alg_warmup20"
+    },
+    {
+      "checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+      "encoder_seed": 1,
+      "selected_epoch": 239,
+      "test_macro_top1": 27.03605890274048,
+      "test_overall_top1": 26.855367621677598,
+      "test_top5": 52.67518122195374,
+      "validation_macro_top1": 27.666667103767395,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_sha256": "1c1bf6f6141f1efc0e21fe48e60be9e6a1ef3a126c60d81b6903d462fdc86410",
+      "encoder_seed": 2,
+      "selected_epoch": 266,
+      "test_macro_top1": 22.533656656742096,
+      "test_overall_top1": 22.41974456334139,
+      "test_top5": 48.25681739730756,
+      "validation_macro_top1": 25.666669011116028,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_sha256": "87f73dfbc0cb9b8dc6475c61ecbd9dcf270269a3f746105aa6d2de3aa8fd2980",
+      "encoder_seed": 3,
+      "selected_epoch": 254,
+      "test_macro_top1": 23.71707707643509,
+      "test_overall_top1": 23.62789092164308,
+      "test_top5": 48.826372109078356,
+      "validation_macro_top1": 24.166664481163025,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+      "encoder_seed": 1,
+      "selected_epoch": 58,
+      "test_macro_top1": 11.612388491630554,
+      "test_overall_top1": 11.511908871246117,
+      "test_top5": 31.08387987573352,
+      "validation_macro_top1": 12.000001221895218,
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "checkpoint_sha256": "bf3eade3a6ee2fca0b9d0e1335a2ab89468a0abb97f04620670a8b3a6c03cf09",
+      "encoder_seed": 2,
+      "selected_epoch": 273,
+      "test_macro_top1": 21.530695259571075,
+      "test_overall_top1": 21.453227476700036,
+      "test_top5": 46.65170866413531,
+      "validation_macro_top1": 22.999997437000275,
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "checkpoint_sha256": "fea3f7a6512e0670db906877a4b764f2e7ab8cd86964b3a45b9b1c66663bd043",
+      "encoder_seed": 3,
+      "selected_epoch": 297,
+      "test_macro_top1": 18.09936910867691,
+      "test_overall_top1": 18.087676907145323,
+      "test_top5": 41.681049361408355,
+      "validation_macro_top1": 19.66666728258133,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "encoder_seeds": [
+    1,
+    2,
+    3
+  ],
+  "final_six_method_three_seed_matrix_complete": false,
+  "independent_n": 3,
+  "independent_unit": "encoder_seed",
+  "official_test_evaluations": 12,
+  "protocol_id": "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5",
+  "schema_version": 1,
+  "status": "complete_audited_guided_3seed_v5"
+}

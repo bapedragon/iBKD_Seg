@@ -1,0 +1,774 @@
+{
+  "attention_gt_rows": [
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.17509138584136963,
+      "global_micro_patch_average_precision": 0.21840971499311718,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.5246807336807251,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "lg"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.1885259747505188,
+      "global_micro_patch_average_precision": 0.2643180126531196,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.5177770256996155,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "alg_warmup20"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.1999073475599289,
+      "global_micro_patch_average_precision": 0.27647670791883805,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.49430444836616516,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.2206277847290039,
+      "global_micro_patch_average_precision": 0.2126733902371026,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.4767000377178192,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "completion_gate": {
+    "attention_metric_rows": 4,
+    "attention_official_test_evaluations": 4,
+    "checkpoint_strict_loads": 4,
+    "official_test_evaluations": 24,
+    "part_probe_lr_candidates": 60,
+    "part_probe_official_test_evaluations": 20,
+    "part_probe_validation_selections": 20,
+    "qualitative_pngs": 32,
+    "spatial_cka_values": 48
+  },
+  "config_path": "/app/scratch/input/kau-aimslab_737/phase1/phase1_cub/configs/cub200_r50_224_b128_seed1_direct_spatial_full_v2.json",
+  "config_sha256": "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017",
+  "encoder_seed": 1,
+  "final_encoder_seed_inference": false,
+  "independent_encoder_seed_n": 1,
+  "official_test_accessed": true,
+  "official_test_evaluations": 24,
+  "official_test_used_for_selection": false,
+  "part_annotation_validity_audit": {
+    "official_test": {
+      "affected_image_count": 0,
+      "affected_image_ids": [],
+      "excluded_landmarks": [],
+      "excluded_out_of_frame_visible_keypoints": 0,
+      "images_without_valid_keypoints": [],
+      "official_visible_keypoints": 69546,
+      "records": 5794,
+      "valid_visible_keypoints": 69546
+    },
+    "train": {
+      "affected_image_count": 1,
+      "affected_image_ids": [
+        5007
+      ],
+      "excluded_landmarks": [
+        {
+          "coordinates": [
+            [
+              405.0,
+              344.0
+            ]
+          ],
+          "image_id": 5007,
+          "image_size": [
+            500.0,
+            333.0
+          ],
+          "part_ids": [
+            4
+          ]
+        }
+      ],
+      "excluded_out_of_frame_visible_keypoints": 1,
+      "images_without_valid_keypoints": [],
+      "official_visible_keypoints": 64697,
+      "records": 5394,
+      "valid_visible_keypoints": 64696
+    },
+    "validation": {
+      "affected_image_count": 0,
+      "affected_image_ids": [],
+      "excluded_landmarks": [],
+      "excluded_out_of_frame_visible_keypoints": 0,
+      "images_without_valid_keypoints": [],
+      "official_visible_keypoints": 7164,
+      "records": 600,
+      "valid_visible_keypoints": 7164
+    }
+  },
+  "part_probe_aggregates": [
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_seed_n": 1,
+      "probe_seed_pck_values": [
+        0.2811664222241394,
+        0.28361084749662097,
+        0.2818566128893107,
+        0.28146838064015184,
+        0.2806200212808788
+      ],
+      "probe_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "test_mean_normalized_error_probe_seed_mean": 0.23264952301979064,
+      "test_micro_pck_at_0.1_probe_seed_mean": 0.28174445690622035,
+      "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0011369576151280749,
+      "variant": "lg"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_seed_n": 1,
+      "probe_seed_pck_values": [
+        0.20002588214994393,
+        0.19896183820780491,
+        0.19978143962269576,
+        0.1998101975670779,
+        0.19868863773617462
+      ],
+      "probe_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "test_mean_normalized_error_probe_seed_mean": 0.2889623463153839,
+      "test_micro_pck_at_0.1_probe_seed_mean": 0.19945359905673943,
+      "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0005893098564284654,
+      "variant": "alg_warmup20"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_seed_n": 1,
+      "probe_seed_pck_values": [
+        0.2239668708480718,
+        0.22505967273459293,
+        0.2232910591550916,
+        0.2237368072930147,
+        0.2236073965432951
+      ],
+      "probe_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "test_mean_normalized_error_probe_seed_mean": 0.2747985482215881,
+      "test_micro_pck_at_0.1_probe_seed_mean": 0.2239323613148132,
+      "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0006758575817590011,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "encoder_seed": 1,
+      "encoder_seed_standard_deviation_not_estimable": true,
+      "independent_encoder_seed_n": 1,
+      "probe_seed_pck_values": [
+        0.14502631351910966,
+        0.14386161677163317,
+        0.14427860696517414,
+        0.14324332096741724,
+        0.14330083685618153
+      ],
+      "probe_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "test_mean_normalized_error_probe_seed_mean": 0.37421618700027465,
+      "test_micro_pck_at_0.1_probe_seed_mean": 0.14394213901590316,
+      "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0007407334188264461,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "protocol_id": "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v2",
+  "result_scope": "precommitted_encoder_seed1_shard_pending_encoder_seeds2_3_for_final_statistics",
+  "runtime": {
+    "cuda": "13.0",
+    "device": "cuda",
+    "elapsed_seconds": 1232.6767283994704,
+    "finished_at_utc": "2026-09-10T02:12:57.461217+00:00",
+    "gpu_name": "NVIDIA H200 NVL MIG 1g.18gb",
+    "peak_allocated_bytes": 405438976,
+    "peak_reserved_bytes": 530579456,
+    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "python": "3.10.12 (main, Mar  3 2026, 11:56:32) [GCC 11.4.0]",
+    "started_at_utc": "2026-09-10T01:52:24.781486+00:00",
+    "timm": "1.0.27",
+    "torch": "2.11.0+cu130",
+    "torchvision": "0.26.0+cu130"
+  },
+  "schema_version": 2,
+  "scientific_result": true,
+  "seed2_3_settings_remain_locked_regardless_of_seed1_results": true,
+  "spatial_cka_rows": [
+    {
+      "centered_linear_cka": 0.2045380053731954,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 0,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.22862056376137976,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 1,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.27791880733030927,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 2,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.3174246540930035,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 3,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.3480201980908335,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 4,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.4224597072579475,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 5,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.4708711287597871,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 6,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.46089687256682005,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 7,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.45404836420590355,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 8,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.4496817412943914,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 9,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.4469174181287868,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 10,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.44199694137985773,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 11,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "lg"
+    },
+    {
+      "centered_linear_cka": 0.10435971203729019,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 0,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.13176100926484594,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 1,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.20096797163330984,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 2,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.28571924974277263,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 3,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.3438821389359297,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 4,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.3888490714971145,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 5,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.4262562248650264,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 6,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.4212497267976546,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 7,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.416831972463604,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 8,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.4088319190866836,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 9,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.4065106433989191,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 10,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.4023404477221058,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 11,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "alg_warmup20"
+    },
+    {
+      "centered_linear_cka": 0.20900234790171848,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 0,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.23536648821527362,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 1,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.26185781611341225,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 2,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.2805787156642351,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 3,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.2993324193612656,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 4,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.3147804497968259,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 5,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.33788279321590087,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 6,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.3539333192286001,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 7,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.35633845277317633,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 8,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.352141886908087,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 9,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.3451356149099015,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 10,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.33409563861252933,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 11,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "centered_linear_cka": 0.15690818408061788,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 0,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.1679243783202675,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 1,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.19989441611904923,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 2,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.23091197869847152,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 3,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.24890373438757496,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 4,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.2685180184510616,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 5,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.281888735969084,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 6,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.28945268960737375,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 7,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.30141318106624954,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 8,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.2958387817945098,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 9,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.2888932189175004,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 10,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "centered_linear_cka": 0.2656008506457484,
+      "encoder_seed": 1,
+      "images": 600,
+      "scientific_result": true,
+      "spatial_observations": 117600,
+      "student_block": 11,
+      "teacher_feature": "resnet50_layer3",
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "status": "complete",
+  "student_batch_size": 128,
+  "variants": [
+    "lg",
+    "alg_warmup20",
+    "ibkd_lambda_0.25",
+    "ibkd_lambda_0.5"
+  ]
+}

@@ -1,6 +1,6 @@
 # Phase 1 CUB 직접 공간정보 진단 프로토콜
 
-상태: **v2 본실험 계약 LOCK — v1 annotation preflight 실패 수정, seed 1 재실행 대기**
+상태: **v2 본실험 계약 LOCK — seed 1 실행·감사 완료, seed 2·3 미실행**
 
 이 프로토콜은 분류 정확도나 frozen segmentation mIoU만으로 공간정보 보존을
 간접 추론하지 않고, 동일한 classification-best encoder에서 위치 정보를 직접
@@ -161,3 +161,9 @@ Machine-readable 실행 계약은
 이 shard는 protocol에 맞는 scientific result이지만 독립 encoder seed가 하나이므로
 encoder-seed 표준편차나 최종 방법 우위는 확정하지 않습니다. Seed 2·3을 같은 설정으로
 추가한 뒤 세 encoder seed의 평균과 표본 표준편차로 최종 해석합니다.
+
+H200 issue 737에서 완료 gate를 모두 충족하고 20개 part-probe checkpoint를 독립
+감사했습니다. 결과와 32개 정성 이미지는
+[seed-1 결과 보고서](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에
+고정했습니다. 주 Part PCK와 CKA block11은 LG가 가장 높았고 attention 지표는
+엇갈렸으므로, seed 1은 iBKD의 전반적 공간정보 우위를 지지하지 않습니다.

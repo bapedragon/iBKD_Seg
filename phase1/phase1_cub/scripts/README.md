@@ -76,6 +76,12 @@
   encoder 8개와 선택 probe 40개를 `weights_only=True`로 strict load하고 파일·state
   hash, 유한값, split 및 selection-before-test 계약을 재검산해 v4 부분 보고서를
   생성합니다.
+- `curate_r50_v5_guided_seeds2_3_result.py`: issue 730의 batch-128 seed 2·3
+  encoder 8개와 선택 probe 40개를 감사하고, issue 727의 감사된 seed 1과 결합해
+  guided 네 방법의 3-encoder-seed 집계를 생성합니다.
+- `curate_r50_direct_spatial_seed1_v2_result.py`: issue 737의 part-probe checkpoint
+  20개를 strict load하고 PCK, CKA, attention–GT, annotation 유효성 및 32개 정성
+  이미지 계약을 감사해 seed-1 직접진단 보고서를 생성합니다.
 
 ```bash
 PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
@@ -95,6 +101,26 @@ PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
 PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_v4_guided_seed1_result.py \
   --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_b64_guided_seed1_v4_issue727 \
   --report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
+  ARCHIVE.zip --kind resnet50-v5-guided-seeds2-3 --issue-id 730 \
+  --output-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_guided_seeds2_3_v5_issue730 \
+  --canonical-bundle-filename phase1_cub_r50_224_issue730_guided_s23_and_issue737_direct_spatial_v2.zip
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_v5_guided_seeds2_3_result.py \
+  --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_guided_seeds2_3_v5_issue730 \
+  --seed1-report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4 \
+  --report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_guided_3seed_v5
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
+  ARCHIVE.zip --kind resnet50-direct-spatial-v2-seed1 --issue-id 737 \
+  --output-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_seed1_direct_spatial_v2_issue737 \
+  --canonical-bundle-filename phase1_cub_r50_224_issue730_guided_s23_and_issue737_direct_spatial_v2.zip
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_direct_spatial_seed1_v2_result.py \
+  --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_seed1_direct_spatial_v2_issue737 \
+  --seed1-report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4 \
+  --report-dir phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2
 ```
 
 v3 Teacher는 완료됐습니다. 이후 학생·probe 본실험 실행기는 checkpoint 파일

@@ -17,6 +17,16 @@ R50_V4_REPORT = (
     / "phase1/phase1_cub/reports/frozen_probe/"
     "resnet50_224_b128_b64_guided_seed1_v4"
 )
+R50_V5_REPORT = (
+    ROOT
+    / "phase1/phase1_cub/reports/frozen_probe/"
+    "resnet50_224_b128_guided_3seed_v5"
+)
+DIRECT_V2_REPORT = (
+    ROOT
+    / "phase1/phase1_cub/reports/direct_spatial/"
+    "resnet50_224_b128_seed1_v2"
+)
 
 
 def _json(path: Path) -> dict:
@@ -99,6 +109,8 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(list(R50_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(R56_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(R50_V4_REPORT.rglob("*.pt")), [])
+        self.assertEqual(list(R50_V5_REPORT.rglob("*.pt")), [])
+        self.assertEqual(list(DIRECT_V2_REPORT.rglob("*.pt")), [])
 
     def test_r50_v4_guided_seed1_profiles_are_audited_but_partial(self) -> None:
         classification = _json(R50_V4_REPORT / "classification_summary.json")
@@ -162,6 +174,79 @@ class Phase1CubResultTest(unittest.TestCase):
             "phase1_cub_resnet50_224_b128_b64_guided_seed1_v4_issue727.zip",
         )
         self.assertTrue(source["source_archive"]["all_member_crc_verified"])
+
+    def test_r50_v5_guided_batch128_is_complete_for_three_encoder_seeds(self) -> None:
+        classification = _json(R50_V5_REPORT / "classification_summary.json")
+        probe = _json(R50_V5_REPORT / "probe_summary.json")
+        audit = _json(R50_V5_REPORT / "checkpoint_audit.json")
+        source = _json(R50_V5_REPORT / "source_manifest.json")
+
+        self.assertEqual(classification["status"], "complete_audited_guided_3seed_v5")
+        self.assertEqual(probe["status"], "complete_audited_guided_3seed_v5")
+        self.assertEqual(classification["encoder_seeds"], [1, 2, 3])
+        self.assertEqual(classification["independent_n"], 3)
+        self.assertEqual(probe["independent_n"], 3)
+        self.assertEqual(probe["probe_seeds_per_encoder"], 5)
+        self.assertTrue(probe["probe_seed_is_not_independent_replication"])
+        self.assertFalse(probe["final_six_method_three_seed_matrix_complete"])
+        self.assertEqual(probe["official_test_evaluations"], 60)
+
+        by_variant = {row["variant"]: row for row in probe["aggregates"]}
+        self.assertTrue(
+            math.isclose(
+                by_variant["lg"]["mean"],
+                0.7347006323996028,
+                rel_tol=0.0,
+                abs_tol=1e-15,
+            )
+        )
+        self.assertTrue(
+            math.isclose(
+                by_variant["ibkd_lambda_0.25"]["mean"],
+                0.7031841065184272,
+                rel_tol=0.0,
+                abs_tol=1e-15,
+            )
+        )
+        self.assertGreater(by_variant["lg"]["mean"], by_variant["alg_warmup20"]["mean"])
+        self.assertGreater(by_variant["alg_warmup20"]["mean"], by_variant["ibkd_lambda_0.25"]["mean"])
+        self.assertEqual(audit["issue730_new_checkpoint_count"], 48)
+        self.assertTrue(audit["all_file_hashes_match"])
+        self.assertTrue(audit["all_strict_loads_passed"])
+        self.assertEqual(source["h200_issue_id"], "730")
+        self.assertEqual(source["checkpoint_count"], 48)
+
+    def test_direct_spatial_v2_seed1_is_complete_audited_and_not_final(self) -> None:
+        summary = _json(DIRECT_V2_REPORT / "direct_spatial_summary.json")
+        audit = _json(DIRECT_V2_REPORT / "checkpoint_audit.json")
+        source = _json(DIRECT_V2_REPORT / "source_manifest.json")
+
+        self.assertEqual(summary["status"], "complete_audited_seed1_only")
+        self.assertEqual(summary["encoder_seed"], 1)
+        self.assertEqual(summary["independent_encoder_n"], 1)
+        self.assertFalse(summary["final_encoder_seed_inference"])
+        self.assertEqual(summary["official_test_evaluations"], 24)
+        pck = {row["variant"]: row for row in summary["part_pck_primary"]}
+        cka = {row["variant"]: row for row in summary["spatial_cka_block11_secondary"]}
+        attention = {row["variant"]: row for row in summary["attention_gt_secondary"]}
+        self.assertGreater(
+            pck["lg"]["test_micro_pck_at_0.1_probe_seed_mean"],
+            pck["ibkd_lambda_0.25"]["test_micro_pck_at_0.1_probe_seed_mean"],
+        )
+        self.assertGreater(
+            cka["lg"]["centered_linear_cka"],
+            cka["ibkd_lambda_0.25"]["centered_linear_cka"],
+        )
+        self.assertGreater(
+            attention["ibkd_lambda_0.25"]["global_micro_patch_average_precision"],
+            attention["lg"]["global_micro_patch_average_precision"],
+        )
+        self.assertEqual(audit["part_probes"]["selected_part_probe_checkpoint_count"], 20)
+        self.assertTrue(audit["part_probes"]["all_strict_loads_passed"])
+        self.assertTrue(audit["reused_encoders"]["hashes_match_audited_issue727_batch128_seed1"])
+        self.assertEqual(source["h200_issue_id"], "737")
+        self.assertEqual(source["checkpoint_count"], 20)
+        self.assertEqual(len(list((DIRECT_V2_REPORT / "attention_qualitative").glob("*.png"))), 32)
 
     def test_release_manifests_bind_the_remote_assets_and_checkpoint_roles(self) -> None:
         teacher = _json(R50_REPORT / "checkpoint_release.json")

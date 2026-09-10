@@ -1,0 +1,103 @@
+{
+  "official_test_evaluations": 4,
+  "rows": [
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.17509138584136963,
+      "global_micro_patch_average_precision": 0.21840971499311718,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.5246807336807251,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "lg"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.1885259747505188,
+      "global_micro_patch_average_precision": 0.2643180126531196,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.5177770256996155,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "alg_warmup20"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.1999073475599289,
+      "global_micro_patch_average_precision": 0.27647670791883805,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.49430444836616516,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "attention_rollout_layers": 12,
+      "encoder_seed": 1,
+      "foreground_attention_mass_mean": 0.2206277847290039,
+      "global_micro_patch_average_precision": 0.2126733902371026,
+      "images": 5794,
+      "official_test_evaluations": 1,
+      "patches": 1135624,
+      "pointing_game_peak_inside_mask": 0.4767000377178192,
+      "positive_patches": 180768,
+      "qualitative_image_ids": [
+        787,
+        2285,
+        3735,
+        5205,
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "qualitative_png_count": 8,
+      "scientific_result": true,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "scientific_result": true,
+  "status": "complete"
+}
