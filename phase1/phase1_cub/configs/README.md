@@ -50,6 +50,14 @@ attention–GT rollout을 검증하는 비과학적 smoke 계약입니다. Part 
 test는 열지 않으며 smoke config SHA-256은
 `55ac0598c11a4065f3b1416022e8fbb3de35b21cad94780ace2e2036d5430bc6`입니다.
 
+`cub200_r50_224_b128_seed1_direct_spatial_full_v2.json`은 직접 공간정보 진단의
+seed-1 본실험 계약입니다. 첫 v1 실행은 metric 학습과 official-test 접근 전에
+CUB image `5007`의 out-of-frame visible part를 발견해 중단됐습니다. v2는 원본
+좌표를 clipping하지 않고 `official visible ∩ image bounds`만 part loss·validation
+선택·PCK에 사용하며, split별 제외 내역을 전부 기록합니다. 나머지 4방법, probe
+seed 5개, LR 3개, 100 epoch, CKA와 attention 계약은 v1과 같습니다. SHA-256은
+`90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017`입니다.
+
 ## 대체된 v2 보존본
 
 과거 CUB 본실험 프로토콜은 `cub200_b128_full_v2.json`에 고정했습니다. SHA-256은

@@ -1,17 +1,19 @@
 # Phase 1 CUB 직접 공간정보 진단 프로토콜
 
-상태: **v1 지표·본실험 계약 LOCK — seed 1 smoke 통과, seed 1 본실험 대기**
+상태: **v2 본실험 계약 LOCK — v1 annotation preflight 실패 수정, seed 1 재실행 대기**
 
 이 프로토콜은 분류 정확도나 frozen segmentation mIoU만으로 공간정보 보존을
 간접 추론하지 않고, 동일한 classification-best encoder에서 위치 정보를 직접
 측정하기 위한 후속 진단입니다. 주 비교는 잠긴 CUB v3와 같은 batch 128이며,
 batch 64 sensitivity는 섞지 않습니다.
 
-H200 issue 727의 encoder seed 1 네 개로 smoke 실행 계약을 통과했습니다. 따라서
-고정된 전체 데이터·100 epoch·probe seed 5개 설정으로 seed 1 본실험 shard를 먼저
-수행합니다. 이후 batch-128 seed 2·3 checkpoint hash를 고정하면 결과와 관계없이
-같은 정의를 그대로 적용합니다. Smoke 값으로 방법, lambda, 지표 정의, 학습률 또는
-본실험 범위를 선택하지 않았습니다.
+H200 issue 727의 encoder seed 1 네 개로 smoke 실행 계약을 통과했습니다. 첫 v1
+본실험은 어떤 probe도 학습하거나 official test를 열기 전에 CUB 원본 annotation
+예외를 발견하고 중단됐습니다. 이미지 ID `5007`은 크기가 `500×333`인데 공식
+visible인 part 4 좌표가 `(405,344)`입니다. v2는 이를 포함한 out-of-frame visible
+part를 모든 방법에서 같은 규칙으로 제외하고 좌표를 clipping하지 않습니다. 이
+변경은 방법별 결과를 보기 전에 이루어졌으며 방법, lambda, 지표, 학습률과 본실험
+범위는 바꾸지 않았습니다.
 
 Machine-readable 계약은
 [`configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json`](configs/cub200_r50_224_b128_direct_spatial_smoke_v1.json)에
@@ -30,8 +32,16 @@ Machine-readable 계약은
 
 ## 1. Visible-part localization probe — 주 직접 지표
 
-CUB가 제공하는 15개 part landmark 중 `visible=1`인 점만 사용합니다. 보이지 않는
-part는 loss와 metric에서 모두 제외하고, 사후 누락 기준은 만들지 않습니다.
+CUB가 제공하는 15개 part landmark 중 `visible=1`이면서 원본 이미지의 연속 좌표
+영역 `0≤x≤width`, `0≤y≤height` 안에 있는 점만 valid로 사용합니다. 보이지 않거나
+이미지 밖인 part는 loss, validation 선택과 PCK에서 모두 제외합니다. 이미지 밖
+좌표를 경계로 clipping하거나 다른 위치로 바꾸지 않습니다.
+
+Train/validation은 probe 학습 전에 전수 감사하고 official test는 20개 validation
+선택을 모두 끝낸 뒤 처음 열어 별도로 감사합니다. Split별 공식 visible 수, valid
+수, 제외된 part 수와 해당 image ID·part ID·원 좌표·이미지 크기를
+`part_probe/annotation_validity_audit.json`과 로그에 남깁니다. Valid part가 하나도
+없는 이미지가 발견되면 결과를 만들지 않고 중단합니다.
 
 - feature: DeiT block 11의 final norm 전 patch feature `192×14×14`
 - head: `Conv2d(192,15,1,bias=True)`, 총 `2,895` parameter
@@ -124,9 +134,13 @@ bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seed1.sh
 ```
 
 Machine-readable 실행 계약은
-[`configs/cub200_r50_224_b128_seed1_direct_spatial_full_v1.json`](configs/cub200_r50_224_b128_seed1_direct_spatial_full_v1.json)에
+[`configs/cub200_r50_224_b128_seed1_direct_spatial_full_v2.json`](configs/cub200_r50_224_b128_seed1_direct_spatial_full_v2.json)에
 있으며 SHA-256은
-`aeb2e17c76f6139b17bab8e0d2d4699a928f2607edcf5f7a346d648565384548`입니다.
+`90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017`입니다.
+
+대체된 v1의 config는 실패 재현 기록으로 보존합니다. v1은 annotation을 읽는
+단계에서 중단되어 part probe·CKA·attention 결과와 official-test 접근이 모두
+`0`이므로 v2 결과와 섞이는 pilot 결과가 없습니다.
 
 - encoder: batch-128 seed 1의 `LG`, `ALG-w20`, `iBKD λ=0.25`, `iBKD λ=0.5`
 - part probe: 4 encoder × probe seed 5개 × LR 3개 × 100 epoch = 후보 60개
@@ -141,7 +155,7 @@ Machine-readable 실행 계약은
 마지막 성공 marker는 다음과 같습니다.
 
 ```text
-[DIRECT_SPATIAL_FULL_SEED1_DONE] status=complete encoder_seed=1 strict_loads=4 part_candidates=60 part_selections=20 part_test=20 cka_values=48 attention_rows=4 qualitative_pngs=32 official_test=24 final_encoder_seed_inference=false ...
+[DIRECT_SPATIAL_FULL_SEED1_DONE] status=complete encoder_seed=1 strict_loads=4 part_candidates=60 part_selections=20 part_test=20 cka_values=48 attention_rows=4 qualitative_pngs=32 official_test=24 final_encoder_seed_inference=false excluded_oob_train=... excluded_oob_validation=... excluded_oob_test=... ...
 ```
 
 이 shard는 protocol에 맞는 scientific result이지만 독립 encoder seed가 하나이므로

@@ -3,10 +3,12 @@ from __future__ import annotations
 import json
 import importlib.util
 import math
+import tempfile
 import unittest
 from pathlib import Path
 
 import torch
+from PIL import Image
 
 from ibkd_seg.phase1.cub_direct_spatial import (
     CubSpatialAnnotation,
@@ -14,9 +16,12 @@ from ibkd_seg.phase1.cub_direct_spatial import (
     attention_rollout,
     binary_average_precision,
     gaussian_part_targets,
+    load_part_supervision,
     masked_heatmap_mse,
     part_localization_metrics,
+    summarize_part_supervision,
 )
+from ibkd_seg.phase1.cub_probe_data import CubProbeRecord
 from ibkd_seg.phase1.models import create_student
 from ibkd_seg.phase1.release_asset import _asset_kind
 from ibkd_seg.phase1.run_cub_direct_spatial_smoke import (
@@ -106,6 +111,48 @@ class CubDirectSpatialMetricTest(unittest.TestCase):
         visible = torch.zeros(1, 15, dtype=torch.bool)
         visible[:, 0] = True
         self.assertEqual(float(masked_heatmap_mse(prediction, target, visible)), 0.0)
+
+    def test_out_of_frame_visible_part_is_excluded_without_clipping(self) -> None:
+        annotation = CubSpatialAnnotation(
+            image_id=5007,
+            bounding_box=(42.0, 30.0, 440.0, 303.0),
+            points=(
+                (0.0, 0.0),
+                (185.0, 163.0),
+                (0.0, 0.0),
+                (405.0, 344.0),
+            )
+            + tuple((0.0, 0.0) for _ in range(11)),
+            visible=(False, True, False, True) + (False,) * 11,
+        )
+        heatmaps, valid, points, image_size, _box = gaussian_part_targets(
+            image_size=(500, 333), annotation=annotation
+        )
+        self.assertFalse(valid[3])
+        self.assertTrue(valid[1])
+        self.assertEqual(points[3].tolist(), [405.0, 344.0])
+        self.assertEqual(int(torch.count_nonzero(heatmaps[3])), 0)
+
+        with tempfile.TemporaryDirectory() as directory:
+            image_path = Path(directory) / "image.jpg"
+            Image.new("RGB", (500, 333)).save(image_path)
+            record = CubProbeRecord(
+                image_id=5007,
+                label=85,
+                relative_path="086.Pacific_Loon/Pacific_Loon_0034_75438.jpg",
+                image_path=image_path,
+                mask_path=Path(directory) / "unused.png",
+            )
+            supervision = load_part_supervision([record], {5007: annotation})
+            audit = summarize_part_supervision([record], supervision)
+        self.assertEqual(audit["excluded_out_of_frame_visible_keypoints"], 1)
+        self.assertEqual(audit["affected_image_ids"], [5007])
+        self.assertEqual(audit["excluded_landmarks"][0]["part_ids"], [4])
+        self.assertEqual(
+            audit["excluded_landmarks"][0]["coordinates"], [[405.0, 344.0]]
+        )
+        self.assertEqual(audit["excluded_landmarks"][0]["image_size"], [500.0, 333.0])
+        self.assertEqual(audit["images_without_valid_keypoints"], [])
 
     def test_pck_uses_patch_center_and_bbox_max_side(self) -> None:
         logits = torch.zeros(1, 15, 14, 14)

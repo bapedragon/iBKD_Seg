@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the locked CUB direct-spatial full experiment for encoder seed 1."""
+"""Run the locked CUB direct-spatial v2 full experiment for encoder seed 1."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from .cub_direct_spatial import (
     load_part_supervision,
     load_spatial_annotations,
     save_attention_triptych,
+    summarize_part_supervision,
     train_part_candidate,
 )
 from .cub_probe_data import (
@@ -56,10 +57,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/configs/"
-    "cub200_r50_224_b128_seed1_direct_spatial_full_v1.json"
+    "cub200_r50_224_b128_seed1_direct_spatial_full_v2.json"
 )
 EXPECTED_CONFIG_SHA256 = (
-    "aeb2e17c76f6139b17bab8e0d2d4699a928f2607edcf5f7a346d648565384548"
+    "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017"
 )
 EXPECTED_METRIC_CONFIG_SHA256 = (
     "55ac0598c11a4065f3b1416022e8fbb3de35b21cad94780ace2e2036d5430bc6"
@@ -73,6 +74,28 @@ def log(message: str = "") -> None:
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _log_part_validity_audit(split: str, audit: dict[str, Any]) -> None:
+    log(
+        "[CUB_PART_VALIDITY_AUDIT] "
+        f"split={split} records={audit['records']} "
+        f"official_visible={audit['official_visible_keypoints']} "
+        f"valid_visible={audit['valid_visible_keypoints']} "
+        "excluded_out_of_frame_visible="
+        f"{audit['excluded_out_of_frame_visible_keypoints']} "
+        f"affected_images={audit['affected_image_count']} "
+        f"images_without_valid={len(audit['images_without_valid_keypoints'])} "
+        "coordinate_clipping=false"
+    )
+    for row in audit["excluded_landmarks"]:
+        log(
+            "[CUB_PART_VALIDITY_EXCLUSION] "
+            f"split={split} image_id={row['image_id']} "
+            f"part_ids={','.join(str(value) for value in row['part_ids'])} "
+            f"coordinates={json.dumps(row['coordinates'], separators=(',', ':'))} "
+            f"image_size={json.dumps(row['image_size'], separators=(',', ':'))}"
+        )
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,12 +127,26 @@ def _validate_config(config: dict[str, Any], path: Path) -> dict[str, Any]:
     checks = {
         "config_hash": file_sha256(path) == EXPECTED_CONFIG_SHA256,
         "protocol_id": config.get("protocol_id")
-        == "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v1",
+        == "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v2",
         "locked_status": config.get("status")
-        == "locked_after_smoke_pass_before_seed1_full_results_2026-09-10",
+        == "locked_after_v1_annotation_preflight_failure_before_any_metric_2026-09-10",
         "scientific": config.get("scientific_result") is True,
         "partial_scope": config.get("result_scope")
         == "precommitted_encoder_seed1_shard_pending_encoder_seeds2_3_for_final_statistics",
+        "revision": config.get("revision")
+        == {
+            "supersedes": (
+                "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v1"
+            ),
+            "reason": (
+                "v1 stopped before probe training because official-visible CUB "
+                "image 5007 part 4 is outside the 500x333 image at coordinate "
+                "405,344"
+            ),
+            "v1_probe_training_started": False,
+            "v1_official_test_accessed": False,
+            "metric_or_method_result_used_to_choose_revision": False,
+        },
         "scope": scope
         == {
             "student_batch_size": 128,
@@ -131,12 +168,33 @@ def _validate_config(config: dict[str, Any], path: Path) -> dict[str, Any]:
         }
         and dataset.get("input_size") == 224
         and dataset.get("part_count") == 15
-        and dataset.get("visible_parts_only") is True,
+        and dataset.get("visible_parts_only") is True
+        and dataset.get("part_coordinate_validity")
+        == {
+            "coordinate_domain": (
+                "continuous_original_image_0_le_x_le_width_and_0_le_y_le_height"
+            ),
+            "validity": "official_visible_and_in_image_bounds",
+            "out_of_frame_visible_action": (
+                "exclude_from_part_probe_loss_validation_selection_and_pck"
+            ),
+            "coordinate_clipping": False,
+            "audit": (
+                "per_split_counts_image_ids_part_ids_coordinates_and_image_sizes"
+            ),
+            "train_validation_audited_before_probe_training": True,
+            "official_test_audited_only_after_all_validation_selections": True,
+        },
         "part": part.get("head") == "Conv2d(192,15,1,bias=True)"
+        and part.get("target")
+        == "valid_visible_part_gaussian_heatmap_sigma_1_grid_pixel"
+        and part.get("loss") == "valid_visible_part_masked_mean_squared_error"
         and part.get("learning_rates") == [0.01, 0.03, 0.1]
         and part.get("epochs") == 100
         and part.get("batch_size") == 64
         and part.get("probe_seeds") == [1, 2, 3, 4, 5]
+        and part.get("official_test_metric")
+        == "valid_visible_keypoint_micro_PCK_at_0.1"
         and part.get("official_test_once_per_validation_selected_probe") is True,
         "cka": cka.get("split") == "fixed_validation_600"
         and cka.get("student_blocks") == list(range(12))
@@ -357,7 +415,7 @@ def _run_part_validation(
             {
                 "probe": selected["probe_state"],
                 "metadata": {
-                    "purpose": "cub_direct_spatial_part_probe_seed1_full_v1",
+                    "purpose": "cub_direct_spatial_part_probe_seed1_full_v2",
                     "variant": variant,
                     "encoder_seed": 1,
                     "probe_seed": probe_seed,
@@ -649,6 +707,35 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError("official CUB spatial annotation inventory changed")
     train_supervision = load_part_supervision(train_records, annotations)
     validation_supervision = load_part_supervision(validation_records, annotations)
+    train_part_audit = summarize_part_supervision(
+        train_records, train_supervision
+    )
+    validation_part_audit = summarize_part_supervision(
+        validation_records, validation_supervision
+    )
+    if (
+        train_part_audit["images_without_valid_keypoints"]
+        or validation_part_audit["images_without_valid_keypoints"]
+    ):
+        raise RuntimeError("CUB train/validation image has no valid visible part")
+    if 5007 not in train_part_audit["affected_image_ids"]:
+        raise RuntimeError("expected audited CUB image-5007 annotation edge case is missing")
+    part_annotation_audit: dict[str, Any] = {
+        "status": "pretest_complete",
+        "rule": config["dataset"]["part_coordinate_validity"],
+        "train": train_part_audit,
+        "validation": validation_part_audit,
+        "official_test": None,
+        "official_test_accessed": False,
+        "coordinate_clipping": False,
+        "config_sha256": EXPECTED_CONFIG_SHA256,
+    }
+    _atomic_json_save(
+        part_annotation_audit,
+        output_dir / "part_probe/annotation_validity_audit.json",
+    )
+    _log_part_validity_audit("train", train_part_audit)
+    _log_part_validity_audit("validation", validation_part_audit)
 
     teacher, _teacher_metadata, teacher_hash, teacher_state_hash = (
         load_scientific_teacher(
@@ -754,6 +841,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if len(test_records) != 5794:
         raise RuntimeError("official CUB test count changed")
     test_supervision = load_part_supervision(test_records, annotations)
+    test_part_audit = summarize_part_supervision(test_records, test_supervision)
+    if test_part_audit["images_without_valid_keypoints"]:
+        raise RuntimeError("CUB official-test image has no valid visible part")
+    part_annotation_audit.update(
+        {
+            "status": "complete",
+            "official_test": test_part_audit,
+            "official_test_accessed": True,
+        }
+    )
+    _atomic_json_save(
+        part_annotation_audit,
+        output_dir / "part_probe/annotation_validity_audit.json",
+    )
+    _log_part_validity_audit("official_test", test_part_audit)
     part_test_rows: list[dict[str, Any]] = []
     attention_rows: list[dict[str, Any]] = []
     for item in metric_config["checkpoint_inputs"]:
@@ -825,6 +927,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 str(seed): next(iter(values))
                 for seed, values in matched_initial_hashes.items()
             },
+            "part_annotation_validity_audit": part_annotation_audit,
             "official_test_evaluations": len(part_test_rows),
             "scientific_result": True,
             "final_encoder_seed_inference": False,
@@ -898,6 +1001,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             ),
             "part_names": list(part_names),
             "part_annotation_images": len(annotations),
+            "part_coordinate_validity": config["dataset"][
+                "part_coordinate_validity"
+            ],
+            "part_annotation_validity_audit": {
+                "train": train_part_audit,
+                "validation": validation_part_audit,
+                "official_test": test_part_audit,
+            },
             "official_test_opened_after_all_20_validation_selections": True,
         },
         output_dir / "dataset_audit.json",
@@ -911,7 +1022,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     }
     attention_lookup = {row["variant"]: row for row in attention_rows}
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "complete",
         "protocol_id": config["protocol_id"],
         "config_path": str(config_path),
@@ -924,6 +1035,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "final_encoder_seed_inference": False,
         "seed2_3_settings_remain_locked_regardless_of_seed1_results": True,
         "variants": list(EXPECTED_VARIANTS),
+        "part_annotation_validity_audit": {
+            "train": train_part_audit,
+            "validation": validation_part_audit,
+            "official_test": test_part_audit,
+        },
         "part_probe_aggregates": aggregates,
         "spatial_cka_rows": cka_rows,
         "attention_gt_rows": attention_rows,
@@ -977,6 +1093,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "strict_loads=4 part_candidates=60 part_selections=20 part_test=20 "
         "cka_values=48 attention_rows=4 qualitative_pngs=32 "
         "official_test=24 final_encoder_seed_inference=false "
+        "excluded_oob_train="
+        f"{train_part_audit['excluded_out_of_frame_visible_keypoints']} "
+        "excluded_oob_validation="
+        f"{validation_part_audit['excluded_out_of_frame_visible_keypoints']} "
+        "excluded_oob_test="
+        f"{test_part_audit['excluded_out_of_frame_visible_keypoints']} "
         f"elapsed_seconds={elapsed:.2f} "
         f"peak_allocated_bytes={summary['runtime']['peak_allocated_bytes']} "
         f"peak_reserved_bytes={summary['runtime']['peak_reserved_bytes']}"

@@ -200,6 +200,25 @@ train/validation smoke subset만 쓰며 official test는 열지 않습니다. �
 네 방법의 smoke PCK, block-11 CKA, patch AP와 pointing-game 값 및 전체 완료
 marker가 나옵니다. 값은 비과학적이며 방법·lambda 선택에 사용할 수 없습니다.
 
+## Batch 128 seed-1 직접 공간정보 진단 본실험 v2
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seed1.sh
+```
+
+첫 v1 실행은 probe 학습과 official-test 접근 전에 image `5007`의 공식 visible
+part 4 좌표 `(405,344)`가 `500×333` 이미지 밖인 것을 발견해 중단됐습니다.
+방법별 metric은 하나도 생성되지 않았습니다. v2는 모든 방법에 공통으로
+`official visible ∩ image bounds`인 part만 loss·validation 선택·PCK에 쓰고,
+out-of-frame 좌표는 clipping하지 않습니다. Split별 제외 수와 원 좌표는 별도
+audit JSON 및 마지막 로그에 남깁니다.
+
+나머지 계약은 smoke 전에 정한 그대로입니다. Batch-128 seed-1의 네 encoder에
+probe seed 5개 × LR 3개 × 100 epoch를 적용하고 validation 선택 20개가 모두
+끝난 뒤 official test를 엽니다. CKA 48개, attention row 4개, 정성 PNG 32개와
+official-test 평가 24회를 완료해야 성공 marker가 출력됩니다. 이 seed-1 shard만으로
+최종 방법 우위를 확정하지 않으며 seed 2·3에 동일한 v2 규칙을 적용합니다.
+
 ## 이전 v2 smoke 및 보존 결과
 
 다음 비과학적 smoke는 CUB 다운로드와 mask 대응, 고정 validation split, 분류

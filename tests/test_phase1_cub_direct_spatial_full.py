@@ -16,7 +16,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/configs/"
-    "cub200_r50_224_b128_seed1_direct_spatial_full_v1.json"
+    "cub200_r50_224_b128_seed1_direct_spatial_full_v2.json"
 )
 SHELL_PATH = (
     REPOSITORY_ROOT
@@ -37,6 +37,13 @@ class CubDirectSpatialSeed1FullProtocolTest(unittest.TestCase):
         self.assertTrue(config["scientific_result"])
         self.assertEqual(config["scope"]["encoder_seeds_in_this_run"], [1])
         self.assertEqual(config["scope"]["eventual_encoder_seeds"], [1, 2, 3])
+        self.assertFalse(
+            config["dataset"]["part_coordinate_validity"]["coordinate_clipping"]
+        )
+        self.assertEqual(
+            config["dataset"]["part_coordinate_validity"]["validity"],
+            "official_visible_and_in_image_bounds",
+        )
         self.assertEqual(len(metric_config["checkpoint_inputs"]), 4)
         self.assertEqual(
             config["completion_gate"],
@@ -57,6 +64,7 @@ class CubDirectSpatialSeed1FullProtocolTest(unittest.TestCase):
         text = SHELL_PATH.read_text(encoding="utf-8")
         self.assertEqual(text.count("python -m ibkd_seg.phase1.release_asset"), 2)
         self.assertIn("python -m ibkd_seg.phase1.run_cub_direct_spatial_full", text)
+        self.assertIn("direct_spatial_full_v2", text)
         self.assertIn("--full", text)
         self.assertIn("--feature-batch-size 16", text)
         self.assertIn("--cka-batch-size 8", text)

@@ -124,22 +124,27 @@ def gaussian_part_targets(
     grid_size: int = GRID_SIZE,
     sigma: float = 1.0,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Create fixed-sigma heatmaps while retaining original-coordinate geometry."""
+    """Create fixed-sigma heatmaps while retaining original-coordinate geometry.
+
+    CUB contains a small number of annotations that are marked visible even though
+    their coordinates lie outside the image.  An image encoder cannot localize an
+    out-of-frame point, so those landmarks receive zero weight just like an
+    invisible landmark.  The original coordinates are retained for auditing and
+    are never clipped into the image.
+    """
 
     width, height = image_size
     if width <= 0 or height <= 0 or grid_size <= 0 or sigma <= 0.0:
         raise ValueError("image/grid dimensions and Gaussian sigma must be positive")
     points = torch.tensor(annotation.points, dtype=torch.float32)
-    visible = torch.tensor(annotation.visible, dtype=torch.bool)
-    if visible.any():
-        visible_points = points[visible]
-        if (
-            visible_points[:, 0].lt(0).any()
-            or visible_points[:, 0].gt(float(width)).any()
-            or visible_points[:, 1].lt(0).any()
-            or visible_points[:, 1].gt(float(height)).any()
-        ):
-            raise RuntimeError(f"visible CUB part lies outside image {annotation.image_id}")
+    official_visible = torch.tensor(annotation.visible, dtype=torch.bool)
+    in_image = (
+        points[:, 0].ge(0.0)
+        & points[:, 0].le(float(width))
+        & points[:, 1].ge(0.0)
+        & points[:, 1].le(float(height))
+    )
+    valid = official_visible & in_image
 
     x_center = points[:, 0] * grid_size / float(width) - 0.5
     y_center = points[:, 1] * grid_size / float(height) - 0.5
@@ -150,10 +155,10 @@ def gaussian_part_targets(
         + (yy.unsqueeze(0) - y_center[:, None, None]).square()
     )
     heatmaps = torch.exp(-squared_distance / (2.0 * sigma * sigma))
-    heatmaps[~visible] = 0.0
+    heatmaps[~valid] = 0.0
     image_size_tensor = torch.tensor([width, height], dtype=torch.float32)
     box = torch.tensor(annotation.bounding_box, dtype=torch.float32)
-    return heatmaps, visible, points, image_size_tensor, box
+    return heatmaps, valid, points, image_size_tensor, box
 
 
 def load_part_supervision(
@@ -166,6 +171,8 @@ def load_part_supervision(
     values: dict[str, list[torch.Tensor]] = {
         "heatmaps": [],
         "visible": [],
+        "official_visible": [],
+        "excluded_out_of_frame_visible": [],
         "points": [],
         "image_sizes": [],
         "boxes": [],
@@ -176,15 +183,84 @@ def load_part_supervision(
             raise RuntimeError(f"missing spatial annotation for image {record.image_id}")
         with Image.open(record.image_path) as image:
             image_size = image.size
-        tensors = gaussian_part_targets(
+        heatmaps, valid, points, image_size_tensor, box = gaussian_part_targets(
             image_size=image_size,
             annotation=annotation,
             grid_size=grid_size,
             sigma=sigma,
         )
-        for key, tensor in zip(values, tensors, strict=True):
-            values[key].append(tensor)
+        official_visible = torch.tensor(annotation.visible, dtype=torch.bool)
+        values["heatmaps"].append(heatmaps)
+        values["visible"].append(valid)
+        values["official_visible"].append(official_visible)
+        values["excluded_out_of_frame_visible"].append(
+            official_visible & ~valid
+        )
+        values["points"].append(points)
+        values["image_sizes"].append(image_size_tensor)
+        values["boxes"].append(box)
     return {key: torch.stack(items) for key, items in values.items()}
+
+
+def summarize_part_supervision(
+    records: Sequence[CubProbeRecord], supervision: dict[str, torch.Tensor]
+) -> dict[str, Any]:
+    """Return a JSON-safe audit of visible landmarks excluded as out of frame."""
+
+    sample_count = len(records)
+    expected_shape = (sample_count, PART_COUNT)
+    valid = supervision.get("visible")
+    official_visible = supervision.get("official_visible")
+    excluded = supervision.get("excluded_out_of_frame_visible")
+    points = supervision.get("points")
+    image_sizes = supervision.get("image_sizes")
+    if (
+        valid is None
+        or official_visible is None
+        or excluded is None
+        or points is None
+        or image_sizes is None
+        or valid.shape != expected_shape
+        or official_visible.shape != expected_shape
+        or excluded.shape != expected_shape
+        or points.shape != (sample_count, PART_COUNT, 2)
+        or image_sizes.shape != (sample_count, 2)
+    ):
+        raise ValueError("part supervision audit tensors have unexpected shapes")
+    if not torch.equal(official_visible, valid | excluded):
+        raise RuntimeError("part supervision validity masks are inconsistent")
+    if torch.logical_and(valid, excluded).any():
+        raise RuntimeError("valid and excluded CUB part masks overlap")
+
+    affected: list[dict[str, Any]] = []
+    for sample_index in torch.nonzero(excluded.any(dim=1), as_tuple=False).flatten():
+        index = int(sample_index.item())
+        part_indices = torch.nonzero(excluded[index], as_tuple=False).flatten()
+        affected.append(
+            {
+                "image_id": int(records[index].image_id),
+                "part_ids": [int(value.item()) + 1 for value in part_indices],
+                "coordinates": [
+                    [float(value) for value in points[index, part_index].tolist()]
+                    for part_index in part_indices
+                ],
+                "image_size": [float(value) for value in image_sizes[index].tolist()],
+            }
+        )
+    no_valid = [
+        int(records[index].image_id)
+        for index in torch.nonzero(~valid.any(dim=1), as_tuple=False).flatten().tolist()
+    ]
+    return {
+        "records": sample_count,
+        "official_visible_keypoints": int(official_visible.sum().item()),
+        "valid_visible_keypoints": int(valid.sum().item()),
+        "excluded_out_of_frame_visible_keypoints": int(excluded.sum().item()),
+        "affected_image_count": len(affected),
+        "affected_image_ids": [row["image_id"] for row in affected],
+        "excluded_landmarks": affected,
+        "images_without_valid_keypoints": no_valid,
+    }
 
 
 class PartHeatmapProbe(nn.Conv2d):

@@ -2,14 +2,14 @@
 set -euo pipefail
 
 data_dir="${PHASE1_CUB_DATA_DIR:-/app/scratch/phase1_cub_data}"
-output_root="${PHASE1_CUB_DIRECT_SPATIAL_FULL_OUTPUT_DIR:-/app/output/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v1}"
+output_root="${PHASE1_CUB_DIRECT_SPATIAL_FULL_OUTPUT_DIR:-/app/output/phase1_cub_r50_224_b128_seed1_direct_spatial_full_v2}"
 student_dir="${PHASE1_CUB_GUIDED_SEED1_RELEASE_DIR:-/app/scratch/phase1_cub_r50_224_guided_seed1_v4_issue727}"
 student_download_dir="${PHASE1_CUB_GUIDED_SEED1_DOWNLOAD_DIR:-/app/scratch/phase1_cub_r50_224_guided_seed1_v4_download}"
 teacher_dir="${PHASE1_CUB_R50_TEACHER_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_issue722}"
 teacher_download_dir="${PHASE1_CUB_R50_TEACHER_DOWNLOAD_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_download}"
 student_manifest="phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/artifact_release.json"
 teacher_manifest="phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json"
-full_config="phase1/phase1_cub/configs/cub200_r50_224_b128_seed1_direct_spatial_full_v1.json"
+full_config="phase1/phase1_cub/configs/cub200_r50_224_b128_seed1_direct_spatial_full_v2.json"
 
 mkdir -p "${output_root}"
 

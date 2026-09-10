@@ -41,6 +41,12 @@
   probe, 12-block spatial linear CKA, attention rollout–GT mask 지표와 정성 PNG를
   생성합니다. 클래스당 한 장의 train/validation subset만 사용하고 official test는
   열지 않습니다. H200 MIG slice 1개용 비과학적 실행 점검입니다.
+- `run_r50_224_direct_spatial_full_b128_seed1.sh`: 직접 공간정보 진단 v2 seed-1
+  본실험 실행기입니다. 두 Release를 같은 hash로 검증하고 4 encoder × part-probe
+  seed 5개 × LR 3개 × 100 epoch, validation CKA와 official-test attention을
+  수행합니다. 원본에서 visible이지만 이미지 밖인 part는 좌표를 clipping하지 않고
+  part loss·선택·PCK에서 공통 제외하며 split별 감사 내역을 출력합니다. v1은 어떤
+  metric도 계산하기 전에 image `5007`에서 중단됐으므로 결과로 사용하지 않습니다.
 
 아래 두 스크립트는 대체된 ResNet-56/32 v2 기록용입니다.
 
