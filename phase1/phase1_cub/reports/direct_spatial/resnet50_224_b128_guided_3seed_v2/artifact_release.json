@@ -1,0 +1,37 @@
+{
+  "asset_name": "phase1_cub_resnet50_224_b128_seed2_3_direct_spatial_v2_issue739.tar.gz",
+  "asset_type": "phase1_cub_resnet50_224_direct_spatial_seed2_3_v2",
+  "combined_with_issue737_for_three_seed_inference": true,
+  "contents": {
+    "attention_metrics": true,
+    "classification_encoder_checkpoints": false,
+    "dataset_files": false,
+    "feature_caches": false,
+    "part_probe_checkpoints": 40,
+    "part_probe_histories": 120,
+    "qualitative_pngs": 64,
+    "source_artifact_manifest": true,
+    "spatial_cka": true,
+    "total_checkpoints": 40
+  },
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-cub-r50-224-direct-spatial-seed2-3-v2-issue739/phase1_cub_resnet50_224_b128_seed2_3_direct_spatial_v2_issue739.tar.gz",
+  "final_encoder_seed_inference_for_this_shard_alone": false,
+  "release_tag": "phase1-cub-r50-224-direct-spatial-seed2-3-v2-issue739",
+  "release_url": "https://github.com/bapedragon/iBKD_Seg/releases/tag/phase1-cub-r50-224-direct-spatial-seed2-3-v2-issue739",
+  "remote_asset_digest_verified": true,
+  "role": "preserve_issue739_seed2_3_direct_spatial_raw_evidence_and_selected_part_probes",
+  "schema_version": 1,
+  "sha256": "cb61a82eaa031135d45838b845d4dc89650fb02f8edbb976490f18b9688c3d49",
+  "size_bytes": 12049929,
+  "source": {
+    "canonical_source_archive_name": "phase1_cub_resnet50_224_b128_seed2_3_direct_spatial_v2_issue739.zip",
+    "encoder_checkpoint_source_h200_job_id": 730,
+    "h200_job_id": 739,
+    "protocol_config_sha256": "54980771cf910543a3aba24c0a5ff86de6a0dce34866c662025409ab3abd0691",
+    "protocol_id": "cub200_phase1_r50_224_b128_seed2_3_direct_spatial_full_v2",
+    "source_archive_bytes": 12138184,
+    "source_archive_sha256": "bcb674b4848f0c53228eba031ad744275e8a57a9dcc27cd42da01abbbde9e1fd"
+  },
+  "storage_policy": "github_release_asset_not_git_history",
+  "target_git_commit": "6499a92b57c95f814dc56d672bc620b06fa69f74"
+}

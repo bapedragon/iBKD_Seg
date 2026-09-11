@@ -321,6 +321,7 @@ class Phase1CubResultTest(unittest.TestCase):
         v4 = _json(R50_V4_REPORT / "artifact_release.json")
         v5 = _json(R50_V5_REPORT / "artifact_release.json")
         direct = _json(DIRECT_V2_REPORT / "artifact_release.json")
+        direct_3seed = _json(DIRECT_V2_3SEED_REPORT / "artifact_release.json")
 
         self.assertEqual(teacher["size_bytes"], 89065279)
         self.assertEqual(
@@ -377,6 +378,18 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(direct["contents"]["total_checkpoints"], 20)
         self.assertFalse(direct["final_encoder_seed_inference"])
         self.assertTrue(direct["remote_asset_digest_verified"])
+
+        self.assertEqual(direct_3seed["size_bytes"], 12049929)
+        self.assertEqual(
+            direct_3seed["sha256"],
+            "cb61a82eaa031135d45838b845d4dc89650fb02f8edbb976490f18b9688c3d49",
+        )
+        self.assertEqual(direct_3seed["contents"]["part_probe_checkpoints"], 40)
+        self.assertEqual(direct_3seed["contents"]["part_probe_histories"], 120)
+        self.assertEqual(direct_3seed["contents"]["qualitative_pngs"], 64)
+        self.assertEqual(direct_3seed["contents"]["total_checkpoints"], 40)
+        self.assertTrue(direct_3seed["combined_with_issue737_for_three_seed_inference"])
+        self.assertTrue(direct_3seed["remote_asset_digest_verified"])
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ PCK@0.1이 주 직접지표이고 CKA와 attention–GT는 보조지표입니다
 ## 감사
 
 - issue 739 실행시간: 42.02분
+- issue 739의 checkpoint·전체 이력·원시 로그는 Git history가 아닌 검증된 [Release 자산](artifact_release.json)에 보존
 - issue 739 encoder 8개는 감사된 issue 730 classification checkpoint의 파일·state hash와 일치
 - 새 part-probe checkpoint 40개 모두 SHA-256, `weights_only=True`, strict load, 유한값 검사 통과
 - issue 737의 seed-1 part-probe 20개 감사 결과를 합쳐 encoder seed 3개 × probe seed 5개 구성

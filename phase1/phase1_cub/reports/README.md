@@ -23,7 +23,10 @@ attention–GT 결과는
 정리했습니다. Part PCK와 CKA는 LG가 가장 높고 attention 3개 지표 평균은 iBKD
 λ=0.25가 가장 높았습니다. 주 직접지표와 보조 attention 지표가 엇갈리므로 현재
 결과는 iBKD의 전반적 공간정보 우위를 지지하지 않습니다. Seed-1 전용 보고서도
-원래 shard 기록으로 별도 보존합니다.
+원래 shard 기록으로 별도 보존합니다. Issue 739의 40개 part-probe checkpoint와
+전체 원시 증거는 Git history가 아닌 검증된
+[Release 자산](direct_spatial/resnet50_224_b128_guided_3seed_v2/artifact_release.json)에
+연결했습니다.
 
 H200 issue 716의 ResNet-56/32 v2 guided 결과는 제출 시점의 계약대로 완결됐지만,
 v3 확정 전의 구버전입니다. 결과와 55개 checkpoint는

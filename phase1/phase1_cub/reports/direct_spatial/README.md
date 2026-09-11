@@ -4,6 +4,8 @@
 직접 측정한 결과를 보존합니다. H200 issue 737의 seed 1과 issue 739의 seed 2·3을
 합친 [3-seed v2 최종 보고서](resnet50_224_b128_guided_3seed_v2/RESULTS.md)에
 독립 encoder seed 평균과 sample SD를 정리했습니다.
+Issue 739의 checkpoint와 원시 이력은 보고서에 연결한 검증된
+[Release 자산](resnet50_224_b128_guided_3seed_v2/artifact_release.json)에 보존합니다.
 
 Part PCK@0.1이 주 지표이며 spatial CKA와 attention 지표는 보조 지표입니다.
 [seed-1 전용 보고서](resnet50_224_b128_seed1_v2/RESULTS.md)도 원래 shard의
