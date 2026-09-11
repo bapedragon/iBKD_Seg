@@ -1,0 +1,19 @@
+{
+  "completion_gate": {
+    "attention_metric_rows": 8,
+    "attention_official_test_evaluations": 8,
+    "checkpoint_strict_loads": 8,
+    "official_test_evaluations": 48,
+    "part_probe_lr_candidates": 120,
+    "part_probe_official_test_evaluations": 40,
+    "part_probe_validation_selections": 40,
+    "qualitative_pngs": 64,
+    "spatial_cka_values": 96
+  },
+  "failure": null,
+  "finished_at_utc": "2026-09-10T11:58:13.316288+00:00",
+  "official_test_accessed": true,
+  "official_test_used_for_selection": false,
+  "phase": "complete",
+  "status": "complete"
+}

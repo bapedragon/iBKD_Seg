@@ -71,7 +71,7 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 
 ## Phase 1-CUB-200 — CUB-200-2011 독립 반복
 
-**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided 4방법×3seed 및 seed-1 직접진단 감사 완료.** Pet
+**상태: ResNet-50/224 scratch 본실험 v3 LOCK, guided 4방법×3seed 및 직접진단 3seed 감사 완료.** Pet
 결과가 특정 데이터셋에만 의존한 것인지 확인하기 위해 CUB-200-2011에서 분류
 encoder 학습과 frozen segmentation probe를 독립적으로 반복합니다. Pet의 잠긴
 config나 결과를 섞지 않으며, CUB용 데이터·split·mask·ResNet-50 teacher·학습·평가
@@ -93,11 +93,13 @@ Teacher를 공유한 LG, ALG-w20, iBKD λ=0.25/0.5의 batch-128/64 encoder seed 
 Segmentation mIoU만으로 공간정보 보존을 간접 해석하지 않도록 visible-part
 PCK@0.1, spatial linear CKA, attention rollout–GT mask 정렬을 묶은
 [직접 공간정보 진단 프로토콜](phase1/phase1_cub/DIRECT_SPATIAL_PROTOCOL.md)도
-결과 확인 전에 잠갔습니다. 먼저 batch-128 seed-1 네 guided encoder로 official
-test를 열지 않는 smoke 뒤 issue 737의 seed-1 본실험도 완료했습니다. Part PCK와
-CKA는 LG가 가장 높았고 attention 지표는 엇갈려 iBKD의 전반적 공간정보 우위를
-지지하지 않았습니다. 상세 결과는
-[직접진단 보고서](phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에 있습니다.
+결과 확인 전에 잠갔습니다. Issue 737 seed 1과 issue 739 seed 2·3을 같은 v2
+정의로 완료해 독립 encoder seed 3개 집계를 만들었습니다. Part PCK는 LG
+`27.510±2.030%`, ALG-w20 `21.621±2.716%`, iBKD-0.25 `20.109±2.024%`,
+iBKD-0.5 `15.426±1.858%`이고 CKA도 LG가 가장 높았습니다. Attention 세 지표의
+평균은 iBKD-0.25가 높았지만 주 지표와 방향이 엇갈리므로 전반적 공간정보 우위를
+지지하지 않습니다. 상세 결과는
+[3-seed 직접진단 보고서](phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md)에 있습니다.
 
 이전 ResNet-56/32 v2 guided shard도 H200 issue 716에서 완료됐지만, v3로 교체한 뒤
 회수한 구버전 결과이므로 현재 결과와 합치지 않고 참고 자료로만 보존합니다.

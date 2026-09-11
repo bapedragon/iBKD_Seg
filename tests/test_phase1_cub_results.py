@@ -27,6 +27,11 @@ DIRECT_V2_REPORT = (
     / "phase1/phase1_cub/reports/direct_spatial/"
     "resnet50_224_b128_seed1_v2"
 )
+DIRECT_V2_3SEED_REPORT = (
+    ROOT
+    / "phase1/phase1_cub/reports/direct_spatial/"
+    "resnet50_224_b128_guided_3seed_v2"
+)
 
 
 def _json(path: Path) -> dict:
@@ -111,6 +116,7 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(list(R50_V4_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(R50_V5_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(DIRECT_V2_REPORT.rglob("*.pt")), [])
+        self.assertEqual(list(DIRECT_V2_3SEED_REPORT.rglob("*.pt")), [])
 
     def test_r50_v4_guided_seed1_profiles_are_audited_but_partial(self) -> None:
         classification = _json(R50_V4_REPORT / "classification_summary.json")
@@ -247,6 +253,67 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(source["h200_issue_id"], "737")
         self.assertEqual(source["checkpoint_count"], 20)
         self.assertEqual(len(list((DIRECT_V2_REPORT / "attention_qualitative").glob("*.png"))), 32)
+
+    def test_direct_spatial_v2_is_complete_for_three_encoder_seeds(self) -> None:
+        summary = _json(DIRECT_V2_3SEED_REPORT / "direct_spatial_summary.json")
+        audit = _json(DIRECT_V2_3SEED_REPORT / "checkpoint_audit.json")
+        source = _json(DIRECT_V2_3SEED_REPORT / "source_manifest.json")
+
+        self.assertEqual(summary["status"], "complete_audited_guided_3seed_v2")
+        self.assertEqual(summary["encoder_seeds"], [1, 2, 3])
+        self.assertEqual(summary["independent_encoder_n"], 3)
+        self.assertTrue(summary["probe_seed_is_not_independent_replication"])
+        self.assertTrue(summary["final_encoder_seed_inference"])
+        self.assertTrue(summary["guided_four_method_direct_spatial_block_complete"])
+        self.assertEqual(summary["official_test_evaluations"]["total"], 72)
+        self.assertFalse(summary["official_test_used_for_selection"])
+
+        pck = {
+            row["variant"]: row
+            for row in summary["part_pck_primary"]["aggregates"]
+        }
+        cka = {
+            row["variant"]: row
+            for row in summary["spatial_cka_block11_secondary"]["aggregates"]
+        }
+        attention = {
+            row["variant"]: row
+            for row in summary["attention_gt_secondary"]["patch_ap_aggregates"]
+        }
+        self.assertTrue(
+            math.isclose(
+                pck["lg"]["mean"],
+                0.27510137175394705,
+                rel_tol=0.0,
+                abs_tol=1e-15,
+            )
+        )
+        self.assertGreater(pck["lg"]["mean"], pck["alg_warmup20"]["mean"])
+        self.assertGreater(
+            pck["alg_warmup20"]["mean"],
+            pck["ibkd_lambda_0.25"]["mean"],
+        )
+        self.assertGreater(cka["lg"]["mean"], cka["ibkd_lambda_0.25"]["mean"])
+        self.assertGreater(
+            attention["ibkd_lambda_0.25"]["mean"],
+            attention["lg"]["mean"],
+        )
+        self.assertEqual(audit["issue739_new_checkpoint_count"], 40)
+        self.assertTrue(audit["reused_encoders"]["hashes_match_audited_issue730"])
+        self.assertTrue(audit["part_probes"]["all_strict_loads_passed"])
+        self.assertEqual(source["h200_issue_id"], "739")
+        self.assertEqual(source["checkpoint_count"], 40)
+        self.assertEqual(
+            len(
+                list(
+                    (
+                        DIRECT_V2_3SEED_REPORT
+                        / "attention_qualitative_seed2_3"
+                    ).glob("*.png")
+                )
+            ),
+            64,
+        )
 
     def test_release_manifests_bind_the_remote_assets_and_checkpoint_roles(self) -> None:
         teacher = _json(R50_REPORT / "checkpoint_release.json")

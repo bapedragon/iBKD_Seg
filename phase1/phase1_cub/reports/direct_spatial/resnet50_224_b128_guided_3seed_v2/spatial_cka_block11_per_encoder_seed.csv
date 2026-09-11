@@ -1,0 +1,13 @@
+variant,encoder_seed,student_block,teacher_feature,centered_linear_cka
+lg,1,11,resnet50_layer3,0.44199694137985773
+lg,2,11,resnet50_layer3,0.4335542944734917
+lg,3,11,resnet50_layer3,0.40988783884136953
+alg_warmup20,1,11,resnet50_layer3,0.4023404477221058
+alg_warmup20,2,11,resnet50_layer3,0.34772504795445075
+alg_warmup20,3,11,resnet50_layer3,0.380379897157402
+ibkd_lambda_0.25,1,11,resnet50_layer3,0.33409563861252933
+ibkd_lambda_0.25,2,11,resnet50_layer3,0.30376840656841136
+ibkd_lambda_0.25,3,11,resnet50_layer3,0.31746346455551416
+ibkd_lambda_0.5,1,11,resnet50_layer3,0.2656008506457484
+ibkd_lambda_0.5,2,11,resnet50_layer3,0.23616878124479565
+ibkd_lambda_0.5,3,11,resnet50_layer3,0.20340724651812864

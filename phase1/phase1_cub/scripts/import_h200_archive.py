@@ -23,6 +23,7 @@ KINDS = (
     "resnet50-v4-guided-seed1",
     "resnet50-v5-guided-seeds2-3",
     "resnet50-direct-spatial-v2-seed1",
+    "resnet50-direct-spatial-v2-seeds2-3",
 )
 V2_CONFIG_SHA256 = (
     "0cf751c28168872a4108274644f80dadc7466d5c1210995e7da3abfc0737e575"
@@ -38,6 +39,9 @@ V5_CONFIG_SHA256 = (
 )
 DIRECT_V2_CONFIG_SHA256 = (
     "90f7dc92b7e1ad27b6a4a4b68e91bb5e72ea021389304d87dda5950fac8e6017"
+)
+DIRECT_SEED23_V2_CONFIG_SHA256 = (
+    "54980771cf910543a3aba24c0a5ff86de6a0dce34866c662025409ab3abd0691"
 )
 R50_TEACHER_CHECKPOINT_SHA256 = (
     "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
@@ -324,6 +328,49 @@ def _validate_direct_spatial_v2(summary: dict[str, Any]) -> None:
     if failures:
         raise RuntimeError(
             "invalid completed CUB direct-spatial v2 result: " + ", ".join(failures)
+        )
+
+
+def _validate_direct_spatial_seed23_v2(summary: dict[str, Any]) -> None:
+    gate = summary.get("completion_gate", {})
+    expected_gate = {
+        "attention_metric_rows": 8,
+        "attention_official_test_evaluations": 8,
+        "checkpoint_strict_loads": 8,
+        "official_test_evaluations": 48,
+        "part_probe_lr_candidates": 120,
+        "part_probe_official_test_evaluations": 40,
+        "part_probe_validation_selections": 40,
+        "qualitative_pngs": 64,
+        "spatial_cka_values": 96,
+    }
+    checks = {
+        "status": summary.get("status") == "complete",
+        "scientific": summary.get("scientific_result") is True,
+        "protocol": summary.get("protocol_id")
+        == "cub200_phase1_r50_224_b128_seed2_3_direct_spatial_full_v2",
+        "config": summary.get("config_sha256")
+        == DIRECT_SEED23_V2_CONFIG_SHA256,
+        "batch_seeds": summary.get("student_batch_size") == 128
+        and summary.get("encoder_seeds") == [2, 3]
+        and summary.get("independent_encoder_seed_n") == 2,
+        "variants": summary.get("variants")
+        == ["lg", "alg_warmup20", "ibkd_lambda_0.25", "ibkd_lambda_0.5"],
+        "scope": summary.get("final_encoder_seed_inference") is False
+        and summary.get("settings_unchanged_after_seed1_and_smoke") is True,
+        "test_policy": summary.get("official_test_accessed") is True
+        and summary.get("official_test_evaluations") == 48
+        and summary.get("official_test_used_for_selection") is False,
+        "gate": gate == expected_gate,
+        "part_rows": len(summary.get("part_probe_aggregates", [])) == 8,
+        "cka_rows": len(summary.get("spatial_cka_rows", [])) == 96,
+        "attention_rows": len(summary.get("attention_gt_rows", [])) == 8,
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid completed CUB direct-spatial seed-2/3 v2 result: "
+            + ", ".join(failures)
         )
 
 
@@ -688,6 +735,78 @@ def _direct_spatial_v2_selection(
     return suite_root, selected, omitted
 
 
+def _direct_spatial_seed23_v2_selection(
+    source_zip: zipfile.ZipFile, names: set[str]
+) -> tuple[str, list[tuple[str, Path]], list[str]]:
+    suite_name = "phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/"
+    summary_member = _unique_suffix(names, "/" + suite_name + "summary.json")
+    _validate_direct_spatial_seed23_v2(_read_json(source_zip, summary_member))
+    suite_root = summary_member.rsplit("/", 1)[0] + "/"
+    issue_root = suite_root[: -len(suite_name)]
+    selected: list[tuple[str, Path]] = []
+
+    fixed_files = (
+        "attention_gt/results.csv",
+        "attention_gt/results.json",
+        "checkpoint_audit.json",
+        "dataset_audit.json",
+        "part_probe/annotation_validity_audit.json",
+        "part_probe/candidates.csv",
+        "part_probe/official_test_results.csv",
+        "part_probe/results.json",
+        "part_probe/selection_complete_before_test.json",
+        "run.log",
+        "sequence_status.json",
+        "spatial_cka/layerwise_heatmap.png",
+        "spatial_cka/results.csv",
+        "spatial_cka/results.json",
+        "summary.json",
+    )
+    for relative in fixed_files:
+        member = suite_root + relative
+        if member not in names:
+            raise RuntimeError(
+                f"required direct-spatial seed-2/3 artifact is missing: {member}"
+            )
+        selected.append((member, Path(relative)))
+
+    checkpoint_members = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root + "part_probe/checkpoints/")
+        and name.endswith("_best_validation.pt")
+    )
+    history_members = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root + "part_probe/histories/")
+        and name.endswith(".json")
+    )
+    qualitative_members = sorted(
+        name
+        for name in names
+        if name.startswith(suite_root + "attention_gt/qualitative/")
+        and name.endswith(".png")
+    )
+    if (len(checkpoint_members), len(history_members), len(qualitative_members)) != (
+        40,
+        120,
+        64,
+    ):
+        raise RuntimeError(
+            "unexpected direct-spatial seed-2/3 reusable artifact counts: "
+            f"checkpoints={len(checkpoint_members)} histories={len(history_members)} "
+            f"qualitative={len(qualitative_members)}"
+        )
+    for member in checkpoint_members + history_members + qualitative_members:
+        selected.append((member, Path(PurePosixPath(member).relative_to(suite_root))))
+
+    issue_log = _unique_root_suffix(names, issue_root, "_result.txt")
+    selected.append((issue_log, Path("h200_issue.log")))
+    omitted = ["directory entries"]
+    return suite_root, selected, omitted
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
@@ -726,8 +845,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             suite_root, selected, omitted = _v5_guided_seeds2_3_selection(
                 source_zip, names
             )
-        else:
+        elif args.kind == "resnet50-direct-spatial-v2-seed1":
             suite_root, selected, omitted = _direct_spatial_v2_selection(
+                source_zip, names
+            )
+        else:
+            suite_root, selected, omitted = _direct_spatial_seed23_v2_selection(
                 source_zip, names
             )
         if len({str(relative) for _, relative in selected}) != len(selected):

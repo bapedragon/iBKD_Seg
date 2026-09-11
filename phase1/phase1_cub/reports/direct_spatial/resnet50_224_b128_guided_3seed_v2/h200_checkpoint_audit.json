@@ -1,0 +1,108 @@
+{
+  "status": "pass",
+  "students": [
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 25075823,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed2/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "checkpoint_sha256": "c3cd2401cd2f2e41ed096593d06b43a15340fb1105bd44a543ec71790e62b605",
+      "encoder_seed": 2,
+      "eval_mode": true,
+      "model_state_sha256": "9e7e526c7d724b2d7d5967ed57ee7fdc12e7efc3523d721860bda2cc1e7eb6cb",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "lg"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 25076847,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed2/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "checkpoint_sha256": "dd58c8818d9479094babfe22f43c59981024975a97b770074d2126fb320d1d66",
+      "encoder_seed": 2,
+      "eval_mode": true,
+      "model_state_sha256": "647a752df642e3478cb6793f9fa4209429f72db534e8d631276cb2b51b15bc2a",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "alg_warmup20"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 116028477,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed2/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "checkpoint_sha256": "1c1bf6f6141f1efc0e21fe48e60be9e6a1ef3a126c60d81b6903d462fdc86410",
+      "encoder_seed": 2,
+      "eval_mode": true,
+      "model_state_sha256": "6380dc6022896cdd9d41ad0c9f3f4c0cb37ad46dcd3af04161e61a35d0b77bba",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 116028669,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed2/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed2/student_best_validation.pt",
+      "checkpoint_sha256": "bf3eade3a6ee2fca0b9d0e1335a2ab89468a0abb97f04620670a8b3a6c03cf09",
+      "encoder_seed": 2,
+      "eval_mode": true,
+      "model_state_sha256": "778cd31863c04f12435be7d88e9186d5898006d8c3bcdaca5876315bb2657982",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "ibkd_lambda_0.5"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 25075055,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed3/classification/students/cub_r50_224_lg_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "checkpoint_sha256": "9c1ecc76ccbc5cc0b3cad6e7bcb0289a189628e38687ae272be677074ee36da8",
+      "encoder_seed": 3,
+      "eval_mode": true,
+      "model_state_sha256": "dbd600696822e36c65e5cee7b44d520f670af6072fe8b961ede83769d9f6e880",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "lg"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 25075567,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed3/classification/students/cub_r50_224_alg_warmup20_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "checkpoint_sha256": "445d8b7c301b1a586702582364d9047f447ec99d610b6d97aef43ccac98c41c6",
+      "encoder_seed": 3,
+      "eval_mode": true,
+      "model_state_sha256": "43cbe4626d6d38cbd21ca8052f04c993761a947d3542d377262bd69c1b342f38",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "alg_warmup20"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 116028925,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed3/classification/students/cub_r50_224_ibkd_lambda_0.25_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "checkpoint_sha256": "87f73dfbc0cb9b8dc6475c61ecbd9dcf270269a3f746105aa6d2de3aa8fd2980",
+      "encoder_seed": 3,
+      "eval_mode": true,
+      "model_state_sha256": "09daa33b9e4835f484ef000a902c68e6d179f9f8d36719071704a840b7e2439a",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "ibkd_lambda_0.25"
+    },
+    {
+      "all_floating_tensors_finite": true,
+      "checkpoint_bytes": 116028477,
+      "checkpoint_path": "/app/scratch/phase1_cub_r50_224_guided_seed23_v5_issue730/batch128_seed3/classification/students/cub_r50_224_ibkd_lambda_0.5_deit_tiny_b128_full_300ep_seed3/student_best_validation.pt",
+      "checkpoint_sha256": "fea3f7a6512e0670db906877a4b764f2e7ab8cd86964b3a45b9b1c66663bd043",
+      "encoder_seed": 3,
+      "eval_mode": true,
+      "model_state_sha256": "11ab1ce2215a7e92d3a15ee031c71291223cc929192d47b830063f59782fbf51",
+      "strict_load": true,
+      "trainable_parameters": 0,
+      "variant": "ibkd_lambda_0.5"
+    }
+  ],
+  "teacher": {
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "eval_mode": true,
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "strict_load": true,
+    "trainable_parameters": 0
+  }
+}

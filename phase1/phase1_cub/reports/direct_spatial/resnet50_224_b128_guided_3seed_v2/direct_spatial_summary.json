@@ -1,0 +1,1434 @@
+{
+  "attention_gt_secondary": {
+    "cells": [
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 1,
+        "foreground_attention_mass_mean": 0.17509138584136963,
+        "global_micro_patch_average_precision": 0.21840971499311718,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5246807336807251,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "lg"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 2,
+        "foreground_attention_mass_mean": 0.1605917066335678,
+        "global_micro_patch_average_precision": 0.16368576433989848,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.2913358509540558,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "lg"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 3,
+        "foreground_attention_mass_mean": 0.23276740312576294,
+        "global_micro_patch_average_precision": 0.29849302427810703,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5124266743659973,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "lg"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 1,
+        "foreground_attention_mass_mean": 0.1885259747505188,
+        "global_micro_patch_average_precision": 0.2643180126531196,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5177770256996155,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 2,
+        "foreground_attention_mass_mean": 0.18127986788749695,
+        "global_micro_patch_average_precision": 0.23003616619429423,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.4822230041027069,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 3,
+        "foreground_attention_mass_mean": 0.19974127411842346,
+        "global_micro_patch_average_precision": 0.2428713281829583,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.4456334114074707,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "alg_warmup20"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 1,
+        "foreground_attention_mass_mean": 0.1999073475599289,
+        "global_micro_patch_average_precision": 0.27647670791883805,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.49430444836616516,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 2,
+        "foreground_attention_mass_mean": 0.21211548149585724,
+        "global_micro_patch_average_precision": 0.3385000151404855,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5602347254753113,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 3,
+        "foreground_attention_mass_mean": 0.21576513350009918,
+        "global_micro_patch_average_precision": 0.22967426512521744,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5039696097373962,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 1,
+        "foreground_attention_mass_mean": 0.2206277847290039,
+        "global_micro_patch_average_precision": 0.2126733902371026,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.4767000377178192,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 2,
+        "foreground_attention_mass_mean": 0.1956922560930252,
+        "global_micro_patch_average_precision": 0.2571810681730958,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5031066536903381,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "attention_rollout_layers": 12,
+        "encoder_seed": 3,
+        "foreground_attention_mass_mean": 0.2013779878616333,
+        "global_micro_patch_average_precision": 0.2526640810944128,
+        "images": 5794,
+        "official_test_evaluations": 1,
+        "patches": 1135624,
+        "pointing_game_peak_inside_mask": 0.5070762634277344,
+        "positive_patches": 180768,
+        "qualitative_image_ids": [
+          787,
+          2285,
+          3735,
+          5205,
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "qualitative_png_count": 8,
+        "scientific_result": true,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "foreground_mass_aggregates": [
+      {
+        "encoder_seed_values": [
+          0.17509138584136963,
+          0.1605917066335678,
+          0.23276740312576294
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.1894834985335668,
+        "metric": "foreground_attention_mass_mean",
+        "sample_standard_deviation": 0.03817960806297053,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.1885259747505188,
+          0.18127986788749695,
+          0.19974127411842346
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.18984903891881308,
+        "metric": "foreground_attention_mass_mean",
+        "sample_standard_deviation": 0.009301545790936646,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.1999073475599289,
+          0.21211548149585724,
+          0.21576513350009918
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.2092626541852951,
+        "metric": "foreground_attention_mass_mean",
+        "sample_standard_deviation": 0.00830489683734738,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.2206277847290039,
+          0.1956922560930252,
+          0.2013779878616333
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.20589934289455414,
+        "metric": "foreground_attention_mass_mean",
+        "sample_standard_deviation": 0.013068172618588161,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "patch_ap_aggregates": [
+      {
+        "encoder_seed_values": [
+          0.21840971499311718,
+          0.16368576433989848,
+          0.29849302427810703
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.2268628345370409,
+        "metric": "global_micro_patch_average_precision",
+        "sample_standard_deviation": 0.06780000557175368,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.2643180126531196,
+          0.23003616619429423,
+          0.2428713281829583
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.24574183567679073,
+        "metric": "global_micro_patch_average_precision",
+        "sample_standard_deviation": 0.01732025141592149,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.27647670791883805,
+          0.3385000151404855,
+          0.22967426512521744
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.281550329394847,
+        "metric": "global_micro_patch_average_precision",
+        "sample_standard_deviation": 0.05458999169039842,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.2126733902371026,
+          0.2571810681730958,
+          0.2526640810944128
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.24083951316820373,
+        "metric": "global_micro_patch_average_precision",
+        "sample_standard_deviation": 0.024496911107212527,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "pointing_aggregates": [
+      {
+        "encoder_seed_values": [
+          0.5246807336807251,
+          0.2913358509540558,
+          0.5124266743659973
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.4428144196669261,
+        "metric": "pointing_game_peak_inside_mask",
+        "sample_standard_deviation": 0.13132729372410382,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.5177770256996155,
+          0.4822230041027069,
+          0.4456334114074707
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.4818778137365977,
+        "metric": "pointing_game_peak_inside_mask",
+        "sample_standard_deviation": 0.036073045866340143,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.49430444836616516,
+          0.5602347254753113,
+          0.5039696097373962
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.5195029278596243,
+        "metric": "pointing_game_peak_inside_mask",
+        "sample_standard_deviation": 0.03560426012202685,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.4767000377178192,
+          0.5031066536903381,
+          0.5070762634277344
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.4956276516119639,
+        "metric": "pointing_game_peak_inside_mask",
+        "sample_standard_deviation": 0.016511522527046747,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ]
+  },
+  "batch_size": 128,
+  "encoder_seeds": [
+    1,
+    2,
+    3
+  ],
+  "final_encoder_seed_inference": true,
+  "guided_four_method_direct_spatial_block_complete": true,
+  "independent_encoder_n": 3,
+  "independent_unit": "classification_encoder_seed",
+  "official_test_evaluations": {
+    "attention_gt": 12,
+    "part_probe": 60,
+    "total": 72
+  },
+  "official_test_used_for_selection": false,
+  "part_normalized_error_secondary": {
+    "aggregates": [
+      {
+        "encoder_seed_values": [
+          0.23264952301979064,
+          0.22796482145786284,
+          0.2460765242576599
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.23556362291177113,
+        "metric": "test_mean_normalized_error_probe_seed_mean",
+        "sample_standard_deviation": 0.009400926986865434,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.2889623463153839,
+          0.251162189245224,
+          0.2774059116840363
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.2725101490815481,
+        "metric": "test_mean_normalized_error_probe_seed_mean",
+        "sample_standard_deviation": 0.019369804780305148,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.2747985482215881,
+          0.299433833360672,
+          0.30958614945411683
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.29460617701212566,
+        "metric": "test_mean_normalized_error_probe_seed_mean",
+        "sample_standard_deviation": 0.017889214606659043,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.37421618700027465,
+          0.3054385483264923,
+          0.3424540877342224
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.3407029410203298,
+        "metric": "test_mean_normalized_error_probe_seed_mean",
+        "sample_standard_deviation": 0.034422242540187914,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "cells": [
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2811664222241394,
+          0.28361084749662097,
+          0.2818566128893107,
+          0.28146838064015184,
+          0.2806200212808788
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.23264952301979064,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.28174445690622035,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0011369576151280749,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2886291087913036,
+          0.29325913783682744,
+          0.29133235556322434,
+          0.29182124061772063,
+          0.2912029448135047
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.22796482145786284,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.2912489575245162,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0016763809690910068,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2526097834526788,
+          0.2525091306473413,
+          0.2518189399821701,
+          0.25253788859172344,
+          0.2520777614816093
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2460765242576599,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.25231070083110463,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.00034515523976991934,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.20002588214994393,
+          0.19896183820780491,
+          0.19978143962269576,
+          0.1998101975670779,
+          0.19868863773617462
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2889623463153839,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.19945359905673943,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0005893098564284654,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.24812354412906565,
+          0.2466712679377678,
+          0.2477496908520979,
+          0.24825295487878526,
+          0.24697322635378025
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.251162189245224,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.24755413683029937,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0007013784954197525,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.20153567423000604,
+          0.20287291864377535,
+          0.20139188450809536,
+          0.2002990826215742,
+          0.20206769620107554
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2774059116840363,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.20163345124090531,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0009451590568162499,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2239668708480718,
+          0.22505967273459293,
+          0.2232910591550916,
+          0.2237368072930147,
+          0.2236073965432951
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2747985482215881,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.2239323613148132,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0006758575817590011,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1945474937451471,
+          0.19253443763839762,
+          0.1957840853535789,
+          0.19489258907773271,
+          0.19220372127800306
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.299433833360672,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.1939924654185719,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0015535146961628465,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.18648089034595808,
+          0.1841946337675783,
+          0.1862076898743278,
+          0.1841946337675783,
+          0.1857044258476404
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.30958614945411683,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.18535645472061657,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0010965510158595724,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.14502631351910966,
+          0.14386161677163317,
+          0.14427860696517414,
+          0.14324332096741724,
+          0.14330083685618153
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.37421618700027465,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.14394213901590316,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0007407334188264461,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1749920915652949,
+          0.17453196445518074,
+          0.17635809392344634,
+          0.1770482845886176,
+          0.1756247663417019
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.3054385483264923,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.1757110401748483,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0010150678556020377,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1417479078595462,
+          0.14204986627555863,
+          0.14519886118540246,
+          0.1439766485491617,
+          0.14269692002415668
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.3424540877342224,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.14313404077876513,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0014371277382033195,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ]
+  },
+  "part_pck_primary": {
+    "aggregates": [
+      {
+        "encoder_seed_values": [
+          0.28174445690622035,
+          0.2912489575245162,
+          0.25231070083110463
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.27510137175394705,
+        "metric": "test_micro_pck_at_0.1_probe_seed_mean",
+        "sample_standard_deviation": 0.0203013520198968,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.19945359905673943,
+          0.24755413683029937,
+          0.20163345124090531
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.21621372904264805,
+        "metric": "test_micro_pck_at_0.1_probe_seed_mean",
+        "sample_standard_deviation": 0.027163464600606643,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.2239323613148132,
+          0.1939924654185719,
+          0.18535645472061657
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.20109376048466723,
+        "metric": "test_micro_pck_at_0.1_probe_seed_mean",
+        "sample_standard_deviation": 0.020244664386026706,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.14394213901590316,
+          0.1757110401748483,
+          0.14313404077876513
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.15426240665650554,
+        "metric": "test_micro_pck_at_0.1_probe_seed_mean",
+        "sample_standard_deviation": 0.018579455469505797,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "cells": [
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2811664222241394,
+          0.28361084749662097,
+          0.2818566128893107,
+          0.28146838064015184,
+          0.2806200212808788
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.23264952301979064,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.28174445690622035,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0011369576151280749,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2886291087913036,
+          0.29325913783682744,
+          0.29133235556322434,
+          0.29182124061772063,
+          0.2912029448135047
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.22796482145786284,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.2912489575245162,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0016763809690910068,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2526097834526788,
+          0.2525091306473413,
+          0.2518189399821701,
+          0.25253788859172344,
+          0.2520777614816093
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2460765242576599,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.25231070083110463,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.00034515523976991934,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.20002588214994393,
+          0.19896183820780491,
+          0.19978143962269576,
+          0.1998101975670779,
+          0.19868863773617462
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2889623463153839,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.19945359905673943,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0005893098564284654,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.24812354412906565,
+          0.2466712679377678,
+          0.2477496908520979,
+          0.24825295487878526,
+          0.24697322635378025
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.251162189245224,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.24755413683029937,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0007013784954197525,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.20153567423000604,
+          0.20287291864377535,
+          0.20139188450809536,
+          0.2002990826215742,
+          0.20206769620107554
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2774059116840363,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.20163345124090531,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0009451590568162499,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.2239668708480718,
+          0.22505967273459293,
+          0.2232910591550916,
+          0.2237368072930147,
+          0.2236073965432951
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.2747985482215881,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.2239323613148132,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0006758575817590011,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1945474937451471,
+          0.19253443763839762,
+          0.1957840853535789,
+          0.19489258907773271,
+          0.19220372127800306
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.299433833360672,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.1939924654185719,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0015535146961628465,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.18648089034595808,
+          0.1841946337675783,
+          0.1862076898743278,
+          0.1841946337675783,
+          0.1857044258476404
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.30958614945411683,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.18535645472061657,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0010965510158595724,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed": 1,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.14502631351910966,
+          0.14386161677163317,
+          0.14427860696517414,
+          0.14324332096741724,
+          0.14330083685618153
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.37421618700027465,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.14394213901590316,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0007407334188264461,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "encoder_seed": 2,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1749920915652949,
+          0.17453196445518074,
+          0.17635809392344634,
+          0.1770482845886176,
+          0.1756247663417019
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.3054385483264923,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.1757110401748483,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0010150678556020377,
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "encoder_seed": 3,
+        "encoder_seed_standard_deviation_not_estimable": true,
+        "independent_encoder_seed_n": 1,
+        "probe_seed_pck_values": [
+          0.1417479078595462,
+          0.14204986627555863,
+          0.14519886118540246,
+          0.1439766485491617,
+          0.14269692002415668
+        ],
+        "probe_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "test_mean_normalized_error_probe_seed_mean": 0.3424540877342224,
+        "test_micro_pck_at_0.1_probe_seed_mean": 0.14313404077876513,
+        "test_micro_pck_at_0.1_probe_seed_sample_sd": 0.0014371277382033195,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ]
+  },
+  "probe_seed_is_not_independent_replication": true,
+  "probe_seeds_per_encoder": 5,
+  "protocol_family": "cub200_phase1_r50_224_b128_direct_spatial_v2",
+  "schema_version": 1,
+  "source_h200_issues": [
+    737,
+    739
+  ],
+  "source_protocol_ids": [
+    "cub200_phase1_r50_224_b128_seed1_direct_spatial_full_v2",
+    "cub200_phase1_r50_224_b128_seed2_3_direct_spatial_full_v2"
+  ],
+  "spatial_cka_block11_secondary": {
+    "aggregates": [
+      {
+        "encoder_seed_values": [
+          0.44199694137985773,
+          0.4335542944734917,
+          0.40988783884136953
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.42847969156490634,
+        "metric": "centered_linear_cka",
+        "sample_standard_deviation": 0.016645188868458498,
+        "variant": "lg"
+      },
+      {
+        "encoder_seed_values": [
+          0.4023404477221058,
+          0.34772504795445075,
+          0.380379897157402
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.37681513094465285,
+        "metric": "centered_linear_cka",
+        "sample_standard_deviation": 0.027481650997690486,
+        "variant": "alg_warmup20"
+      },
+      {
+        "encoder_seed_values": [
+          0.33409563861252933,
+          0.30376840656841136,
+          0.31746346455551416
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.31844250324548495,
+        "metric": "centered_linear_cka",
+        "sample_standard_deviation": 0.015187301881235809,
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "encoder_seed_values": [
+          0.2656008506457484,
+          0.23616878124479565,
+          0.20340724651812864
+        ],
+        "encoder_seeds": [
+          1,
+          2,
+          3
+        ],
+        "independent_encoder_n": 3,
+        "mean": 0.23505895946955757,
+        "metric": "centered_linear_cka",
+        "sample_standard_deviation": 0.031111651786354336,
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "cells": [
+      {
+        "centered_linear_cka": 0.44199694137985773,
+        "encoder_seed": 1,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "lg"
+      },
+      {
+        "centered_linear_cka": 0.4335542944734917,
+        "encoder_seed": 2,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "lg"
+      },
+      {
+        "centered_linear_cka": 0.40988783884136953,
+        "encoder_seed": 3,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "lg"
+      },
+      {
+        "centered_linear_cka": 0.4023404477221058,
+        "encoder_seed": 1,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "alg_warmup20"
+      },
+      {
+        "centered_linear_cka": 0.34772504795445075,
+        "encoder_seed": 2,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "alg_warmup20"
+      },
+      {
+        "centered_linear_cka": 0.380379897157402,
+        "encoder_seed": 3,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "alg_warmup20"
+      },
+      {
+        "centered_linear_cka": 0.33409563861252933,
+        "encoder_seed": 1,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "centered_linear_cka": 0.30376840656841136,
+        "encoder_seed": 2,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "centered_linear_cka": 0.31746346455551416,
+        "encoder_seed": 3,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.25"
+      },
+      {
+        "centered_linear_cka": 0.2656008506457484,
+        "encoder_seed": 1,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "centered_linear_cka": 0.23616878124479565,
+        "encoder_seed": 2,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.5"
+      },
+      {
+        "centered_linear_cka": 0.20340724651812864,
+        "encoder_seed": 3,
+        "images": 600,
+        "scientific_result": true,
+        "spatial_observations": 117600,
+        "student_block": 11,
+        "teacher_feature": "resnet50_layer3",
+        "variant": "ibkd_lambda_0.5"
+      }
+    ],
+    "evaluation_split": "validation_600"
+  },
+  "status": "complete_audited_guided_3seed_v2",
+  "variants": [
+    "lg",
+    "alg_warmup20",
+    "ibkd_lambda_0.25",
+    "ibkd_lambda_0.5"
+  ]
+}

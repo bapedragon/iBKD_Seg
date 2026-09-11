@@ -1,6 +1,6 @@
 # Phase 1 CUB-200-2011 프로토콜
 
-상태: **본실험 v3 LOCK — batch128 guided 4방법×3seed 실행·감사 완료**
+상태: **본실험 v3 LOCK — batch128 guided 4방법×3seed 및 직접 공간진단 3seed 실행·감사 완료**
 
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
@@ -11,8 +11,8 @@
 분류→frozen segmentation probe 이후의 직접 공간정보 진단은 결과를 보기 전에
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 v1으로 고정했습니다.
 Part localization PCK@0.1을 주 직접 지표로, spatial linear CKA와 attention–GT를
-보조 지표로 사용합니다. Seed-1 본실험은 issue 737에서 완료됐으며, 후속 seed 2·3도
-같은 v2 정의를 유지해야 합니다.
+보조 지표로 사용합니다. Issue 737의 seed 1과 issue 739의 seed 2·3이 같은 v2
+정의로 완료됐으며, 독립 encoder seed 3개 집계까지 감사를 마쳤습니다.
 
 ## 잠긴 본실험 v3 계약
 

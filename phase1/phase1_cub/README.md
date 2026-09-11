@@ -1,6 +1,6 @@
 # Phase 1 — CUB-200-2011 공간 표현 검증
 
-상태: **ResNet-50/224 v3 LOCK — batch128 guided 4방법×3seed 및 seed-1 직접진단 감사 완료**
+상태: **ResNet-50/224 v3 LOCK — batch128 guided 4방법×3seed 및 직접진단 3seed 감사 완료**
 
 이 폴더는 Oxford-IIIT Pet 결과와 섞이지 않도록 CUB-200-2011 독립 반복만
 관리합니다. 완료된 Pet 실험과 결과는 [phase1_pet](../phase1_pet/README.md)에
@@ -39,9 +39,9 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 별도로 잠갔습니다.
-Batch-128 seed-1 네 guided encoder의 본실험 결과는 issue 737에서 완료됐습니다.
-상세 수치와 제한은
-[직접 공간정보 진단 결과](reports/direct_spatial/resnet50_224_b128_seed1_v2/RESULTS.md)에
+Batch-128 네 guided encoder의 seed 1은 issue 737, seed 2·3은 issue 739에서
+완료됐습니다. 독립 encoder seed 3개를 합친 상세 수치와 결론은
+[직접 공간정보 3-seed 진단 결과](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md)에
 정리했습니다.
 
 ## 현재 v3: ResNet-50/224 Teacher 본학습 완료
@@ -264,6 +264,16 @@ official test를 열고, part test 40회와 attention test 8회를 수행합니�
 정성 PNG 64개와 선택 probe checkpoint 40개를 함께 보존합니다. 한 MIG에서 순수
 실행 약 41분, 최초 다운로드 포함 약 45~60분으로 예상합니다. 이 shard 단독으로
 최종 우위를 선언하지 않고 결과 회수 후 issue 737 seed 1과 결합합니다.
+
+H200 issue 739에서 실제 실행시간 `2,520.98`초(42.02분)로 완료했습니다. Encoder
+8개 hash는 issue 730과 일치했고, part 후보 `120/120`, validation 선택·test
+`40/40`, CKA `96/96`, attention `8/8`, 정성 PNG `64/64`를 충족했습니다. 새
+part-probe checkpoint 40개도 모두 독립 감사를 통과했습니다. Issue 737과 합친
+3-seed 결과에서 Part PCK와 CKA는 LG가 가장 높고, attention 3개 지표 평균은
+iBKD λ=0.25가 가장 높았습니다. 주 지표와 보조 지표가 엇갈리므로 전반적 iBKD
+공간정보 우위는 지지되지 않습니다. 상세 결과는
+[3-seed 직접진단 보고서](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md)에
+있습니다.
 
 ## 이전 v2 smoke 및 보존 결과
 

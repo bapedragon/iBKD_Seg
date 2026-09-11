@@ -238,3 +238,18 @@ Issue 737 seed-1 실행이 `1,232.68`초였으므로 동일 장비의 순수 본
 약 45~60분을 잡으면 충분하며 10시간 제한과는 큰 차이가 있습니다. 이 shard 결과를
 회수·감사한 뒤 issue 737 seed 1과 결합해 encoder seed `[1,2,3]` 최종 평균과 표본
 표준편차를 계산합니다.
+
+Issue 739에서 `2,520.98`초(42.02분)에 완료됐습니다. 마지막 marker의 strict load
+`8`, part 후보 `120`, 선택 `40`, part test `40`, CKA `96`, attention row `8`,
+정성 PNG `64`, official-test 평가 `48`을 모두 충족했습니다. 선택 probe
+checkpoint 40개는 `weights_only=True` strict load, 파일·state hash와 유한값
+검사를 통과했고, encoder 8개도 issue 730의 감사된 hash와 일치했습니다.
+
+Issue 737 seed 1과 결합한 최종 3-seed Part PCK는 LG `27.510±2.030%`, ALG-w20
+`21.621±2.716%`, iBKD-0.25 `20.109±2.024%`, iBKD-0.5 `15.426±1.858%`입니다.
+CKA block11도 LG가 가장 높습니다. Attention AP·pointing·foreground mass의
+3-seed 평균은 iBKD-0.25가 가장 높지만 seed별 순서가 달라지고 주 지표와 방향이
+일치하지 않습니다. 따라서 잠긴 현 프로토콜은 iBKD의 전반적 공간정보 우위를
+지지하지 않습니다. 전체 집계는
+[3-seed 보고서](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md)에
+고정합니다.

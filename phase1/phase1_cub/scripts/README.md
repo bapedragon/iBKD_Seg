@@ -92,6 +92,9 @@
 - `curate_r50_direct_spatial_seed1_v2_result.py`: issue 737의 part-probe checkpoint
   20개를 strict load하고 PCK, CKA, attention–GT, annotation 유효성 및 32개 정성
   이미지 계약을 감사해 seed-1 직접진단 보고서를 생성합니다.
+- `curate_r50_direct_spatial_seed2_3_v2_result.py`: issue 739의 part-probe
+  checkpoint 40개와 재사용 encoder 8개를 감사하고, issue 737 seed 1과 합쳐
+  PCK·CKA·attention의 독립 encoder seed 3개 평균과 sample SD를 생성합니다.
 
 ```bash
 PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
@@ -131,6 +134,17 @@ PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_direct_spatial_seed1_
   --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_seed1_direct_spatial_v2_issue737 \
   --seed1-report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4 \
   --report-dir phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/import_h200_archive.py \
+  ARCHIVE.zip --kind resnet50-direct-spatial-v2-seeds2-3 --issue-id 739 \
+  --output-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_seed2_3_direct_spatial_v2_issue739 \
+  --canonical-bundle-filename phase1_cub_resnet50_224_b128_seed2_3_direct_spatial_v2_issue739.zip
+
+PYTHONPATH=src python phase1/phase1_cub/scripts/curate_r50_direct_spatial_seed2_3_v2_result.py \
+  --raw-dir phase1/phase1_cub/results/raw/cub200/resnet50_224_b128_seed2_3_direct_spatial_v2_issue739 \
+  --seed1-report-dir phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2 \
+  --guided-report-dir phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_guided_3seed_v5 \
+  --report-dir phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2
 ```
 
 v3 Teacher는 완료됐습니다. 이후 학생·probe 본실험 실행기는 checkpoint 파일

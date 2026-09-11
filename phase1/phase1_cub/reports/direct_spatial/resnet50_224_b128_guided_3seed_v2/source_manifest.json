@@ -1,0 +1,1712 @@
+{
+  "checkpoint_count": 40,
+  "dataset": "CUB-200-2011",
+  "experiment_kind": "resnet50-direct-spatial-v2-seeds2-3",
+  "files": [
+    {
+      "bytes": 229630,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image11064.png",
+      "sha256": "0cf61ad18e726723b0bd1e48781db2fc5dbfa21d5d4704b2bdf06c654d9c9e92",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image11064.png"
+    },
+    {
+      "bytes": 121298,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image2285.png",
+      "sha256": "42f0eb94ea07c889a1ffa9f4e13a7453787165855e33c3b8443d591126138ceb",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image2285.png"
+    },
+    {
+      "bytes": 224368,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image3735.png",
+      "sha256": "256c85e83aa9c915de2c79bb02b7d0b218d348527099e7cc05e8d597d65d7330",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image3735.png"
+    },
+    {
+      "bytes": 140568,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image5205.png",
+      "sha256": "c199447d49b3b7bbc9759b6a7e5443586aa85c4723bb0520257b979290275e4f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image5205.png"
+    },
+    {
+      "bytes": 189577,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image6691.png",
+      "sha256": "2462877cd7add7ebed9a443452221970db7ed36b84db1dea4af41866126ec523",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image6691.png"
+    },
+    {
+      "bytes": 137442,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image787.png",
+      "sha256": "881de743d692cc702e24442235334ec5b714f747f83f9dd65aab3de8d5ec6a2a",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image787.png"
+    },
+    {
+      "bytes": 163694,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image8139.png",
+      "sha256": "82b21dcf4eb092561b5d1f589c5f61cf612bff208021dd74802b8e57e3d860d2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image8139.png"
+    },
+    {
+      "bytes": 99995,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed2_image9597.png",
+      "sha256": "58968d55aa9fa3c7d2ef3383db794c6f074db5a1b3b3869a56edfaad6a4804d4",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed2_image9597.png"
+    },
+    {
+      "bytes": 228198,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image11064.png",
+      "sha256": "c5eb5b937dac3a78284118269a93181c68949047986a23020d031385775b8b33",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image11064.png"
+    },
+    {
+      "bytes": 123048,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image2285.png",
+      "sha256": "d0e1104327c618bf0a650cbaca9c86f12789200f433ebd791f7e1265c9f68fdc",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image2285.png"
+    },
+    {
+      "bytes": 228170,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image3735.png",
+      "sha256": "4c167d03e9554b2c5bfe5b96a2b9e8d3a25fe449e9051577912a6c042549b04e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image3735.png"
+    },
+    {
+      "bytes": 138151,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image5205.png",
+      "sha256": "6b4a8cc9f8178bb6a6515dce623c0e00a7ff24fb447fcca6ec2d3aa8cdab2978",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image5205.png"
+    },
+    {
+      "bytes": 185604,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image6691.png",
+      "sha256": "a32f917397b04ac58985f5c5bfeee453c27790e94fda90f65b622677a951ef2b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image6691.png"
+    },
+    {
+      "bytes": 132146,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image787.png",
+      "sha256": "edc5cd55a6194c770381495fc0c31eb7a9f40689b56f834f46ca5384488a9772",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image787.png"
+    },
+    {
+      "bytes": 157979,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image8139.png",
+      "sha256": "5e2a977da2fa6bf5e62515a2f3463339bf846e7db8185bb994439c3627cc5026",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image8139.png"
+    },
+    {
+      "bytes": 106414,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/alg_warmup20_encoder_seed3_image9597.png",
+      "sha256": "aff1f1c3254e6203084cd41a11e964587d03e2080560896ffaff6ff7e01e52e2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/alg_warmup20_encoder_seed3_image9597.png"
+    },
+    {
+      "bytes": 229134,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image11064.png",
+      "sha256": "9933f33d8faca71c00bcd8296a3f032bdbccdeb73dbbaf21fed2eac1ef039bba",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image11064.png"
+    },
+    {
+      "bytes": 118843,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image2285.png",
+      "sha256": "563c061b4385edfac55ba068716376b165d63f57b469d7474350fa36dbcb0094",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image2285.png"
+    },
+    {
+      "bytes": 229013,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image3735.png",
+      "sha256": "0bd831d64764edbbf6a48c7e219fe3e8772a21d406aa3ec7b0a7e835f16d92c3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image3735.png"
+    },
+    {
+      "bytes": 132856,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image5205.png",
+      "sha256": "09547702fd2cc5661147f384411d62dfa48470a905f6d17a313b7063531b45a5",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image5205.png"
+    },
+    {
+      "bytes": 189662,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image6691.png",
+      "sha256": "8f209c8b873deb12700704093f21bd246e7c867c4f5ceaf984223fed6c9868a7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image6691.png"
+    },
+    {
+      "bytes": 130991,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image787.png",
+      "sha256": "257017b77d4bfbfda7fa62fa7deb451f04e3acaff6be633d5b073b4b53f35f60",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image787.png"
+    },
+    {
+      "bytes": 162579,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image8139.png",
+      "sha256": "e6006079404e6f714484b5bc855e299b97ee4a35b372869b807539a725634da6",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image8139.png"
+    },
+    {
+      "bytes": 101299,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image9597.png",
+      "sha256": "34fa24a4e197eb79036aea35eeaeb597790c78fcb0fda4d075392bd97e235471",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed2_image9597.png"
+    },
+    {
+      "bytes": 227090,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image11064.png",
+      "sha256": "a56406721c678f0244814217945bcbd5f96750998128db0de2b3f82ea303ce79",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image11064.png"
+    },
+    {
+      "bytes": 117639,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image2285.png",
+      "sha256": "1b4a1f512ddff6e86175e805da3cbd497191e1b6ede5dace1b1c080eacfd04d8",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image2285.png"
+    },
+    {
+      "bytes": 210490,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image3735.png",
+      "sha256": "8c29abd74d8f21f1c2a5136c748ac54492cd4236c16155fecf21f45284267e9e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image3735.png"
+    },
+    {
+      "bytes": 114952,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image5205.png",
+      "sha256": "cfc1651fc651a9fa3c5f590216a2a418f5f8319e0583f226d8404fa4a707db25",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image5205.png"
+    },
+    {
+      "bytes": 186342,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image6691.png",
+      "sha256": "fd40843aee1fdcc95b263e854805e9bc1ae5493ce577c97f3a06fde617644cc7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image6691.png"
+    },
+    {
+      "bytes": 119182,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image787.png",
+      "sha256": "77e1e990f61b2a32be5eb8e01704e7a4d20f23d29a41741d6c5f0ba55200fb1b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image787.png"
+    },
+    {
+      "bytes": 146925,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image8139.png",
+      "sha256": "b518427e2606c40c6edbb18b708d764fa0a37b267e54db07a12bfb7d9e021535",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image8139.png"
+    },
+    {
+      "bytes": 98001,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image9597.png",
+      "sha256": "91049d2f4ad33e4adca1f58343d3b5ff7f7d2f09985e4a792de84854ee7373bc",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.25_encoder_seed3_image9597.png"
+    },
+    {
+      "bytes": 228276,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image11064.png",
+      "sha256": "bc7d3ee272328a68a6d0ee96aee50fc8794ac0fb2eddfa69a644c482ce2d9923",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image11064.png"
+    },
+    {
+      "bytes": 123898,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image2285.png",
+      "sha256": "aa1d7a42e638412bbf26bf2528d0efd6e93613a830cabe40038d587f685789b3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image2285.png"
+    },
+    {
+      "bytes": 227113,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image3735.png",
+      "sha256": "52abcc3a66815402fad5f75d5221e88fdbff6b8ad4555b2f743a9e9b6ca79aec",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image3735.png"
+    },
+    {
+      "bytes": 140793,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image5205.png",
+      "sha256": "d27f5922dc9ae64ac121214f299c39c721042b05d5e6f605c9bcf61653f53195",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image5205.png"
+    },
+    {
+      "bytes": 187168,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image6691.png",
+      "sha256": "e1e6ce9dfa49ce07209c40d79017b1e0e5fa48ecc0f485a8104c6db0ad8d5f18",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image6691.png"
+    },
+    {
+      "bytes": 132562,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image787.png",
+      "sha256": "ba7dddf9c719911ca72ce7927f0e9e9d2240e141be70308d6797833055cfd340",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image787.png"
+    },
+    {
+      "bytes": 163708,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image8139.png",
+      "sha256": "8c48d19ff74097295de402351803cb1d9c3f016ac74ced40df15935ec117ae44",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image8139.png"
+    },
+    {
+      "bytes": 94252,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image9597.png",
+      "sha256": "cbbc12890e4c61b46e832cb89c613c56f081bfbdbb469462abf3c4e9e6628eb8",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed2_image9597.png"
+    },
+    {
+      "bytes": 217607,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image11064.png",
+      "sha256": "915a2e4ff1cac8a0f27f634232f2d15a3a5b632c27b875d4035ebf6efdf81aba",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image11064.png"
+    },
+    {
+      "bytes": 122852,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image2285.png",
+      "sha256": "f83c7f05b7d31e0fd73ba3efb73a8bca58a1b03bbe760fcf98bc0ee3bda15a44",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image2285.png"
+    },
+    {
+      "bytes": 219624,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image3735.png",
+      "sha256": "28b68ad1b1348cb58b8d91afe90d257e08b566146f6f3ed295c4102cf8051359",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image3735.png"
+    },
+    {
+      "bytes": 132604,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image5205.png",
+      "sha256": "d9630b49d98ed44e441eb6a4da6623138ae8303646f7a0b7c5aad3145197c9a5",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image5205.png"
+    },
+    {
+      "bytes": 174309,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image6691.png",
+      "sha256": "094a1ac0214e0a12a4895db904b13f6197a0467cdd90dffcbd663b143b788b08",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image6691.png"
+    },
+    {
+      "bytes": 131339,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image787.png",
+      "sha256": "d3ad866ed74d081d13bfde2e77aad1b4ba36ec7bf35da7c2f94d3414e6533818",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image787.png"
+    },
+    {
+      "bytes": 164057,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image8139.png",
+      "sha256": "3220543ddbdc6f9fac921c87b4532fc82d504f858dd41440e99bf4a03fa02594",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image8139.png"
+    },
+    {
+      "bytes": 93772,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image9597.png",
+      "sha256": "be93e3b6e1e81131d851ac00dde8811b866e2d362c139e9902d4f3fef3c809b0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/ibkd_lambda_0.5_encoder_seed3_image9597.png"
+    },
+    {
+      "bytes": 230064,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image11064.png",
+      "sha256": "c2b3da00b78db2c8220d6af9685dbe684a2c48a59494775064efd7bb18f7d737",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image11064.png"
+    },
+    {
+      "bytes": 127066,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image2285.png",
+      "sha256": "29d7ed261417e7dd3c29f42680d02943d4c545da949662ff5555f83b6a127d25",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image2285.png"
+    },
+    {
+      "bytes": 229176,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image3735.png",
+      "sha256": "48c0945bae77e91d548af545f41c463ed2d3b31ead57ac92b88b1324362e0cf8",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image3735.png"
+    },
+    {
+      "bytes": 138755,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image5205.png",
+      "sha256": "8ecc913d0521f6150ce407b41a4237902f6ea8cba712d3559324447cca3979aa",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image5205.png"
+    },
+    {
+      "bytes": 188119,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image6691.png",
+      "sha256": "98c39f96b198c21e49f9971da22d407d12ce66896f22abf7e2580917f7f49543",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image6691.png"
+    },
+    {
+      "bytes": 136224,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image787.png",
+      "sha256": "31051da0375a71068f0da7ec989e67bc81a8cbc1388799e3792be3d7a3c1660c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image787.png"
+    },
+    {
+      "bytes": 164416,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image8139.png",
+      "sha256": "73a620b1e8843ddb484754e29a171bc94f6b140e433a52db5821bf78ffe2e9a1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image8139.png"
+    },
+    {
+      "bytes": 104620,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed2_image9597.png",
+      "sha256": "f824c93df11e215a8b0a3553434344754446b7ed8879c8a13a66a7ec525bf758",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed2_image9597.png"
+    },
+    {
+      "bytes": 204250,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image11064.png",
+      "sha256": "85521afa306224455442452a63956d181662357f453c5d13f6d897d08c04c3c7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image11064.png"
+    },
+    {
+      "bytes": 118445,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image2285.png",
+      "sha256": "ca29105989159665ebbcf5958ef12cedc8d849c98614684292494c21d7b89bd5",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image2285.png"
+    },
+    {
+      "bytes": 213834,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image3735.png",
+      "sha256": "1cc6f7c3f491d13ad91a2ad265ab8c3c0052e2abf355df4a2b0939fb1af85de3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image3735.png"
+    },
+    {
+      "bytes": 135186,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image5205.png",
+      "sha256": "91898e5619ed88adbd7aa6eff7f4574e4961f793d8f04471e7da4bb578a03b2a",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image5205.png"
+    },
+    {
+      "bytes": 174788,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image6691.png",
+      "sha256": "17cb3a288900b586838620ca5b22e78b55182e925df762d6a7adc3886c92cc14",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image6691.png"
+    },
+    {
+      "bytes": 135499,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image787.png",
+      "sha256": "cb5e96a36465d5865b324b80c905772c156d62855a54d66d809a872c1db4a1b2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image787.png"
+    },
+    {
+      "bytes": 156242,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image8139.png",
+      "sha256": "bc58b3d3558cb6aa0133952d10f159a471c7c7c1cf1dbd823ef6b69db1b15777",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image8139.png"
+    },
+    {
+      "bytes": 100966,
+      "checkpoint": false,
+      "path": "attention_gt/qualitative/lg_encoder_seed3_image9597.png",
+      "sha256": "4dc5bf592b0707d73824af3e67265337bc74dccba1e77afa2981ebc9e981ad16",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/qualitative/lg_encoder_seed3_image9597.png"
+    },
+    {
+      "bytes": 1508,
+      "checkpoint": false,
+      "path": "attention_gt/results.csv",
+      "sha256": "5cbc1705cd89fea2d01dd7798899b2e909bbb641d34402befff44ac9bd03adf3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/results.csv"
+    },
+    {
+      "bytes": 5181,
+      "checkpoint": false,
+      "path": "attention_gt/results.json",
+      "sha256": "f2f6fa4f27d9d29df78faf9f8901f8d29694bbfe16a222a07742a23e7fe29bc9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/attention_gt/results.json"
+    },
+    {
+      "bytes": 5392,
+      "checkpoint": false,
+      "path": "checkpoint_audit.json",
+      "sha256": "d95a9fea61e537aa08691a313b2323110fc4f1480ee0d4a69efcd74a2319a83a",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/checkpoint_audit.json"
+    },
+    {
+      "bytes": 96424,
+      "checkpoint": false,
+      "path": "dataset_audit.json",
+      "sha256": "6674c247768097c2b2a2e1547ae1eb957be26d4e7baf281300a0e94954c138cd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/dataset_audit.json"
+    },
+    {
+      "bytes": 38723,
+      "checkpoint": false,
+      "path": "h200_issue.log",
+      "sha256": "a8a8e68e1b49aa1c28ec375c2e1e328b9e671d572e6fd977c12ea2160878bb1c",
+      "source_member": "bapedragon_739/bapedragon_739_result.txt"
+    },
+    {
+      "bytes": 1867,
+      "checkpoint": false,
+      "path": "part_probe/annotation_validity_audit.json",
+      "sha256": "ce793598f6f42da58009e159c8149b39f5fba3bd473be68a597ee178607fb255",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/annotation_validity_audit.json"
+    },
+    {
+      "bytes": 8989,
+      "checkpoint": false,
+      "path": "part_probe/candidates.csv",
+      "sha256": "7e5f98bf269d3a042ea06841e32acb1d79dfbd799856f1f4e782e63c395cfcbf",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/candidates.csv"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed1_best_validation.pt",
+      "sha256": "dc0788145216699d9bdc53acc843b9158e8bb60a8744a1de497a381daa7f3152",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed2_best_validation.pt",
+      "sha256": "aa893ec739effee7743c0a3232bcfaff11f6e274a7f2a8e9e11aa41da09f8378",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed3_best_validation.pt",
+      "sha256": "ef9e31d0d753dbdf84052aea393e3d40fc9aeca7a092ed61ca23d1351a2d8b69",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed4_best_validation.pt",
+      "sha256": "2f0c54e988f66f711ee4765257daa0f5ca18774288f8845d76adfe48ec015a90",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed5_best_validation.pt",
+      "sha256": "933ab6764e9a2bef8810212d4c2966237d171b4c501b5c3a668e4d1ff5cc4167",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed2_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed1_best_validation.pt",
+      "sha256": "8adc1dc242bbe0e3051b3c70635a3c84fe98cbf1861cec82d4862422fcee43d9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed2_best_validation.pt",
+      "sha256": "ec5103c1256c7ea161ad8425f01d078acf8ccf66791a676d291afdeec11a7f15",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed3_best_validation.pt",
+      "sha256": "e946e8b250d0ea3849e3c0301d673b6cbda57549122d19583b68431708bf8f90",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed4_best_validation.pt",
+      "sha256": "eeae37ae50f255cda05f9259e2cd7b2ab6ff100d9e422d706ad594e195905313",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14453,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed5_best_validation.pt",
+      "sha256": "196d4e3941ebd5b0a451d6eaa66e9195c4ae0edabf6965950d83a10f5c170a43",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/alg_warmup20_encoder_seed3_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed1_best_validation.pt",
+      "sha256": "14988c202850f7844b4acacac24bca087c1c22409b1a6fe7706dfcb8a662cf05",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed2_best_validation.pt",
+      "sha256": "76b963f516423430da13251e9b220c67f5cae9718aef23ce89cd153d614799f4",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed3_best_validation.pt",
+      "sha256": "4d504feb9f78129f67cb6a3e3e1daa038f038c9e00e28e5851ec3ed933de6d54",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed4_best_validation.pt",
+      "sha256": "1d647eec98deb88d6c03fcc3153ccad5715493a12469b9074b68e0c310d76dc7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed5_best_validation.pt",
+      "sha256": "36279396f3bcf872b7d65f7c22162bafec8c726bb287dfcd2895601d17db8a85",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed2_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed1_best_validation.pt",
+      "sha256": "551984cd6b67dc3877409a3664c484a3263793fc29f772a36ac2dc2c6240978c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed2_best_validation.pt",
+      "sha256": "f73849f1ae113a03470ae6ebcdbd181e489b1990e41894733135f909358e3167",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed3_best_validation.pt",
+      "sha256": "02a4b794aea80b3d62794de6652f2233141e4998adf8df9f5290eae5afc6dea5",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed4_best_validation.pt",
+      "sha256": "2b212607683117d4083c6a12dcc3b9305bb8322af9167bab50f848ab3aa145fd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14549,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed5_best_validation.pt",
+      "sha256": "d62819f01235862a233f16ec4aae8803a875e58cab8484a0617cf8f26f3f5a9c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.25_encoder_seed3_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed1_best_validation.pt",
+      "sha256": "ff058cb485a1489312362424de193f7ca9e8492f97a7b20e744607a14479562e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed2_best_validation.pt",
+      "sha256": "4e6b3d463ac618c8cdf1df571bf97f24243b4d39c9dca47d01aef1570f572d9a",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed3_best_validation.pt",
+      "sha256": "d5a71cc27af4fe2e3e89b5dd5261c6770db157c6b50ad272c95f7f6fa5b7d090",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed4_best_validation.pt",
+      "sha256": "77874cbbdb5209a6ed838d8e077d8767eccdcbff585b207b5ca23b767e838052",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed5_best_validation.pt",
+      "sha256": "ae84ec66e26cc6f772fd8b085c9e6ab45d0df8537be252f11485f3498acb12c2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed2_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed1_best_validation.pt",
+      "sha256": "83204ff1fe31e2cff62e9ca5673aa151abf2d390e7504006fbccae718e505059",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed2_best_validation.pt",
+      "sha256": "b7b24382bf3d58fabd177ec190949d959e6d1369efa5ba30a071c74dc3f4c68f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed3_best_validation.pt",
+      "sha256": "44a305e61bb4d9e7c719f19da50194f4c93ac39017b5b5196b29af13fab44f9a",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed4_best_validation.pt",
+      "sha256": "f5de2c122de6d53975d881a3f168a54a6455e7d5dc7f2573635b066b702435f4",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14541,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed5_best_validation.pt",
+      "sha256": "4bb0f72d114257da0ae0070ac1497bee21735825f9b9b600f4eba3aa6076e0a2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/ibkd_lambda_0.5_encoder_seed3_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed2_probe_seed1_best_validation.pt",
+      "sha256": "da8376c980d5ea55e64867198263cdf438905c6b0ca302acdcdb11089c1a9471",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed2_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed2_probe_seed2_best_validation.pt",
+      "sha256": "54fc15182927ef37b58795d8b96611678a9a1bfb04aa5df71f3af6301097cdbc",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed2_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed2_probe_seed3_best_validation.pt",
+      "sha256": "73570c303654740a619c5c1b7af7763a6c95a48084b68ce344b6ff09af266537",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed2_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed2_probe_seed4_best_validation.pt",
+      "sha256": "a6f3ab5263e4c107b5204e552d863dbed16c93da9435673a561e16267334502c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed2_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed2_probe_seed5_best_validation.pt",
+      "sha256": "e655b451c35a276109be765aea5c69e417f2557d93ae02a022112d3cc870e38e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed2_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed3_probe_seed1_best_validation.pt",
+      "sha256": "492f4405c2ebf4ba6c7d791630d711dba7d05f459dcc69601357fca620b95d42",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed3_probe_seed1_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed3_probe_seed2_best_validation.pt",
+      "sha256": "8ab982ee098056920518fa883f57a689b82f42ed4fcd17d8d704c762fd1ec3aa",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed3_probe_seed2_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed3_probe_seed3_best_validation.pt",
+      "sha256": "b2ab99278e201581417019ab9c5289c3ac86a13e7e242ba3f7c983e87661fa60",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed3_probe_seed3_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed3_probe_seed4_best_validation.pt",
+      "sha256": "c604409e8c11d1ccd742309ad26c74d5f7ef7b262ec9652dd6ce56a9b02c67c9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed3_probe_seed4_best_validation.pt"
+    },
+    {
+      "bytes": 14309,
+      "checkpoint": true,
+      "path": "part_probe/checkpoints/lg_encoder_seed3_probe_seed5_best_validation.pt",
+      "sha256": "3a87566b823af4a96c362f9c9648806831d195ded19df2b3e09371fe6dc7cd7e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/checkpoints/lg_encoder_seed3_probe_seed5_best_validation.pt"
+    },
+    {
+      "bytes": 112668,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p01.json",
+      "sha256": "1a0eb8624f98713f1e69c16196f1748c4ff87d0ac575df146b72505d617c12cc",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113375,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p03.json",
+      "sha256": "9fb947f0faca9783df92b1bab88a2f44cb953d982b8f943d5841c569b9106947",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113377,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p1.json",
+      "sha256": "03b9ff6506546d61f5ff0cbbd11954205d103fa97281a894de1a75b94a974e44",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 112961,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p01.json",
+      "sha256": "8197907e0d52e821405c2dc7df8e2078b164018dde4df9f685dfe2e8edada697",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113527,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p03.json",
+      "sha256": "983f32f49f69613e7c10ea43800b2ec35a05724b9784982825c3db0864589b05",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113420,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p1.json",
+      "sha256": "0218012767054e018a5e3dd3189a3f52dac504ee8f3315396ce9138269402f49",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 112856,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p01.json",
+      "sha256": "e40f3ae3c98a805e0ba2529aff4fc908b0f41e0e111e527b603bafcf608d6de8",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113439,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p03.json",
+      "sha256": "0bcf1db8580686b51e45f7c820c547b7f263930c43f97cb4fd1f9ce4ef2a1510",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113429,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p1.json",
+      "sha256": "8fa2e339c8bbec223274ab9d1d6d5f3c34f37c53053c685fd6d657cbc44893d9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 112740,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p01.json",
+      "sha256": "668195c34a6a4cb6b20132e443cef66fde4b988ec9388153a08006b80efed366",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113430,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p03.json",
+      "sha256": "6fa79a606875cf7fdc833b184075cd550434141c502e2b8c3454e960b636b8cf",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113429,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p1.json",
+      "sha256": "17783a350e54015c06d952eb8878129825505f37a80c79a1fa1a22f6c80d096f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113056,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p01.json",
+      "sha256": "ab48af76b1cf03109a5738d3fd8a34a809f4ef5bdec842c7947c13608e815497",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113433,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p03.json",
+      "sha256": "291967b0bedc03ba2274320a021587b2adefbc2e2fd67312455de258decebef9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113494,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p1.json",
+      "sha256": "e1b0dfc43297c482daedfe7701d6f97d6f47ea419936035d9b0b5c1c91041d7b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed2_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113674,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p01.json",
+      "sha256": "45687000fe1b8781c47d9ccfffaa47089bc54a28468eb85e9eea0a12d4df86e2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113384,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p03.json",
+      "sha256": "2fc3f2c8c39dd8dde1e9c5556bc57dc394a31c42ef2e9b7206bb18cab05b966e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113240,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p1.json",
+      "sha256": "31be1f484f92f920d38635f51abc4dd68f4c8239884d8722f17831f0cc550087",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113454,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p01.json",
+      "sha256": "0f6622f411e43dfe8a40ce6e28e1810ed43eb6871c5395ac6e375466a94a59a1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113520,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p03.json",
+      "sha256": "f54e77204933cf4a0d95c9cfe8bbdf74cd7b80f8d2693538bb600dba2c2737c7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113214,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p1.json",
+      "sha256": "40df426fcb97c18007c22b39d36d92c43c2cf5a167bd72102fb8943dbd065c82",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113433,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p01.json",
+      "sha256": "1c4d05c575c98209196063fdc9156b50eac882be27ed917084161fdc451e66e3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113361,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p03.json",
+      "sha256": "cf2c6a49b9b929598b7d63a8447c0f96cf697fd67aede42957131f385bbf2333",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113356,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p1.json",
+      "sha256": "8bad3ed589efb325c858a809ca9f01475c533f8930c61ef8a5ca40e78bd60eb7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113726,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p01.json",
+      "sha256": "b97d7cbc4573c1b6e91712ac2874dedd5f5f62572234843b3116f67c07aed390",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113386,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p03.json",
+      "sha256": "da6f497928d06f669b97e63e27106cec7095750d08494b566f01420f8504fb52",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113463,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p1.json",
+      "sha256": "926a4c2fffc7a424e2f16dad7dc6b812b425fb6f93c93541f6ef872962fc4516",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113634,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p01.json",
+      "sha256": "dbf28d89a1a856a0e9ab7f0325344744708a8b19ac92e4d5111465e255401fbf",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113369,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p03.json",
+      "sha256": "68d41b6acb52403217d4718fd04fed88522d34aad612c320cf7600ff1253c3d2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113255,
+      "checkpoint": false,
+      "path": "part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p1.json",
+      "sha256": "214b7596b40384f57d4448ef0b10437d3dd5233f18e7bd8382c88a07ab85bdad",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/alg_warmup20_encoder_seed3_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113748,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p01.json",
+      "sha256": "1c1caeae01fc3e76912ee3d3c8fced177acfba021c65936df1395bbd244a925f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113595,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p03.json",
+      "sha256": "e92fd73c074a7c443243792e8e59d5beee4d5167fe575fd1f996e3a84fc47464",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113410,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p1.json",
+      "sha256": "1f29c2e9729e7f2eaec8c5a8d83ed9bf4481b124c65ef663630069a2e38ae9ba",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113602,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p01.json",
+      "sha256": "df9e8f600f2689cdb10d5cfe988e9ab04867b6311f7d68a2e6dd7f52c62950d4",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113472,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p03.json",
+      "sha256": "b8569920e713e2d7c617723ca82f9de4b09faf57679338f4a2b5f782b4e367f9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113278,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p1.json",
+      "sha256": "e78429ff9dec2d4f96735e1c4cde4ba93ee957bc813b660ac911536393e1d85e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113669,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p01.json",
+      "sha256": "be615b823622038e4d3e23f9fe91964a25148c09805401cc080093b485b502d0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113504,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p03.json",
+      "sha256": "ca4cb3f6d26adc0ce2b3fe6ee356a209ad1469abcd6edf906fd5f21c1af863dd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113239,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p1.json",
+      "sha256": "f00583e9e2499d295bab85a5233f121193d7ab419b1e068347738a61717417bf",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113442,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p01.json",
+      "sha256": "738b61b02dffac074b1647b795d451c5aac81107bd88c2c2d50180cd1d377987",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113648,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p03.json",
+      "sha256": "dd1599ee306450f5b57e44ac43a75220e95a7aae0242a41f8ed6ea76bab39dd1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113363,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p1.json",
+      "sha256": "12d62f55bcfd41eec3602f893daec51ea7cd61679625c1be7f589c8af14022de",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113641,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p01.json",
+      "sha256": "387cb4f54f328d6c0a2b777eaa7fd7ac30b3857e3712409d2b7a8144788f472c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113621,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p03.json",
+      "sha256": "34cca453906e808cc3d4bbbc4c7e83f34ccd4465a88441947c5ba38cb4d4752e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113230,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p1.json",
+      "sha256": "2885a375657327492f03ef47e422b1919e97076c052bef48fe720958e5055d41",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed2_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113595,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p01.json",
+      "sha256": "ad7e58ad7f251bf46f64dc77665ccf01444ef434685906ec299d05c379e8e6c1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113214,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p03.json",
+      "sha256": "3230fdaef8b518106976b98d61d455e0d75ee373e71d443401bd4b3a9a658090",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113421,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p1.json",
+      "sha256": "91dad542398d9d3bba184a42d7c31e17b576f2f3a6d0928590c7e06b24799204",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113710,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p01.json",
+      "sha256": "5cd7b36c54f4d8a0da57d010b4e4ef1a2c080c3a5d9a4c9639d9670dd46624ea",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113261,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p03.json",
+      "sha256": "85c8cdc95eabd79929c5cf9cb5b8861f2d50f8fc38697991006b971014d99415",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113472,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p1.json",
+      "sha256": "13b974cab2517519de645ad6720b17bb494a808514f1c42693b57e7ba4fa360b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113201,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p01.json",
+      "sha256": "419b49303ecd6fb272f3bfbac63cd61fd96dbd9cf5dd8e6ae2f584c804cafbb7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113389,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p03.json",
+      "sha256": "8e32bc5e9142f7ff6338ceb78d3040c62ecff54f32c39671d50642310c481475",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113531,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p1.json",
+      "sha256": "e3b4370cedccc0005ddbfe30cc760891d810428efaef684ec081cd05eb6d5edd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113413,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p01.json",
+      "sha256": "5eec6367cd04d60147155493c3a0a62f91445cec3f654b34228f32f7660cd7d4",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113346,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p03.json",
+      "sha256": "02794c86f180294efb70b5cfd74f69685e7c76abd2eaf3b634265a898d91db8e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113488,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p1.json",
+      "sha256": "f19759884d1ec0a914886d4e194ee2127754969e803d697724ca96d35cb04818",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113561,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p01.json",
+      "sha256": "6c25a7711733c8eac48efb43956d7ccab9568bb21c3a406e9372009898c7f106",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113243,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p03.json",
+      "sha256": "d733d3af64a55fc0e9fd2e1523ac61bf114493dbd6e2965f6f6a195e31c82c4d",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113453,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p1.json",
+      "sha256": "811177a14e4fa908554b5b19643b8b402ac98054bbce6815854d87bdcf13904d",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.25_encoder_seed3_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113807,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p01.json",
+      "sha256": "489c2dcdf8fe6cf22787214c66a170c398658c07cf2901777d249b8642f260d0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113162,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p03.json",
+      "sha256": "0743d15434333cc071ef00d24881389b75bf0b2e5409284db741b7671de027cd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113211,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p1.json",
+      "sha256": "4bdc77cd827a633e15bda4dc4df38c9f7886f364fc1dd9c2fe6adbaecce9cb4b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113521,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p01.json",
+      "sha256": "babcc8ac6eb0ab560d086cdda7f1e78686d049371ceb6226b8fc44143d396c5e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113253,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p03.json",
+      "sha256": "b851908159063b18226d3088d02b9e5ec693ea728bc1a0bdb3dd164522fb162f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113470,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p1.json",
+      "sha256": "f5f01d4f99631ba3dc97e55d500e880623b1591f4e630ae5a8b146384b06fab2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113357,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p01.json",
+      "sha256": "beff36036809cce8817385067c734820c42f853cba094866fc4b0ceeb3d44a90",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113327,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p03.json",
+      "sha256": "e3a4dab3409d3465e24da9265295e4579e1a580f63094f1b3a53d3d3cad4cbb0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113343,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p1.json",
+      "sha256": "a1ef14a37f5b55f6063e75eb6d8de1c6bf7eaa712fd54559a597efa2884e5ad0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113522,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p01.json",
+      "sha256": "2dd7b37c34d900b9ca5e6f6ebcb75dde6b3f0b59ad457b70a03de540f491442d",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113317,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p03.json",
+      "sha256": "a7cffeb70d46b964aa251383667ee2de8efc419d773c94905edbe1cd753836e1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113164,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p1.json",
+      "sha256": "24ad34607fa2d1fa874c7c751fe8be75dda55408a76d70ebc3755d0bfd141bac",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113330,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p01.json",
+      "sha256": "e5cb759e28f30905df08b15752839766d063ffbad4619fde89eecd064f25e5ad",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113249,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p03.json",
+      "sha256": "ca0a94c615942f277cda054d28e7b9d9f06bb806140697cf793bdd6523cbfbb9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113370,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p1.json",
+      "sha256": "460faed8b71191b7ac4e9f22be27e1e1ddaca795d2f650392b1c03b8769525f2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed2_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113843,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p01.json",
+      "sha256": "a31a1d44dec9c90125825356ce7eeae4765ed2a21a541d2314ecf9653414025e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113616,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p03.json",
+      "sha256": "2ddec27e22574d8e45e11d554cdc70f01642bdb837c8b7a5ef3c99e4cdd726e2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 113400,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p1.json",
+      "sha256": "bc535d240f5f6a61301eb77a63bbc6bac3acfe190f94c8df0bbba1b410e45057",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113778,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p01.json",
+      "sha256": "ba47c51fd57803d869e5ff08867c1c1a27cc9070568ffe4f8595f68279944126",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113561,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p03.json",
+      "sha256": "8cb72c5fd93311b14cd372d8b11d344eb003005c767e2c033fd8afb42370022c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113565,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p1.json",
+      "sha256": "8c2f7bc68743fb67ff5792f8069f84bd96a7c24ea0eba99cf61f4d7d438a39ee",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113268,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p01.json",
+      "sha256": "91bf1f217a9775e77b6d76d2a94c0248b0417f5038be73d2460ed2192e80e716",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113629,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p03.json",
+      "sha256": "03ef7670ec523cbcdc14f9b6cdb5f08933fbabf6ff414c1c0290cba421d20e15",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113440,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p1.json",
+      "sha256": "34134e0650622d0846cbb874471f4a1daaab75a258a668dc1b4cd8cfa31aeca3",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113509,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p01.json",
+      "sha256": "81dde5345bc5298bae5a660b2ca0c9880509ffacfd5b1282b1297e38baa9e8e7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113505,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p03.json",
+      "sha256": "ac028b1b99e9d07629cc18428797bda4121782b51c8fd88586f15e660f87381d",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113481,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p1.json",
+      "sha256": "7683f7725eb2debb08297a9bd4a15eb71208b6f0dc23832678596d6cb625de32",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113656,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p01.json",
+      "sha256": "80164f35ff40b66b369e2cd9c9ae18df24189425b66d1e0536b2044800f423dd",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113434,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p03.json",
+      "sha256": "7e07ad51c29f39f945da25edb191b5e5237662c009eb53a02a767053d64001f9",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113504,
+      "checkpoint": false,
+      "path": "part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p1.json",
+      "sha256": "cd9c157e4af287e141ce736fb4db6723155e340f16651e36c501e2713d8f0d43",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/ibkd_lambda_0.5_encoder_seed3_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113258,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p01.json",
+      "sha256": "5a0de2eeeef5ecea6c799f4e436b6c14f66946cb9e70f9686ffaa9069ce6177d",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 113077,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p03.json",
+      "sha256": "6dadf5f92452a69a52ef1271a8047d710c29bce4043b82a1413e039a7ac199c7",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 112947,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p1.json",
+      "sha256": "acda64e0c39212a4143e4efa212c5fc90abed55ca8ba01c37ad815e992d195f0",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 113366,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p01.json",
+      "sha256": "a3f7f958a15a652995d22a3c87238de0e7b3530defcb4e4159b177f2bac2d805",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 113010,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p03.json",
+      "sha256": "0bee0c8333f0c094927544c1c2ffcdebee366626f06be02df98265bc96f7cb4c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 112967,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p1.json",
+      "sha256": "db459ef9456f2946ba7cc15432d6f2b7dd0d4dc0b04b8f25394b1a78b4b72f78",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 113172,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p01.json",
+      "sha256": "3096f7c79e75c74b3291f027cfe728e8825eae5771c1e22f3652fb6eedecc0a8",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 112991,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p03.json",
+      "sha256": "e165fbeb94c3b8475124f3baad4e8703228b7d12d95cce6034d68c574b1dab0e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 113200,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p1.json",
+      "sha256": "585046d8947a7a3698cb87da2a2b0c64bc88853c97b2e216ea8a2dce0e81185e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113102,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p01.json",
+      "sha256": "a1f7f040670a85a60b177a0762cb40809e0eedf9f43bd082ca9630cf3e25f020",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 113123,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p03.json",
+      "sha256": "cb35136498d0ac58fbde3e4eb73e805957149164ca61acd33a755a1dad6c7277",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 113087,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p1.json",
+      "sha256": "0bd65a30398ed0fadf89763706a76cb6e17b1d9a9a80c5bbe34b4690661d7c83",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113167,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p01.json",
+      "sha256": "8e76d045b332526b060137f19d92165f2c3d1d4ac22de9c975ebe1324575db5c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 113121,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p03.json",
+      "sha256": "1ed8d04471e13d3b59030cd2420239a8474e24c947f2e4b252ab1aa192488a51",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 113048,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p1.json",
+      "sha256": "7af637d96ca682a5ae9e942dcf60720a82e49855c5c3300deeb392449095fc80",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed2_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 113247,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p01.json",
+      "sha256": "c706cf614e649d505a127c3bcb2d25fc2ad74f59c416287d4894600b1e4923d2",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p01.json"
+    },
+    {
+      "bytes": 112934,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p03.json",
+      "sha256": "78d2654c4f9ac6e53048d722d929b90fd845e34037b9831d581b5e3c688d9c32",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p03.json"
+    },
+    {
+      "bytes": 112957,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p1.json",
+      "sha256": "83654744704d2257608ae5dbf3738c4dd2958e3c68c4a22ddb9d23eaa88cd86e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed1_lr0p1.json"
+    },
+    {
+      "bytes": 112942,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p01.json",
+      "sha256": "ef733328e61a8addfcf31dd923828a2819816dbf251d13e5696ccd982a05953f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p01.json"
+    },
+    {
+      "bytes": 112980,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p03.json",
+      "sha256": "ae528ff79087f2708e575b6fd4e055eadaf6d428f48daa12e427c63cea4c092e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p03.json"
+    },
+    {
+      "bytes": 113070,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p1.json",
+      "sha256": "1fe59171c7548897b1b35731c52b32f12cfc9505565ea234e5b9cc60cd861e03",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed2_lr0p1.json"
+    },
+    {
+      "bytes": 112981,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p01.json",
+      "sha256": "a84056b7b7e25bd89e3383c86b076b962c9de0ae97676afcb5c1a6b6d7606827",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p01.json"
+    },
+    {
+      "bytes": 113081,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p03.json",
+      "sha256": "573841efbb571a466a7c1165c115543e697beb3afb5e623214403c59030cf9e1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p03.json"
+    },
+    {
+      "bytes": 112834,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p1.json",
+      "sha256": "4f35bbc1ab865a6b074da49ba7cb81c7c18e46df0e62ef78b8218a29c09cc38e",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed3_lr0p1.json"
+    },
+    {
+      "bytes": 113199,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p01.json",
+      "sha256": "c83845b60955d389371ca007c76222f05e56fe606c93c516a4e1d6dff9990cf1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p01.json"
+    },
+    {
+      "bytes": 112972,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p03.json",
+      "sha256": "a2e45bc9912dcb562cb2150b394fb850779fceb2ef3ffc8eb81baa036f30f281",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p03.json"
+    },
+    {
+      "bytes": 112835,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p1.json",
+      "sha256": "ce3a3667bd29cb8f665b01eac04a24f0b702294d5d8e0bf704c452794bc5ec0b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed4_lr0p1.json"
+    },
+    {
+      "bytes": 113016,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p01.json",
+      "sha256": "91904e2a34cb78e34668893c2301fc1a594a6a2d6f08fdcaed72eb4a9081541b",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p01.json"
+    },
+    {
+      "bytes": 112906,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p03.json",
+      "sha256": "208a1da170b73dc72bb5350be817a420f82178fc27475457238a7a9827c02037",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p03.json"
+    },
+    {
+      "bytes": 112781,
+      "checkpoint": false,
+      "path": "part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p1.json",
+      "sha256": "e40f75ae45148ad36a7180d37311028099c1d16712b67a797f67bafb25ad8d77",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/histories/lg_encoder_seed3_probe_seed5_lr0p1.json"
+    },
+    {
+      "bytes": 2719,
+      "checkpoint": false,
+      "path": "part_probe/official_test_results.csv",
+      "sha256": "0c1483326729220c9db086cc10d7622fb704d42978348b5d833f27804ad33e91",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/official_test_results.csv"
+    },
+    {
+      "bytes": 157450,
+      "checkpoint": false,
+      "path": "part_probe/results.json",
+      "sha256": "b1983b7b69f292029e77f79314e564cf141e89787eb1c2bf4b9a414809597fbe",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/results.json"
+    },
+    {
+      "bytes": 310,
+      "checkpoint": false,
+      "path": "part_probe/selection_complete_before_test.json",
+      "sha256": "627d90cce7f10b1b4a1541637ee3b727eaaf321f463761d87a97df9fb6504d14",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/part_probe/selection_complete_before_test.json"
+    },
+    {
+      "bytes": 38723,
+      "checkpoint": false,
+      "path": "run.log",
+      "sha256": "a8a8e68e1b49aa1c28ec375c2e1e328b9e671d572e6fd977c12ea2160878bb1c",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/run.log"
+    },
+    {
+      "bytes": 568,
+      "checkpoint": false,
+      "path": "sequence_status.json",
+      "sha256": "cb98fcb54820549d8524c5ec9c9462c8c64d19f642f9be97d78da756bc3d9835",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/sequence_status.json"
+    },
+    {
+      "bytes": 35235,
+      "checkpoint": false,
+      "path": "spatial_cka/layerwise_heatmap.png",
+      "sha256": "e8714d8c3f24e25c82497797aa8028667c7647a42e013e97a8c48ac6eeac4586",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/spatial_cka/layerwise_heatmap.png"
+    },
+    {
+      "bytes": 6638,
+      "checkpoint": false,
+      "path": "spatial_cka/results.csv",
+      "sha256": "bf9f44b997c57b86b17244ea3a5b673161c935fb5bda5b56000a4bee069715b1",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/spatial_cka/results.csv"
+    },
+    {
+      "bytes": 27072,
+      "checkpoint": false,
+      "path": "spatial_cka/results.json",
+      "sha256": "82be13d8c777de3fa0e867778819ff989f4ebd4ade9f6b57787f160c6196708f",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/spatial_cka/results.json"
+    },
+    {
+      "bytes": 40508,
+      "checkpoint": false,
+      "path": "summary.json",
+      "sha256": "fcfef7a1079118534041c269fcaf116442ad5acfc8b377c0436cbe1443dc3668",
+      "source_member": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/summary.json"
+    }
+  ],
+  "h200_issue_id": "739",
+  "import_policy": {
+    "kept": [
+      "scientific summaries and CSV/JSON evidence",
+      "classification checkpoints needed for reproducibility",
+      "selected probe checkpoints when present",
+      "H200 execution logs"
+    ],
+    "omitted": [
+      "directory entries"
+    ]
+  },
+  "imported_bytes_excluding_this_manifest": 24877517,
+  "imported_file_count_excluding_this_manifest": 240,
+  "schema_version": 1,
+  "source_archive": {
+    "all_member_crc_verified": true,
+    "bytes": 12138184,
+    "canonical_filename": "phase1_cub_resnet50_224_b128_seed2_3_direct_spatial_v2_issue739.zip",
+    "original_filename": "bapedragon_739.zip",
+    "sha256": "bcb674b4848f0c53228eba031ad744275e8a57a9dcc27cd42da01abbbde9e1fd",
+    "unsafe_paths_or_symlinks": false
+  },
+  "source_suite_root": "bapedragon_739/phase1_cub_r50_224_b128_seed2_3_direct_spatial_full_v2/",
+  "status": "pass"
+}
