@@ -2,6 +2,11 @@
 
 상태: **본실험 v3 LOCK — batch128 guided 4방법×3seed 및 직접 공간진단 3seed 실행·감사 완료**
 
+현재 학생 이미지 loader 자체를 점검하는 사후 탐색 절차는
+[LOADER_EXPERIMENT_PROTOCOL.md](LOADER_EXPERIMENT_PROTOCOL.md)에 별도 버전으로
+고정했습니다. 이 절차는 완료된 v3 결과를 수정하지 않으며, loader 선택 전 official
+test를 다시 열지 않습니다.
+
 이 문서는 CUB-200-2011 전용 실험 계약입니다. 현재 항목은
 `configs/cub200_r50_224_b128_full_v3.json`에 고정했습니다. 결과와 관계없이
 여섯 설정 × 세 encoder seed를 모두 수행하며, smoke나 official test 수치를 보고

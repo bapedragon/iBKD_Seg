@@ -1,5 +1,9 @@
 # CUB-200-2011 실행 스크립트
 
+- `run_r50_224_loader_damage_audit.sh`: loader pilot Stage A. 학습이나 official-test
+  접근 없이 derived train 이미지의 random crop이 part, mask, bbox를 얼마나
+  보존하는지 L0/L1/L2에서 감사하고 JSON·CSV·고정 정성 그림을 저장합니다.
+
 데이터 감사, smoke, 분류 본실험, frozen probe와 결과 정리 스크립트를 이 폴더에
 둡니다.
 

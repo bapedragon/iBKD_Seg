@@ -25,7 +25,12 @@ from torchvision import transforms
 from torchvision.datasets.utils import extract_archive
 from torchvision.transforms import InterpolationMode
 
-from .data import IMAGENET_MEAN, IMAGENET_STD, evaluation_transform, train_transform
+from .cub_loader_profiles import (
+    L0_CURRENT_STRONG,
+    build_cub_student_train_transform,
+    loader_profile_contract,
+)
+from .data import IMAGENET_MEAN, IMAGENET_STD, evaluation_transform
 
 
 DATASET_NAME = "CUB-200-2011"
@@ -512,6 +517,7 @@ def build_train_validation_loaders(
     num_workers: int,
     seed: int,
     device: torch.device,
+    train_transform_profile: str = L0_CURRENT_STRONG,
 ) -> tuple[DataLoader[Any], DataLoader[Any], dict[str, Any]]:
     """Build the fixed 5,394/600 loaders without opening official test."""
 
@@ -534,7 +540,7 @@ def build_train_validation_loaders(
     train_dataset = CUBClassificationDataset(
         dataset_root,
         train_records,
-        transform=train_transform(),
+        transform=build_cub_student_train_transform(train_transform_profile),
     )
     validation_dataset = CUBClassificationDataset(
         dataset_root,
@@ -570,6 +576,10 @@ def build_train_validation_loaders(
         drop_last=False,
         **shared,
     )
+    manifest = {
+        **manifest,
+        "student_train_loader": loader_profile_contract(train_transform_profile),
+    }
     return train_loader, validation_loader, manifest
 
 

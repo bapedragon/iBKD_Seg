@@ -1,5 +1,11 @@
 # CUB-200-2011 설정
 
+`cub200_r50_224_loader_damage_audit_v1.json`은 이미지 loader 실험의 첫 단계인
+학습 없는 crop 손상 감사 계약입니다. Derived train 5,394장에 profile별 5회 crop을
+적용해 part·mask·bbox 보존량을 계산하며, annotation은 진단에만 사용하고 official
+test는 열지 않습니다. SHA-256은
+`6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf`입니다.
+
 현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
 `e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.
 Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation-only

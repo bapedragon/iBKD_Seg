@@ -36,6 +36,12 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
+완료된 v3와 직접진단 결과를 바꾸지 않고 학생 이미지 loader의 crop·증강 강도를
+점검하는 사후 탐색 절차는
+[이미지 loader 실험 프로토콜](LOADER_EXPERIMENT_PROTOCOL.md)에 분리했습니다.
+첫 단계는 학습이나 official-test 접근 없이 L0/L1/L2 crop의 part·mask·bbox
+보존량만 감사합니다.
+
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md)에 별도로 잠갔습니다.
