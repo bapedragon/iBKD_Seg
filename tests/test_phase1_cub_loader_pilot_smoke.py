@@ -14,6 +14,8 @@ from ibkd_seg.phase1.run_cub_loader_pilot_smoke import (
     EXPECTED_VARIANTS,
     VARIANT_ARGUMENTS,
     _classification_command,
+    _completion_gate_for_profiles,
+    _normalize_profiles,
     _validate_config,
 )
 from ibkd_seg.phase1.train_timing import file_sha256, validate_args
@@ -32,6 +34,9 @@ SCRIPT = (
     ROOT
     / "phase1/phase1_cub/scripts/"
     "run_r50_224_loader_pilot_smoke_b128_seed1.sh"
+)
+L1_L2_SCRIPT = SCRIPT.with_name(
+    "run_r50_224_loader_pilot_smoke_l1_l2_b128_seed1.sh"
 )
 AUDIT_SUMMARY = (
     ROOT
@@ -148,6 +153,26 @@ class Phase1CubLoaderPilotSmokeTest(unittest.TestCase):
                     self.assertNotIn("--access-official-test", command)
         self.assertEqual(len(commands), 12)
 
+    def test_l1_l2_operational_subset_uses_dynamic_gate(self) -> None:
+        profiles = _normalize_profiles(
+            ["l1_matched_weak", "l2_conservative_spatial"]
+        )
+        gate = _completion_gate_for_profiles(profiles)
+        self.assertEqual(
+            profiles, ("l1_matched_weak", "l2_conservative_spatial")
+        )
+        self.assertEqual(gate["loader_profiles"], 2)
+        self.assertEqual(gate["classification_students"], 8)
+        self.assertEqual(gate["segmentation_probe_lr_candidates"], 24)
+        self.assertEqual(gate["part_probe_validation_selections"], 8)
+        self.assertEqual(gate["spatial_cka_values"], 96)
+        self.assertEqual(gate["attention_qualitative_pngs"], 32)
+        self.assertEqual(gate["official_test_evaluations"], 0)
+        with self.assertRaisesRegex(ValueError, "locked L0 -> L1 -> L2 order"):
+            _normalize_profiles(
+                ["l2_conservative_spatial", "l1_matched_weak"]
+            )
+
     def test_frozen_probe_runtime_schema_executes_one_candidate(self) -> None:
         config = json.loads(CONFIG.read_text(encoding="utf-8"))
         probe_config = config["frozen_probe"]["probe"]
@@ -193,6 +218,17 @@ class Phase1CubLoaderPilotSmokeTest(unittest.TestCase):
         self.assertIn("teacher_best_validation.pt", script)
         self.assertIn('tee "${output_root}/run.log"', script)
         self.assertTrue(SCRIPT.stat().st_mode & 0o111)
+
+    def test_l1_l2_h200_script_is_validation_only_subset(self) -> None:
+        script = L1_L2_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("ibkd_seg.phase1.release_asset", script)
+        self.assertIn("ibkd_seg.phase1.run_cub_loader_pilot_smoke", script)
+        self.assertIn(
+            "--profiles l1_matched_weak l2_conservative_spatial", script
+        )
+        self.assertNotIn("--access-official-test", script)
+        self.assertIn('tee "${output_root}/run.log"', script)
+        self.assertTrue(L1_L2_SCRIPT.stat().st_mode & 0o111)
 
 
 if __name__ == "__main__":

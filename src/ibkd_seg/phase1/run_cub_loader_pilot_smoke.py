@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Run the validation-only CUB L0/L1/L2 loader-pilot smoke.
+"""Run a validation-only CUB loader-pilot smoke.
 
-The smoke trains twelve two-epoch guided students, freezes every encoder, and
-exercises the binary-segmentation, part-localization, spatial-CKA, and
-attention--GT paths.  It never constructs an official-test loader and none of
-its metrics may select a loader or change the locked full-pilot matrix.
+By default the smoke trains all twelve L0/L1/L2 two-epoch guided students.  A
+canonical subset may be requested only to validate an operational job
+partition after the complete smoke has passed.  Every encoder is frozen before
+the binary-segmentation, part-localization, spatial-CKA, and attention--GT
+paths.  The runner never constructs an official-test loader and none of its
+metrics may select a loader or change the locked full-pilot matrix.
 """
 
 from __future__ import annotations
@@ -96,6 +98,47 @@ def _load_json(path: Path) -> dict[str, Any]:
 def _repository_path(value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else REPOSITORY_ROOT / path
+
+
+def _normalize_profiles(values: Sequence[str] | None) -> tuple[str, ...]:
+    """Return a non-empty, duplicate-free subset in the locked profile order."""
+
+    if values is None:
+        return LOADER_PROFILE_ORDER
+    requested = tuple(values)
+    if not requested:
+        raise ValueError("at least one loader profile is required")
+    if len(set(requested)) != len(requested):
+        raise ValueError("loader profiles must not be repeated")
+    unknown = [value for value in requested if value not in LOADER_PROFILE_ORDER]
+    if unknown:
+        raise ValueError(f"unknown loader profiles: {unknown}")
+    canonical = tuple(
+        profile for profile in LOADER_PROFILE_ORDER if profile in requested
+    )
+    if requested != canonical:
+        raise ValueError(
+            "loader profile subset must follow the locked L0 -> L1 -> L2 order"
+        )
+    return requested
+
+
+def _completion_gate_for_profiles(profiles: Sequence[str]) -> dict[str, int]:
+    profile_count = len(tuple(profiles))
+    classification_count = profile_count * len(EXPECTED_VARIANTS)
+    return {
+        "loader_profiles": profile_count,
+        "classification_students": classification_count,
+        "classification_checkpoints": classification_count,
+        "segmentation_probe_lr_candidates": classification_count * 3,
+        "segmentation_probe_validation_selections": classification_count,
+        "part_probe_lr_candidates": classification_count * 3,
+        "part_probe_validation_selections": classification_count,
+        "spatial_cka_values": classification_count * 12,
+        "attention_metric_rows": classification_count,
+        "attention_qualitative_pngs": classification_count * 4,
+        "official_test_evaluations": 0,
+    }
 
 
 def _write_csv(
@@ -501,22 +544,24 @@ def _write_status(
     segmentation_selections: int,
     part_selections: int,
     direct_rows: int,
+    profile_count: int = len(LOADER_PROFILE_ORDER),
     active_profile: str | None = None,
     active_variant: str | None = None,
     failure: str | None = None,
 ) -> None:
+    classification_expected = profile_count * len(EXPECTED_VARIANTS)
     _atomic_json_save(
         {
             "status": status,
             "phase": phase,
             "classification_complete": classification_complete,
-            "classification_expected": 12,
+            "classification_expected": classification_expected,
             "segmentation_probe_selections": segmentation_selections,
-            "segmentation_probe_selections_expected": 12,
+            "segmentation_probe_selections_expected": classification_expected,
             "part_probe_selections": part_selections,
-            "part_probe_selections_expected": 12,
+            "part_probe_selections_expected": classification_expected,
             "direct_metric_rows": direct_rows,
-            "direct_metric_rows_expected": 156,
+            "direct_metric_rows_expected": classification_expected * 13,
             "active_profile": active_profile,
             "active_variant": active_variant,
             "scientific_result": False,
@@ -738,6 +783,9 @@ def _segmentation_csv_rows(
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     started = time.perf_counter()
+    profiles = _normalize_profiles(getattr(args, "profiles", None))
+    profile_count = len(profiles)
+    classification_expected = profile_count * len(EXPECTED_VARIANTS)
     config_path = args.config.expanduser().resolve()
     config = _load_json(config_path)
     _validate_config(config, config_path)
@@ -769,13 +817,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         segmentation_selections=0,
         part_selections=0,
         direct_rows=0,
+        profile_count=profile_count,
     )
     log("=" * 96)
-    log("CUB PHASE 1 — L0/L1/L2 LOADER PILOT SMOKE")
+    log("CUB PHASE 1 — LOADER PILOT SMOKE")
     log("=" * 96)
     log(
         "[LOADER_PILOT_POLICY] scientific_result=false "
-        "smoke_selection=forbidden official_test_accessed=false"
+        "smoke_selection=forbidden official_test_accessed=false "
+        f"profiles={','.join(profiles)}"
     )
 
     records, split_manifest, source = load_train_validation_records(
@@ -853,7 +903,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     classification_root = output_dir / "classification"
     classifications: list[dict[str, Any]] = []
-    for profile in LOADER_PROFILE_ORDER:
+    for profile in profiles:
         for variant in EXPECTED_VARIANTS:
             _write_status(
                 output_dir,
@@ -863,6 +913,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 segmentation_selections=0,
                 part_selections=0,
                 direct_rows=0,
+                profile_count=profile_count,
                 active_profile=profile,
                 active_variant=variant,
             )
@@ -950,10 +1001,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             output_dir,
             status="running",
             phase="frozen_spatial_probes",
-            classification_complete=12,
+            classification_complete=classification_expected,
             segmentation_selections=len(segmentation_results),
             part_selections=len(part_results),
             direct_rows=len(cka_rows) + len(attention_rows),
+            profile_count=profile_count,
             active_profile=profile,
             active_variant=variant,
         )
@@ -1059,7 +1111,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     qualitative_pngs = sorted((output_dir / "attention_gt/qualitative").glob("*.png"))
     gate = {
-        "loader_profiles": len(LOADER_PROFILE_ORDER),
+        "loader_profiles": profile_count,
         "classification_students": len(classifications),
         "classification_checkpoints": sum(
             Path(item["checkpoint_path"]).is_file() for item in classifications
@@ -1075,8 +1127,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "attention_qualitative_pngs": len(qualitative_pngs),
         "official_test_evaluations": 0,
     }
-    if gate != config["completion_gate"]:
-        raise RuntimeError(f"loader-pilot completion gate failed: {gate}")
+    expected_gate = _completion_gate_for_profiles(profiles)
+    if (
+        profiles == LOADER_PROFILE_ORDER
+        and expected_gate != config["completion_gate"]
+    ):
+        raise RuntimeError("locked full-smoke completion gate changed")
+    if gate != expected_gate:
+        raise RuntimeError(
+            f"loader-pilot completion gate failed: {gate} != {expected_gate}"
+        )
 
     segmentation_csv = _segmentation_csv_rows(segmentation_results)
     _write_csv(
@@ -1188,7 +1248,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "scientific_result": False,
         "selection_from_smoke_metrics_forbidden": True,
         "official_test_accessed": False,
-        "profiles": list(LOADER_PROFILE_ORDER),
+        "profiles": list(profiles),
+        "locked_profile_order": list(LOADER_PROFILE_ORDER),
+        "operational_subset_smoke": profiles != LOADER_PROFILE_ORDER,
         "variants": list(EXPECTED_VARIANTS),
         "classification": classification_csv,
         "segmentation_probe": segmentation_csv,
@@ -1211,8 +1273,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "finished_at_utc": _utc_now(),
             "smoke_suite_seconds": elapsed,
             "rough_full_pilot_upper_estimate": {
-                "classification_12_students_x300ep_seconds": classification_full_seconds,
-                "segmentation_probe_12_encoders_x5seeds_x3lr_x100ep_seconds": segmentation_full_seconds,
+                "selected_profile_count": profile_count,
+                "classification_student_count": classification_expected,
+                "classification_x300ep_seconds": classification_full_seconds,
+                "segmentation_probe_x5seeds_x3lr_x100ep_seconds": segmentation_full_seconds,
                 "part_probe_conservative_upper_seconds": part_full_seconds_upper,
                 "cka_attention_fixed_seconds": fixed_diagnostic_seconds,
                 "total_seconds": estimated_full_seconds_upper,
@@ -1227,10 +1291,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         output_dir,
         status="pass",
         phase="complete",
-        classification_complete=12,
-        segmentation_selections=12,
-        part_selections=12,
-        direct_rows=156,
+        classification_complete=classification_expected,
+        segmentation_selections=classification_expected,
+        part_selections=classification_expected,
+        direct_rows=classification_expected * 13,
+        profile_count=profile_count,
     )
 
     segmentation_lookup = {
@@ -1274,11 +1339,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "linear_conservative_extrapolation_only=true"
     )
     log(
-        "[LOADER_PILOT_SMOKE_DONE] status=pass profiles=3/3 "
-        "classification=12/12 segmentation_candidates=36/36 "
-        "segmentation_selections=12/12 part_candidates=36/36 "
-        "part_selections=12/12 cka_values=144/144 attention_rows=12/12 "
-        "qualitative_pngs=48/48 official_test=0 "
+        "[LOADER_PILOT_SMOKE_DONE] status=pass "
+        f"profiles={profile_count}/{profile_count} "
+        f"classification={classification_expected}/{classification_expected} "
+        f"segmentation_candidates={classification_expected * 3}/"
+        f"{classification_expected * 3} "
+        f"segmentation_selections={classification_expected}/"
+        f"{classification_expected} "
+        f"part_candidates={classification_expected * 3}/"
+        f"{classification_expected * 3} "
+        f"part_selections={classification_expected}/{classification_expected} "
+        f"cka_values={classification_expected * 12}/"
+        f"{classification_expected * 12} "
+        f"attention_rows={classification_expected}/{classification_expected} "
+        f"qualitative_pngs={classification_expected * 4}/"
+        f"{classification_expected * 4} official_test=0 "
         f"elapsed_seconds={elapsed:.2f} summary={output_dir / 'summary.json'}"
     )
     return summary
@@ -1292,6 +1367,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cache-dir", type=Path, required=True)
     parser.add_argument("--teacher-checkpoint", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument(
+        "--profiles",
+        nargs="+",
+        choices=LOADER_PROFILE_ORDER,
+        help=(
+            "Canonical loader-profile subset for operational smoke only; "
+            "defaults to all L0/L1/L2 profiles."
+        ),
+    )
     parser.add_argument("--device", choices=("cuda",), default="cuda")
     parser.add_argument("--feature-batch-size", type=int, default=16)
     parser.add_argument("--cka-batch-size", type=int, default=8)
@@ -1324,6 +1408,9 @@ def main() -> None:
             ),
             part_selections=int(previous.get("part_probe_selections", 0)),
             direct_rows=int(previous.get("direct_metric_rows", 0)),
+            profile_count=len(
+                getattr(args, "profiles", None) or LOADER_PROFILE_ORDER
+            ),
             active_profile=previous.get("active_profile"),
             active_variant=previous.get("active_variant"),
             failure=f"{type(error).__name__}: {error}",

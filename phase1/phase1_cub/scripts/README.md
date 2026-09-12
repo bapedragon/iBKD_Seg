@@ -10,6 +10,12 @@
   LG·ALG-w20·iBKD 두 lambda의 분류 12개를 2 epoch 학습하고, 각 frozen encoder에
   segmentation probe, Part PCK, CKA, attention–GT를 적용합니다. Official test는
   열지 않으며 마지막 로그에 12개 결과와 full pilot 보수적 시간 외삽을 나열합니다.
+- `run_r50_224_loader_pilot_smoke_l1_l2_b128_seed1.sh`: L0 본 pilot의 실제 실행
+  시간이 확인된 뒤 남은 L1·L2를 한 H200 작업으로 묶을 수 있는지 점검하는 운영용
+  subset smoke입니다. 잠긴 v2 smoke의 방법·seed·LR·probe를 그대로 사용하되 L1과
+  L2의 8개 학생만 실행합니다. 완료 gate는 분류 `8`, segmentation/part 후보 각
+  `24`, 선택 각 `8`, CKA `96`, attention `8`, 정성 PNG `32`, official test `0`이며
+  smoke 성능값은 loader 선택에 사용하지 않습니다.
 - `run_r50_224_loader_pilot_full_b128_seed1.sh`: 통과한 smoke v2 뒤 잠근 Stage B
   본 pilot 실행기입니다. 인자로 L0/L1/L2 중 정확히 하나를 받아 4개 guided
   학생의 300-epoch 분류, frozen segmentation·part probe 각 5 seeds × 3 LR ×

@@ -110,6 +110,23 @@ bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_full_b128_seed1.sh l2_co
 세 작업 모두 분류와 모든 probe를 validation-only로 수행하고 official test를 열지
 않습니다.
 
+### L0 실행시간 확인 뒤의 운영 분할 점검
+
+L0 본 pilot 로그에서 전체 경로가 `3시간 24분 14초`에 완료됐습니다. 이 시간만
+H200의 10시간 제한을 피하기 위한 운영 정보로 사용하며, L0의 성능값은 작업 분할이나
+protocol 변경에 사용하지 않습니다. 남은 L1·L2를 한 이슈에서 연속 실행할 수 있는지
+확인하기 위해 다음 subset smoke를 먼저 수행합니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_smoke_l1_l2_b128_seed1.sh
+```
+
+이는 이미 잠긴 v2 smoke에서 L1·L2만 실행하는 운영 점검입니다. 방법, encoder seed,
+학습 epoch, probe seed/LR/epoch, validation 선택 규칙, loader 선택 규칙은 바꾸지
+않으며 official test도 열지 않습니다. Smoke의 완료 gate와 시간 외삽을 확인하기
+전에는 L1·L2 결합 본실험을 제출하지 않습니다. 결합 실행을 하더라도 두 profile은
+서로 다른 출력 디렉터리와 독립 summary/checkpoint를 유지해야 합니다.
+
 그 다음 L0/L1/L2 각각에서 LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 encoder seed
 1로 동일하게 학습합니다. Scratch ResNet-50/224 issue 722 teacher, batch 128, 학생
 300 epoch와 기존 optimizer/controller 값은 바꾸지 않습니다.
