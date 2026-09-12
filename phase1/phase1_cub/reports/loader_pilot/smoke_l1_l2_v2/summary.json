@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "official_test_accessed": false,
+  "source_h200_issue": 750,
+  "config": {
+    "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_loader_pilot_smoke_v2.json",
+    "sha256": "8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f"
+  },
+  "profiles": [
+    "l1_matched_weak",
+    "l2_conservative_spatial"
+  ],
+  "completion_gate": {
+    "loader_profiles": 2,
+    "classification_students": 8,
+    "classification_checkpoints": 8,
+    "segmentation_probe_lr_candidates": 24,
+    "segmentation_probe_validation_selections": 8,
+    "part_probe_lr_candidates": 24,
+    "part_probe_validation_selections": 8,
+    "spatial_cka_values": 96,
+    "attention_metric_rows": 8,
+    "attention_qualitative_pngs": 32,
+    "official_test_evaluations": 0
+  },
+  "timing": {
+    "smoke_suite_seconds": 418.26,
+    "linear_conservative_upper_seconds": 36259,
+    "linear_conservative_upper_display": "10h 04m 19s",
+    "l0_upper_to_actual_calibration_ratio": 0.6852317844,
+    "calibrated_expected_seconds": 24846,
+    "calibrated_expected_display": "6h 54m 06s",
+    "timing_used_only_for_job_partitioning": true
+  },
+  "observed_memory": {
+    "maximum_logged_peak_cuda_allocated_bytes": 11912255488,
+    "maximum_logged_peak_cuda_reserved_bytes": 15881732096,
+    "oom_observed": false
+  },
+  "source_log": {
+    "byte_size": 51998,
+    "sha256": "486e04196719114071c1091b17133ac6ac4366e145b18c31d2bb82755c60da59"
+  }
+}

@@ -10,6 +10,9 @@
   official-test 결과로 사용하지 않습니다.
 - `smoke_v2/`: 수정된 Stage B smoke의 완료 gate, 시간·메모리와 12개 진단값을
   보존합니다. 비과학적 2-epoch 값으로 loader를 선택하지 않습니다.
+- `smoke_l1_l2_v2/`: L0 실제시간 확인 뒤 L1·L2를 한 H200 이슈로 묶기 위해 수행한
+  issue 750 운영 smoke의 gate와 시간·메모리를 보존합니다. 성능값은 선택에 쓰지
+  않습니다.
 
 본 pilot은 L0/L1/L2별 독립 결과 archive를 회수한 뒤 `full_v1/` 아래에 함께
 정리합니다. 한 shard만으로 loader를 선택하거나 중간 결과를 다음 shard 설정에

@@ -23,6 +23,12 @@
   예상이 14시간 54분이므로 profile별 약 4시간 58분의 세 이슈로 나누며 official
   test는 열지 않습니다. 마지막 로그에 4방법 결과와 해당 profile의 사전 고정된
   loader 선택 점수를 모두 나열합니다.
+- `run_r50_224_loader_pilot_full_l1_l2_b128_seed1.sh`: L0 실제시간과 issue 750의
+  L1·L2 subset smoke를 이용해 10시간 제한 안에서 두 남은 shard를 한 이슈로
+  순차 실행하는 운영용 wrapper입니다. 과학적 full config는 변경하지 않고 L1과
+  L2의 출력·cache·checkpoint를 완전히 분리합니다. 마지막에 두 shard의 hash와
+  completion gate를 다시 감사하고 8개 방법 결과, 두 loader 선택 점수 및 합산
+  실행시간을 한 번에 출력합니다. Official test는 열지 않습니다.
 
 데이터 감사, smoke, 분류 본실험, frozen probe와 결과 정리 스크립트를 이 폴더에
 둡니다.

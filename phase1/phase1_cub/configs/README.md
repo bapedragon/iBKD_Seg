@@ -31,6 +31,13 @@ CKA와 attention도 같은 validation subset에서 계산하며 official test �
 SHA-256은
 `97adb9274a4f1a996932915dbb8a715a719b2ae6777aceb40201e96174cbe5a4`입니다.
 
+`cub200_r50_224_b128_seed1_loader_pilot_l1_l2_combined_job_v1.json`은 과학적
+프로토콜을 바꾸는 설정이 아니라, L0 실제시간과 issue 750 L1·L2 subset smoke 뒤
+남은 두 shard를 한 H200 이슈에 순차 포장하는 운영 계약입니다. 원본 full config의
+SHA-256, 방법·seed·epoch·probe·validation 선택·official-test 봉인을 그대로
+강제하고, L1/L2 각각의 출력과 checkpoint를 독립 보존합니다. L0/L1/L2 archive가
+모두 감사되기 전 loader 선택은 금지됩니다.
+
 현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
 `e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.
 Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation-only

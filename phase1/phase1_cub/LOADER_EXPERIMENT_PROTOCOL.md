@@ -1,6 +1,6 @@
 # CUB 이미지 loader 실험 프로토콜
 
-상태: **Stage A 및 Stage B smoke 완료 — Stage B 본 pilot 3개 shard 실행 준비**
+상태: **Stage A 완료, Stage B L0 본실험 완료 및 L1·L2 결합 본실험 준비**
 
 이 실험은 완료된 CUB ResNet-50/224 v3 결과를 바꾸지 않는 사후 탐색 실험입니다.
 기존 결과는 그대로 보존하고 새 결과에는 모두 `loader_pilot`을 표시합니다. 최종
@@ -123,9 +123,27 @@ bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_smoke_l1_l2_b128_seed1.s
 
 이는 이미 잠긴 v2 smoke에서 L1·L2만 실행하는 운영 점검입니다. 방법, encoder seed,
 학습 epoch, probe seed/LR/epoch, validation 선택 규칙, loader 선택 규칙은 바꾸지
-않으며 official test도 열지 않습니다. Smoke의 완료 gate와 시간 외삽을 확인하기
-전에는 L1·L2 결합 본실험을 제출하지 않습니다. 결합 실행을 하더라도 두 profile은
-서로 다른 출력 디렉터리와 독립 summary/checkpoint를 유지해야 합니다.
+않으며 official test도 열지 않습니다. H200 issue 750에서 418.26초에 분류 `8/8`,
+segmentation/part 후보 각 `24/24`, 선택 각 `8/8`, CKA `96/96`, attention `8/8`,
+정성 PNG `32/32`, official test `0` gate를 통과했고 OOM이나 비정상 종료는 없었습니다.
+이 smoke의 성능값은 loader 선택에 사용하지 않습니다.
+
+Smoke 자체의 단순 선형 상한은 `10시간 4분 19초`였지만, 같은 실행기의 L0 상한
+`4시간 58분 3초` 대비 실제 `3시간 24분 14초`의 비율 `0.6852`를 운영시간에만
+적용하면 L1·L2 합산 예상은 약 `6시간 54분 6초`입니다. 따라서 두 profile을 한
+H200 이슈에서 **순차 실행**하도록 운영 분할만 갱신합니다. 최초 full config의
+학습·probe·평가·선택 규칙과 SHA-256은 그대로 두며, 변경된 작업 포장은
+`configs/cub200_r50_224_b128_seed1_loader_pilot_l1_l2_combined_job_v1.json`에
+별도로 잠급니다.
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_full_l1_l2_b128_seed1.sh
+```
+
+L1과 L2는 서로 다른 출력·cache·summary·checkpoint 디렉터리를 사용합니다. 마지막
+결합 감사가 두 shard의 원래 completion gate, teacher/checkpoint hash와 총 8개
+방법 결과를 재검산합니다. 결합 실행이 완료돼도 L0 archive까지 함께 감사하기 전에는
+loader를 선택하지 않습니다.
 
 그 다음 L0/L1/L2 각각에서 LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 encoder seed
 1로 동일하게 학습합니다. Scratch ResNet-50/224 issue 722 teacher, batch 128, 학생
