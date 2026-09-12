@@ -1,0 +1,47 @@
+{
+  "status": "pass",
+  "audit_id": "cub200_phase1_r50_224_student_loader_damage_audit_v1",
+  "scientific_role": "posthoc_exploratory_loader_diagnostic",
+  "source_h200_issue": 745,
+  "training_performed": false,
+  "official_test_accessed": false,
+  "official_test_images_or_masks_decoded": 0,
+  "train_records": 5394,
+  "draws_per_image": 5,
+  "draws_per_profile": 26970,
+  "unique_geometry_draws_total": 53940,
+  "elapsed_seconds": 91.27,
+  "profiles": {
+    "l0_current_strong": {
+      "visible_part_retention": 0.693335,
+      "all_visible_parts_retained_rate": 0.330256,
+      "foreground_mask_retention": 0.695441,
+      "bounding_box_coverage": 0.635829,
+      "near_empty_crop_rate": 0.032147,
+      "background_only_crop_rate": 0.021691
+    },
+    "l1_matched_weak": {
+      "visible_part_retention": 0.693335,
+      "all_visible_parts_retained_rate": 0.330256,
+      "foreground_mask_retention": 0.695441,
+      "bounding_box_coverage": 0.635829,
+      "near_empty_crop_rate": 0.032147,
+      "background_only_crop_rate": 0.021691
+    },
+    "l2_conservative_spatial": {
+      "visible_part_retention": 0.940904,
+      "all_visible_parts_retained_rate": 0.687875,
+      "foreground_mask_retention": 0.936316,
+      "bounding_box_coverage": 0.890116,
+      "near_empty_crop_rate": 0.000334,
+      "background_only_crop_rate": 0.000037
+    }
+  },
+  "contracts": {
+    "profile_summaries_complete": "3/3",
+    "l0_l1_geometry_metrics_exactly_equal": true,
+    "finite_metrics": true,
+    "spatial_annotations_exposed_to_training": false,
+    "loader_selection_from_audit_forbidden": true
+  }
+}

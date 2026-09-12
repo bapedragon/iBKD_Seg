@@ -1,0 +1,4 @@
+profile,visible_part_retention,all_visible_parts_retained_rate,foreground_mask_retention,bounding_box_coverage,near_empty_crop_rate,background_only_crop_rate,train_records,draws_per_profile
+l0_current_strong,0.693335,0.330256,0.695441,0.635829,0.032147,0.021691,5394,26970
+l1_matched_weak,0.693335,0.330256,0.695441,0.635829,0.032147,0.021691,5394,26970
+l2_conservative_spatial,0.940904,0.687875,0.936316,0.890116,0.000334,0.000037,5394,26970

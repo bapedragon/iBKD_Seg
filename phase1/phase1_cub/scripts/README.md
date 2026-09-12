@@ -3,6 +3,11 @@
 - `run_r50_224_loader_damage_audit.sh`: loader pilot Stage A. 학습이나 official-test
   접근 없이 derived train 이미지의 random crop이 part, mask, bbox를 얼마나
   보존하는지 L0/L1/L2에서 감사하고 JSON·CSV·고정 정성 그림을 저장합니다.
+- `run_r50_224_loader_pilot_smoke_b128_seed1.sh`: loader pilot Stage B의
+  validation-only 경로 점검입니다. Issue 722 teacher를 재사용해 L0/L1/L2 ×
+  LG·ALG-w20·iBKD 두 lambda의 분류 12개를 2 epoch 학습하고, 각 frozen encoder에
+  segmentation probe, Part PCK, CKA, attention–GT를 적용합니다. Official test는
+  열지 않으며 마지막 로그에 12개 결과와 full pilot 보수적 시간 외삽을 나열합니다.
 
 데이터 감사, smoke, 분류 본실험, frozen probe와 결과 정리 스크립트를 이 폴더에
 둡니다.

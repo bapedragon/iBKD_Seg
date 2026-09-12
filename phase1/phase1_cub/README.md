@@ -40,7 +40,11 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 점검하는 사후 탐색 절차는
 [이미지 loader 실험 프로토콜](LOADER_EXPERIMENT_PROTOCOL.md)에 분리했습니다.
 첫 단계는 학습이나 official-test 접근 없이 L0/L1/L2 crop의 part·mask·bbox
-보존량만 감사합니다.
+보존량을 감사했으며 issue 745에서 완료됐습니다. L0/L1의 visible-part 보존
+`69.33%`가 L2에서 `94.09%`로 높아졌지만, 방법 간 상대 성능은 후속
+validation-only 학습에서 따로 확인합니다. 상세 결과는
+[loader crop 손상 감사 보고서](reports/loader_pilot/damage_audit_v1/RESULTS.md)에
+있습니다.
 
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는

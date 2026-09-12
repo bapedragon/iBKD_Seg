@@ -35,6 +35,7 @@ from .cub_data import (
     build_resnet50_train_validation_loaders,
     build_train_validation_loaders as build_cub_train_validation_loaders,
 )
+from .cub_loader_profiles import L0_CURRENT_STRONG, LOADER_PROFILE_ORDER
 from .data import (
     NUM_CLASSES as PET_NUM_CLASSES,
     build_train_validation_loaders as build_pet_train_validation_loaders,
@@ -254,6 +255,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Persist the non-scientific timing student for frozen-probe smoke.",
     )
+    parser.add_argument(
+        "--cub-loader-profile",
+        choices=LOADER_PROFILE_ORDER,
+        default=L0_CURRENT_STRONG,
+        help="Explicit student train loader used only by the CUB loader pilot.",
+    )
+    parser.add_argument(
+        "--loader-pilot-smoke",
+        action="store_true",
+        help="Validation-only seed-1 CUB loader-pilot timing run.",
+    )
     return parser.parse_args()
 
 
@@ -267,6 +279,34 @@ def validate_args(args: argparse.Namespace) -> None:
         getattr(args, "scientific_cub_r50_teacher", False)
     )
     seed_extension_smoke = bool(getattr(args, "seed_extension_smoke", False))
+    loader_profile = str(
+        getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
+    )
+    loader_pilot_smoke = bool(getattr(args, "loader_pilot_smoke", False))
+    if loader_profile not in LOADER_PROFILE_ORDER:
+        raise ValueError("Unknown CUB loader profile")
+    if loader_pilot_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method in {"lg", "alg", "ibkd"}
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and not access_official_test
+            and not seed_extension_smoke
+        ):
+            raise ValueError(
+                "CUB loader-pilot smoke requires a validation-only batch-128 "
+                "seed-1 guided student with the audited ResNet-50 teacher"
+            )
+    elif loader_profile != L0_CURRENT_STRONG:
+        raise ValueError(
+            "Non-default CUB loader profiles require --loader-pilot-smoke"
+        )
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
     if access_official_test and not (
@@ -679,13 +719,19 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     seed_everything(args.seed)
     student = create_student(num_classes=num_classes, drop_path_rate=0.1).to(device)
     initial_hash = state_dict_sha256(student)
+    loader_kwargs = {
+        "train_batch_size": args.batch_size,
+        "eval_batch_size": args.eval_batch_size,
+        "num_workers": args.num_workers,
+        "seed": args.seed,
+        "device": device,
+    }
+    if _dataset_key(args) == "cub":
+        loader_kwargs["train_transform_profile"] = str(
+            getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
+        )
     train_loader, validation_loader, manifest = loader_builder(
-        args.data_dir,
-        train_batch_size=args.batch_size,
-        eval_batch_size=args.eval_batch_size,
-        num_workers=args.num_workers,
-        seed=args.seed,
-        device=device,
+        args.data_dir, **loader_kwargs
     )
     run_dir = args.output_dir / args.run_name
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -759,7 +805,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     log(
         f"[STUDENT_CONTRACT] method={args.method} batch={args.batch_size} "
         f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True "
-        f"alg_controller_warmup={args.alg_controller_warmup_epochs}"
+        f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
+        f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)}"
     )
 
     for epoch in range(1, ACTUAL_EPOCHS + 1):
@@ -919,7 +966,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                 "student": student_state,
                 "metadata": {
                     "purpose": (
-                        "phase1_cub_r50_224_guided_smoke_student_v3"
+                        "phase1_cub_r50_224_loader_pilot_smoke_student_v1"
+                        if bool(getattr(args, "loader_pilot_smoke", False))
+                        else "phase1_cub_r50_224_guided_smoke_student_v3"
                         if _is_resnet50_teacher(args)
                         else "phase1_cub_combined_smoke_student"
                         if _dataset_key(args) == "cub"
@@ -933,10 +982,17 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "num_classes": num_classes,
                     "architecture": "deit_tiny_patch16_224",
                     "method": args.method,
+                    "fusion_ratio_lambda": args.fusion_ratio,
                     "batch_size": args.batch_size,
                     "seed": args.seed,
                     "seed_extension_smoke": bool(
                         getattr(args, "seed_extension_smoke", False)
+                    ),
+                    "loader_pilot_smoke": bool(
+                        getattr(args, "loader_pilot_smoke", False)
+                    ),
+                    "cub_loader_profile": str(
+                        getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
                     ),
                     "actual_epochs": ACTUAL_EPOCHS,
                     "planned_epochs": PLANNED_EPOCHS,
@@ -991,6 +1047,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "seed_extension_smoke": bool(
             getattr(args, "seed_extension_smoke", False)
         ),
+        "loader_pilot_smoke": bool(
+            getattr(args, "loader_pilot_smoke", False)
+        ),
+        "cub_loader_profile": str(
+            getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
+        ),
         "fusion_ratio_lambda": args.fusion_ratio,
         "actual_epochs": ACTUAL_EPOCHS,
         "planned_epochs": PLANNED_EPOCHS,
@@ -1042,6 +1104,7 @@ def main() -> None:
             f"kind={args.kind} method={args.method} "
             f"teacher_architecture={args.teacher_architecture} "
             f"batch={args.batch_size} device={device} actual_epochs=2 "
+            f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
             f"planned_epochs={_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )
         payload = (

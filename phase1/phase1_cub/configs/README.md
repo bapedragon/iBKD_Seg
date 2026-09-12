@@ -6,6 +6,13 @@
 test는 열지 않습니다. SHA-256은
 `6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf`입니다.
 
+`cub200_r50_224_b128_loader_pilot_smoke_v1.json`은 위 감사 통과 뒤 실행하는
+Stage B 경로 점검 계약입니다. L0/L1/L2 × guided 네 방법의 seed-1, 2-epoch
+분류와 frozen segmentation, part localization, spatial CKA, attention–GT를
+validation-only로 모두 실행합니다. 총 12개 encoder와 각 probe의 실행성·시간만
+확인하며 smoke 수치로 loader를 선택할 수 없습니다. SHA-256은
+`db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc`입니다.
+
 현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
 `e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.
 Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation-only

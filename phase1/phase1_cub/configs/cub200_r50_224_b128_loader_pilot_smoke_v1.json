@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "smoke_id": "cub200_phase1_r50_224_b128_seed1_loader_pilot_smoke_v1",
+  "status": "locked_after_damage_audit_before_loader_pilot_smoke_results_2026-09-12",
+  "scientific_result": false,
+  "selection_from_smoke_metrics_forbidden": true,
+  "official_test_accessed": false,
+  "protocol_provenance": {
+    "base_v3": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "loader_damage_audit_v1": {
+      "config_path": "phase1/phase1_cub/configs/cub200_r50_224_loader_damage_audit_v1.json",
+      "config_sha256": "6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf",
+      "result_path": "phase1/phase1_cub/reports/loader_pilot/damage_audit_v1/summary.json",
+      "result_sha256": "c0236797e8b58857afc0cba1ab7101c94aadd83e3f400d64681224c4cf8ed741",
+      "status": "pass",
+      "used_to_drop_or_select_loader": false
+    }
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "image_archive_md5": "97eceeb196236b17998738112f37df78",
+    "segmentation_archive_md5": "4d47ba1228e684f2fa547c47bc65255",
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test_loaded": 0,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    }
+  },
+  "teacher": {
+    "train_in_this_run": false,
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50",
+    "initialization": "scratch",
+    "input_size": 224,
+    "training_epochs": 200,
+    "release_manifest": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+    "release_manifest_sha256": "589082b6526e31ac97c08943f61a53d2799eff07f949e947b37d8870912b6ad6",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+  },
+  "loader_profiles": [
+    "l0_current_strong",
+    "l1_matched_weak",
+    "l2_conservative_spatial"
+  ],
+  "classification": {
+    "student_architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "input_size": 224,
+    "student_batch_size": 128,
+    "encoder_seed": 1,
+    "actual_epochs": 2,
+    "planned_epochs": 300,
+    "variants": [
+      "lg",
+      "alg_warmup20",
+      "ibkd_lambda_0.25",
+      "ibkd_lambda_0.5"
+    ],
+    "optimizer": {
+      "name": "adamw",
+      "learning_rate": 0.0005,
+      "weight_decay": 0.05
+    },
+    "controller_warmup_epochs": {
+      "lg": 0,
+      "alg_warmup20": 20,
+      "ibkd": 20
+    },
+    "same_initial_state_across_all_profiles_and_variants": true,
+    "same_shuffle_order_across_all_profiles_and_variants": true,
+    "teacher_and_student_receive_same_augmented_tensor": true,
+    "checkpoint": "latest_epoch2_smoke_only",
+    "validation_metrics_diagnostic_only": true
+  },
+  "frozen_probe": {
+    "image_input": {
+      "size": 224,
+      "resize": "direct_square",
+      "image_interpolation": "bilinear",
+      "mask_interpolation": "nearest",
+      "random_augmentation": false,
+      "normalization": "imagenet"
+    },
+    "encoder": {
+      "strict_load": true,
+      "frozen": true,
+      "eval_mode": true,
+      "feature": {
+        "block_index": 11,
+        "norm": false,
+        "exclude_cls_token": true,
+        "output_format": "NCHW",
+        "channels": 192,
+        "height": 14,
+        "width": 14
+      }
+    },
+    "probe": {
+      "architecture": "Conv2d(192,2,1,bias=True)",
+      "batch_size": 64,
+      "probe_seeds": [1],
+      "planned_probe_seeds": [1, 2, 3, 4, 5],
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2,
+      "planned_epochs": 100,
+      "optimizer": "sgd_momentum_0.9_weight_decay_0",
+      "selection_split": "validation",
+      "selection_metric": "grid_14x14_mean_iou",
+      "selection_tie_breakers": [
+        "lower_learning_rate",
+        "earlier_epoch"
+      ],
+      "target": {
+        "grid_height": 14,
+        "grid_width": 14,
+        "foreground_occupancy_threshold": 0.5
+      },
+      "loss": {
+        "name": "cross_entropy",
+        "ignore_index": 255
+      }
+    }
+  },
+  "direct_spatial": {
+    "subset": {
+      "train": "lowest_image_id_per_class_200",
+      "validation": "lowest_image_id_per_class_200"
+    },
+    "part_probe": {
+      "batch_size": 64,
+      "probe_seeds": [1],
+      "planned_probe_seeds": [1, 2, 3, 4, 5],
+      "learning_rates": [0.01, 0.03, 0.1],
+      "epochs": 2,
+      "planned_epochs": 100,
+      "selection_split": "validation",
+      "primary_metric": "PCK@0.1",
+      "selection_tie_breakers": [
+        "lower_learning_rate",
+        "earlier_epoch"
+      ]
+    },
+    "spatial_cka": {
+      "split": "fixed_validation_subset_200",
+      "teacher_feature": "resnet50_layer3_14x14",
+      "student_blocks": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "metric": "centered_linear_CKA",
+      "official_test_used": false
+    },
+    "attention_gt": {
+      "split": "fixed_validation_subset_200",
+      "rollout_layers": 12,
+      "metrics": [
+        "global_micro_patch_average_precision",
+        "pointing_game_peak_inside_mask",
+        "foreground_attention_mass_mean"
+      ],
+      "qualitative_examples_per_encoder": 4,
+      "official_test_used": false
+    }
+  },
+  "planned_full_pilot": {
+    "encoder_seed": 1,
+    "classification_epochs": 300,
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "probe_learning_rates": [0.01, 0.03, 0.1],
+    "probe_epochs": 100,
+    "loader_selection_primary": "mean_validation_part_PCK_at_0.1_across_four_guided_variants",
+    "loader_selection_tie_break_1": "mean_validation_frozen_probe_input224_mIoU_across_four_guided_variants",
+    "loader_selection_tie_break_2": [
+      "l0_current_strong",
+      "l1_matched_weak",
+      "l2_conservative_spatial"
+    ],
+    "classification_CKA_and_attention_not_used_for_loader_selection": true,
+    "official_test_accessed": false
+  },
+  "completion_gate": {
+    "loader_profiles": 3,
+    "classification_students": 12,
+    "classification_checkpoints": 12,
+    "segmentation_probe_lr_candidates": 36,
+    "segmentation_probe_validation_selections": 12,
+    "part_probe_lr_candidates": 36,
+    "part_probe_validation_selections": 12,
+    "spatial_cka_values": 144,
+    "attention_metric_rows": 12,
+    "attention_qualitative_pngs": 48,
+    "official_test_evaluations": 0
+  },
+  "execution": {
+    "requested_mig_slices": 7,
+    "precision": "float32",
+    "feature_batch_size": 16,
+    "cka_batch_size": 8,
+    "attention_batch_size": 16,
+    "eval_batch_size": 200,
+    "num_workers": 4,
+    "retain_dataset_or_feature_cache_in_output": false,
+    "retain_smoke_checkpoints": true
+  }
+}

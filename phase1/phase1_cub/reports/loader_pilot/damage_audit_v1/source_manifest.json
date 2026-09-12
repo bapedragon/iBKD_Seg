@@ -1,0 +1,13 @@
+{
+  "source_type": "user_supplied_h200_console_log",
+  "source_h200_issue": 745,
+  "source_filename": "pasted-text.txt",
+  "source_bytes": 16318,
+  "source_sha256": "21d17606e74bc5572320fedece78d80cad440c156aac458183e24f8c1820ef6e",
+  "repository_commit_containing_runner": "1b3cab9b8fd893ec8dde9e0adc91d51fcbf49a51",
+  "protocol_config_sha256": "6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf",
+  "full_output_archive_received": false,
+  "qualitative_png_received": false,
+  "curation_scope": "final_console_metrics_and_completion_contract",
+  "raw_log_committed_to_git": false
+}
