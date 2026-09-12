@@ -1,6 +1,6 @@
 # CUB 이미지 loader 실험 프로토콜
 
-상태: **Stage A loader 손상 감사 v1 완료 — Stage B smoke 준비**
+상태: **Stage A 완료 — Stage B smoke v1 실패 기록 보존, v2 재실행 준비**
 
 이 실험은 완료된 CUB ResNet-50/224 v3 결과를 바꾸지 않는 사후 탐색 실험입니다.
 기존 결과는 그대로 보존하고 새 결과에는 모두 `loader_pilot`을 표시합니다. 최종
@@ -65,21 +65,30 @@ H200 issue 745에서 91.27초에 완료 gate를 모두 통과했습니다. L0/L1
 
 ## Stage B — seed-1 validation-only loader pilot
 
-Stage A 결과를 회수·감사한 뒤 다음 잠금 config와 별도 smoke로 실행 경로와 시간을
-먼저 확인합니다.
+Stage A 결과를 회수·감사한 뒤 잠금 config와 별도 smoke로 실행 경로와 시간을
+먼저 확인합니다. H200 issue 746의 v1은 분류 12개와 checkpoint 12개까지 모두
+완료했지만, 첫 segmentation probe를 만들 때 runtime schema의 `initialization`
+필드가 없어 후보 학습 전에 중단됐습니다. Probe 후보, part, CKA, attention 및
+official-test 평가는 모두 0회이므로 v1은 과학적 결과가 아니며 loader 비교에도
+사용하지 않습니다. 실패 내역은
+[issue 746 실패 기록](reports/loader_pilot/failed_smoke_v1_issue746/README.md)에
+보존합니다.
 
-- Config: `configs/cub200_r50_224_b128_loader_pilot_smoke_v1.json`
-- SHA-256: `db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc`
+- 재실행 Config: `configs/cub200_r50_224_b128_loader_pilot_smoke_v2.json`
+- SHA-256: `8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f`
 - 실행:
 
 ```bash
 bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_smoke_b128_seed1.sh
 ```
 
-Smoke는 2-epoch 최신 checkpoint로 전체 경로만 검사하고 official test를 열지
-않습니다. 완료 gate는 분류 checkpoint `12`, segmentation LR 후보 `36`, part LR
-후보 `36`, CKA 값 `144`, attention row `12`, 정성 PNG `48`, official-test 평가
-`0`입니다.
+v2는 v1의 방법·metric·선택 규칙을 바꾸지 않고 기존 공통 probe 구현이 요구하는
+초기화, parameter count, optimizer, scheduler, loss schema만 완성한 기술 수정입니다.
+새 컨테이너에서는 issue 746의 임시 출력에 의존하지 않고 12개 분류부터 동일하게
+재실행합니다. Smoke는 2-epoch 최신 checkpoint로 전체 경로만 검사하고 official
+test를 열지 않습니다. 완료 gate는 분류 checkpoint `12`, segmentation LR 후보
+`36`, part LR 후보 `36`, CKA 값 `144`, attention row `12`, 정성 PNG `48`,
+official-test 평가 `0`입니다.
 
 그 다음 L0/L1/L2 각각에서 LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 encoder seed
 1로 동일하게 학습합니다. Scratch ResNet-50/224 issue 722 teacher, batch 128, 학생

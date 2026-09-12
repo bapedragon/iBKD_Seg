@@ -5,7 +5,10 @@ import json
 import unittest
 from pathlib import Path
 
+import torch
+
 from ibkd_seg.phase1.cub_loader_profiles import LOADER_PROFILE_ORDER
+from ibkd_seg.phase1.probe import train_candidate
 from ibkd_seg.phase1.run_cub_loader_pilot_smoke import (
     EXPECTED_CONFIG_SHA256,
     EXPECTED_VARIANTS,
@@ -20,6 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (
     ROOT
     / "phase1/phase1_cub/configs/"
+    "cub200_r50_224_b128_loader_pilot_smoke_v2.json"
+)
+FAILED_V1_CONFIG = CONFIG.with_name(
     "cub200_r50_224_b128_loader_pilot_smoke_v1.json"
 )
 SCRIPT = (
@@ -32,6 +38,11 @@ AUDIT_SUMMARY = (
     / "phase1/phase1_cub/reports/loader_pilot/damage_audit_v1/summary.json"
 )
 AUDIT_SOURCE = AUDIT_SUMMARY.with_name("source_manifest.json")
+FAILED_V1_SUMMARY = (
+    ROOT
+    / "phase1/phase1_cub/reports/loader_pilot/"
+    "failed_smoke_v1_issue746/failure_summary.json"
+)
 
 
 def _timing_args(profile: str, variant: str) -> argparse.Namespace:
@@ -93,6 +104,28 @@ class Phase1CubLoaderPilotSmokeTest(unittest.TestCase):
         self.assertEqual(
             config["completion_gate"]["official_test_evaluations"], 0
         )
+        self.assertEqual(
+            file_sha256(FAILED_V1_CONFIG),
+            config["failed_predecessor"]["config_sha256"],
+        )
+        probe = config["frozen_probe"]["probe"]
+        self.assertEqual(probe["parameter_count"], 386)
+        self.assertEqual(probe["initialization"]["weight_std"], 0.01)
+        self.assertEqual(probe["optimizer"]["name"], "sgd")
+        self.assertEqual(probe["scheduler"]["name"], "cosine")
+
+    def test_issue746_failure_is_preserved_as_non_scientific(self) -> None:
+        failure = json.loads(FAILED_V1_SUMMARY.read_text(encoding="utf-8"))
+        self.assertFalse(failure["scientific_result"])
+        self.assertEqual(failure["source_h200_issue"], 746)
+        self.assertEqual(failure["completed"]["classification_students"], 12)
+        self.assertEqual(
+            failure["completed"]["segmentation_probe_candidates"], 0
+        )
+        self.assertEqual(failure["completed"]["official_test_evaluations"], 0)
+        self.assertEqual(
+            failure["replacement"]["sha256"], EXPECTED_CONFIG_SHA256
+        )
 
     def test_all_twelve_timing_commands_are_validation_only(self) -> None:
         commands = []
@@ -115,6 +148,30 @@ class Phase1CubLoaderPilotSmokeTest(unittest.TestCase):
                     self.assertNotIn("--access-official-test", command)
         self.assertEqual(len(commands), 12)
 
+    def test_frozen_probe_runtime_schema_executes_one_candidate(self) -> None:
+        config = json.loads(CONFIG.read_text(encoding="utf-8"))
+        probe_config = config["frozen_probe"]["probe"]
+        generator = torch.Generator().manual_seed(746)
+        features = torch.randn(2, 192, 14, 14, generator=generator)
+        targets = torch.zeros(2, 14, 14, dtype=torch.long)
+        targets[:, :, 7:] = 1
+        state, result = train_candidate(
+            features,
+            targets,
+            features.clone(),
+            targets.clone(),
+            probe_config=probe_config,
+            learning_rate=0.01,
+            seed=1,
+            device=torch.device("cpu"),
+            epochs=1,
+        )
+        self.assertEqual(set(state), {"weight", "bias"})
+        self.assertEqual(result["best_epoch"], 1)
+        self.assertEqual(
+            result["gradient_contract"]["probe_gradient_tensor_count"], 2
+        )
+
     def test_non_default_profile_cannot_escape_pilot(self) -> None:
         args = _timing_args("l1_matched_weak", "lg")
         args.loader_pilot_smoke = False
@@ -131,6 +188,8 @@ class Phase1CubLoaderPilotSmokeTest(unittest.TestCase):
         script = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("ibkd_seg.phase1.release_asset", script)
         self.assertIn("ibkd_seg.phase1.run_cub_loader_pilot_smoke", script)
+        self.assertIn("loader_pilot_smoke_v2.json", script)
+        self.assertNotIn("loader_pilot_smoke_v1.json", script)
         self.assertIn("teacher_best_validation.pt", script)
         self.assertIn('tee "${output_root}/run.log"', script)
         self.assertTrue(SCRIPT.stat().st_mode & 0o111)

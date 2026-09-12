@@ -4,7 +4,9 @@
   접근 없이 derived train 이미지의 random crop이 part, mask, bbox를 얼마나
   보존하는지 L0/L1/L2에서 감사하고 JSON·CSV·고정 정성 그림을 저장합니다.
 - `run_r50_224_loader_pilot_smoke_b128_seed1.sh`: loader pilot Stage B의
-  validation-only 경로 점검입니다. Issue 722 teacher를 재사용해 L0/L1/L2 ×
+  validation-only v2 경로 점검입니다. Issue 746 v1은 분류 12개 뒤 첫 probe 생성
+  전에 설정 schema 누락으로 중단됐고, 현재 실행기는 의미를 바꾸지 않은 v2를
+  사용합니다. Issue 722 teacher를 재사용해 L0/L1/L2 ×
   LG·ALG-w20·iBKD 두 lambda의 분류 12개를 2 epoch 학습하고, 각 frozen encoder에
   segmentation probe, Part PCK, CKA, attention–GT를 적용합니다. Official test는
   열지 않으며 마지막 로그에 12개 결과와 full pilot 보수적 시간 외삽을 나열합니다.

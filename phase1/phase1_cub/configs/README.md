@@ -6,12 +6,20 @@
 test는 열지 않습니다. SHA-256은
 `6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf`입니다.
 
-`cub200_r50_224_b128_loader_pilot_smoke_v1.json`은 위 감사 통과 뒤 실행하는
-Stage B 경로 점검 계약입니다. L0/L1/L2 × guided 네 방법의 seed-1, 2-epoch
-분류와 frozen segmentation, part localization, spatial CKA, attention–GT를
-validation-only로 모두 실행합니다. 총 12개 encoder와 각 probe의 실행성·시간만
-확인하며 smoke 수치로 loader를 선택할 수 없습니다. SHA-256은
+`cub200_r50_224_b128_loader_pilot_smoke_v1.json`은 H200 issue 746에서 분류
+12개까지 완료한 뒤 첫 segmentation probe 생성 전에 runtime schema 누락으로
+중단된 보존본입니다. Probe metric과 official-test 평가는 한 번도 수행되지 않았고
+과학적 결과로 사용할 수 없습니다. SHA-256은
 `db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc`입니다.
+
+`cub200_r50_224_b128_loader_pilot_smoke_v2.json`은 위 실패를 고친 현재 Stage B
+경로 점검 계약입니다. L0/L1/L2 × guided 네 방법의 seed-1, 2-epoch 분류와 frozen
+segmentation, part localization, spatial CKA, attention–GT를 validation-only로
+모두 실행합니다. v1과 방법·metric·선택 규칙은 같고 공통 probe runtime이 요구하는
+초기화·parameter count·optimizer·scheduler·loss 필드만 완성했습니다. 총 12개
+encoder와 각 probe의 실행성·시간만 확인하며 smoke 수치로 loader를 선택할 수
+없습니다. SHA-256은
+`8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f`입니다.
 
 현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
 `e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.

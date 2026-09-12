@@ -2,12 +2,12 @@
 set -euo pipefail
 
 data_dir="${PHASE1_CUB_DATA_DIR:-/app/scratch/phase1_cub_data}"
-output_root="${PHASE1_CUB_LOADER_PILOT_SMOKE_OUTPUT_DIR:-/app/output/phase1_cub_r50_224_b128_seed1_loader_pilot_smoke_v1}"
-cache_root="${PHASE1_CUB_LOADER_PILOT_SMOKE_CACHE_DIR:-/app/scratch/phase1_cub_r50_224_b128_seed1_loader_pilot_smoke_v1_cache}"
+output_root="${PHASE1_CUB_LOADER_PILOT_SMOKE_OUTPUT_DIR:-/app/output/phase1_cub_r50_224_b128_seed1_loader_pilot_smoke_v2}"
+cache_root="${PHASE1_CUB_LOADER_PILOT_SMOKE_CACHE_DIR:-/app/scratch/phase1_cub_r50_224_b128_seed1_loader_pilot_smoke_v2_cache}"
 teacher_dir="${PHASE1_CUB_R50_TEACHER_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_issue722}"
 teacher_download_dir="${PHASE1_CUB_R50_TEACHER_DOWNLOAD_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_download}"
 teacher_manifest="phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json"
-smoke_config="phase1/phase1_cub/configs/cub200_r50_224_b128_loader_pilot_smoke_v1.json"
+smoke_config="phase1/phase1_cub/configs/cub200_r50_224_b128_loader_pilot_smoke_v2.json"
 
 mkdir -p "${output_root}"
 

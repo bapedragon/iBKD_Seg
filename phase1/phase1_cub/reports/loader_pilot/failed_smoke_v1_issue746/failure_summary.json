@@ -1,0 +1,41 @@
+{
+  "status": "failed_before_first_probe_candidate",
+  "scientific_result": false,
+  "source_h200_issue": 746,
+  "source_log": {
+    "byte_size": 41586,
+    "sha256": "b63b022ba70f6bc8794d63376037ff8d08c3b7ade0fb2b5114e58ffbd71bb338"
+  },
+  "config": {
+    "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_loader_pilot_smoke_v1.json",
+    "sha256": "db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc"
+  },
+  "completed": {
+    "classification_students": 12,
+    "classification_checkpoints": 12,
+    "segmentation_feature_cache_pairs": 1,
+    "segmentation_probe_candidates": 0,
+    "segmentation_probe_selections": 0,
+    "part_probe_candidates": 0,
+    "spatial_cka_values": 0,
+    "attention_metric_rows": 0,
+    "official_test_evaluations": 0
+  },
+  "contracts_observed": {
+    "common_student_initial_state_sha256": "34e2122bcf137af67b7a52981980aa503446331c5e207cccfeb326a7140b684d",
+    "maximum_peak_cuda_allocated_bytes": 11912255488,
+    "maximum_peak_cuda_reserved_bytes": 15881732096,
+    "oom_observed": false,
+    "teacher_release_verification_passed": true
+  },
+  "failure": {
+    "stage": "first_frozen_segmentation_probe_construction",
+    "exception": "KeyError: 'initialization'",
+    "root_cause": "frozen_probe.probe runtime schema was incomplete in v1"
+  },
+  "replacement": {
+    "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_loader_pilot_smoke_v2.json",
+    "sha256": "8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f",
+    "metric_or_selection_semantics_changed": false
+  }
+}

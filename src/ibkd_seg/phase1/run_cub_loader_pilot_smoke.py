@@ -52,9 +52,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/configs/"
-    "cub200_r50_224_b128_loader_pilot_smoke_v1.json"
+    "cub200_r50_224_b128_loader_pilot_smoke_v2.json"
 )
-EXPECTED_CONFIG_SHA256 = "db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc"
+EXPECTED_CONFIG_SHA256 = "8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f"
 EXPECTED_VALIDATION_SHA256 = (
     "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
 )
@@ -120,9 +120,9 @@ def _validate_config(config: dict[str, Any], path: Path) -> None:
     checks = {
         "config_hash": file_sha256(path) == EXPECTED_CONFIG_SHA256,
         "smoke_id": config.get("smoke_id")
-        == "cub200_phase1_r50_224_b128_seed1_loader_pilot_smoke_v1",
+        == "cub200_phase1_r50_224_b128_seed1_loader_pilot_smoke_v2",
         "locked_before_results": config.get("status")
-        == "locked_after_damage_audit_before_loader_pilot_smoke_results_2026-09-12",
+        == "locked_after_issue746_preprobe_schema_fix_before_retry_results_2026-09-12",
         "non_scientific": config.get("scientific_result") is False,
         "selection_forbidden": config.get(
             "selection_from_smoke_metrics_forbidden"
@@ -171,6 +171,24 @@ def _validate_config(config: dict[str, Any], path: Path) -> None:
         and frozen.get("probe", {}).get("planned_epochs") == 100
         and frozen.get("probe", {}).get("selection_tie_breakers")
         == ["lower_learning_rate", "earlier_epoch"]
+        and frozen.get("probe", {}).get("parameter_count") == 386
+        and frozen.get("probe", {}).get("initialization")
+        == {"weight": "normal", "weight_std": 0.01, "bias": 0.0}
+        and frozen.get("probe", {}).get("optimizer")
+        == {
+            "name": "sgd",
+            "momentum": 0.9,
+            "weight_decay": 0.0,
+            "nesterov": False,
+        }
+        and frozen.get("probe", {}).get("scheduler")
+        == {"name": "cosine", "minimum_learning_rate": 0.0}
+        and frozen.get("probe", {}).get("loss")
+        == {
+            "name": "cross_entropy",
+            "ignore_index": 255,
+            "class_weighting": "none",
+        }
         and frozen.get("encoder", {}).get("frozen") is True,
         "direct_spatial": direct.get("subset")
         == {
@@ -211,6 +229,26 @@ def _validate_config(config: dict[str, Any], path: Path) -> None:
             "attention_qualitative_pngs": 48,
             "official_test_evaluations": 0,
         },
+        "failed_v1_preserved": config.get("failed_predecessor")
+        == {
+            "source_h200_issue": 746,
+            "config_path": (
+                "phase1/phase1_cub/configs/"
+                "cub200_r50_224_b128_loader_pilot_smoke_v1.json"
+            ),
+            "config_sha256": (
+                "db95bf6eb04410e1da2cfffcc97887086f36c0cc7f766f3f5ba407af417785dc"
+            ),
+            "completed_before_failure": {
+                "classification_students": 12,
+                "classification_checkpoints": 12,
+                "segmentation_probe_candidates": 0,
+                "official_test_evaluations": 0,
+            },
+            "failure": "segmentation_probe_runtime_schema_missing",
+            "scientific_result": False,
+            "metric_or_selection_semantics_changed_in_v2": False,
+        },
     }
     failures = [name for name, passed in checks.items() if not passed]
     if failures:
@@ -229,6 +267,13 @@ def _validate_config(config: dict[str, Any], path: Path) -> None:
             raise RuntimeError(
                 f"loader-pilot provenance changed: {source_name}/{path_key}"
             )
+    failed_v1 = config["failed_predecessor"]
+    failed_v1_path = _repository_path(failed_v1["config_path"])
+    if (
+        not failed_v1_path.is_file()
+        or file_sha256(failed_v1_path) != failed_v1["config_sha256"]
+    ):
+        raise RuntimeError("loader-pilot failed-v1 provenance changed")
     teacher_manifest = _repository_path(config["teacher"]["release_manifest"])
     if (
         not teacher_manifest.is_file()
@@ -576,7 +621,7 @@ def _segmentation_probe_smoke(
         {
             "model": selected_state,
             "metadata": {
-                "purpose": "non_scientific_cub_loader_pilot_smoke_segmentation_probe_v1",
+                "purpose": "non_scientific_cub_loader_pilot_smoke_segmentation_probe_v2",
                 "scientific_result": False,
                 "official_test_accessed": False,
                 "config_sha256": config_sha256,
