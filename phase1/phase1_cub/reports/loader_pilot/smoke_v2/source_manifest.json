@@ -1,0 +1,9 @@
+{
+  "source_h200_issue": null,
+  "source_h200_issue_available_in_pasted_log": false,
+  "source_log_byte_size": 65086,
+  "source_log_sha256": "25605b8cf21c1295a32fcfeb5fffd68d67502529b6f3053b43bc6f0e2d613b07",
+  "raw_log_committed": false,
+  "reason_raw_log_not_committed": "large generated H200 log; compact audited facts only",
+  "recorded_at": "2026-09-12"
+}

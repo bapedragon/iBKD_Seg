@@ -1,6 +1,6 @@
 # CUB 이미지 loader 실험 프로토콜
 
-상태: **Stage A 완료 — Stage B smoke v1 실패 기록 보존, v2 재실행 준비**
+상태: **Stage A 및 Stage B smoke 완료 — Stage B 본 pilot 3개 shard 실행 준비**
 
 이 실험은 완료된 CUB ResNet-50/224 v3 결과를 바꾸지 않는 사후 탐색 실험입니다.
 기존 결과는 그대로 보존하고 새 결과에는 모두 `loader_pilot`을 표시합니다. 최종
@@ -89,6 +89,26 @@ v2는 v1의 방법·metric·선택 규칙을 바꾸지 않고 기존 공통 prob
 test를 열지 않습니다. 완료 gate는 분류 checkpoint `12`, segmentation LR 후보
 `36`, part LR 후보 `36`, CKA 값 `144`, attention row `12`, 정성 PNG `48`,
 official-test 평가 `0`입니다.
+
+V2 smoke는 모든 gate를 통과했습니다. 결과는
+[smoke v2 보고서](reports/loader_pilot/smoke_v2/RESULTS.md)에 보존하며, 전체
+본 pilot의 보수적 외삽이 14시간 54분 8초이므로 10시간 제한을 피하기 위해 다음
+세 독립 작업으로 고정했습니다.
+
+- Full config: `configs/cub200_r50_224_b128_seed1_loader_pilot_full_v1.json`
+- SHA-256: `97adb9274a4f1a996932915dbb8a715a719b2ae6777aceb40201e96174cbe5a4`
+- 작업: L0, L1, L2를 각각 한 이슈에서 실행
+- profile별 보수적 예상: 4시간 58분 3초
+
+```bash
+bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_full_b128_seed1.sh l0_current_strong
+bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_full_b128_seed1.sh l1_matched_weak
+bash phase1/phase1_cub/scripts/run_r50_224_loader_pilot_full_b128_seed1.sh l2_conservative_spatial
+```
+
+각 결과는 단독으로 loader를 선택할 수 없으며 세 shard가 모두 완료되어야 합니다.
+세 작업 모두 분류와 모든 probe를 validation-only로 수행하고 official test를 열지
+않습니다.
 
 그 다음 L0/L1/L2 각각에서 LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5를 encoder seed
 1로 동일하게 학습합니다. Scratch ResNet-50/224 issue 722 teacher, batch 128, 학생

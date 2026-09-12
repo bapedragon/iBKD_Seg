@@ -21,6 +21,16 @@ encoder와 각 probe의 실행성·시간만 확인하며 smoke 수치로 loader
 없습니다. SHA-256은
 `8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f`입니다.
 
+`cub200_r50_224_b128_seed1_loader_pilot_full_v1.json`은 smoke v2 통과 후 결과를
+보기 전에 고정한 Stage B 본 pilot 계약입니다. L0/L1/L2를 각각 별도 H200
+작업으로 실행하고, 각 profile에서 guided 네 방법을 seed 1·300 epoch로 학습한 뒤
+frozen segmentation 및 part probe를 5 seeds × 3 LR × 100 epoch로 수행합니다.
+CKA와 attention도 같은 validation subset에서 계산하며 official test 접근은 0회로
+강제합니다. 세 shard가 모두 끝난 뒤 20개 validation Part PCK의 산술평균을 주
+기준, 20개 frozen-seg input-224 mIoU 평균을 동률 해소 기준으로 사용합니다.
+SHA-256은
+`97adb9274a4f1a996932915dbb8a715a719b2ae6777aceb40201e96174cbe5a4`입니다.
+
 현재 본실험은 `cub200_r50_224_b128_full_v3.json`에 고정했습니다. SHA-256은
 `e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc`입니다.
 Scratch ResNet-50/224 teacher와 최종 6설정×3seed 전체 수행, validation-only

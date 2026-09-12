@@ -10,6 +10,13 @@
   LG·ALG-w20·iBKD 두 lambda의 분류 12개를 2 epoch 학습하고, 각 frozen encoder에
   segmentation probe, Part PCK, CKA, attention–GT를 적용합니다. Official test는
   열지 않으며 마지막 로그에 12개 결과와 full pilot 보수적 시간 외삽을 나열합니다.
+- `run_r50_224_loader_pilot_full_b128_seed1.sh`: 통과한 smoke v2 뒤 잠근 Stage B
+  본 pilot 실행기입니다. 인자로 L0/L1/L2 중 정확히 하나를 받아 4개 guided
+  학생의 300-epoch 분류, frozen segmentation·part probe 각 5 seeds × 3 LR ×
+  100 epoch, validation CKA·attention을 수행합니다. 세 profile 전체의 보수적
+  예상이 14시간 54분이므로 profile별 약 4시간 58분의 세 이슈로 나누며 official
+  test는 열지 않습니다. 마지막 로그에 4방법 결과와 해당 profile의 사전 고정된
+  loader 선택 점수를 모두 나열합니다.
 
 데이터 감사, smoke, 분류 본실험, frozen probe와 결과 정리 스크립트를 이 폴더에
 둡니다.

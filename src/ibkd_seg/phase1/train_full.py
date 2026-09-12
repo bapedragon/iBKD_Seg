@@ -22,6 +22,7 @@ from .cub_data import (
     build_official_test_loader as build_cub_official_test_loader,
     build_train_validation_loaders as build_cub_train_validation_loaders,
 )
+from .cub_loader_profiles import L0_CURRENT_STRONG, LOADER_PROFILE_ORDER
 from .data import (
     NUM_CLASSES as PET_NUM_CLASSES,
     build_official_test_loader as build_pet_official_test_loader,
@@ -62,6 +63,9 @@ CUB_R50_BATCH_PROFILE_CONFIG_SHA256 = (
 )
 CUB_R50_SEED_EXTENSION_CONFIG_SHA256 = (
     "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+)
+CUB_R50_LOADER_PILOT_FULL_CONFIG_SHA256 = (
+    "97adb9274a4f1a996932915dbb8a715a719b2ae6777aceb40201e96174cbe5a4"
 )
 ALG_WARMUP20_DIAGNOSTIC_ID = (
     "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1"
@@ -119,6 +123,17 @@ def parse_args() -> argparse.Namespace:
         help="Run one cell from the locked CUB R50/224 v5 seed extension.",
     )
     parser.add_argument(
+        "--loader-pilot-full",
+        action="store_true",
+        help="Run one validation-only cell from the locked CUB loader pilot.",
+    )
+    parser.add_argument(
+        "--cub-loader-profile",
+        choices=LOADER_PROFILE_ORDER,
+        default=L0_CURRENT_STRONG,
+        help="Explicit CUB student train-loader profile.",
+    )
+    parser.add_argument(
         "--protocol-config",
         type=Path,
         help="Locked batch-profile protocol snapshot bound to this student run.",
@@ -130,6 +145,7 @@ def parse_args() -> argparse.Namespace:
             "batch64_sensitivity",
             "locked_v3_confirmatory_continuation",
             "posthoc_exploratory_batch_sensitivity",
+            "exploratory_loader_pilot",
         ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=200)
@@ -154,6 +170,10 @@ def validate_args(args: argparse.Namespace) -> None:
     teacher_architecture = str(getattr(args, "teacher_architecture", "resnet56_32"))
     scientific_cub_r50 = bool(getattr(args, "scientific_cub_r50_teacher", False))
     seed_extension_full = bool(getattr(args, "seed_extension_full", False))
+    loader_pilot_full = bool(getattr(args, "loader_pilot_full", False))
+    cub_loader_profile = str(
+        getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
+    )
     protocol_config = getattr(args, "protocol_config", None)
     batch_profile_role = getattr(args, "batch_profile_role", None)
     if args.batch_size not in {64, 128}:
@@ -161,7 +181,13 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.eval_batch_size <= 0 or args.num_workers < 0:
         raise ValueError("Invalid evaluation batch size or worker count")
     if args.kind == "teacher":
-        if scientific_cub_r50 or seed_extension_full or protocol_config is not None:
+        if (
+            scientific_cub_r50
+            or seed_extension_full
+            or loader_pilot_full
+            or protocol_config is not None
+            or cub_loader_profile != L0_CURRENT_STRONG
+        ):
             raise ValueError("Legacy teacher training cannot use the CUB R50 student flags")
         if teacher_architecture != "resnet56_32":
             raise ValueError("Use run_cub_r50_teacher_full for a ResNet-50 teacher")
@@ -178,6 +204,8 @@ def validate_args(args: argparse.Namespace) -> None:
         return
     if args.seed not in {1, 2, 3}:
         raise ValueError("Student seed must be 1, 2, or 3")
+    if seed_extension_full and loader_pilot_full:
+        raise ValueError("Seed extension and loader pilot are mutually exclusive")
     if teacher_architecture == "resnet50_224_scratch":
         if not scientific_cub_r50 or dataset_key != "cub":
             raise ValueError(
@@ -187,11 +215,28 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError(
                 "CUB ResNet-50/224 full students require protocol config and profile role"
             )
-        profile = json.loads(protocol_config.read_text(encoding="utf-8"))
-        if seed_extension_full:
+        protocol = json.loads(protocol_config.read_text(encoding="utf-8"))
+        if not loader_pilot_full and cub_loader_profile != L0_CURRENT_STRONG:
+            raise ValueError("Non-pilot CUB runs must use the locked L0 loader")
+        if loader_pilot_full:
+            if file_sha256(protocol_config) != CUB_R50_LOADER_PILOT_FULL_CONFIG_SHA256:
+                raise ValueError("CUB loader-pilot full protocol SHA-256 changed")
+            if protocol.get("protocol_id") != (
+                "cub200_phase1_r50_224_b128_seed1_loader_pilot_full_v1"
+            ):
+                raise ValueError("Unexpected CUB loader-pilot full protocol")
+            if args.batch_size != 128 or args.seed != 1:
+                raise ValueError("CUB loader-pilot full is fixed to batch 128 and seed 1")
+            if batch_profile_role != "exploratory_loader_pilot":
+                raise ValueError("CUB loader-pilot full requires its exploratory role")
+            if cub_loader_profile not in protocol.get("scope", {}).get(
+                "loader_profiles", []
+            ):
+                raise ValueError("CUB loader profile is outside the locked pilot")
+        elif seed_extension_full:
             if file_sha256(protocol_config) != CUB_R50_SEED_EXTENSION_CONFIG_SHA256:
                 raise ValueError("CUB ResNet-50/224 v5 seed-extension protocol SHA-256 changed")
-            if profile.get("protocol_id") != (
+            if protocol.get("protocol_id") != (
                 "cub200_phase1_r50_224_guided_b128_s23_b64_s2_full_v5"
             ):
                 raise ValueError("Unexpected CUB ResNet-50/224 seed-extension protocol")
@@ -208,7 +253,7 @@ def validate_args(args: argparse.Namespace) -> None:
         else:
             if file_sha256(protocol_config) != CUB_R50_BATCH_PROFILE_CONFIG_SHA256:
                 raise ValueError("CUB ResNet-50/224 batch-profile protocol SHA-256 changed")
-            if profile.get("protocol_id") != (
+            if protocol.get("protocol_id") != (
                 "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
             ):
                 raise ValueError("Unexpected CUB ResNet-50/224 batch-profile protocol")
@@ -221,7 +266,11 @@ def validate_args(args: argparse.Namespace) -> None:
                 raise ValueError("Batch size and batch-profile role disagree")
             if args.seed != 1:
                 raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
-        allowed = profile.get("result_scope", {}).get("variants", [])
+        allowed = (
+            protocol.get("scope", {}).get("variants", [])
+            if loader_pilot_full
+            else protocol.get("result_scope", {}).get("variants", [])
+        )
         variant = (
             f"ibkd_lambda_{args.fusion_ratio}"
             if args.method == "ibkd"
@@ -230,12 +279,14 @@ def validate_args(args: argparse.Namespace) -> None:
             else args.method
         )
         if variant not in allowed:
-            raise ValueError(f"Method is outside the locked v4 profile: {variant}")
+            raise ValueError(f"Method is outside the locked protocol: {variant}")
     elif (
         scientific_cub_r50
         or seed_extension_full
+        or loader_pilot_full
         or protocol_config is not None
         or batch_profile_role
+        or cub_loader_profile != L0_CURRENT_STRONG
     ):
         raise ValueError("CUB R50 flags require --teacher-architecture resnet50_224_scratch")
     if args.method is None:
@@ -525,13 +576,20 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     seed_everything(args.seed)
     student = create_student(num_classes=num_classes, drop_path_rate=0.1).to(device)
     initial_hash = state_dict_sha256(student)
+    loader_kwargs = {
+        "train_batch_size": args.batch_size,
+        "eval_batch_size": args.eval_batch_size,
+        "num_workers": args.num_workers,
+        "seed": args.seed,
+        "device": device,
+    }
+    if _dataset_key(args) == "cub":
+        loader_kwargs["train_transform_profile"] = str(
+            getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
+        )
     train_loader, validation_loader, manifest = loader_builder(
         args.data_dir,
-        train_batch_size=args.batch_size,
-        eval_batch_size=args.eval_batch_size,
-        num_workers=args.num_workers,
-        seed=args.seed,
-        device=device,
+        **loader_kwargs,
     )
     run_dir = args.output_dir / args.run_name
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -541,6 +599,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
 
     scientific_cub_r50 = bool(args.scientific_cub_r50_teacher)
     seed_extension_full = bool(args.seed_extension_full)
+    loader_pilot_full = bool(args.loader_pilot_full)
+    cub_loader_profile = str(args.cub_loader_profile)
     protocol_config_sha256 = (
         file_sha256(args.protocol_config) if args.protocol_config is not None else None
     )
@@ -624,6 +684,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     log(
         f"[STUDENT_START] method={args.method} batch={args.batch_size} "
         f"lambda={args.fusion_ratio} seed={args.seed} initial_sha256={initial_hash} "
+        f"loader_pilot_full={loader_pilot_full} "
+        f"cub_loader_profile={cub_loader_profile} "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
         f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
     )
@@ -772,7 +834,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     )
     metadata = {
         "purpose": (
-            "phase1_cub_r50_224_seed_extension_full_student_v5"
+            "phase1_cub_r50_224_loader_pilot_full_student_v1"
+            if scientific_cub_r50 and loader_pilot_full
+            else "phase1_cub_r50_224_seed_extension_full_student_v5"
             if scientific_cub_r50 and seed_extension_full
             else "phase1_cub_r50_224_batch_profile_full_student_v4"
             if scientific_cub_r50
@@ -784,6 +848,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
         "seed_extension_full": seed_extension_full,
+        "loader_pilot_full": loader_pilot_full,
+        "cub_loader_profile": cub_loader_profile,
+        "exploratory_loader_pilot": loader_pilot_full,
         "dataset": dataset_name,
         "num_classes": num_classes,
         "architecture": "deit_tiny_patch16_224",
@@ -804,13 +871,19 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_architecture": args.teacher_architecture,
         "protocol_config_sha256": protocol_config_sha256,
         "batch_profile_role": args.batch_profile_role,
-        "eligible_locked_v3_matrix_cell": scientific_cub_r50 and args.batch_size == 128,
+        "eligible_locked_v3_matrix_cell": (
+            scientific_cub_r50 and args.batch_size == 128 and not loader_pilot_full
+        ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_warmup_epochs": args.alg_controller_warmup_epochs,
         "guidance_controller_warmup_epochs": (
             None if controller is None else controller.warmup_epochs
         ),
-        "official_test_policy": "once_after_validation_selection",
+        "official_test_policy": (
+            "not_accessed_validation_only_loader_pilot"
+            if loader_pilot_full
+            else "once_after_validation_selection"
+        ),
         "official_test_evaluations_at_checkpoint_write": 0,
     }
     atomic_torch_save(
@@ -839,25 +912,30 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         raise RuntimeError("Reloaded student state does not match selected state")
     student.to(device)
 
-    # Official test is instantiated only after validation selection and strict load.
-    test_loader = test_loader_builder(
-        args.data_dir,
-        eval_batch_size=args.eval_batch_size,
-        num_workers=args.num_workers,
-        device=device,
-    )
-    test_metrics = evaluate(
-        student,
-        test_loader,
-        device,
-        teacher=False,
-        num_classes=num_classes,
-    )
+    # The exploratory loader pilot is validation-only.  Its official test stays
+    # sealed until the selected loader is rerun in the later confirmatory matrix.
+    test_metrics: dict[str, float] | None = None
+    if not loader_pilot_full:
+        test_loader = test_loader_builder(
+            args.data_dir,
+            eval_batch_size=args.eval_batch_size,
+            num_workers=args.num_workers,
+            device=device,
+        )
+        test_metrics = evaluate(
+            student,
+            test_loader,
+            device,
+            teacher=False,
+            num_classes=num_classes,
+        )
     summary = {
         "status": "complete",
         "scientific_result": True,
         "confirmatory_main_result": (
-            args.batch_size == 128
+            False
+            if loader_pilot_full
+            else args.batch_size == 128
             if scientific_cub_r50
             else not is_alg_warmup20_diagnostic
         ),
@@ -865,6 +943,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
         "seed_extension_full": seed_extension_full,
+        "loader_pilot_full": loader_pilot_full,
+        "cub_loader_profile": cub_loader_profile,
+        "exploratory_loader_pilot": loader_pilot_full,
         "kind": "student",
         "dataset": dataset_name,
         "num_classes": num_classes,
@@ -877,7 +958,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "selected_epoch": best_epoch,
         "selected_validation": best_validation,
         "official_test": test_metrics,
-        "official_test_evaluations": 1,
+        "official_test_evaluations": 0 if loader_pilot_full else 1,
+        "official_test_accessed": not loader_pilot_full,
+        "official_test_policy": (
+            "not_accessed_validation_only_loader_pilot"
+            if loader_pilot_full
+            else "once_after_validation_selection"
+        ),
         "official_test_used_for_training_or_selection": False,
         "selected_checkpoint_strict_reloaded": True,
         "checkpoint": str(checkpoint_path.resolve()),
@@ -889,7 +976,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "teacher_architecture": args.teacher_architecture,
         "protocol_config_sha256": protocol_config_sha256,
         "batch_profile_role": args.batch_profile_role,
-        "eligible_locked_v3_matrix_cell": scientific_cub_r50 and args.batch_size == 128,
+        "eligible_locked_v3_matrix_cell": (
+            scientific_cub_r50 and args.batch_size == 128 and not loader_pilot_full
+        ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_final": None if controller is None else controller.state_dict(),
         "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
@@ -926,6 +1015,8 @@ def main() -> None:
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"teacher_architecture={args.teacher_architecture} "
             f"seed_extension_full={args.seed_extension_full} "
+            f"loader_pilot_full={args.loader_pilot_full} "
+            f"cub_loader_profile={args.cub_loader_profile} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"posthoc_diagnostic_id={args.posthoc_diagnostic_id}"
         )
@@ -935,12 +1026,17 @@ def main() -> None:
             else run_student(args, device)
         )
         save_json(payload, run_dir / "summary.json")
+        test_macro = (
+            "not_accessed"
+            if payload["official_test"] is None
+            else f"{payload['official_test']['macro_top1']:.3f}"
+        )
         log(
             f"[PHASE1_FULL_DONE] dataset={_dataset_contract(args)[0]} "
             f"kind={args.kind} method={args.method} "
             f"batch={args.batch_size} lambda={args.fusion_ratio} seed={args.seed} "
             f"selected_epoch={payload['selected_epoch']} "
-            f"test_macro={payload['official_test']['macro_top1']:.3f} "
+            f"test_macro={test_macro} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
             f"elapsed={format_duration(payload['training_seconds'])}"
         )
@@ -966,6 +1062,8 @@ def main() -> None:
                 "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
                 "teacher_architecture": args.teacher_architecture,
                 "batch_profile_role": args.batch_profile_role,
+                "loader_pilot_full": args.loader_pilot_full,
+                "cub_loader_profile": args.cub_loader_profile,
                 "failure_kind": failure_kind,
                 "error_type": type(error).__name__,
                 "error": message,

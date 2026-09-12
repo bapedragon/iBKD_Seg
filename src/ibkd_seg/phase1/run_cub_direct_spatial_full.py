@@ -621,8 +621,14 @@ def _run_part_validation(
             {
                 "probe": selected["probe_state"],
                 "metadata": {
-                    "purpose": (
-                        f"cub_direct_spatial_part_probe_seed{encoder_seed}_full_v2"
+                    "purpose": protocol.get(
+                        "checkpoint_purpose",
+                        f"cub_direct_spatial_part_probe_seed{encoder_seed}_full_v2",
+                    ),
+                    **(
+                        {"loader_profile": protocol["loader_profile"]}
+                        if "loader_profile" in protocol
+                        else {}
                     ),
                     "variant": variant,
                     "encoder_seed": encoder_seed,
