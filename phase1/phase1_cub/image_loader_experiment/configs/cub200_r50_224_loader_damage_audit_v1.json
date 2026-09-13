@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "audit_id": "cub200_phase1_r50_224_student_loader_damage_audit_v1",
+  "status": "locked_before_loader_audit_results_2026-09-12",
+  "scientific_role": "posthoc_exploratory_loader_diagnostic",
+  "training_performed": false,
+  "official_test_accessed": false,
+  "dataset": {
+    "name": "CUB-200-2011",
+    "source_partition": "derived_train_only",
+    "train_samples": 5394,
+    "validation_samples_not_used_for_audit": 600,
+    "official_test_samples_not_opened": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "annotations_used_for_diagnosis_only": [
+      "segmentation_mask",
+      "bounding_box",
+      "part_location"
+    ],
+    "annotations_exposed_to_model_training": false
+  },
+  "loader_profiles": [
+    {
+      "id": "l0_current_strong",
+      "role": "completed_v3_reference_loader",
+      "random_resized_crop_scale": [0.08, 1.0],
+      "random_resized_crop_ratio": [0.75, 1.3333333333333333],
+      "horizontal_flip_probability": 0.5,
+      "color_jitter_argument": 0.4,
+      "auto_augment": "rand-m9-mstd0.5-inc1",
+      "random_erasing_probability": 0.25
+    },
+    {
+      "id": "l1_matched_weak",
+      "role": "photometric_strength_ablation",
+      "random_resized_crop_scale": [0.08, 1.0],
+      "random_resized_crop_ratio": [0.75, 1.3333333333333333],
+      "horizontal_flip_probability": 0.5,
+      "color_jitter_argument": null,
+      "auto_augment": null,
+      "random_erasing_probability": 0.0
+    },
+    {
+      "id": "l2_conservative_spatial",
+      "role": "crop_severity_ablation",
+      "random_resized_crop_scale": [0.5, 1.0],
+      "random_resized_crop_ratio": [0.75, 1.3333333333333333],
+      "horizontal_flip_probability": 0.5,
+      "color_jitter_argument": null,
+      "auto_augment": null,
+      "random_erasing_probability": 0.0
+    }
+  ],
+  "paired_sampling": {
+    "base_seed": 20270912,
+    "draws_per_train_image": 5,
+    "same_geometry_id_uses_identical_crop_draws": true,
+    "l0_l1_geometry_must_match_exactly": true
+  },
+  "metrics": {
+    "all_higher_are_better": [
+      "visible_part_retention",
+      "all_visible_parts_retained_rate",
+      "foreground_mask_retention",
+      "bounding_box_coverage"
+    ],
+    "all_lower_are_better": [
+      "near_empty_crop_rate",
+      "background_only_crop_rate"
+    ],
+    "near_empty_foreground_fraction_threshold": 0.01,
+    "summaries": ["mean", "standard_deviation", "p05", "median", "p95"]
+  },
+  "qualitative": {
+    "selection": "lowest_train_image_id_per_class_then_first_8_classes",
+    "examples": 8,
+    "draw_index": 0,
+    "show_crop_box_bbox_and_visible_parts": true
+  },
+  "decision_policy": {
+    "audit_values_are_diagnostic_not_a_final_loader_selection": true,
+    "loader_selection_from_smoke_forbidden": true,
+    "official_test_selection_forbidden": true,
+    "next_step_after_pass": "seed1_l0_l1_l2_guided_validation_only_pilot_smoke"
+  },
+  "completion_gate": {
+    "train_records": 5394,
+    "draws_per_profile": 26970,
+    "profile_summaries": 3,
+    "l0_l1_geometry_metrics_exactly_equal": true,
+    "finite_metrics": true,
+    "official_test_images_or_masks_decoded": 0
+  },
+  "execution": {
+    "requested_mig_slices": 1,
+    "gpu_required": false,
+    "num_workers": 4,
+    "retain_dataset_in_output": false,
+    "retain_json_csv_and_qualitative_only": true
+  }
+}

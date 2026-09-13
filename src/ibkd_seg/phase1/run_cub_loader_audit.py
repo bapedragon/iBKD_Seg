@@ -34,7 +34,8 @@ from .train_timing import file_sha256, runtime_metadata
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
-    / "phase1/phase1_cub/configs/cub200_r50_224_loader_damage_audit_v1.json"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
+    "cub200_r50_224_loader_damage_audit_v1.json"
 )
 EXPECTED_CONFIG_SHA256 = (
     "6eeff24ba01b188d00f3f8ec7e4de533cd4b531eb95bda352b36fdd9fb9695bf"

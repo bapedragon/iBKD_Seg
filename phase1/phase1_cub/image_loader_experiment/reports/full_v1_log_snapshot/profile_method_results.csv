@@ -1,0 +1,13 @@
+profile,variant,classification_validation_macro_top1_percent,segmentation_validation_input224_miou,part_validation_pck_at_0_1,spatial_cka_block11,attention_patch_ap,attention_pointing
+l0_current_strong,lg,27.0000,0.743031,0.315798,0.485855,0.258074,0.515000
+l0_current_strong,alg_warmup20,23.6667,0.697727,0.212269,0.422925,0.226967,0.485000
+l0_current_strong,ibkd_lambda_0.25,28.3333,0.711646,0.252269,0.388379,0.251118,0.515000
+l0_current_strong,ibkd_lambda_0.5,27.8333,0.699825,0.206303,0.320483,0.235147,0.505000
+l1_matched_weak,lg,21.0000,0.723174,0.270924,0.463888,0.219471,0.385000
+l1_matched_weak,alg_warmup20,19.8333,0.727121,0.278571,0.464797,0.308529,0.520000
+l1_matched_weak,ibkd_lambda_0.25,17.3333,0.676995,0.145210,0.329672,0.337568,0.615000
+l1_matched_weak,ibkd_lambda_0.5,18.8333,0.685088,0.176807,0.324160,0.316230,0.485000
+l2_conservative_spatial,lg,31.5000,0.739186,0.417227,0.514921,0.289222,0.480000
+l2_conservative_spatial,alg_warmup20,28.6667,0.737160,0.390000,0.508612,0.272832,0.415000
+l2_conservative_spatial,ibkd_lambda_0.25,27.6667,0.736832,0.333529,0.495034,0.280149,0.520000
+l2_conservative_spatial,ibkd_lambda_0.5,24.6667,0.718685,0.301681,0.415618,0.234283,0.435000

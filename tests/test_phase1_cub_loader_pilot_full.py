@@ -19,12 +19,12 @@ from ibkd_seg.phase1.train_timing import file_sha256
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (
     ROOT
-    / "phase1/phase1_cub/configs/"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
     "cub200_r50_224_b128_seed1_loader_pilot_full_v1.json"
 )
 SCRIPT = (
     ROOT
-    / "phase1/phase1_cub/scripts/"
+    / "phase1/phase1_cub/image_loader_experiment/scripts/"
     "run_r50_224_loader_pilot_full_b128_seed1.sh"
 )
 

@@ -26,12 +26,12 @@ from ibkd_seg.phase1.summarize_cub_loader_pilot_l1_l2 import (
 ROOT = Path(__file__).resolve().parents[1]
 JOB_CONFIG = (
     ROOT
-    / "phase1/phase1_cub/configs/"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
     "cub200_r50_224_b128_seed1_loader_pilot_l1_l2_combined_job_v1.json"
 )
 SCRIPT = (
     ROOT
-    / "phase1/phase1_cub/scripts/"
+    / "phase1/phase1_cub/image_loader_experiment/scripts/"
     "run_r50_224_loader_pilot_full_l1_l2_b128_seed1.sh"
 )
 PER_PROFILE_GATE = {

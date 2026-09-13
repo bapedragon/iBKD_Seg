@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "complete_logs_received_result_archives_pending_audit",
+  "scientific_result": true,
+  "exploratory_loader_pilot": true,
+  "confirmatory_main_result": false,
+  "encoder_seeds": [
+    1
+  ],
+  "official_test_accessed": false,
+  "official_test_evaluations": 0,
+  "selection_rule": {
+    "primary": "mean_validation_part_PCK_at_0.1_across_four_guided_variants",
+    "tie_break_1": "mean_validation_frozen_segmentation_input224_mIoU_across_four_guided_variants",
+    "tie_break_2": [
+      "l0_current_strong",
+      "l1_matched_weak",
+      "l2_conservative_spatial"
+    ]
+  },
+  "profile_means": {
+    "l0_current_strong": {
+      "classification_validation_macro_top1_percent": 26.7083,
+      "segmentation_validation_input224_miou": 0.713057,
+      "part_validation_pck_at_0.1": 0.246660,
+      "spatial_cka_block11": 0.404411,
+      "attention_patch_ap": 0.242827,
+      "attention_pointing": 0.505000,
+      "elapsed_seconds": 12254
+    },
+    "l1_matched_weak": {
+      "classification_validation_macro_top1_percent": 19.2500,
+      "segmentation_validation_input224_miou": 0.703095,
+      "part_validation_pck_at_0.1": 0.217878,
+      "spatial_cka_block11": 0.395629,
+      "attention_patch_ap": 0.295450,
+      "attention_pointing": 0.501250,
+      "elapsed_seconds": 11298
+    },
+    "l2_conservative_spatial": {
+      "classification_validation_macro_top1_percent": 28.1250,
+      "segmentation_validation_input224_miou": 0.732966,
+      "part_validation_pck_at_0.1": 0.360609,
+      "spatial_cka_block11": 0.483546,
+      "attention_patch_ap": 0.269122,
+      "attention_pointing": 0.462500,
+      "elapsed_seconds": 11595
+    }
+  },
+  "selected_profile_from_locked_rule": "l2_conservative_spatial",
+  "selection_is_provisional_until_archive_audit": true,
+  "selection_deltas_percentage_points": {
+    "l2_minus_l0_part_pck": 11.3949,
+    "l2_minus_l1_part_pck": 14.2731,
+    "l2_minus_l0_segmentation_miou": 1.9909,
+    "l2_minus_l1_segmentation_miou": 2.9871
+  },
+  "conclusion": "L2 improves loader-level spatial preservation, but seed-1 within-L2 results do not support iBKD superiority over LG or ALG.",
+  "source_manifest": "source_manifest.json",
+  "profile_method_table": "profile_method_results.csv",
+  "profile_mean_table": "profile_means.csv"
+}

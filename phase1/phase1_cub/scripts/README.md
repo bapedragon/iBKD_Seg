@@ -1,5 +1,10 @@
 # CUB-200-2011 실행 스크립트
 
+이미지 loader L0/L1/L2 실험의 canonical 문서와 실행기는
+[`image_loader_experiment/`](../image_loader_experiment/README.md)로 옮겼습니다.
+아래 loader 파일명은 과거 H200 명령과 config SHA 재현을 위한 symbolic link이며,
+새 명령은 전용 폴더의 경로를 사용합니다.
+
 - `run_r50_224_loader_damage_audit.sh`: loader pilot Stage A. 학습이나 official-test
   접근 없이 derived train 이미지의 random crop이 part, mask, bbox를 얼마나
   보존하는지 L0/L1/L2에서 감사하고 JSON·CSV·고정 정성 그림을 저장합니다.

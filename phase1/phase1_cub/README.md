@@ -32,19 +32,27 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 - `reports/classification/`: 200종 분류 결과와 checkpoint manifest
 - `reports/frozen_probe/`: frozen segmentation probe 정량·정성 결과
 - `reports/direct_spatial/`: part PCK, spatial CKA, attention–GT 직접 진단 결과
+- `image_loader_experiment/`: L0/L1/L2 이미지 loader 사후 실험의 protocol, config,
+  H200 script와 결과를 모두 분리 보관
 - `results/raw/`: 로컬 원시 산출물 전용 경로이며 Git에는 포함하지 않음
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
 
 완료된 v3와 직접진단 결과를 바꾸지 않고 학생 이미지 loader의 crop·증강 강도를
 점검하는 사후 탐색 절차는
-[이미지 loader 실험 프로토콜](LOADER_EXPERIMENT_PROTOCOL.md)에 분리했습니다.
+[이미지 loader 실험 폴더](image_loader_experiment/README.md)에 분리했습니다.
 첫 단계는 학습이나 official-test 접근 없이 L0/L1/L2 crop의 part·mask·bbox
 보존량을 감사했으며 issue 745에서 완료됐습니다. L0/L1의 visible-part 보존
 `69.33%`가 L2에서 `94.09%`로 높아졌지만, 방법 간 상대 성능은 후속
 validation-only 학습에서 따로 확인합니다. 상세 결과는
-[loader crop 손상 감사 보고서](reports/loader_pilot/damage_audit_v1/RESULTS.md)에
+[loader crop 손상 감사 보고서](image_loader_experiment/reports/damage_audit_v1/RESULTS.md)에
 있습니다.
+
+Stage B의 L0/L1/L2 완료 로그를 합친 사전 선택 지표는 Part PCK 평균
+`24.6660% / 21.7878% / 36.0609%`로 L2가 가장 높았습니다. 전체 표와 제한은
+[loader 결과 스냅샷](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md)에
+있습니다. 결과 archive 감사 전에는 선택된 L2의 guided 4방법×seed-1 비과학적
+smoke만 허용하며, 이 범위는 6방법×3seed 최종 확증 matrix를 대신하지 않습니다.
 
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는

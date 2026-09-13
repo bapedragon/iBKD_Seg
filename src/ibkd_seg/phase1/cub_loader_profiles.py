@@ -1,8 +1,8 @@
 """Versioned CUB student-loader profiles and auditable crop geometry.
 
 The completed Phase-1 v3 runs keep using ``l0_current_strong``.  The other
-profiles are only for the post-hoc, validation-only loader pilot and therefore
-must be named explicitly by any runner that uses them.
+profiles belong to the separately versioned post-hoc loader experiment and
+must be named explicitly by a pilot or selected-loader follow-up runner.
 """
 
 from __future__ import annotations

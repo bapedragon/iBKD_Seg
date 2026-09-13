@@ -266,6 +266,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Validation-only seed-1 CUB loader-pilot timing run.",
     )
+    parser.add_argument(
+        "--loader-followup-smoke",
+        action="store_true",
+        help=(
+            "Non-scientific selected-L2 seed-1 smoke. It may exercise the "
+            "official-test path only for the separately locked four-guided "
+            "preliminary follow-up."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -283,6 +292,13 @@ def validate_args(args: argparse.Namespace) -> None:
         getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
     )
     loader_pilot_smoke = bool(getattr(args, "loader_pilot_smoke", False))
+    loader_followup_smoke = bool(
+        getattr(args, "loader_followup_smoke", False)
+    )
+    if loader_pilot_smoke and loader_followup_smoke:
+        raise ValueError(
+            "CUB loader-pilot and selected-loader follow-up modes are exclusive"
+        )
     if loader_profile not in LOADER_PROFILE_ORDER:
         raise ValueError("Unknown CUB loader profile")
     if loader_pilot_smoke:
@@ -303,9 +319,30 @@ def validate_args(args: argparse.Namespace) -> None:
                 "CUB loader-pilot smoke requires a validation-only batch-128 "
                 "seed-1 guided student with the audited ResNet-50 teacher"
             )
+    elif loader_followup_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method in {"lg", "alg", "ibkd"}
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and access_official_test
+            and not seed_extension_smoke
+            and loader_profile == "l2_conservative_spatial"
+        ):
+            raise ValueError(
+                "CUB selected-loader follow-up smoke requires an official-test "
+                "batch-128 seed-1 guided student, the audited ResNet-50 teacher, "
+                "and the locked L2 loader"
+            )
     elif loader_profile != L0_CURRENT_STRONG:
         raise ValueError(
-            "Non-default CUB loader profiles require --loader-pilot-smoke"
+            "Non-default CUB loader profiles require --loader-pilot-smoke or "
+            "--loader-followup-smoke"
         )
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
@@ -966,7 +1003,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                 "student": student_state,
                 "metadata": {
                     "purpose": (
-                        "phase1_cub_r50_224_loader_pilot_smoke_student_v1"
+                        "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
+                        if bool(
+                            getattr(args, "loader_followup_smoke", False)
+                        )
+                        else "phase1_cub_r50_224_loader_pilot_smoke_student_v1"
                         if bool(getattr(args, "loader_pilot_smoke", False))
                         else "phase1_cub_r50_224_guided_smoke_student_v3"
                         if _is_resnet50_teacher(args)
@@ -990,6 +1031,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     ),
                     "loader_pilot_smoke": bool(
                         getattr(args, "loader_pilot_smoke", False)
+                    ),
+                    "loader_followup_smoke": bool(
+                        getattr(args, "loader_followup_smoke", False)
                     ),
                     "cub_loader_profile": str(
                         getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
@@ -1049,6 +1093,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         ),
         "loader_pilot_smoke": bool(
             getattr(args, "loader_pilot_smoke", False)
+        ),
+        "loader_followup_smoke": bool(
+            getattr(args, "loader_followup_smoke", False)
         ),
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)

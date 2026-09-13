@@ -25,6 +25,10 @@ from typing import Any, Sequence
 
 import torch
 
+from .cub_loader_profiles import (
+    L2_CONSERVATIVE_SPATIAL,
+    loader_profile_contract,
+)
 from .cub_data import (
     ARCHIVE_MD5,
     DATASET_NAME,
@@ -75,6 +79,15 @@ EXPECTED_SEED_EXTENSION_CONFIG_SHA256 = (
 )
 EXPECTED_SEED_EXTENSION_FULL_CONFIG_SHA256 = (
     "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+)
+LOADER_FOLLOWUP_SMOKE_ID = (
+    "cub200_phase1_r50_224_b128_seed1_l2_guided_preliminary_smoke_v1"
+)
+EXPECTED_LOADER_FOLLOWUP_CONFIG_SHA256 = (
+    "484783f30c795ecfb8eb1c8766ccc466a8c266ac0e8359fbe272531b310287b6"
+)
+EXPECTED_LOADER_FOLLOWUP_FULL_CONFIG_SHA256 = (
+    "1ecef8999e7233f1f2dc5c960394fbcb2f8892ae85df6f5de98a36bacd51a7b4"
 )
 EXPECTED_SCIENTIFIC_TEACHER_SHA256 = (
     "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
@@ -622,6 +635,226 @@ def _validate_seed_extension_configs(
         )
 
 
+def _validate_loader_followup_configs(
+    smoke: dict[str, Any], full: dict[str, Any]
+) -> None:
+    teacher = smoke.get("classification", {}).get("teacher", {})
+    student = smoke.get("classification", {}).get("student", {})
+    probe = smoke.get("frozen_probe", {}).get("probe", {})
+    feature = smoke.get("frozen_probe", {}).get("encoder", {}).get(
+        "feature", {}
+    )
+    loader = smoke.get("loader", {})
+    full_gate = full.get("full_execution_gate", {})
+    full_classification = full.get("classification", {})
+    full_probe = full.get("frozen_probe", {}).get("probe", {})
+    expected_loader = loader_profile_contract(L2_CONSERVATIVE_SPATIAL)
+    checks = {
+        "smoke_id": smoke.get("smoke_id") == LOADER_FOLLOWUP_SMOKE_ID,
+        "smoke_locked": smoke.get("status")
+        == "locked_non_scientific_before_smoke_results_2026-09-13",
+        "smoke_non_scientific": smoke.get("scientific_result") is False,
+        "selection_forbidden": smoke.get(
+            "selection_from_smoke_metrics_forbidden"
+        )
+        is True
+        and smoke.get(
+            "method_lambda_or_protocol_change_from_smoke_metrics_forbidden"
+        )
+        is True,
+        "official_test_enabled": smoke.get("official_test_accessed") is True,
+        "stage_b_gate": smoke.get("stage_b_archive_policy")
+        == {
+            "l0_l1_l2_logs_complete": True,
+            "l0_l1_l2_result_archives_pending_audit": True,
+            "smoke_execution_allowed": True,
+            "full_execution_allowed": False,
+        },
+        "dataset": smoke.get("dataset", {}).get("name") == DATASET_NAME
+        and smoke.get("dataset", {}).get("num_classes") == NUM_CLASSES
+        and smoke.get("dataset", {}).get("official_counts")
+        == {
+            "train": OFFICIAL_TRAIN_COUNT,
+            "test": OFFICIAL_TEST_COUNT,
+            "total": OFFICIAL_TRAIN_COUNT + OFFICIAL_TEST_COUNT,
+        }
+        and smoke.get("dataset", {}).get("split", {}).get("counts")
+        == {
+            "train": DERIVED_TRAIN_COUNT,
+            "validation": DERIVED_VALIDATION_COUNT,
+            "test": OFFICIAL_TEST_COUNT,
+        }
+        and smoke.get("dataset", {}).get("split", {}).get(
+            "validation_per_class"
+        )
+        == 3
+        and smoke.get("dataset", {}).get("split", {}).get("split_seed")
+        == 2027,
+        "archives": smoke.get("dataset", {}).get("image_archive", {}).get(
+            "md5"
+        )
+        == ARCHIVE_MD5
+        and smoke.get("dataset", {}).get("segmentation_archive", {}).get(
+            "md5"
+        )
+        == SEGMENTATION_ARCHIVE_MD5,
+        "teacher": teacher.get("train_in_smoke") is False
+        and teacher.get("reuse_h200_issue") == 722
+        and teacher.get("architecture") == "torchvision_resnet50"
+        and teacher.get("initialization") == "scratch"
+        and teacher.get("input_size") == 224
+        and teacher.get("training_epochs") == 200
+        and teacher.get("checkpoint_sha256")
+        == EXPECTED_SCIENTIFIC_TEACHER_SHA256
+        and teacher.get("model_state_sha256")
+        == EXPECTED_SCIENTIFIC_TEACHER_STATE_SHA256,
+        "loader": loader
+        == {
+            "profile": L2_CONSERVATIVE_SPATIAL,
+            "random_resized_crop_scale": expected_loader[
+                "random_resized_crop"
+            ]["scale"],
+            "random_resized_crop_ratio": expected_loader[
+                "random_resized_crop"
+            ]["ratio"],
+            "horizontal_flip_probability": expected_loader[
+                "horizontal_flip_probability"
+            ],
+            "color_jitter_argument": expected_loader[
+                "color_jitter_argument"
+            ],
+            "auto_augment": expected_loader["auto_augment"],
+            "random_erasing_probability": expected_loader[
+                "random_erasing_probability"
+            ],
+            "interpolation": "bicubic",
+            "normalization": "imagenet",
+        },
+        "student": student.get("architecture") == "deit_tiny_patch16_224"
+        and student.get("batch_size") == 128
+        and student.get("encoder_seed") == 1
+        and student.get("actual_epochs") == 2
+        and student.get("planned_epochs") == 300
+        and student.get("same_initial_state_across_variants") is True,
+        "variants": tuple(smoke.get("classification", {}).get("variants", ()))
+        == EXPECTED_VARIANTS,
+        "controller": smoke.get("classification", {}).get("controller")
+        == {
+            "lg": "all_epochs",
+            "alg_warmup_epochs": 20,
+            "ibkd_warmup_epochs": 20,
+        },
+        "shared_guided_view": smoke.get("classification", {}).get(
+            "guided_teacher_view", {}
+        ).get("additional_resize")
+        is False
+        and smoke.get("classification", {}).get(
+            "guided_teacher_view", {}
+        ).get("shared_random_geometry_between_student_and_teacher")
+        is True,
+        "probe": probe.get("learning_rates") == [0.01, 0.03, 0.1]
+        and probe.get("epochs") == 2
+        and probe.get("planned_epochs") == 100
+        and probe.get("probe_seeds") == [1]
+        and probe.get("planned_probe_seeds") == [1, 2, 3, 4, 5]
+        and probe.get("batch_size") == 64,
+        "probe_schema": feature
+        == {
+            "block_index": 11,
+            "norm": False,
+            "exclude_cls_token": True,
+            "output_format": "NCHW",
+            "channels": 192,
+            "height": 14,
+            "width": 14,
+            "dtype": "float32",
+        }
+        and probe.get("initialization")
+        == {"weight": "normal", "weight_std": 0.01, "bias": 0.0}
+        and probe.get("optimizer")
+        == {
+            "name": "sgd",
+            "momentum": 0.9,
+            "weight_decay": 0.0,
+            "nesterov": False,
+        }
+        and probe.get("scheduler")
+        == {"name": "cosine", "minimum_learning_rate": 0.0},
+        "smoke_gate": smoke.get("task_count")
+        == {
+            "teacher_download_and_audit": 1,
+            "classification_students": 4,
+            "probe_lr_candidates": 12,
+            "selected_smoke_probes": 4,
+            "classification_official_test_evaluations": 4,
+            "probe_official_test_evaluations": 4,
+            "logical_gpu_tasks": 16,
+        },
+        "full_hash": smoke.get("full_protocol_config_sha256")
+        == EXPECTED_LOADER_FOLLOWUP_FULL_CONFIG_SHA256,
+        "full_identity": full.get("protocol_id")
+        == "cub200_phase1_r50_224_b128_seed1_l2_guided_preliminary_full_v1"
+        and full.get("status")
+        == "locked_for_smoke_pending_stage_b_archive_audit_before_full_2026-09-13",
+        "full_scope": full.get("scientific_result") is True
+        and full.get("exploratory_selected_loader_followup") is True
+        and full.get("confirmatory_main_result") is False
+        and full.get("loader", {}).get("profile")
+        == L2_CONSERVATIVE_SPATIAL
+        and tuple(full_classification.get("variants", ()))
+        == EXPECTED_VARIANTS
+        and full_classification.get("encoder_seeds") == [1]
+        and full_classification.get("batch_size") == 128
+        and full_classification.get("epochs") == 300,
+        "full_probe": full_probe.get("learning_rates")
+        == [0.01, 0.03, 0.1]
+        and full_probe.get("epochs") == 100
+        and full_probe.get("probe_seeds") == [1, 2, 3, 4, 5]
+        and full.get("official_test_policy", {}).get(
+            "test_used_for_model_hyperparameter_or_loader_selection"
+        )
+        is False,
+        "full_archive_gate": full_gate
+        == {
+            "smoke_may_run_before_stage_b_archive_audit": True,
+            "full_must_wait_for_all_l0_l1_l2_archives_and_checkpoint_manifests_to_pass": True,
+            "current_state": "full_blocked_smoke_allowed",
+        },
+        "full_task_count": full.get("task_count")
+        == {
+            "teacher_download_and_audit": 1,
+            "classification_students": 4,
+            "classification_official_test_evaluations": 4,
+            "segmentation_probe_lr_candidates": 60,
+            "segmentation_probe_validation_selections": 20,
+            "segmentation_probe_official_test_evaluations": 20,
+            "retained_new_checkpoints": 24,
+        },
+        "h200": smoke.get("runtime", {}).get("requested_mig_slices") == 7
+        and full.get("execution", {}).get("requested_mig_slices") == 7,
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid CUB selected-L2 follow-up smoke contract: "
+            + ", ".join(failures)
+        )
+
+    for source in full.get("protocol_provenance", {}).values():
+        path_value = source.get("path") if isinstance(source, dict) else None
+        expected_hash = (
+            source.get("sha256") if isinstance(source, dict) else None
+        )
+        if path_value is None or expected_hash is None:
+            continue
+        candidate = Path(path_value)
+        path = (
+            candidate if candidate.is_absolute() else REPOSITORY_ROOT / candidate
+        )
+        if not path.is_file() or file_sha256(path) != expected_hash:
+            raise RuntimeError(f"selected-L2 provenance changed: {path_value}")
+
+
 def _write_status(
     output_dir: Path,
     *,
@@ -683,13 +916,18 @@ def _load_encoder(
     encoder_seed: int = 1,
     scientific_teacher: bool = False,
     seed_extension_smoke: bool = False,
+    loader_followup_smoke: bool = False,
     device: torch.device,
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     metadata = payload.get("metadata", {})
     method, _, controller_warmup = VARIANT_ARGUMENTS[variant]
     expected = {
-        "purpose": "phase1_cub_r50_224_guided_smoke_student_v3",
+        "purpose": (
+            "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
+            if loader_followup_smoke
+            else "phase1_cub_r50_224_guided_smoke_student_v3"
+        ),
         "scientific_result": False,
         "official_test_accessed": True,
         "dataset": DATASET_NAME,
@@ -718,6 +956,13 @@ def _load_encoder(
         )
     if seed_extension_smoke:
         expected["seed_extension_smoke"] = True
+    if loader_followup_smoke:
+        expected.update(
+            {
+                "loader_followup_smoke": True,
+                "cub_loader_profile": L2_CONSERVATIVE_SPATIAL,
+            }
+        )
     for key, value in expected.items():
         if metadata.get(key) != value:
             raise RuntimeError(
@@ -778,7 +1023,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     smoke_id = smoke_config.get("smoke_id")
     batch_profile_mode = smoke_id == BATCH_PROFILE_SMOKE_ID
     seed_extension_mode = smoke_id == SEED_EXTENSION_SMOKE_ID
-    reuse_scientific_teacher = batch_profile_mode or seed_extension_mode
+    loader_followup_mode = smoke_id == LOADER_FOLLOWUP_SMOKE_ID
+    reuse_scientific_teacher = (
+        batch_profile_mode or seed_extension_mode or loader_followup_mode
+    )
     student_batch_size = int(getattr(args, "student_batch_size", 128))
     encoder_seed = int(getattr(args, "encoder_seed", 1))
     supplied_teacher_checkpoint = getattr(args, "teacher_checkpoint", None)
@@ -787,7 +1035,20 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             raise ValueError("CUB reusable-teacher smoke requires batch 64 or 128")
         if supplied_teacher_checkpoint is None:
             raise ValueError("CUB reusable-teacher smoke requires --teacher-checkpoint")
-        if seed_extension_mode:
+        if loader_followup_mode:
+            if student_batch_size != 128 or encoder_seed != 1:
+                raise ValueError(
+                    "CUB selected-L2 follow-up smoke is fixed to batch 128 seed 1"
+                )
+            _validate_loader_followup_configs(smoke_config, full_config)
+            if (
+                smoke_config_sha256
+                != EXPECTED_LOADER_FOLLOWUP_CONFIG_SHA256
+            ):
+                raise RuntimeError(
+                    "locked CUB selected-L2 smoke-config SHA-256 mismatch"
+                )
+        elif seed_extension_mode:
             _validate_seed_extension_configs(
                 smoke_config,
                 full_config,
@@ -867,7 +1128,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         f"student_batch_size={student_batch_size} "
         f"encoder_seed={encoder_seed} "
         f"teacher_reused={str(reuse_scientific_teacher).lower()} "
-        "full_matrix_precommitted=6variants_x3seeds"
+        "planned_scope="
+        + (
+            "selected_l2_4guided_x1seed_preliminary"
+            if loader_followup_mode
+            else "6variants_x3seeds"
+        )
     )
 
     partitions, split_manifest, source = load_train_validation_records(
@@ -1038,6 +1304,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         ]
         if reuse_scientific_teacher:
             command.append("--scientific-cub-r50-teacher")
+        if loader_followup_mode:
+            command.extend(
+                [
+                    "--loader-followup-smoke",
+                    "--cub-loader-profile",
+                    L2_CONSERVATIVE_SPATIAL,
+                ]
+            )
         if seed_extension_mode:
             command.append("--seed-extension-smoke")
         if fusion_ratio is not None:
@@ -1074,6 +1348,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             )
         if seed_extension_mode:
             expected["seed_extension_smoke"] = True
+        if loader_followup_mode:
+            expected.update(
+                {
+                    "loader_followup_smoke": True,
+                    "cub_loader_profile": L2_CONSERVATIVE_SPATIAL,
+                }
+            )
         for key, value in expected.items():
             if summary.get(key) != value:
                 raise RuntimeError(f"CUB v3 classification mismatch {variant}:{key}")
@@ -1196,6 +1477,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             encoder_seed=encoder_seed,
             scientific_teacher=reuse_scientific_teacher,
             seed_extension_smoke=seed_extension_mode,
+            loader_followup_smoke=loader_followup_mode,
             device=device,
         )
         feature_started = time.monotonic()
@@ -1300,6 +1582,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "purpose": (
                     "phase1_cub_r50_224_seed_extension_frozen_probe_smoke_v5"
                     if seed_extension_mode
+                    else "phase1_cub_r50_224_l2_guided_preliminary_probe_smoke_v1"
+                    if loader_followup_mode
                     else (
                         "phase1_cub_r50_224_batch_profile_frozen_probe_smoke_v4"
                         if batch_profile_mode
@@ -1312,6 +1596,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "full_protocol_config_sha256": full_config_sha256,
                 "variant": variant,
                 "student_batch_size": student_batch_size,
+                "cub_loader_profile": (
+                    L2_CONSERVATIVE_SPATIAL
+                    if loader_followup_mode
+                    else "l0_current_strong"
+                ),
                 "encoder_seed": encoder_seed,
                 "encoder_checkpoint_sha256": encoder_audit[
                     "checkpoint_sha256"
@@ -1501,7 +1790,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "config_validated": True,
         "non_scientific": True,
         "official_test_accessed_by_explicit_precommitment": True,
-        "full_matrix_locked_six_by_three": True,
+        "declared_execution_scope_locked_before_smoke": (
+            full_config.get("protocol_id")
+            == "cub200_phase1_r50_224_b128_seed1_l2_guided_preliminary_full_v1"
+            if loader_followup_mode
+            else True
+        ),
         "classification_and_probe_split_match": all(
             row["summary"]["split_manifest"]["validation_image_ids_sha256"]
             == validation_hash
@@ -1560,6 +1854,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "smoke_id": smoke_config["smoke_id"],
         "batch_profile_mode": batch_profile_mode,
         "seed_extension_mode": seed_extension_mode,
+        "loader_followup_mode": loader_followup_mode,
+        "cub_loader_profile": (
+            L2_CONSERVATIVE_SPATIAL
+            if loader_followup_mode
+            else "l0_current_strong"
+        ),
         "student_batch_size": student_batch_size,
         "encoder_seed": encoder_seed,
         "scientific_result": False,

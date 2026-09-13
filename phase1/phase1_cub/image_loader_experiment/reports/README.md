@@ -13,9 +13,13 @@
 - `smoke_l1_l2_v2/`: L0 실제시간 확인 뒤 L1·L2를 한 H200 이슈로 묶기 위해 수행한
   issue 750 운영 smoke의 gate와 시간·메모리를 보존합니다. 성능값은 선택에 쓰지
   않습니다.
+- `full_v1_log_snapshot/`: L0와 L1·L2 완료 로그에서 추출한 12개 방법별 수치와
+  profile 평균, 해석을 보존합니다. L2가 사전 선택 규칙에서 1위지만 결과 archive와
+  checkpoint 감사 전까지는 잠정 로그 스냅샷입니다.
 
-본 pilot은 L0/L1/L2별 독립 결과 archive를 회수한 뒤 `full_v1/` 아래에 함께
-정리합니다. 한 shard만으로 loader를 선택하거나 중간 결과를 다음 shard 설정에
-반영하지 않습니다.
+L0/L1/L2 완료 로그는 모두 도착해 `full_v1_log_snapshot/`에 함께 정리했습니다.
+다만 독립 결과 archive는 아직 회수하지 않았으므로 checkpoint와 원본
+machine-readable 결과를 감사한 뒤 `full_v1/` 최종 보고서를 만듭니다. 로그
+스냅샷은 이 상태를 명시하며 archive 기반 결과로 가장하지 않습니다.
 
 Stage B 이후 결과도 완료된 v3 주 결과와 섞지 않고 이 계보 아래에 추가합니다.

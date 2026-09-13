@@ -30,9 +30,14 @@ from ibkd_seg.phase1.train_timing import file_sha256
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (
     ROOT
-    / "phase1/phase1_cub/configs/cub200_r50_224_loader_damage_audit_v1.json"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
+    "cub200_r50_224_loader_damage_audit_v1.json"
 )
-SCRIPT = ROOT / "phase1/phase1_cub/scripts/run_r50_224_loader_damage_audit.sh"
+SCRIPT = (
+    ROOT
+    / "phase1/phase1_cub/image_loader_experiment/scripts/"
+    "run_r50_224_loader_damage_audit.sh"
+)
 
 
 class CubLoaderAuditTest(unittest.TestCase):

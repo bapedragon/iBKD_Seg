@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "complete_logs_received_result_archives_pending_audit",
+  "scientific_scope": "validation_only_loader_pilot_seed1",
+  "official_test_evaluations": 0,
+  "sources": [
+    {
+      "profiles": [
+        "l0_current_strong"
+      ],
+      "attachment_id": "755a1101-563a-40a3-a04c-b70b11325ef4",
+      "filename": "pasted-text.txt",
+      "bytes": 65004,
+      "lines": 491,
+      "sha256": "0f5d0bface814c110d6eef8ae8ed1ccb3537f6daea1e2c87ebb8285636028f0d",
+      "completion_marker_line": 490
+    },
+    {
+      "profiles": [
+        "l1_matched_weak",
+        "l2_conservative_spatial"
+      ],
+      "attachment_id": "9958c891-b0f3-40e9-88b7-86e2ef64fafa",
+      "filename": "pasted-text.txt",
+      "bytes": 65004,
+      "lines": 479,
+      "sha256": "55a5b799523d0d268776d40e90b55dfecadb0527a7f1dab04f7390726da580e9",
+      "completion_marker_line": 478
+    }
+  ],
+  "pending": [
+    "audit_l0_result_archive",
+    "audit_l1_l2_result_archive",
+    "verify_checkpoint_manifests_and_artifact_hashes",
+    "replace_log_snapshot_with_curated_archive_backed_report"
+  ]
+}

@@ -53,7 +53,7 @@ from .train_timing import file_sha256, format_duration, state_dict_sha256
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
-    / "phase1/phase1_cub/configs/"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
     "cub200_r50_224_b128_loader_pilot_smoke_v2.json"
 )
 EXPECTED_CONFIG_SHA256 = "8ea14d480d64dcc6ad1ab2fafd2754bc22c29867d0b8a20126bcd4ebab537a5f"

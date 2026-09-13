@@ -24,7 +24,7 @@ from ibkd_seg.phase1.train_timing import file_sha256, validate_args
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (
     ROOT
-    / "phase1/phase1_cub/configs/"
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
     "cub200_r50_224_b128_loader_pilot_smoke_v2.json"
 )
 FAILED_V1_CONFIG = CONFIG.with_name(
@@ -32,7 +32,7 @@ FAILED_V1_CONFIG = CONFIG.with_name(
 )
 SCRIPT = (
     ROOT
-    / "phase1/phase1_cub/scripts/"
+    / "phase1/phase1_cub/image_loader_experiment/scripts/"
     "run_r50_224_loader_pilot_smoke_b128_seed1.sh"
 )
 L1_L2_SCRIPT = SCRIPT.with_name(
@@ -40,12 +40,13 @@ L1_L2_SCRIPT = SCRIPT.with_name(
 )
 AUDIT_SUMMARY = (
     ROOT
-    / "phase1/phase1_cub/reports/loader_pilot/damage_audit_v1/summary.json"
+    / "phase1/phase1_cub/image_loader_experiment/reports/"
+    "damage_audit_v1/summary.json"
 )
 AUDIT_SOURCE = AUDIT_SUMMARY.with_name("source_manifest.json")
 FAILED_V1_SUMMARY = (
     ROOT
-    / "phase1/phase1_cub/reports/loader_pilot/"
+    / "phase1/phase1_cub/image_loader_experiment/reports/"
     "failed_smoke_v1_issue746/failure_summary.json"
 )
 

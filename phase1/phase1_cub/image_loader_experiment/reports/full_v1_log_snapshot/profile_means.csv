@@ -1,0 +1,4 @@
+profile,classification_validation_macro_top1_percent,segmentation_validation_input224_miou,part_validation_pck_at_0_1,spatial_cka_block11,attention_patch_ap,attention_pointing,elapsed_seconds
+l0_current_strong,26.7083,0.713057,0.246660,0.404411,0.242827,0.505000,12254
+l1_matched_weak,19.2500,0.703095,0.217878,0.395629,0.295450,0.501250,11298
+l2_conservative_spatial,28.1250,0.732966,0.360609,0.483546,0.269122,0.462500,11595
