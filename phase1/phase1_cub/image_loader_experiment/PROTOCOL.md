@@ -173,8 +173,8 @@ tie-break로 사용하지 않습니다. CKA와 attention은 해석용 보조 지
 사전에 고정한 평균 Part PCK 선택 규칙에서 L2가 `0.360609`로 L0 `0.246660`,
 L1 `0.217878`보다 높았습니다. 전체 표와 제한은
 [Stage B 로그 결과](reports/full_v1_log_snapshot/RESULTS.md)에 기록합니다. 다만
-결과 archive와 checkpoint manifest 감사가 아직 남았으므로 현재는 비과학적 smoke만
-허용하고 full 실행은 보류합니다.
+결과 archive와 checkpoint manifest 감사가 아직 남았으므로 이 후속 결과는 최종
+논문 결과가 아닌 단일-seed 예비 결과로 한정합니다.
 
 - 방법: LG, ALG-w20, iBKD λ=0.25, iBKD λ=0.5
 - encoder seed: 1
@@ -197,6 +197,23 @@ bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_l2_guided_pre
 Smoke는 분류 4개 × 2 epoch와 probe seed 1 × LR 3개 × 2 epoch를 실행하고,
 분류 및 선택 probe의 official-test 경로를 각각 4회 확인합니다. 이 2-epoch 수치로
 방법, lambda, protocol 또는 이후 실행 여부를 바꾸지 않습니다.
+
+H200 issue 753 smoke는 `classification=4/4`, `probe_candidates=12/12`,
+`selected_probes=4/4`, `tasks=16/16`, `status=pass`, `312.17초`로 완료됐습니다.
+성능값은 선택에 사용하지 않았으며, smoke 전에 잠근 과학적 설정을 바꾸지 않은 실행
+manifest는
+`configs/cub200_r50_224_b128_seed1_l2_guided_preliminary_full_execution_v1.json`
+에 기록합니다. SHA-256은
+`d1138ac889fd6bd7ec6503776be9444d9e7915ec37d0eb0c4ac1692a63c24907`입니다.
+
+```bash
+bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_l2_guided_preliminary_full_b128_seed1.sh
+```
+
+이 본학습은 분류 4개 × 300 epoch, frozen probe 20개 선택을 위한 LR 후보 60개를
+실행합니다. 모든 validation 선택 후 분류 checkpoint 4개와 probe checkpoint 20개를
+official test에서 각각 한 번만 평가하고, 새 checkpoint 24개를 보존합니다. Stage B
+archive 감사 전에도 예비 실행은 가능하지만, 최종 논문 주장에는 해당 감사가 필요합니다.
 
 ## Stage C1 — 향후 최종 확증 실험
 

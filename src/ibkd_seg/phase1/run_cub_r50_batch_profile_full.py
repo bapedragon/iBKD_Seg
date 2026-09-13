@@ -26,6 +26,7 @@ from .cub_data import (
     DERIVED_VALIDATION_COUNT,
     NUM_CLASSES,
     OFFICIAL_TEST_COUNT,
+    build_official_test_loader,
     file_digest,
 )
 from .cub_probe_data import (
@@ -37,6 +38,7 @@ from .cub_probe_data import (
     load_official_test_records,
     load_train_validation_records,
 )
+from .cub_loader_profiles import L2_CONSERVATIVE_SPATIAL, loader_profile_contract
 from .models import create_student
 from .probe import evaluate_probe_both_resolutions, probe_from_state, train_candidate
 from .run_cub_combined_smoke import (
@@ -49,7 +51,7 @@ from .run_cub_combined_smoke import (
     _target_cache,
 )
 from .run_cub_r50_teacher_full import load_scientific_teacher
-from .train_timing import file_sha256, format_duration, state_dict_sha256
+from .train_timing import evaluate, file_sha256, format_duration, state_dict_sha256
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -63,11 +65,22 @@ SEED_EXTENSION_CONFIG = (
     / "phase1/phase1_cub/configs/"
     "cub200_r50_224_b128_s23_b64_s2_guided_full_v5.json"
 )
+LOADER_FOLLOWUP_CONFIG = (
+    REPOSITORY_ROOT
+    / "phase1/phase1_cub/image_loader_experiment/configs/"
+    "cub200_r50_224_b128_seed1_l2_guided_preliminary_full_execution_v1.json"
+)
 EXPECTED_CONFIG_SHA256 = (
     "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633"
 )
 EXPECTED_SEED_EXTENSION_CONFIG_SHA256 = (
     "f3531c648f65e6f51e48bbeda7ad38b1fc5931d88e04b01c97c6ff71aad437b9"
+)
+EXPECTED_LOADER_FOLLOWUP_CONFIG_SHA256 = (
+    "d1138ac889fd6bd7ec6503776be9444d9e7915ec37d0eb0c4ac1692a63c24907"
+)
+EXPECTED_LOADER_FOLLOWUP_PARENT_SHA256 = (
+    "1ecef8999e7233f1f2dc5c960394fbcb2f8892ae85df6f5de98a36bacd51a7b4"
 )
 EXPECTED_BASE_CONFIG_SHA256 = (
     "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
@@ -109,6 +122,7 @@ def parse_args() -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--batch-profile-full", action="store_true")
     mode.add_argument("--seed-extension-full", action="store_true")
+    mode.add_argument("--loader-followup-full", action="store_true")
     parser.add_argument(
         "--partition",
         choices=("batch128_encoder_seeds_2_3", "batch64_encoder_seed_2"),
@@ -127,6 +141,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def _execution_profiles(args: argparse.Namespace) -> tuple[tuple[int, int], ...]:
+    if bool(getattr(args, "loader_followup_full", False)):
+        if args.partition is not None:
+            raise ValueError("The selected-loader follow-up does not accept --partition")
+        return ((128, 1),)
     if args.batch_profile_full:
         if args.partition is not None:
             raise ValueError("The v4 batch-profile run does not accept --partition")
@@ -346,6 +364,146 @@ def _validate_seed_extension_config(
         raise RuntimeError("audited issue-722 teacher release manifest changed")
 
 
+def _validate_loader_followup_config(
+    config: dict[str, Any], config_path: Path
+) -> None:
+    provenance = config.get("protocol_provenance", {})
+    teacher = config.get("teacher", {})
+    dataset = config.get("dataset", {})
+    classification = config.get("classification", {})
+    probe = config.get("frozen_probe", {}).get("probe", {})
+    counts = config.get("task_count", {})
+    execution = config.get("execution", {})
+    loader = config.get("loader", {})
+    expected_loader = loader_profile_contract(L2_CONSERVATIVE_SPATIAL)
+    checks = {
+        "config_sha256": file_sha256(config_path)
+        == EXPECTED_LOADER_FOLLOWUP_CONFIG_SHA256,
+        "protocol_id": config.get("protocol_id")
+        == (
+            "cub200_phase1_r50_224_b128_seed1_l2_guided_"
+            "preliminary_full_execution_v1"
+        ),
+        "released": config.get("status")
+        == "released_after_successful_smoke_before_preliminary_full_2026-09-13"
+        and config.get("execution_gate", {}).get("current_state")
+        == "ready_for_preliminary_full",
+        "result_role": config.get("scientific_result") is True
+        and config.get("exploratory_selected_loader_followup") is True
+        and config.get("confirmatory_main_result") is False,
+        "parent": provenance.get("pre_smoke_locked_full", {}).get("sha256")
+        == EXPECTED_LOADER_FOLLOWUP_PARENT_SHA256
+        and provenance.get("pre_smoke_locked_full", {}).get(
+            "scientific_parameters_changed_after_smoke"
+        )
+        is False,
+        "smoke": config.get("smoke_evidence", {}).get("status") == "pass"
+        and config.get("smoke_evidence", {}).get("scientific_result") is False
+        and config.get("smoke_evidence", {}).get("metrics_used_to_change_protocol")
+        is False
+        and config.get("smoke_evidence", {}).get("logical_tasks_completed")
+        == "16/16",
+        "teacher": teacher.get("train_in_this_run") is False
+        and teacher.get("source_h200_issue") == 722
+        and teacher.get("architecture") == "torchvision_resnet50"
+        and teacher.get("initialization") == "scratch"
+        and teacher.get("external_pretraining") is False
+        and teacher.get("input_size") == 224
+        and teacher.get("training_epochs") == 200
+        and teacher.get("checkpoint_sha256") == EXPECTED_TEACHER_SHA256
+        and teacher.get("model_state_sha256") == EXPECTED_TEACHER_STATE_SHA256,
+        "dataset": dataset.get("name") == DATASET_NAME
+        and dataset.get("num_classes") == NUM_CLASSES
+        and dataset.get("split")
+        == {
+            "train": 5394,
+            "validation": 600,
+            "official_test": 5794,
+            "validation_per_class": 3,
+            "split_seed": 2027,
+            "validation_image_ids_sha256": EXPECTED_VALIDATION_HASH,
+        },
+        "loader": loader.get("profile") == L2_CONSERVATIVE_SPATIAL
+        and loader.get("random_resized_crop_scale")
+        == expected_loader["random_resized_crop"]["scale"]
+        and loader.get("random_resized_crop_ratio")
+        == expected_loader["random_resized_crop"]["ratio"]
+        and loader.get("horizontal_flip_probability")
+        == expected_loader["horizontal_flip_probability"]
+        and loader.get("color_jitter_argument")
+        == expected_loader["color_jitter_argument"]
+        and loader.get("auto_augment") == expected_loader["auto_augment"]
+        and loader.get("random_erasing_probability")
+        == expected_loader["random_erasing_probability"]
+        and loader.get("teacher_and_student_receive_same_augmented_tensor") is True
+        and loader.get("spatial_annotations_used_for_student_training") is False,
+        "classification": classification.get("student_architecture")
+        == "deit_tiny_patch16_224"
+        and classification.get("initialization") == "scratch"
+        and classification.get("batch_size") == 128
+        and classification.get("encoder_seeds") == [1]
+        and classification.get("epochs") == 300
+        and tuple(classification.get("variants", ())) == EXPECTED_VARIANTS
+        and classification.get("optimizer", {}).get("learning_rate") == 0.0005
+        and classification.get("scheduler", {}).get("warmup_epochs") == 20
+        and classification.get("controller_warmup_epochs")
+        == {"lg": 0, "alg_warmup20": 20, "ibkd": 20}
+        and classification.get("ibkd_fusion_ratio_lambdas") == [0.25, 0.5]
+        and classification.get("selection_split") == "validation"
+        and classification.get("selection_metric") == "macro_top1",
+        "probe": probe.get("learning_rates") == [0.01, 0.03, 0.1]
+        and probe.get("epochs") == 100
+        and probe.get("batch_size") == 64
+        and probe.get("probe_seeds") == [1, 2, 3, 4, 5]
+        and probe.get("selection_split") == "validation",
+        "test_policy": config.get("official_test_policy")
+        == {
+            "classification_open_after_all_four_validation_checkpoint_selections": True,
+            "segmentation_open_after_all_twenty_validation_probe_selections": True,
+            "one_evaluation_per_selected_checkpoint": True,
+            "test_used_for_model_hyperparameter_or_loader_selection": False,
+        },
+        "counts": counts
+        == {
+            "teacher_download_and_audit": 1,
+            "classification_students": 4,
+            "classification_official_test_evaluations": 4,
+            "segmentation_probe_lr_candidates": 60,
+            "segmentation_probe_validation_selections": 20,
+            "segmentation_probe_official_test_evaluations": 20,
+            "retained_new_checkpoints": 24,
+        },
+        "runtime": execution.get("requested_mig_slices") == 7
+        and execution.get("precision") == "float32"
+        and execution.get("feature_batch_size") == 32
+        and execution.get("classification_eval_batch_size") == 200
+        and execution.get("classification_num_workers") == 4,
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid CUB selected-loader follow-up full config: "
+            + ", ".join(failures)
+        )
+
+    parent_path = _resolve_repository_path(
+        provenance["pre_smoke_locked_full"]["path"]
+    )
+    release_path = _resolve_repository_path(teacher["release_manifest"])
+    if (
+        not parent_path.is_file()
+        or file_sha256(parent_path) != EXPECTED_LOADER_FOLLOWUP_PARENT_SHA256
+    ):
+        raise RuntimeError("selected-loader pre-smoke full protocol changed")
+    if (
+        not release_path.is_file()
+        or file_sha256(release_path) != EXPECTED_RELEASE_MANIFEST_SHA256
+        or teacher.get("release_manifest_sha256")
+        != EXPECTED_RELEASE_MANIFEST_SHA256
+    ):
+        raise RuntimeError("audited issue-722 teacher release manifest changed")
+
+
 def _write_status(
     path: Path,
     *,
@@ -439,7 +597,13 @@ def _write_csv(rows: Sequence[dict[str, Any]], path: Path) -> None:
     temporary.replace(path)
 
 
-def _batch_role(batch_size: int, *, seed_extension: bool) -> str:
+def _batch_role(
+    batch_size: int, *, seed_extension: bool, loader_followup: bool = False
+) -> str:
+    if loader_followup:
+        if batch_size != 128:
+            raise ValueError("selected-loader follow-up is fixed to batch 128")
+        return "exploratory_selected_loader_followup"
     if seed_extension:
         if batch_size == 128:
             return "locked_v3_confirmatory_continuation"
@@ -454,7 +618,7 @@ def _batch_role(batch_size: int, *, seed_extension: bool) -> str:
 
 
 def _profile_dir(args: argparse.Namespace, batch_size: int, encoder_seed: int) -> Path:
-    if args.seed_extension_full:
+    if args.seed_extension_full or args.loader_followup_full:
         return args.output_dir / f"batch{batch_size}_seed{encoder_seed}"
     return args.output_dir / f"batch{batch_size}"
 
@@ -466,17 +630,25 @@ def _variant_run_name(variant: str, batch_size: int, encoder_seed: int) -> str:
     )
 
 
-def _checkpoint_purpose(seed_extension: bool) -> str:
+def _checkpoint_purpose(
+    seed_extension: bool, *, loader_followup: bool = False
+) -> str:
     return (
-        "phase1_cub_r50_224_seed_extension_full_student_v5"
+        "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
+        if loader_followup
+        else "phase1_cub_r50_224_seed_extension_full_student_v5"
         if seed_extension
         else "phase1_cub_r50_224_batch_profile_full_student_v4"
     )
 
 
-def _probe_checkpoint_purpose(seed_extension: bool) -> str:
+def _probe_checkpoint_purpose(
+    seed_extension: bool, *, loader_followup: bool = False
+) -> str:
     return (
-        "phase1_cub_r50_224_seed_extension_frozen_probe_v5"
+        "phase1_cub_r50_224_l2_guided_preliminary_frozen_probe_v1"
+        if loader_followup
+        else "phase1_cub_r50_224_seed_extension_frozen_probe_v5"
         if seed_extension
         else "phase1_cub_r50_224_batch_profile_frozen_probe_v4"
     )
@@ -514,7 +686,11 @@ def _classification_rows(
             "resnet50_224_scratch",
             "--scientific-cub-r50-teacher",
             "--batch-profile-role",
-            _batch_role(batch_size, seed_extension=args.seed_extension_full),
+            _batch_role(
+                batch_size,
+                seed_extension=args.seed_extension_full,
+                loader_followup=args.loader_followup_full,
+            ),
             "--protocol-config",
             str(args.config),
             "--batch-size",
@@ -534,7 +710,16 @@ def _classification_rows(
             "--seed",
             str(encoder_seed),
         ]
-        if args.seed_extension_full:
+        if args.loader_followup_full:
+            command.extend(
+                [
+                    "--loader-followup-full",
+                    "--defer-official-test",
+                    "--cub-loader-profile",
+                    L2_CONSERVATIVE_SPATIAL,
+                ]
+            )
+        elif args.seed_extension_full:
             command.append("--seed-extension-full")
         if fusion_ratio is not None:
             command.extend(["--fusion-ratio", str(fusion_ratio)])
@@ -545,7 +730,7 @@ def _classification_rows(
             run_dir / "summary.json",
             label=f"batch{batch_size}_{variant}_seed{encoder_seed}",
         )
-        expected_confirmatory = batch_size == 128
+        expected_confirmatory = batch_size == 128 and not args.loader_followup_full
         expected = {
             "status": "complete",
             "scientific_result": True,
@@ -558,7 +743,8 @@ def _classification_rows(
             "batch_size": batch_size,
             "epochs": 300,
             "seed": encoder_seed,
-            "official_test_evaluations": 1,
+            "official_test_evaluations": 0 if args.loader_followup_full else 1,
+            "official_test_accessed": not args.loader_followup_full,
             "official_test_used_for_training_or_selection": False,
             "selected_checkpoint_strict_reloaded": True,
             "teacher_checkpoint_sha256": EXPECTED_TEACHER_SHA256,
@@ -566,14 +752,28 @@ def _classification_rows(
             "teacher_architecture": "resnet50_224_scratch",
             "protocol_config_sha256": config_sha256,
             "batch_profile_role": _batch_role(
-                batch_size, seed_extension=args.seed_extension_full
+                batch_size,
+                seed_extension=args.seed_extension_full,
+                loader_followup=args.loader_followup_full,
             ),
-            "eligible_locked_v3_matrix_cell": batch_size == 128,
+            "eligible_locked_v3_matrix_cell": expected_confirmatory,
             "final_confirmatory_matrix_complete": False,
             "guidance_controller_warmup_epochs": controller_warmup,
         }
         if args.seed_extension_full:
             expected["seed_extension_full"] = True
+        if args.loader_followup_full:
+            expected.update(
+                {
+                    "loader_followup_full": True,
+                    "cub_loader_profile": L2_CONSERVATIVE_SPATIAL,
+                    "exploratory_selected_loader_followup": True,
+                    "official_test_policy": (
+                        "deferred_to_orchestrator_after_all_four_"
+                        "validation_selections"
+                    ),
+                }
+            )
         failures = [key for key, value in expected.items() if summary.get(key) != value]
         if (
             failures
@@ -590,7 +790,15 @@ def _classification_rows(
             {
                 "batch_size": batch_size,
                 "batch_profile_role": _batch_role(
-                    batch_size, seed_extension=args.seed_extension_full
+                    batch_size,
+                    seed_extension=args.seed_extension_full,
+                    loader_followup=args.loader_followup_full,
+                ),
+                "eligible_locked_v3_matrix_cell": expected_confirmatory,
+                "cub_loader_profile": (
+                    L2_CONSERVATIVE_SPATIAL
+                    if args.loader_followup_full
+                    else "l0_current_strong"
                 ),
                 "variant": variant,
                 "method": method,
@@ -598,7 +806,8 @@ def _classification_rows(
                 "controller_warmup_epochs": controller_warmup,
                 "encoder_seed": encoder_seed,
                 "checkpoint_purpose": _checkpoint_purpose(
-                    args.seed_extension_full
+                    args.seed_extension_full,
+                    loader_followup=args.loader_followup_full,
                 ),
                 "summary_path": str((run_dir / "summary.json").resolve()),
                 "checkpoint_path": str(checkpoint_path.resolve()),
@@ -620,14 +829,148 @@ def _classification_rows(
     return rows
 
 
+def _evaluate_deferred_classification_tests(
+    args: argparse.Namespace,
+    rows: Sequence[dict[str, Any]],
+    *,
+    config_sha256: str,
+    validation_hash: str,
+    batch_size: int,
+    encoder_seed: int,
+    device: torch.device,
+) -> None:
+    if not args.loader_followup_full:
+        return
+    if len(rows) != 4 or {row["variant"] for row in rows} != set(EXPECTED_VARIANTS):
+        raise RuntimeError(
+            "all four validation-selected encoders are required before official test"
+        )
+    profile_dir = _profile_dir(args, batch_size, encoder_seed)
+    marker_path = (
+        profile_dir / "classification" / "selection_complete_before_test.json"
+    )
+    journal_path = profile_dir / "classification" / "official_test_results.json"
+    if not marker_path.is_file():
+        _atomic_json_save(
+            {
+                "status": "complete",
+                "config_sha256": config_sha256,
+                "batch_size": batch_size,
+                "encoder_seed": encoder_seed,
+                "completed_validation_selections": 4,
+                "expected_validation_selections": 4,
+                "official_test_accessed": False,
+            },
+            marker_path,
+        )
+    marker = _load_json(marker_path)
+    if marker != {
+        "status": "complete",
+        "config_sha256": config_sha256,
+        "batch_size": batch_size,
+        "encoder_seed": encoder_seed,
+        "completed_validation_selections": 4,
+        "expected_validation_selections": 4,
+        "official_test_accessed": False,
+    }:
+        raise RuntimeError("classification pre-test selection marker changed")
+
+    entries: list[dict[str, Any]] = []
+    if journal_path.is_file():
+        journal = _load_json(journal_path)
+        if (
+            journal.get("config_sha256") != config_sha256
+            or journal.get("batch_size") != batch_size
+            or journal.get("encoder_seed") != encoder_seed
+            or not isinstance(journal.get("entries"), list)
+        ):
+            raise RuntimeError("classification official-test journal changed")
+        entries = journal["entries"]
+    by_variant = {entry.get("variant"): entry for entry in entries}
+    if len(by_variant) != len(entries) or any(
+        variant not in EXPECTED_VARIANTS for variant in by_variant
+    ):
+        raise RuntimeError("classification official-test journal has invalid variants")
+
+    test_loader = None
+    for row in rows:
+        variant = row["variant"]
+        existing = by_variant.get(variant)
+        if existing is None:
+            if test_loader is None:
+                test_loader = build_official_test_loader(
+                    args.data_dir,
+                    eval_batch_size=args.eval_batch_size,
+                    num_workers=args.num_workers,
+                    device=device,
+                )
+            model, encoder_audit = _load_encoder(
+                row,
+                config_sha256=config_sha256,
+                validation_hash=validation_hash,
+                device=device,
+            )
+            metrics = evaluate(
+                model,
+                test_loader,
+                device,
+                teacher=False,
+                num_classes=NUM_CLASSES,
+            )
+            del model
+            if not all(_finite_metrics(value) for value in metrics.values()):
+                raise RuntimeError("non-finite classification official-test metric")
+            existing = {
+                "variant": variant,
+                "encoder_checkpoint_sha256": encoder_audit["checkpoint_sha256"],
+                "metrics": metrics,
+                "official_test_evaluations": 1,
+            }
+            entries.append(existing)
+            by_variant[variant] = existing
+            _atomic_json_save(
+                {
+                    "status": "complete" if len(entries) == 4 else "in_progress",
+                    "config_sha256": config_sha256,
+                    "batch_size": batch_size,
+                    "encoder_seed": encoder_seed,
+                    "completed": len(entries),
+                    "expected": 4,
+                    "settings_locked_before_first_test": True,
+                    "entries": entries,
+                },
+                journal_path,
+            )
+            log(
+                f"[CUB_R50_FULL_CLASSIFICATION_TEST] batch={batch_size} "
+                f"encoder_seed={encoder_seed} variant={variant} "
+                f"test_macro_top1={metrics['macro_top1']:.4f}"
+            )
+        if (
+            existing.get("encoder_checkpoint_sha256")
+            != row["summary"]["checkpoint_sha256"]
+            or existing.get("official_test_evaluations") != 1
+            or not isinstance(existing.get("metrics"), dict)
+        ):
+            raise RuntimeError("classification official-test result failed audit")
+        row["official_test"] = existing["metrics"]
+
+    if len(entries) != 4:
+        raise RuntimeError("classification official-test completion gate failed")
+
+
 def _classification_flat_rows(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     flattened = []
     for row in rows:
         summary = row["summary"]
+        official_test = row.get("official_test", summary.get("official_test"))
+        if not isinstance(official_test, dict):
+            raise RuntimeError("classification official-test metrics are missing")
         flattened.append(
             {
                 "batch_size": row["batch_size"],
                 "batch_profile_role": row["batch_profile_role"],
+                "cub_loader_profile": row["cub_loader_profile"],
                 "variant": row["variant"],
                 "method": row["method"],
                 "fusion_ratio_lambda": row["fusion_ratio_lambda"],
@@ -635,9 +978,9 @@ def _classification_flat_rows(rows: Sequence[dict[str, Any]]) -> list[dict[str, 
                 "encoder_seed": row["encoder_seed"],
                 "selected_epoch": summary["selected_epoch"],
                 "validation_macro_top1": summary["selected_validation"]["macro_top1"],
-                "test_macro_top1": summary["official_test"]["macro_top1"],
-                "test_overall_top1": summary["official_test"]["overall_top1"],
-                "test_top5": summary["official_test"]["top5"],
+                "test_macro_top1": official_test["macro_top1"],
+                "test_overall_top1": official_test["overall_top1"],
+                "test_top5": official_test["top5"],
                 "checkpoint_path": row["checkpoint_path"],
                 "checkpoint_sha256": summary["checkpoint_sha256"],
                 "confirmatory_main_result": summary["confirmatory_main_result"],
@@ -677,12 +1020,20 @@ def _load_encoder(
         "teacher_architecture": "resnet50_224_scratch",
         "protocol_config_sha256": config_sha256,
         "batch_profile_role": row["batch_profile_role"],
-        "eligible_locked_v3_matrix_cell": row["batch_size"] == 128,
+        "eligible_locked_v3_matrix_cell": row["eligible_locked_v3_matrix_cell"],
         "final_confirmatory_matrix_complete": False,
         "official_test_evaluations_at_checkpoint_write": 0,
     }
     if row["checkpoint_purpose"].endswith("_v5"):
         expected["seed_extension_full"] = True
+    if row["checkpoint_purpose"].endswith("_v1"):
+        expected.update(
+            {
+                "loader_followup_full": True,
+                "cub_loader_profile": L2_CONSERVATIVE_SPATIAL,
+                "exploratory_selected_loader_followup": True,
+            }
+        )
     failures = [key for key, value in expected.items() if metadata.get(key) != value]
     if failures:
         raise RuntimeError(
@@ -950,14 +1301,24 @@ def _select_probes(
                 {
                     "metadata": {
                         "purpose": _probe_checkpoint_purpose(
-                            args.seed_extension_full
+                            args.seed_extension_full,
+                            loader_followup=args.loader_followup_full,
                         ),
                         "scientific_result": True,
-                        "confirmatory_main_result": batch_size == 128,
+                        "confirmatory_main_result": (
+                            batch_size == 128 and not args.loader_followup_full
+                        ),
                         "config_sha256": config_sha256,
                         "batch_size": batch_size,
                         "batch_profile_role": _batch_role(
-                            batch_size, seed_extension=args.seed_extension_full
+                            batch_size,
+                            seed_extension=args.seed_extension_full,
+                            loader_followup=args.loader_followup_full,
+                        ),
+                        "cub_loader_profile": (
+                            L2_CONSERVATIVE_SPATIAL
+                            if args.loader_followup_full
+                            else "l0_current_strong"
                         ),
                         "variant": variant,
                         "encoder_seed": encoder_seed,
@@ -983,9 +1344,18 @@ def _select_probes(
             row = {
                 "batch_size": batch_size,
                 "batch_profile_role": _batch_role(
-                    batch_size, seed_extension=args.seed_extension_full
+                    batch_size,
+                    seed_extension=args.seed_extension_full,
+                    loader_followup=args.loader_followup_full,
                 ),
-                "confirmatory_main_result": batch_size == 128,
+                "cub_loader_profile": (
+                    L2_CONSERVATIVE_SPATIAL
+                    if args.loader_followup_full
+                    else "l0_current_strong"
+                ),
+                "confirmatory_main_result": (
+                    batch_size == 128 and not args.loader_followup_full
+                ),
                 "variant": variant,
                 "method": classification["method"],
                 "fusion_ratio_lambda": classification["fusion_ratio_lambda"],
@@ -1109,11 +1479,21 @@ def _evaluate_probe_test(
             )
             metadata = saved.get("metadata", {})
             expected = {
-                "purpose": _probe_checkpoint_purpose(args.seed_extension_full),
+                "purpose": _probe_checkpoint_purpose(
+                    args.seed_extension_full,
+                    loader_followup=args.loader_followup_full,
+                ),
                 "config_sha256": config_sha256,
                 "batch_size": batch_size,
                 "batch_profile_role": _batch_role(
-                    batch_size, seed_extension=args.seed_extension_full
+                    batch_size,
+                    seed_extension=args.seed_extension_full,
+                    loader_followup=args.loader_followup_full,
+                ),
+                "cub_loader_profile": (
+                    L2_CONSERVATIVE_SPATIAL
+                    if args.loader_followup_full
+                    else "l0_current_strong"
                 ),
                 "variant": row["variant"],
                 "encoder_seed": encoder_seed,
@@ -1189,6 +1569,7 @@ def _probe_flat_rows(selections: Sequence[dict[str, Any]]) -> list[dict[str, Any
             {
                 "batch_size": item["batch_size"],
                 "batch_profile_role": item["batch_profile_role"],
+                "cub_loader_profile": item["cub_loader_profile"],
                 "confirmatory_main_result": item["confirmatory_main_result"],
                 "variant": item["variant"],
                 "method": item["method"],
@@ -1354,7 +1735,7 @@ def _run_profile(
     profile_dir.mkdir(parents=True, exist_ok=True)
     summary_path = profile_dir / (
         "profile_full_summary.json"
-        if args.seed_extension_full
+        if args.seed_extension_full or args.loader_followup_full
         else "batch_full_summary.json"
     )
     resumed = _load_complete_batch_summary(
@@ -1384,6 +1765,15 @@ def _run_profile(
         row["summary"]["teacher_model_state_sha256"] for row in classification_rows
     } != {EXPECTED_TEACHER_STATE_SHA256}:
         raise RuntimeError("guided students did not share the audited teacher")
+    _evaluate_deferred_classification_tests(
+        args,
+        classification_rows,
+        config_sha256=config_sha256,
+        validation_hash=validation_hash,
+        batch_size=batch_size,
+        encoder_seed=encoder_seed,
+        device=device,
+    )
     _classification_csv(
         classification_rows, profile_dir / "classification_results.csv"
     )
@@ -1482,10 +1872,19 @@ def _run_profile(
         {
             "status": "complete",
             "scientific_result": True,
-            "confirmatory_main_result": batch_size == 128,
+            "confirmatory_main_result": (
+                batch_size == 128 and not args.loader_followup_full
+            ),
             "batch_size": batch_size,
             "batch_profile_role": _batch_role(
-                batch_size, seed_extension=args.seed_extension_full
+                batch_size,
+                seed_extension=args.seed_extension_full,
+                loader_followup=args.loader_followup_full,
+            ),
+            "cub_loader_profile": (
+                L2_CONSERVATIVE_SPATIAL
+                if args.loader_followup_full
+                else "l0_current_strong"
             ),
             "encoder_seed": encoder_seed,
             "rows": probe_rows,
@@ -1501,13 +1900,23 @@ def _run_profile(
     summary = {
         "status": "complete",
         "scientific_result": True,
-        "confirmatory_main_result": batch_size == 128,
+        "confirmatory_main_result": (
+            batch_size == 128 and not args.loader_followup_full
+        ),
+        "exploratory_selected_loader_followup": args.loader_followup_full,
         "final_confirmatory_matrix_complete": False,
         "protocol_id": config["protocol_id"],
         "config_sha256": config_sha256,
         "batch_size": batch_size,
         "batch_profile_role": _batch_role(
-            batch_size, seed_extension=args.seed_extension_full
+            batch_size,
+            seed_extension=args.seed_extension_full,
+            loader_followup=args.loader_followup_full,
+        ),
+        "cub_loader_profile": (
+            L2_CONSERVATIVE_SPATIAL
+            if args.loader_followup_full
+            else "l0_current_strong"
         ),
         "encoder_seed": encoder_seed,
         "variants": list(EXPECTED_VARIANTS),
@@ -1547,11 +1956,14 @@ def _run_profile(
     )
     for row in classification_rows:
         result = row["summary"]
+        official_test = row.get("official_test", result.get("official_test"))
+        if not isinstance(official_test, dict):
+            raise RuntimeError("classification official-test metrics are missing")
         log(
             f"[CUB_R50_FULL_CLASSIFICATION_RESULT] batch={batch_size} "
             f"variant={row['variant']} encoder_seed={encoder_seed} selected_epoch="
             f"{result['selected_epoch']} test_macro_top1="
-            f"{result['official_test']['macro_top1']:.4f}"
+            f"{official_test['macro_top1']:.4f}"
         )
     log(f"[CUB_R50_FULL_BATCH{batch_size}_SEED{encoder_seed}_PROBE_RESULTS]")
     for aggregate in aggregates:
@@ -1593,7 +2005,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     args.cache_dir = args.cache_dir.expanduser().resolve()
     args.teacher_checkpoint = args.teacher_checkpoint.expanduser().resolve()
     config = _load_json(config_path)
-    if args.seed_extension_full:
+    if args.loader_followup_full:
+        _validate_loader_followup_config(config, config_path)
+        parent_path = _resolve_repository_path(
+            config["protocol_provenance"]["pre_smoke_locked_full"]["path"]
+        )
+        runtime_config = _load_json(parent_path)
+        runtime_config["protocol_id"] = config["protocol_id"]
+    elif args.seed_extension_full:
         _validate_seed_extension_config(
             config, config_path, partition=str(args.partition)
         )
@@ -1623,7 +2042,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         profile_total=len(profiles),
     )
     log("=" * 104)
-    if args.seed_extension_full:
+    if args.loader_followup_full:
+        log(
+            "CUB PHASE 1 — RESNET-50/224 SELECTED L2 GUIDED "
+            "SEED-1 PRELIMINARY FULL -> PROBE"
+        )
+    elif args.seed_extension_full:
         log(
             "CUB PHASE 1 — RESNET-50/224 GUIDED SEED EXTENSION FULL -> PROBE"
         )
@@ -1761,7 +2185,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "protocol_id": config["protocol_id"],
         "config_path": str(config_path),
         "config_sha256": config_sha256,
-        "mode": "seed_extension_v5" if args.seed_extension_full else "batch_profile_v4",
+        "mode": (
+            "selected_l2_guided_preliminary_v1"
+            if args.loader_followup_full
+            else "seed_extension_v5"
+            if args.seed_extension_full
+            else "batch_profile_v4"
+        ),
         "partition": args.partition,
         "profile_order": [
             {"batch_size": batch_size, "encoder_seed": encoder_seed}
@@ -1770,7 +2200,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "variants": list(EXPECTED_VARIANTS),
         "encoder_seeds": sorted(initial_hashes_by_seed),
         "final_confirmatory_matrix_complete": False,
-        "batch128_eligible_for_locked_v3_matrix": True,
+        "batch128_eligible_for_locked_v3_matrix": not args.loader_followup_full,
+        "exploratory_selected_loader_followup": args.loader_followup_full,
+        "cub_loader_profile": (
+            L2_CONSERVATIVE_SPATIAL
+            if args.loader_followup_full
+            else "l0_current_strong"
+        ),
         "batch64_is_sensitivity_profile": any(
             batch_size == 64 for batch_size, _ in profiles
         ),
@@ -1812,7 +2248,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         profile_total=len(profiles),
     )
     log(
-        "[CUB_R50_SEED_EXTENSION_FINAL_RESULTS]"
+        "[CUB_R50_L2_GUIDED_PRELIMINARY_FINAL_RESULTS]"
+        if args.loader_followup_full
+        else "[CUB_R50_SEED_EXTENSION_FINAL_RESULTS]"
         if args.seed_extension_full
         else "[CUB_R50_BATCH_PROFILE_FINAL_RESULTS]"
     )
@@ -1836,7 +2274,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 f"{aggregate['mean_over_probe_seeds']:.6f} probe_seed_sd="
                 f"{aggregate['sample_standard_deviation_over_probe_seeds']:.6f}"
             )
-    if args.seed_extension_full:
+    if args.loader_followup_full:
+        log(
+            "[CUB_R50_L2_GUIDED_PRELIMINARY_FULL_DONE] status=complete "
+            "profiles=1/1 classification=4/4 probe_candidates=60/60 "
+            "selections=20/20 test_once=20/20 "
+            f"new_checkpoints={expected_new_checkpoints} "
+            f"elapsed={format_duration(elapsed)} "
+            f"summary={(args.output_dir / 'combined_full_summary.json').resolve()}"
+        )
+    elif args.seed_extension_full:
         log(
             "[CUB_R50_SEED_EXTENSION_FULL_DONE] status=complete "
             f"partition={args.partition} profiles={len(profiles)}/{len(profiles)} "
@@ -1874,7 +2321,9 @@ def main() -> None:
             args.output_dir / "failure.json",
         )
         marker = (
-            "CUB_R50_SEED_EXTENSION_FULL_FAILED"
+            "CUB_R50_L2_GUIDED_PRELIMINARY_FULL_FAILED"
+            if args.loader_followup_full
+            else "CUB_R50_SEED_EXTENSION_FULL_FAILED"
             if args.seed_extension_full
             else "CUB_R50_BATCH_PROFILE_FULL_FAILED"
         )
