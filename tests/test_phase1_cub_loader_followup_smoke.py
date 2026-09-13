@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from ibkd_seg.phase1.cub_loader_profiles import L2_CONSERVATIVE_SPATIAL
 from ibkd_seg.phase1.run_cub_r50_guided_smoke import (
@@ -15,6 +17,7 @@ from ibkd_seg.phase1.run_cub_r50_guided_smoke import (
 )
 from ibkd_seg.phase1.run_cub_r50_batch_profile_full import (
     EXPECTED_LOADER_FOLLOWUP_CONFIG_SHA256 as EXPECTED_EXECUTION_CONFIG_SHA256,
+    _evaluate_deferred_classification_tests,
     _execution_profiles,
     _validate_loader_followup_config,
 )
@@ -195,6 +198,56 @@ class Phase1CubLoaderFollowupSmokeTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('"--defer-official-test"', runner_source)
         self.assertIn("completed_validation_selections", runner_source)
+
+    def test_deferred_classification_metric_audit_accepts_scalar_metrics(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(
+                loader_followup_full=True,
+                seed_extension_full=False,
+                output_dir=Path(directory),
+                data_dir=Path(directory) / "data",
+                eval_batch_size=200,
+                num_workers=4,
+            )
+            rows = [
+                {
+                    "variant": variant,
+                    "summary": {"checkpoint_sha256": "a" * 64},
+                }
+                for variant in EXPECTED_VARIANTS
+            ]
+            metrics = {
+                "overall_top1": 30.0,
+                "macro_top1": 29.5,
+                "top5": 60.0,
+            }
+            module = "ibkd_seg.phase1.run_cub_r50_batch_profile_full"
+            with (
+                mock.patch(f"{module}.build_official_test_loader", return_value=object()),
+                mock.patch(
+                    f"{module}._load_encoder",
+                    return_value=(object(), {"checkpoint_sha256": "a" * 64}),
+                ),
+                mock.patch(f"{module}.evaluate", return_value=metrics),
+            ):
+                _evaluate_deferred_classification_tests(
+                    args,
+                    rows,
+                    config_sha256="b" * 64,
+                    validation_hash="c" * 64,
+                    batch_size=128,
+                    encoder_seed=1,
+                    device=object(),
+                )
+            self.assertTrue(all(row["official_test"] == metrics for row in rows))
+            journal = json.loads(
+                (
+                    Path(directory)
+                    / "batch128_seed1/classification/official_test_results.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual(journal["status"], "complete")
+            self.assertEqual(journal["completed"], 4)
 
 
 if __name__ == "__main__":

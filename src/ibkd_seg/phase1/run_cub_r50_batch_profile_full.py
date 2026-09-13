@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import statistics
 import subprocess
 import sys
@@ -918,7 +919,7 @@ def _evaluate_deferred_classification_tests(
                 num_classes=NUM_CLASSES,
             )
             del model
-            if not all(_finite_metrics(value) for value in metrics.values()):
+            if not all(math.isfinite(float(value)) for value in metrics.values()):
                 raise RuntimeError("non-finite classification official-test metric")
             existing = {
                 "variant": variant,
