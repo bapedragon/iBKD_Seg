@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "complete_log_received_result_archive_pending_audit",
+  "scientific_scope": "l2_selected_loader_guided_four_methods_encoder_seed1_preliminary_full",
+  "source": {
+    "attachment_id": "0eb110f8-beb6-4d69-931a-3be7614607ac",
+    "filename": "pasted-text.txt",
+    "bytes": 65004,
+    "lines": 507,
+    "sha256": "015eba63799c039d21694a664bdfdc65057cdf0639c8b2e031a992d1efbf6d30",
+    "completion_marker_line": 506,
+    "reported_output_summary": "/app/output/phase1_cub_r50_224_b128_seed1_l2_guided_preliminary_full_rerun_v2/combined_full_summary.json"
+  },
+  "pending": [
+    "receive_and_crc_check_result_archive",
+    "audit_original_machine_readable_summaries",
+    "verify_checkpoint_file_and_model_state_hashes",
+    "independently_recompute_aggregates",
+    "replace_log_snapshot_status_with_archive_backed_report"
+  ]
+}

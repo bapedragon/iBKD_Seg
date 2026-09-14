@@ -51,8 +51,13 @@ validation-only 학습에서 따로 확인합니다. 상세 결과는
 Stage B의 L0/L1/L2 완료 로그를 합친 사전 선택 지표는 Part PCK 평균
 `24.6660% / 21.7878% / 36.0609%`로 L2가 가장 높았습니다. 전체 표와 제한은
 [loader 결과 스냅샷](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md)에
-있습니다. 결과 archive 감사 전에는 선택된 L2의 guided 4방법×seed-1 비과학적
-smoke만 허용하며, 이 범위는 6방법×3seed 최종 확증 matrix를 대신하지 않습니다.
+있습니다. 선택된 L2의 guided 4방법×seed-1 smoke에 이어 예비 본실험도 완료됐으며,
+분류는 LG `30.0931%`, ALG-w20 `25.4625%`, iBKD-0.25 `21.9337%`,
+iBKD-0.5 `22.6542%`, frozen probe mIoU는 각각 `74.1203%`, `74.2158%`,
+`72.9239%`, `73.6347%`였습니다. 현재는
+[완료 로그 기반 결과](image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md)만
+반영했으며 결과 archive와 checkpoint 감사가 남아 있습니다. 이 단일 encoder seed
+예비 결과는 6방법×3seed 최종 확증 matrix를 대신하지 않습니다.
 
 분류와 frozen segmentation probe 외에 part landmark, spatial CKA,
 attention–mask 정렬로 공간정보를 직접 확인하는 후속 정의는

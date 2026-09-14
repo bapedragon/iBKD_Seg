@@ -16,6 +16,10 @@
 - `full_v1_log_snapshot/`: L0와 L1·L2 완료 로그에서 추출한 12개 방법별 수치와
   profile 평균, 해석을 보존합니다. L2가 사전 선택 규칙에서 1위지만 결과 archive와
   checkpoint 감사 전까지는 잠정 로그 스냅샷입니다.
+- `l2_guided_preliminary_full_seed1_log_snapshot_v1/`: 선택된 L2에서 guided 네
+  방법을 encoder seed 1로 다시 학습하고 official-test 분류와 frozen probe까지
+  완료한 로그 기반 예비 결과입니다. 결과 archive·checkpoint 감사 전 상태를
+  명시합니다.
 
 L0/L1/L2 완료 로그는 모두 도착해 `full_v1_log_snapshot/`에 함께 정리했습니다.
 다만 독립 결과 archive는 아직 회수하지 않았으므로 checkpoint와 원본

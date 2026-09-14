@@ -41,3 +41,12 @@ bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_l2_guided_pre
 LR 3개 × 100 epoch를 수행합니다. validation 선택이 모두 끝난 뒤 선택된 분류·probe
 checkpoint만 official test에서 한 번 평가하며, checkpoint 24개와 최종 표를
 출력에 보존합니다.
+
+재실행 완료 로그에서는 `classification=4/4`, `probe_candidates=60/60`,
+`selections=20/20`, `test_once=20/20`을 통과했고 총 `3시간 16분 10초`가
+걸렸습니다. Test macro Top-1은 LG `30.0931%`, ALG-w20 `25.4625%`,
+iBKD-0.25 `21.9337%`, iBKD-0.5 `22.6542%`였습니다. Frozen probe mIoU는
+각각 `74.1203%`, `74.2158%`, `72.9239%`, `73.6347%`입니다. 결과 archive
+감사 전의 정확한 범위와 표는
+[L2 seed-1 예비 본실험 로그 결과](reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md)에
+기록했습니다.

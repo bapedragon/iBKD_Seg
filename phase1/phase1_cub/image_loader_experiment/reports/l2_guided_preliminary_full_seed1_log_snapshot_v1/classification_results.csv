@@ -1,0 +1,5 @@
+profile,variant,encoder_seed,selected_epoch,validation_macro_top1_percent,test_macro_top1_percent
+l2_conservative_spatial,lg,1,213,32.5000,30.0931
+l2_conservative_spatial,alg_warmup20,1,109,27.8333,25.4625
+l2_conservative_spatial,ibkd_lambda_0.25,1,123,25.0000,21.9337
+l2_conservative_spatial,ibkd_lambda_0.5,1,242,26.0000,22.6542

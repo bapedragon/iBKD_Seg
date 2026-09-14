@@ -1,0 +1,5 @@
+profile,variant,encoder_seed,test_input224_miou_probe_seed_mean,test_input224_miou_probe_seed_sample_sd,independent_encoder_n,probe_seeds_per_encoder
+l2_conservative_spatial,lg,1,0.741203,0.000724,1,5
+l2_conservative_spatial,alg_warmup20,1,0.742158,0.001870,1,5
+l2_conservative_spatial,ibkd_lambda_0.25,1,0.729239,0.001137,1,5
+l2_conservative_spatial,ibkd_lambda_0.5,1,0.736347,0.001547,1,5

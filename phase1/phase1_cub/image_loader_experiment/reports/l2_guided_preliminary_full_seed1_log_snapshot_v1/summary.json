@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "status": "complete_log_received_result_archive_pending_audit",
+  "scientific_result": true,
+  "exploratory_selected_loader_followup": true,
+  "confirmatory_main_result": false,
+  "profile": "l2_conservative_spatial",
+  "batch_size": 128,
+  "encoder_seeds": [1],
+  "completion": {
+    "classification": "4/4",
+    "probe_candidates": "60/60",
+    "probe_validation_selections": "20/20",
+    "probe_official_test_evaluations": "20/20",
+    "reported_new_checkpoints": 24,
+    "elapsed_seconds": 11770
+  },
+  "official_test_policy_observed_in_log": {
+    "all_probe_selections_before_test_open": true,
+    "official_test_masks_accessed_before_selection_complete": false,
+    "one_test_evaluation_per_selected_probe": true
+  },
+  "classification": {
+    "lg": {
+      "selected_epoch": 213,
+      "validation_macro_top1_percent": 32.5,
+      "test_macro_top1_percent": 30.0931
+    },
+    "alg_warmup20": {
+      "selected_epoch": 109,
+      "validation_macro_top1_percent": 27.8333,
+      "test_macro_top1_percent": 25.4625
+    },
+    "ibkd_lambda_0.25": {
+      "selected_epoch": 123,
+      "validation_macro_top1_percent": 25.0,
+      "test_macro_top1_percent": 21.9337
+    },
+    "ibkd_lambda_0.5": {
+      "selected_epoch": 242,
+      "validation_macro_top1_percent": 26.0,
+      "test_macro_top1_percent": 22.6542
+    }
+  },
+  "frozen_probe_test_input224_miou": {
+    "aggregation": "mean_and_sample_sd_over_five_probe_seeds_within_one_encoder_seed",
+    "independent_encoder_n": 1,
+    "lg": {
+      "mean": 0.741203,
+      "sample_sd": 0.000724
+    },
+    "alg_warmup20": {
+      "mean": 0.742158,
+      "sample_sd": 0.00187
+    },
+    "ibkd_lambda_0.25": {
+      "mean": 0.729239,
+      "sample_sd": 0.001137
+    },
+    "ibkd_lambda_0.5": {
+      "mean": 0.736347,
+      "sample_sd": 0.001547
+    }
+  },
+  "paired_descriptive_differences_percentage_points": {
+    "alg_warmup20_minus_lg": 0.0955,
+    "alg_warmup20_minus_ibkd_lambda_0.5": 0.5811,
+    "lg_minus_ibkd_lambda_0.5": 0.4856,
+    "ibkd_lambda_0.5_minus_ibkd_lambda_0.25": 0.7108
+  },
+  "conclusion": "Within the selected L2 loader and encoder seed 1, ALG-w20 has the highest frozen-probe mIoU and LG has the highest classification accuracy; neither iBKD setting is best.",
+  "audit_limit": "Values are transcribed from the supplied completion log. Result archive, original summaries, checkpoint hashes, and metric recomputation remain pending.",
+  "source_manifest": "source_manifest.json"
+}
