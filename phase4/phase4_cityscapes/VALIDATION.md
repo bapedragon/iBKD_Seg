@@ -18,6 +18,13 @@ Segmenter-S/16 mask decoder 구조를 사용해 네 방법을 검증했습니다
 
 이 결과로 768×768/BF16의 CUDA 동작, GPU 메모리, 실제 Cityscapes 정확도 또는
 pretrained checkpoint 호환성을 확인한 것은 아닙니다. 해당 CUDA 경로는 H200 smoke 대상입니다.
+
+H200 요청은 [#448](https://github.com/Aerodrone-H200/gpu-request/issues/448)로 공식 양식에서
+제출했습니다. 실행 코드 commit은 `c5877ec0efa11c43e24d0112f46c1d667c2fe366`입니다.
+API로 먼저 생성한 #447은 필수 라벨이 붙지 않아 실행되지 않았으며 중복 방지를 위해 닫았습니다.
+GitHub CLI의 `--label provisioning`은 이 계정 권한에서 적용되지 않으므로 이후 H200 요청은
+저장소의 공식 issue form으로 제출하고 라벨 및 자동 처리 상태를 확인해야 합니다.
+
 아래 v1/v2는 이전 자체 convolution decoder pilot의 검증 이력입니다.
 
 ## v2 — Pixel accuracy 우선 변경 검증

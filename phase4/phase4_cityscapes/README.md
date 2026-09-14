@@ -8,6 +8,7 @@ Vanilla/LG/ALG/iBKD 연결을 먼저 확인합니다. Cityscapes 데이터는 �
 
 - [현재 smoke 조건·공식 프로토콜 구분](DEEPLAB_SEGMENTER_SMOKE.md)
 - [H200 제출 본문](H200_SMOKE_ISSUE.md)
+- [H200 smoke 이슈 #448](https://github.com/Aerodrone-H200/gpu-request/issues/448)
 - [GPU smoke 설정](configs/deeplabv3_segmenter_smoke_v1.json)
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_deeplabv3_segmenter_smoke.sh`
 - 로컬: `PYTHONPATH=src .venv/bin/python -m ibkd_seg.cityscapes.public_smoke --device cpu --cpu-small --output-dir outputs/cityscapes_arch_smoke_new`
