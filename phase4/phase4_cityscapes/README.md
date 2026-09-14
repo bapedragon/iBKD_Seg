@@ -3,9 +3,13 @@
 ## 현재 작업: DeepLabV3 → Segmenter GPU smoke
 
 2026-09-14 사용자 선택에 따라 **DeepLabV3-ResNet101 → Segmenter-S/16 mask decoder**로
-Vanilla/LG/ALG/iBKD 연결을 먼저 확인합니다. Cityscapes 데이터는 아직 준비되지 않았습니다.
-이 요청은 **합성 입력·임의 가중치로 실행하는 구조 검증**이며 실제 Cityscapes 성능 평가가 아닙니다.
+Vanilla/LG/ALG/iBKD의 H200 합성 smoke를 수행했고, 사용자 제공 로그에서 **4/4 통과**를 확인했습니다.
+이는 **합성 입력·임의 가중치로 실행한 구조 검증**이며 실제 Cityscapes 성능 평가가 아닙니다.
+사용자가 실제 데이터 ZIP 두 개를 내려받았으며, 로컬 `data/cityscapes`에서
+train 2,975장·val 500장 및 대응 정답의 전체 검증을 완료했습니다.
+H200 컨테이너에서 사용할 데이터 경로는 운영진 배치 후 확인해야 합니다.
 
+- [실제 데이터 준비 명령·운영진 전달 요청](DATA_PREPARATION.md)
 - [현재 smoke 조건·공식 프로토콜 구분](DEEPLAB_SEGMENTER_SMOKE.md)
 - [H200 제출 본문](H200_SMOKE_ISSUE.md)
 - [H200 smoke 이슈 #448](https://github.com/Aerodrone-H200/gpu-request/issues/448)

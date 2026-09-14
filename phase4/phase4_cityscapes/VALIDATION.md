@@ -1,5 +1,17 @@
 # Cityscapes 구성 로컬 검증
 
+## 실제 Cityscapes 데이터 준비
+
+2026-09-14 사용자 제공 ZIP 두 개를 검사하고 `data/cityscapes`에 train/val을 준비했습니다.
+이미지·labelIds 정답 2,975/500쌍 전체의 PNG 디코딩, 2048×1024 해상도, 라벨 범위,
+유효 정답, split 중복 검사 및 파일별 byte size·SHA-256 기록을 완료했습니다.
+ZIP 전체 CRC도 통과했습니다. Test는 추출하거나 평가하지 않았습니다.
+
+원본 파일 해시 및 H200 전달 절차는 [데이터 준비 기록](DATA_PREPARATION.md)에 있습니다.
+새 준비 코드의 상위 폴더 처리, 반복 추출, 기존 데이터 충돌 거부, ZIP CRC 오류 탐지,
+경로 이탈·중복 목적지 거부를 확인했으며 기존 테스트와 합쳐 **14개 통과**했습니다.
+이는 실제 데이터 준비 검증이며 본학습 성능 측정이 아닙니다.
+
 ## DeepLabV3 → Segmenter smoke v1
 
 2026-09-14, 기존과 같은 로컬 CPU 환경에서 실제 DeepLabV3-ResNet101 /
@@ -16,8 +28,20 @@ Segmenter-S/16 mask decoder 구조를 사용해 네 방법을 검증했습니다
 - Source SHA-256: `3b96030c5df9ee05d854a29940ecb32439057f891fcaddcf7dc99c2891275724`.
 - 원시 보고서: `outputs/cityscapes_deeplabv3_segmenter_cpu_smoke_v1/smoke_summary.json`.
 
-이 결과로 768×768/BF16의 CUDA 동작, GPU 메모리, 실제 Cityscapes 정확도 또는
-pretrained checkpoint 호환성을 확인한 것은 아닙니다. 해당 CUDA 경로는 H200 smoke 대상입니다.
+위 CPU 결과만으로 768×768/BF16의 CUDA 동작, GPU 메모리, 실제 Cityscapes 정확도 또는
+pretrained checkpoint 호환성을 확인한 것은 아닙니다.
+
+이후 사용자 제공 H200 실행 로그에서 다음 완료 표식을 확인했습니다.
+
+```text
+[CITYSCAPES_ARCH_SMOKE_DONE] status=passed methods=4/4 scientific_result=false
+```
+
+네 방법 모두 3step을 수행했습니다. GPU 합성 smoke가 통과했지만 실제 데이터 정확도나
+학습된 teacher의 손실 균형을 검증한 결과는 아닙니다. LG/ALG의 출력 loss 약 `2.6234e10`은
+임의 teacher를 사용하는 구조 점검에서 관측한 값이며 수렴 근거로 사용하지 않습니다.
+원격 `smoke_summary.json` 파일 자체는 아직 수령하지 않았으므로 상세 GPU 메모리 수치를
+이 문서에 추정해서 기재하지 않습니다.
 
 H200 요청은 [#448](https://github.com/Aerodrone-H200/gpu-request/issues/448)로 공식 양식에서
 제출했습니다. 실행 코드 commit은 `c5877ec0efa11c43e24d0112f46c1d667c2fe366`입니다.

@@ -1,8 +1,10 @@
 # DeepLabV3 → Segmenter: 첫 GPU smoke
 
 2026-09-14 사용자 요청: CNN → ViT segmentation에서 LG·ALG·iBKD를 비교하되
-먼저 H200 smoke 이슈를 제출합니다. 실제 Cityscapes 데이터가 준비되지 않았으므로
-이번 실행은 합성 입력과 임의 초기 가중치만 사용합니다.
+먼저 H200 smoke 이슈를 제출했습니다. 제출 당시 실제 Cityscapes 데이터가 준비되지 않아
+해당 실행은 합성 입력과 임의 초기 가중치만 사용했습니다.
+이후 사용자 제공 H200 로그에서 네 방법 통과를 확인했습니다.
+실제 ZIP 다운로드 이후 작업은 [데이터 준비·H200 전달 안내](DATA_PREPARATION.md)에 기록합니다.
 
 ## 무엇이 이미 정해져 있는가
 

@@ -6,6 +6,7 @@ import hashlib
 import json
 import random
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import torch
@@ -68,24 +69,28 @@ def discover(root: Path, split: str) -> list[dict]:
     return rows
 
 
-def audit(root: Path, *, synthetic: bool = False) -> dict:
+def audit(root: Path, *, synthetic: bool = False,
+          progress: Callable[[str, int, int], None] | None = None) -> dict:
     splits = {}
     for split, expected in (("train", 2975), ("val", 500)):
         rows = discover(root, split)
         if not synthetic and len(rows) != expected:
             raise ValueError(f"{split}: expected {expected} images, found {len(rows)}")
-        for row in rows:
+        for index, row in enumerate(rows, 1):
             for kind in ("image", "mask"):
                 path = root / row[kind]
                 row[kind + "_bytes"] = path.stat().st_size
                 row[kind + "_sha256"] = sha256(path)
             with Image.open(root / row["image"]) as image, Image.open(root / row["mask"]) as mask:
+                image.load()  # Decode the whole PNG, not just its dimensions.
                 if image.size != mask.size or (not synthetic and image.size != (2048, 1024)):
                     raise ValueError(f"Unexpected image/mask dimensions: {row['id']}")
                 labels = encode_mask(np.asarray(mask))
                 if not (labels != IGNORE).any():
                     raise ValueError(f"No valid target pixels: {row['id']}")
                 row["size_wh"] = list(image.size)
+            if progress is not None:
+                progress(split, index, len(rows))
         splits[split] = rows
     if {r["id"] for r in splits["train"]} & {r["id"] for r in splits["val"]}:
         raise ValueError("Train/val overlap")
