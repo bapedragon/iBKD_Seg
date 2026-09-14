@@ -8,6 +8,11 @@
 
 ## 현재 상태
 
+2026-09-14 사용자 요청으로 **DeepLabV3-ResNet101 → Segmenter-S/16**의
+Vanilla/LG/ALG/iBKD GPU smoke 구성을 추가했습니다. Cityscapes 데이터가 아직 없어
+합성 입력으로 먼저 점검하며 실제 Cityscapes 성능은 아직 측정하지 않았습니다. 기존 Phase 1 gate 판단은
+그대로 유지합니다. 실행 절차는 [Cityscapes 안내](phase4/phase4_cityscapes/README.md)에 있습니다.
+
 **Phase 0.5 완료 — Phase 1-PET No-Go, Phase 1-CUB-200 v3 guided seed-1 부분 결과 감사 완료.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을

@@ -122,6 +122,12 @@ full fine-tuning 조건을 분리합니다. 출력 해상도가 충분히 높아
 
 ## Phase 4 — 표준 semantic segmentation
 
+2026-09-14 사용자 요청으로 [Cityscapes 실험](phase4/phase4_cityscapes/README.md)의
+DeepLabV3-ResNet101 → Segmenter-S/16 smoke를 독립 추가했습니다.
+Vanilla/LG/ALG/iBKD를 같은 합성 입력으로 비교 점검하며 실제 Cityscapes
+성능은 아직 측정하지 않았습니다. 이 pilot은 아래의 기존 gate 경로와 분리하며,
+Phase 1의 iBKD 우위 가설이 통과했다는 의미가 아닙니다.
+
 명시적인 data-scarce 비율을 적용한 PASCAL VOC부터 multi-class benchmark로
 확장합니다. 조건을 맞춘 Vanilla, KD, LG, ALG, iBKD와 선별한 segmentation KD
 baseline을 비교합니다.
