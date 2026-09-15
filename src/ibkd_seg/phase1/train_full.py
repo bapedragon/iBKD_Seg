@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import gc
+import hashlib
 import json
 import time
 from pathlib import Path
@@ -44,6 +45,7 @@ from .train_timing import (
     PLANNED_EPOCHS,
     _ibkd_aggregation_audit,
     atomic_torch_save,
+    configure_controlled_reproducibility,
     create_scheduler,
     evaluate,
     file_sha256,
@@ -51,10 +53,12 @@ from .train_timing import (
     kd_loss,
     log,
     runtime_metadata,
+    rng_state_sha256,
     seed_everything,
     state_dict_sha256,
     synchronize,
     teacher_parameter_groups,
+    update_tensor_sha256,
 )
 
 
@@ -146,6 +150,14 @@ def parse_args() -> argparse.Namespace:
         help="Run one cell from the locked main-L0 iBKD connection ablation.",
     )
     parser.add_argument(
+        "--controlled-aa-full",
+        action="store_true",
+        help=(
+            "Run one 300-epoch member of the locked main-L0 iBKD controlled "
+            "A/A reproducibility audit."
+        ),
+    )
+    parser.add_argument(
         "--ibkd-aggregation-mode",
         choices=IBKD_AGGREGATION_MODES,
         default="learned_all",
@@ -206,6 +218,7 @@ def validate_args(args: argparse.Namespace) -> None:
     mechanism_ablation_full = bool(
         getattr(args, "mechanism_ablation_full", False)
     )
+    controlled_aa_full = bool(getattr(args, "controlled_aa_full", False))
     aggregation_mode = str(
         getattr(args, "ibkd_aggregation_mode", "learned_all")
     )
@@ -226,6 +239,7 @@ def validate_args(args: argparse.Namespace) -> None:
             or loader_pilot_full
             or loader_followup_full
             or mechanism_ablation_full
+            or controlled_aa_full
             or defer_official_test
             or protocol_config is not None
             or cub_loader_profile != L0_CURRENT_STRONG
@@ -255,10 +269,16 @@ def validate_args(args: argparse.Namespace) -> None:
             loader_pilot_full,
             loader_followup_full,
             mechanism_ablation_full,
+            controlled_aa_full,
         )
     ) > 1:
         raise ValueError(
             "CUB full experiment modes are mutually exclusive"
+        )
+    if defer_official_test and controlled_aa_full:
+        raise ValueError(
+            "Controlled A/A full evaluates official test once after each "
+            "validation-selected checkpoint"
         )
     if defer_official_test and not (
         loader_followup_full or mechanism_ablation_full
@@ -274,6 +294,25 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError(
             "Mechanism-ablation classification must defer test until all four selections"
         )
+    if controlled_aa_full:
+        if not (
+            dataset_key == "cub"
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_r50
+            and args.method == "ibkd"
+            and args.fusion_ratio == 0.25
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.num_workers == 0
+            and cub_loader_profile == L0_CURRENT_STRONG
+            and aggregation_mode == "learned_all"
+            and args.alg_controller_warmup_epochs == 0
+            and args.posthoc_diagnostic_id is None
+        ):
+            raise ValueError(
+                "Controlled A/A full is fixed to CUB main-L0, audited ResNet-50, "
+                "iBKD lambda 0.25 learned-all, batch 128, seed 1, and num_workers 0"
+            )
     if teacher_architecture == "resnet50_224_scratch":
         if not scientific_cub_r50 or dataset_key != "cub":
             raise ValueError(
@@ -421,6 +460,7 @@ def validate_args(args: argparse.Namespace) -> None:
         or loader_pilot_full
         or loader_followup_full
         or mechanism_ablation_full
+        or controlled_aa_full
         or protocol_config is not None
         or batch_profile_role
         or cub_loader_profile != L0_CURRENT_STRONG
@@ -748,6 +788,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     mechanism_ablation_full = bool(
         getattr(args, "mechanism_ablation_full", False)
     )
+    controlled_aa_full = bool(getattr(args, "controlled_aa_full", False))
     aggregation_mode = str(
         getattr(args, "ibkd_aggregation_mode", "learned_all")
     )
@@ -811,6 +852,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         ).to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
 
+    initial_guidance_hash = (
+        None if guidance is None else state_dict_sha256(guidance)
+    )
+
     parameters = list(student.parameters())
     if guidance is not None:
         parameters.extend(guidance.parameters())
@@ -840,6 +885,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"loader_pilot_full={loader_pilot_full} "
         f"loader_followup_full={loader_followup_full} "
         f"mechanism_ablation_full={mechanism_ablation_full} "
+        f"controlled_aa_full={controlled_aa_full} "
         f"ibkd_aggregation_mode={aggregation_mode} "
         f"defer_official_test={defer_official_test} "
         f"cub_loader_profile={cub_loader_profile} "
@@ -860,7 +906,19 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         correct = 0
         totals = {"loss": 0.0, "ce": 0.0, "guidance": 0.0, "align": 0.0, "fuse": 0.0}
         epoch_lr = float(optimizer.param_groups[0]["lr"])
-        for images, targets in train_loader:
+        input_stream_digest = hashlib.sha256() if controlled_aa_full else None
+        for batch_index, (images, targets) in enumerate(train_loader):
+            if input_stream_digest is not None:
+                update_tensor_sha256(
+                    input_stream_digest,
+                    f"epoch={epoch}:batch={batch_index}:images",
+                    images,
+                )
+                update_tensor_sha256(
+                    input_stream_digest,
+                    f"epoch={epoch}:batch={batch_index}:targets",
+                    targets,
+                )
             images = images.to(device, non_blocking=True)
             targets = targets.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
@@ -939,6 +997,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             if device.type == "cuda"
             else None
         )
+        peak_reserved = (
+            int(torch.cuda.max_memory_reserved(device))
+            if device.type == "cuda"
+            else None
+        )
         row = {
             "epoch": epoch,
             "lr": epoch_lr,
@@ -952,7 +1015,19 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             "validation": validation,
             "seconds_including_validation": elapsed,
             "peak_cuda_memory_bytes": peak_memory,
+            "peak_cuda_memory_reserved_bytes": peak_reserved,
         }
+        if input_stream_digest is not None:
+            row.update(
+                {
+                    "input_stream_sha256": input_stream_digest.hexdigest(),
+                    "student_state_sha256_after_epoch": state_dict_sha256(student),
+                    "guidance_state_sha256_after_epoch": (
+                        None if guidance is None else state_dict_sha256(guidance)
+                    ),
+                    "rng_state_sha256_after_epoch": rng_state_sha256(),
+                }
+            )
         history.append(row)
         if validation["macro_top1"] > best_macro:
             best_macro = validation["macro_top1"]
@@ -985,11 +1060,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         raise RuntimeError("Student training produced no selected checkpoint")
     student.load_state_dict(best_student_state, strict=True)
     selected_student_hash = state_dict_sha256(student)
+    selected_guidance_hash: str | None = None
     aggregation_audit: dict[str, Any] | None = None
     if isinstance(guidance, IBKD):
         if best_guidance_state is None:
             raise RuntimeError("Selected iBKD checkpoint is missing guidance state")
         guidance.load_state_dict(best_guidance_state, strict=True)
+        selected_guidance_hash = state_dict_sha256(guidance)
         aggregation_audit = _ibkd_aggregation_audit(guidance)
     is_alg_warmup20_diagnostic = (
         _dataset_key(args) == "pet"
@@ -997,7 +1074,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     )
     metadata = {
         "purpose": (
-            "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
+            "phase1_cub_r50_224_main_l0_ibkd_controlled_aa_full_student_v1"
+            if scientific_cub_r50 and controlled_aa_full
+            else "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
             if scientific_cub_r50 and mechanism_ablation_full
             else "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
             if scientific_cub_r50 and loader_followup_full
@@ -1011,10 +1090,15 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             if is_alg_warmup20_diagnostic
             else "phase1_scientific_full_student"
         ),
-        "scientific_result": True,
+        "scientific_result": not controlled_aa_full,
         "confirmatory_main_result": (
             False
-            if loader_pilot_full or loader_followup_full or mechanism_ablation_full
+            if (
+                loader_pilot_full
+                or loader_followup_full
+                or mechanism_ablation_full
+                or controlled_aa_full
+            )
             else args.batch_size == 128
             if scientific_cub_r50
             else not is_alg_warmup20_diagnostic
@@ -1026,6 +1110,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "loader_pilot_full": loader_pilot_full,
         "loader_followup_full": loader_followup_full,
         "mechanism_ablation_full": mechanism_ablation_full,
+        "controlled_aa_full": controlled_aa_full,
+        "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
@@ -1046,6 +1132,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "validation_image_ids_sha256": manifest["validation_image_ids_sha256"],
         "student_state_sha256": selected_student_hash,
         "initial_student_state_sha256": initial_hash,
+        "guidance_state_sha256": selected_guidance_hash,
+        "initial_guidance_state_sha256": initial_guidance_hash,
         "teacher_model_state_sha256": teacher_state_hash,
         "teacher_checkpoint_sha256": teacher_checkpoint_hash,
         "teacher_architecture": args.teacher_architecture,
@@ -1057,6 +1145,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             and not loader_pilot_full
             and not loader_followup_full
             and not mechanism_ablation_full
+            and not controlled_aa_full
         ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_warmup_epochs": args.alg_controller_warmup_epochs,
@@ -1071,6 +1160,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             else "once_after_validation_selection"
         ),
         "official_test_evaluations_at_checkpoint_write": 0,
+        "controlled_reproducibility": getattr(
+            args, "controlled_reproducibility_contract", None
+        ),
     }
     atomic_torch_save(
         {
@@ -1117,10 +1209,15 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         )
     summary = {
         "status": "complete",
-        "scientific_result": True,
+        "scientific_result": not controlled_aa_full,
         "confirmatory_main_result": (
             False
-            if loader_pilot_full or loader_followup_full or mechanism_ablation_full
+            if (
+                loader_pilot_full
+                or loader_followup_full
+                or mechanism_ablation_full
+                or controlled_aa_full
+            )
             else args.batch_size == 128
             if scientific_cub_r50
             else not is_alg_warmup20_diagnostic
@@ -1132,6 +1229,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "loader_pilot_full": loader_pilot_full,
         "loader_followup_full": loader_followup_full,
         "mechanism_ablation_full": mechanism_ablation_full,
+        "controlled_aa_full": controlled_aa_full,
+        "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
@@ -1146,6 +1245,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "epochs": PLANNED_EPOCHS,
         "seed": args.seed,
         "initial_student_state_sha256": initial_hash,
+        "initial_guidance_state_sha256": initial_guidance_hash,
         "selected_epoch": best_epoch,
         "selected_validation": best_validation,
         "official_test": test_metrics,
@@ -1165,6 +1265,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "checkpoint": str(checkpoint_path.resolve()),
         "checkpoint_sha256": file_sha256(checkpoint_path),
         "student_state_sha256": selected_student_hash,
+        "guidance_state_sha256": selected_guidance_hash,
         "teacher_checkpoint_sha256": teacher_checkpoint_hash,
         "teacher_model_state_sha256": teacher_state_hash,
         "teacher_metadata": teacher_metadata,
@@ -1177,6 +1278,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             and not loader_pilot_full
             and not loader_followup_full
             and not mechanism_ablation_full
+            and not controlled_aa_full
         ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_final": None if controller is None else controller.state_dict(),
@@ -1188,6 +1290,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "split_manifest": manifest,
         "training_seconds": time.perf_counter() - start_all,
         "history": history,
+        "controlled_reproducibility": getattr(
+            args, "controlled_reproducibility_contract", None
+        ),
         "runtime": runtime_metadata(device),
     }
     save_json({**summary, "status": "complete"}, status_path)
@@ -1205,8 +1310,21 @@ def main() -> None:
             raise RuntimeError(f"Expected timm==1.0.27, found {timm.__version__}")
         if not torch.cuda.is_available():
             raise RuntimeError("Phase 1 full run requires CUDA")
-        torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
+        if bool(getattr(args, "controlled_aa_full", False)):
+            args.controlled_reproducibility_contract = (
+                configure_controlled_reproducibility(args.seed)
+            )
+            log(
+                "[CONTROLLED_AA_LIMITATION] formal_bitwise_determinism=false "
+                "observed_nondeterministic_operations="
+                "compute_grad_input,adaptive_max_pool2d_backward_cuda,"
+                "memory_efficient_attention_backward_cuda "
+                "scientific_model_path_changed=false"
+            )
+        else:
+            torch.backends.cudnn.benchmark = False
+            torch.backends.cudnn.deterministic = True
+            args.controlled_reproducibility_contract = None
         device = torch.device("cuda")
         log(
             f"[PHASE1_FULL_START] dataset={_dataset_contract(args)[0]} "
@@ -1216,6 +1334,7 @@ def main() -> None:
             f"seed_extension_full={args.seed_extension_full} "
             f"loader_pilot_full={args.loader_pilot_full} "
             f"loader_followup_full={args.loader_followup_full} "
+            f"controlled_aa_full={args.controlled_aa_full} "
             f"defer_official_test={args.defer_official_test} "
             f"cub_loader_profile={args.cub_loader_profile} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
@@ -1265,6 +1384,7 @@ def main() -> None:
                 "batch_profile_role": args.batch_profile_role,
                 "loader_pilot_full": args.loader_pilot_full,
                 "loader_followup_full": args.loader_followup_full,
+                "controlled_aa_full": args.controlled_aa_full,
                 "defer_official_test": args.defer_official_test,
                 "cub_loader_profile": args.cub_loader_profile,
                 "failure_kind": failure_kind,

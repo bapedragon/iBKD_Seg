@@ -12,10 +12,18 @@
 
 ## 엄격 결정론을 그대로 쓸 수 없는 이유
 
-iBKD의 CBAM에는 `torchvision.ops.deform_conv2d`가 포함됩니다. H200의 CUDA
-역전파에서 이 연산은 `compute_grad_input`의 결정론 구현을 제공하지 않습니다.
-실제로 fail-closed 설정(`warn_only=False`)을 적용한 선행 smoke는 첫 backward에서
-이 오류를 검출하고 중단했습니다.
+iBKD의 CBAM에는 `torchvision.ops.deform_conv2d`와 adaptive max-pool이 포함되고,
+DeiT attention은 현재 환경에서 memory-efficient CUDA backend를 사용합니다.
+H200 smoke에서 다음 비결정론 backward 세 경로가 확인됐습니다.
+
+- `compute_grad_input` (deformable convolution)
+- `adaptive_max_pool2d_backward_cuda`
+- memory-efficient attention backward
+
+실제로 fail-closed 설정(`warn_only=False`)을 적용한 선행 smoke는 첫 번째 연산에서
+중단했습니다. v2의 warn-only A/A는 세 경고를 양쪽 실행에서 동일하게 노출하면서
+27/27 실행 gate를 통과했고, 2 epoch 지표의 최대 절대차는
+`1.81652254128e-7`이었습니다.
 
 표준 convolution으로 바꾸거나 gradient를 끊으면 원래 iBKD가 아니므로 그렇게
 우회하지 않습니다. v2는 원래 과학 경로를 그대로 유지하고, 알려진 연산을
@@ -47,7 +55,7 @@ iBKD의 CBAM에는 `torchvision.ops.deform_conv2d`가 포함됩니다. H200의 C
 - validation split manifest
 - epoch별 실제 augmentation 적용 후 입력 tensor stream hash
 - epoch별 전체 RNG state hash
-- runtime·환경 계약과 알려진 비결정론 연산 고지
+- runtime·환경 계약과 관측된 비결정론 연산 세 가지 고지
 
 두 실행의 loss·accuracy 차이, epoch별·최종 model-state hash 일치 여부, controller,
 aggregation 및 checkpoint hash는 모두 기록하되 2-epoch 실행 gate로 사용하지
@@ -59,6 +67,33 @@ aggregation 및 checkpoint hash는 모두 기록하되 2-epoch 실행 gate로 �
 장기 학습 안정성은 동일 설정의 300-epoch A/A 두 실행에서 최종 성능과 controller
 종료 시점의 차이로 판단합니다.
 
+## 300-epoch A/A 본실험
+
+H200 issue 765 smoke가 실행 제어 gate `27/27`을 통과했으므로 동일 과학 경로의
+본실험을 다음처럼 고정합니다.
+
+- 실행 A와 B를 서로 독립된 새 Python process에서 순차 수행
+- 두 실행 모두 CUB main-L0, issue 722 teacher, DeiT-Tiny/16
+- iBKD λ=0.25, learned-all, batch 128, seed 1, fp32, 300 epoch
+- smoke와 같은 결정론 요청·환경 변수·`num_workers=0`
+- epoch마다 learning rate, 실제 입력 stream hash, 전체 RNG state hash, student와
+  guidance state hash 기록
+- 각 실행별 validation macro Top-1 최고 checkpoint 선택; 동률이면 앞 epoch
+- 선택 checkpoint를 strict reload한 뒤 official test 정확히 1회, 총 2회
+- official test는 epoch·method·λ·loader 선택에 사용하지 않음
+
+실행 완료 여부와 입력·RNG·환경 계약은 exact gate입니다. 반면 validation/test
+성능차, 선택 epoch 차이, controller 종료 epoch 차이와 model-state 차이는 바로 이
+진단이 측정하려는 결과이므로 PASS/FAIL 문턱을 사후에 만들지 않고 그대로 보고합니다.
+따라서 본실험 완료는 “두 결과가 충분히 비슷하다”는 뜻이 아니라, 비교 가능한 A/B가
+정상 완료됐다는 뜻입니다.
+
+Smoke 실측 기준 A/B 합계 예상은 약 `6시간 32분`입니다. MIG 1개에서 smoke가
+성공했지만 peak reserved memory가 약 `17.34 GB`로 여유가 작으므로 다른 작업과
+GPU를 공유하지 않습니다.
+
 정확한 machine-readable 계약은
 [`configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2.json`](configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2.json)에
-고정합니다.
+고정합니다. 300-epoch 본실험 계약은
+[`configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_full_v1.json`](configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_full_v1.json)에
+별도로 고정합니다.

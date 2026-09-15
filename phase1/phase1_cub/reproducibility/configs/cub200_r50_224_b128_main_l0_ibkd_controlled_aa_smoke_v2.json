@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2",
-  "status": "ready_for_h200_smoke",
+  "status": "h200_smoke_passed_issue_765",
   "scientific_result": false,
   "posthoc_reproducibility_audit": true,
   "question": "Do two fresh, tightly controlled executions of the unchanged main-L0 iBKD lambda-0.25 seed-1 CUDA path receive identical inputs and RNG streams, and how much numerical drift appears over two full-data epochs?",
@@ -11,6 +11,12 @@
     "status": "failed_closed_before_first_epoch",
     "error_kernel": "compute_grad_input",
     "cause": "torchvision deform_conv2d CUDA backward has no deterministic implementation"
+  },
+  "h200_smoke_evidence": {
+    "source_h200_issue": 765,
+    "execution_control_gates": "27/27",
+    "maximum_epoch_metric_absolute_difference": 1.81652254128e-07,
+    "formal_bitwise_determinism": false
   },
   "lineage": {
     "input_lineage_id": "main_l0_v3",
@@ -80,11 +86,23 @@
     "torch_use_deterministic_algorithms": true,
     "warn_only": true,
     "formal_bitwise_determinism": false,
-    "known_nondeterministic_operation": {
-      "operator": "torchvision.ops.deform_conv2d CUDA backward",
-      "kernel": "compute_grad_input",
-      "reason": "torchvision provides no deterministic CUDA backward implementation"
-    },
+    "observed_nondeterministic_operations": [
+      {
+        "operator": "torchvision.ops.deform_conv2d CUDA backward",
+        "kernel": "compute_grad_input",
+        "reason": "torchvision provides no deterministic CUDA backward implementation"
+      },
+      {
+        "operator": "torch.nn.AdaptiveMaxPool2d CUDA backward",
+        "kernel": "adaptive_max_pool2d_backward_cuda",
+        "reason": "PyTorch provides no deterministic CUDA backward implementation"
+      },
+      {
+        "operator": "memory-efficient attention CUDA backward",
+        "kernel": "memory_efficient_attention_backward_cuda",
+        "reason": "global warn-only mode cannot force its deterministic path while unsupported iBKD operations remain enabled"
+      }
+    ],
     "scientific_model_path_changed": false,
     "cudnn_benchmark": false,
     "cudnn_deterministic": true,
@@ -107,7 +125,7 @@
       "epoch_input_stream_sha256",
       "epoch_rng_state_sha256",
       "runtime_contract",
-      "known_nondeterministic_operation_disclosure"
+      "observed_nondeterministic_operations_disclosure"
     ],
     "reported_not_gated": [
       "epoch_metric_absolute_differences",

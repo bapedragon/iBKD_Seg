@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_controlled_aa_full_v1",
+  "status": "locked_after_h200_smoke_issue_765",
+  "scientific_result": false,
+  "posthoc_reproducibility_audit": true,
+  "question": "How far can two fresh 300-epoch executions of the unchanged main-L0 iBKD lambda-0.25 seed-1 CUDA path diverge when input streams, RNG streams, software, and runtime controls are matched?",
+  "smoke_gate": {
+    "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2",
+    "source_h200_issue": 765,
+    "execution_control_gates": "27/27",
+    "maximum_epoch_metric_absolute_difference": 1.81652254128e-07,
+    "formal_bitwise_determinism": false,
+    "status": "passed"
+  },
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "base_full_protocol": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_b64_guided_seed1_full_v4.json",
+      "sha256": "bbecaa8b48e43325e8b4eb342e6dfbfa146ffee0e7b8b31d641e654a90925633",
+      "protocol_id": "cub200_phase1_r50_224_guided_b128_b64_seed1_full_v4"
+    },
+    "prior_same_seed_observations": [
+      {
+        "run": "issue727_canonical",
+        "selected_epoch": 239,
+        "controller_stop_epoch": 123,
+        "test_macro_top1_percent": 27.03605890274048
+      },
+      {
+        "run": "issue760_mechanism_learned_all",
+        "selected_epoch": 288,
+        "controller_stop_epoch": 55,
+        "test_macro_top1_percent": 10.4095958173275
+      },
+      {
+        "run": "exact_old_commit_replay",
+        "selected_epoch": 255,
+        "controller_stop_epoch": 103,
+        "test_macro_top1_percent": 22.377
+      }
+    ]
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong"
+  },
+  "teacher": {
+    "train_in_this_run": false,
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "external_pretraining": false,
+    "method": "ibkd",
+    "aggregation_mode": "learned_all",
+    "fusion_ratio_lambda": 0.25,
+    "batch_size": 128,
+    "eval_batch_size": 200,
+    "seed": 1,
+    "precision": "float32",
+    "epochs": 300,
+    "optimizer": {
+      "name": "AdamW",
+      "learning_rate": 0.0005,
+      "minimum_learning_rate": 0.000005,
+      "betas": [0.9, 0.999],
+      "epsilon": 1e-08,
+      "weight_decay": 0.05
+    },
+    "scheduler": {
+      "name": "cosine",
+      "warmup_epochs": 20,
+      "warmup_learning_rate": 5e-07
+    },
+    "regularization": {
+      "drop_path_rate": 0.1,
+      "label_smoothing": 0.0,
+      "mixup": false,
+      "cutmix": false
+    },
+    "guidance_beta": 2.5,
+    "guidance_controller_warmup_epochs": 20,
+    "selection_metric": "validation_macro_top1",
+    "selection_tie_break": "earlier_epoch"
+  },
+  "controlled_reproducibility": {
+    "independent_fresh_processes": 2,
+    "run_labels": ["A", "B"],
+    "torch_use_deterministic_algorithms": true,
+    "warn_only": true,
+    "formal_bitwise_determinism": false,
+    "observed_nondeterministic_operations": [
+      {
+        "operator": "torchvision.ops.deform_conv2d CUDA backward",
+        "kernel": "compute_grad_input",
+        "reason": "torchvision provides no deterministic CUDA backward implementation"
+      },
+      {
+        "operator": "torch.nn.AdaptiveMaxPool2d CUDA backward",
+        "kernel": "adaptive_max_pool2d_backward_cuda",
+        "reason": "PyTorch provides no deterministic CUDA backward implementation"
+      },
+      {
+        "operator": "memory-efficient attention CUDA backward",
+        "kernel": "memory_efficient_attention_backward_cuda",
+        "reason": "global warn-only mode cannot force its deterministic path while unsupported iBKD operations remain enabled"
+      }
+    ],
+    "scientific_model_path_changed": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "pythonhashseed": 1,
+    "cublas_workspace_config": ":4096:8",
+    "omp_num_threads": 1,
+    "mkl_num_threads": 1,
+    "num_workers": 0
+  },
+  "comparison": {
+    "exact_execution_control_gate": [
+      "both_300_epoch_runs_complete",
+      "initial_student_state_sha256",
+      "initial_guidance_state_sha256",
+      "teacher_checkpoint_sha256",
+      "teacher_model_state_sha256",
+      "validation_split_manifest",
+      "epoch_learning_rate",
+      "epoch_input_stream_sha256",
+      "epoch_rng_state_sha256",
+      "runtime_contract",
+      "observed_nondeterministic_operations_disclosure",
+      "one_official_test_evaluation_per_run_after_validation_selection"
+    ],
+    "long_horizon_outcomes_reported_without_pass_threshold": [
+      "selected_epoch_absolute_difference",
+      "selected_validation_metric_absolute_differences",
+      "official_test_metric_absolute_differences",
+      "controller_stop_epoch_absolute_difference",
+      "first_epoch_with_metric_difference",
+      "maximum_epoch_metric_absolute_difference",
+      "epoch_and_selected_model_state_hash_equality",
+      "aggregation_state_equality",
+      "checkpoint_file_hash_equality"
+    ],
+    "reason_no_numerical_pass_threshold": "No tolerance was prespecified before the earlier divergent observations; the full A/A measures and reports the same-seed spread without inventing a post-hoc cutoff."
+  },
+  "official_test_policy": {
+    "selection_uses_official_test": false,
+    "evaluation_per_run": "exactly_once_after_validation_checkpoint_selection_and_strict_reload",
+    "total_evaluations": 2,
+    "test_must_not_select_epoch_method_lambda_or_loader": true
+  },
+  "execution": {
+    "device": "one_H200_MIG_slice",
+    "requested_mig_slices": 1,
+    "runs": "A_then_B_sequentially",
+    "measured_smoke_peak_cuda_allocated_bytes": 12080000000,
+    "measured_smoke_peak_cuda_reserved_bytes": 17335000000,
+    "measured_smoke_estimated_total_seconds": 23545,
+    "ten_hour_limit_seconds": 36000,
+    "retain_selected_classification_checkpoints": true,
+    "retain_dataset_archives_in_output": false
+  },
+  "artifact_policy": {
+    "retain": [
+      "run_A/student_best_validation.pt",
+      "run_A/summary.json",
+      "run_A/training_status.json",
+      "run_A/validation_split.json",
+      "run_B/student_best_validation.pt",
+      "run_B/summary.json",
+      "run_B/training_status.json",
+      "run_B/validation_split.json",
+      "aa_full_comparison.json",
+      "checkpoint_manifest.json",
+      "completion_status.json",
+      "run.log"
+    ],
+    "do_not_retain": [
+      "dataset archive",
+      "pip cache",
+      "teacher download scratch copy"
+    ]
+  }
+}

@@ -14,6 +14,7 @@ from ibkd_seg.phase1.run_cub_ibkd_controlled_aa_smoke import (
     validate_config,
 )
 from ibkd_seg.phase1.train_timing import (
+    CONTROLLED_CUDA_NONDETERMINISTIC_OPERATIONS,
     configure_controlled_reproducibility,
     file_sha256,
     validate_args as validate_timing_args,
@@ -121,7 +122,10 @@ def _summary() -> dict[str, object]:
         "controlled_reproducibility": {
             "enabled": True,
             "formal_bitwise_determinism": False,
-            "known_nondeterministic_operation": {"kernel": "compute_grad_input"},
+            "observed_nondeterministic_operations": [
+                dict(value)
+                for value in CONTROLLED_CUDA_NONDETERMINISTIC_OPERATIONS
+            ],
         },
         "checkpoint_sha256": "checkpoint-container",
         "epochs": [epoch, {**epoch, "epoch": 2}],
@@ -194,7 +198,17 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
             "torch.use_deterministic_algorithms(True, warn_only=True)", source
         )
         self.assertIn('"formal_bitwise_determinism": False', source)
-        self.assertIn('"kernel": "compute_grad_input"', source)
+        self.assertEqual(
+            [
+                row["kernel"]
+                for row in CONTROLLED_CUDA_NONDETERMINISTIC_OPERATIONS
+            ],
+            [
+                "compute_grad_input",
+                "adaptive_max_pool2d_backward_cuda",
+                "memory_efficient_attention_backward_cuda",
+            ],
+        )
         self.assertIn('torch.set_float32_matmul_precision("highest")', source)
 
     def test_config_exact_gate_covers_inputs_rng_and_model_states(self) -> None:
@@ -205,7 +219,7 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
                 "epoch_input_stream_sha256",
                 "epoch_rng_state_sha256",
                 "runtime_contract",
-                "known_nondeterministic_operation_disclosure",
+                "observed_nondeterministic_operations_disclosure",
             }.issubset(fields)
         )
 

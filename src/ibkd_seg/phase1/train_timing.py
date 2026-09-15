@@ -68,6 +68,26 @@ CONTROLLED_REPRODUCIBILITY_ENV = {
     "MKL_NUM_THREADS": "1",
     "NVIDIA_TF32_OVERRIDE": "0",
 }
+CONTROLLED_CUDA_NONDETERMINISTIC_OPERATIONS = (
+    {
+        "operator": "torchvision.ops.deform_conv2d CUDA backward",
+        "kernel": "compute_grad_input",
+        "reason": "no deterministic CUDA implementation in torchvision",
+    },
+    {
+        "operator": "torch.nn.AdaptiveMaxPool2d CUDA backward",
+        "kernel": "adaptive_max_pool2d_backward_cuda",
+        "reason": "no deterministic CUDA implementation in PyTorch",
+    },
+    {
+        "operator": "memory-efficient attention CUDA backward",
+        "kernel": "memory_efficient_attention_backward_cuda",
+        "reason": (
+            "global warn-only mode cannot force its deterministic path while "
+            "unsupported iBKD operations remain enabled"
+        ),
+    },
+)
 
 
 def _ibkd_aggregation_audit(guidance: IBKD) -> dict[str, Any]:
@@ -172,10 +192,10 @@ def configure_controlled_reproducibility(seed: int) -> dict[str, Any]:
 
     Environment variables that must be present before CUDA initialization are
     validated rather than silently set here.  The H200 entry script owns those
-    process-level settings.  iBKD contains torchvision's CUDA deformable-conv
-    backward, whose ``compute_grad_input`` implementation has no deterministic
-    alternative.  Warn-only mode preserves the submitted model and exposes that
-    limitation while the independent A/A runner compares the actual trajectories.
+    process-level settings.  The H200 v2 smoke exposed three CUDA backward paths
+    that cannot all run under fail-closed mode without changing the submitted
+    model.  Warn-only mode preserves that model and exposes the limitations while
+    the independent A/A runner compares the actual trajectories.
     """
 
     expected_environment = {
@@ -212,12 +232,10 @@ def configure_controlled_reproducibility(seed: int) -> dict[str, Any]:
         "mode": "controlled_empirical_aa",
         "formal_bitwise_determinism": False,
         "warn_only": True,
-        "known_nondeterministic_operation": {
-            "operator": "torchvision.ops.deform_conv2d CUDA backward",
-            "kernel": "compute_grad_input",
-            "reason": "no deterministic CUDA implementation in torchvision",
-            "scientific_path_preserved": True,
-        },
+        "observed_nondeterministic_operations": [
+            dict(operation) for operation in CONTROLLED_CUDA_NONDETERMINISTIC_OPERATIONS
+        ],
+        "scientific_path_preserved": True,
         "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
         "torch_deterministic_warn_only": (
             torch.is_deterministic_algorithms_warn_only_enabled()
@@ -1367,8 +1385,9 @@ def main() -> None:
             )
             log(
                 "[CONTROLLED_AA_LIMITATION] formal_bitwise_determinism=false "
-                "known_nondeterministic_operation="
-                "torchvision.ops.deform_conv2d_cuda_backward:compute_grad_input "
+                "observed_nondeterministic_operations="
+                "compute_grad_input,adaptive_max_pool2d_backward_cuda,"
+                "memory_efficient_attention_backward_cuda "
                 "scientific_model_path_changed=false"
             )
         else:

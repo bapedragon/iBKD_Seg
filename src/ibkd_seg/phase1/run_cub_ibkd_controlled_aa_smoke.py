@@ -23,7 +23,7 @@ DEFAULT_CONFIG = (
     "cub200_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2.json"
 )
 EXPECTED_CONFIG_SHA256 = (
-    "70ac46fa46aebeb661bb0ac765aa0a7428fc764426357a145d8b4c6c9f42a684"
+    "f16efcd07b96e16ecbb2e9ee6ab5a3c59efd0970ef4f4224df8f8a78d80c8ec2"
 )
 EXPECTED_BASE_SHA256 = (
     "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
@@ -146,8 +146,15 @@ def validate_config(path: Path) -> dict[str, Any]:
         and controlled.get("torch_use_deterministic_algorithms") is True
         and controlled.get("warn_only") is True
         and controlled.get("formal_bitwise_determinism") is False
-        and controlled.get("known_nondeterministic_operation", {}).get("kernel")
-        == "compute_grad_input"
+        and [
+            row.get("kernel")
+            for row in controlled.get("observed_nondeterministic_operations", [])
+        ]
+        == [
+            "compute_grad_input",
+            "adaptive_max_pool2d_backward_cuda",
+            "memory_efficient_attention_backward_cuda",
+        ]
         and controlled.get("scientific_model_path_changed") is False
         and controlled.get("cudnn_benchmark") is False
         and controlled.get("cudnn_deterministic") is True
@@ -266,11 +273,18 @@ def compare_summaries(
     )
     checks["run_a_controlled"] = run_a.get("controlled_aa_smoke") is True
     checks["run_b_controlled"] = run_b.get("controlled_aa_smoke") is True
-    checks["known_cuda_limitation_disclosed"] = all(
-        summary.get("controlled_reproducibility", {})
-        .get("known_nondeterministic_operation", {})
-        .get("kernel")
-        == "compute_grad_input"
+    checks["known_cuda_limitations_disclosed"] = all(
+        [
+            row.get("kernel")
+            for row in summary.get("controlled_reproducibility", {}).get(
+                "observed_nondeterministic_operations", []
+            )
+        ]
+        == [
+            "compute_grad_input",
+            "adaptive_max_pool2d_backward_cuda",
+            "memory_efficient_attention_backward_cuda",
+        ]
         and summary.get("controlled_reproducibility", {}).get(
             "formal_bitwise_determinism"
         )
@@ -297,7 +311,10 @@ def compare_summaries(
         "failures": failures,
         "numerical_observation_not_a_smoke_gate": {
             "formal_bitwise_determinism_claimed": False,
-            "reason": "deform_conv2d CUDA backward has no deterministic implementation",
+            "reason": (
+                "three disclosed CUDA backward paths prevent a formal bitwise "
+                "determinism claim for the unchanged iBKD implementation"
+            ),
             "epoch_metrics": numerical_delta,
             "checkpoint_file_sha256_equal": run_a.get("checkpoint_sha256")
             == run_b.get("checkpoint_sha256"),
