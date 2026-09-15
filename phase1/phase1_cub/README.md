@@ -19,7 +19,7 @@ checkpoint와 학습형 probe는 validation으로만 선택하고, official test
 | 이미지 loader L0/L1/L2 | 사전 주 지표 Part PCK에서 L2 선택 | [Loader 결과](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md) |
 | L2 guided 예비 본실험, seed 1 | 분류 LG 1위, probe ALG-w20 1위 | [L2 결과](image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md) |
 | main-L0 레이어 연결 사후 분석 | seed-1 canonical 재현 실패로 연결 방식 결론 보류 | [Mechanism](mechanism_analysis/README.md) |
-| main-L0 결정론 A/A | 동일 iBKD-0.25 두 실행의 bitwise 재현성 smoke 준비 | [Reproducibility](reproducibility/README.md) |
+| main-L0 제어 A/A | 동일 iBKD-0.25 CUDA 경로 두 실행의 입력·RNG 통제 및 수치 변동 smoke 준비 | [Reproducibility](reproducibility/README.md) |
 | ResNet-56/32 구버전 | 완결된 별도 보존 결과; v3와 합치지 않음 | [Legacy v2](reports/legacy_resnet56_v2_guided/RESULTS.md) |
 
 현재 CUB 결과는 iBKD가 LG/ALG보다 공간정보를 전반적으로 더 잘 보존한다는 가설을

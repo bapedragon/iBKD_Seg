@@ -1,10 +1,17 @@
 {
   "schema_version": 1,
-  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_deterministic_aa_smoke_v1",
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2",
   "status": "ready_for_h200_smoke",
   "scientific_result": false,
   "posthoc_reproducibility_audit": true,
-  "question": "Do two fresh, strictly deterministic executions of the same main-L0 iBKD lambda-0.25 seed-1 training path remain bitwise identical for two full-data epochs?",
+  "question": "Do two fresh, tightly controlled executions of the unchanged main-L0 iBKD lambda-0.25 seed-1 CUDA path receive identical inputs and RNG streams, and how much numerical drift appears over two full-data epochs?",
+  "supersedes_failed_protocol": {
+    "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_deterministic_aa_smoke_v1",
+    "source_h200_issue": 764,
+    "status": "failed_closed_before_first_epoch",
+    "error_kernel": "compute_grad_input",
+    "cause": "torchvision deform_conv2d CUDA backward has no deterministic implementation"
+  },
   "lineage": {
     "input_lineage_id": "main_l0_v3",
     "base_protocol": {
@@ -64,14 +71,21 @@
     "guidance_beta": 2.5,
     "guidance_controller_warmup_epochs": 20
   },
-  "strict_determinism": {
+  "controlled_reproducibility": {
     "independent_fresh_processes": 2,
     "run_labels": [
       "A",
       "B"
     ],
     "torch_use_deterministic_algorithms": true,
-    "warn_only": false,
+    "warn_only": true,
+    "formal_bitwise_determinism": false,
+    "known_nondeterministic_operation": {
+      "operator": "torchvision.ops.deform_conv2d CUDA backward",
+      "kernel": "compute_grad_input",
+      "reason": "torchvision provides no deterministic CUDA backward implementation"
+    },
+    "scientific_model_path_changed": false,
     "cudnn_benchmark": false,
     "cudnn_deterministic": true,
     "cuda_matmul_allow_tf32": false,
@@ -91,27 +105,31 @@
       "teacher_model_state_sha256",
       "validation_split_manifest",
       "epoch_input_stream_sha256",
-      "epoch_metric_trace_excluding_wall_time_and_memory",
-      "epoch_student_state_sha256",
-      "epoch_guidance_state_sha256",
       "epoch_rng_state_sha256",
-      "final_student_state_sha256",
-      "final_guidance_state_sha256",
-      "controller_state",
-      "aggregation_state"
+      "runtime_contract",
+      "known_nondeterministic_operation_disclosure"
     ],
-    "checkpoint_file_sha256": "reported_but_not_a_gate_because_serialization_container_bytes_are_not_model_state",
-    "pass": "all exact-match fields are identical and neither run raises a nondeterministic-operation error",
-    "fail": "any exact-match field differs or either run fails"
+    "reported_not_gated": [
+      "epoch_metric_absolute_differences",
+      "epoch_student_state_sha256_equality",
+      "epoch_guidance_state_sha256_equality",
+      "final_student_state_sha256_equality",
+      "final_guidance_state_sha256_equality",
+      "controller_state_equality",
+      "aggregation_state_equality",
+      "checkpoint_file_sha256_equality"
+    ],
+    "pass": "both runs complete and all execution-control fields match exactly; numerical divergence is measured rather than hidden or used as a two-epoch selection rule",
+    "fail": "either run fails or any execution-control field differs"
   },
   "official_test_policy": {
     "accessed": false,
     "evaluations": 0,
-    "reason": "A/A smoke validates execution determinism, not performance"
+    "reason": "A/A smoke validates controlled execution and measures numerical drift, not performance"
   },
   "decision_rule": {
-    "on_pass": "release a separate 300-epoch deterministic A/A full protocol with the same settings",
-    "on_fail": "do not resume the layer-connection ablation; locate the first mismatching input, RNG, or state hash",
+    "on_pass": "release a separate 300-epoch controlled A/A full protocol with the unchanged scientific path and report the final same-seed spread",
+    "on_fail": "do not resume the layer-connection ablation; locate the first mismatching execution-control field",
     "smoke_metrics_must_not_select_method_lambda_loader_or_checkpoint": true
   },
   "artifact_policy": {

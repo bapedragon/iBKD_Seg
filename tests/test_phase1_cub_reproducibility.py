@@ -7,14 +7,14 @@ import json
 import unittest
 from pathlib import Path
 
-from ibkd_seg.phase1.run_cub_ibkd_deterministic_aa_smoke import (
+from ibkd_seg.phase1.run_cub_ibkd_controlled_aa_smoke import (
+    CONTROLLED_ENVIRONMENT,
     EXPECTED_CONFIG_SHA256,
-    STRICT_ENVIRONMENT,
     compare_summaries,
     validate_config,
 )
 from ibkd_seg.phase1.train_timing import (
-    configure_strict_determinism,
+    configure_controlled_reproducibility,
     file_sha256,
     validate_args as validate_timing_args,
 )
@@ -24,11 +24,11 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPERIMENT = ROOT / "phase1/phase1_cub/reproducibility"
 CONFIG = (
     EXPERIMENT
-    / "configs/cub200_r50_224_b128_main_l0_ibkd_deterministic_aa_smoke_v1.json"
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_smoke_v2.json"
 )
 SCRIPT = (
     EXPERIMENT
-    / "scripts/run_main_l0_ibkd_deterministic_aa_smoke_b128_seed1.sh"
+    / "scripts/run_main_l0_ibkd_controlled_aa_smoke_b128_seed1.sh"
 )
 
 
@@ -55,7 +55,7 @@ def _timing_args(**changes: object) -> argparse.Namespace:
         "cub_loader_profile": "l0_current_strong",
         "loader_pilot_smoke": False,
         "loader_followup_smoke": False,
-        "strict_deterministic_aa_smoke": True,
+        "controlled_aa_smoke": True,
     }
     values.update(changes)
     return argparse.Namespace(**values)
@@ -97,7 +97,7 @@ def _summary() -> dict[str, object]:
         "scientific_result": False,
         "official_test_accessed": False,
         "official_test": None,
-        "strict_deterministic_aa_smoke": True,
+        "controlled_aa_smoke": True,
         "dataset": "CUB-200-2011",
         "kind": "student",
         "method": "ibkd",
@@ -118,7 +118,11 @@ def _summary() -> dict[str, object]:
         "guidance_state_sha256": "guidance-final",
         "optimizer_contract": "adamw",
         "split_manifest": {"validation_image_ids_sha256": "validation"},
-        "strict_determinism": {"enabled": True},
+        "controlled_reproducibility": {
+            "enabled": True,
+            "formal_bitwise_determinism": False,
+            "known_nondeterministic_operation": {"kernel": "compute_grad_input"},
+        },
         "checkpoint_sha256": "checkpoint-container",
         "epochs": [epoch, {**epoch, "epoch": 2}],
         "runtime": runtime,
@@ -132,7 +136,7 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
         self.assertFalse(config["scientific_result"])
         self.assertFalse(config["official_test_policy"]["accessed"])
         self.assertEqual(
-            config["strict_determinism"]["independent_fresh_processes"], 2
+            config["controlled_reproducibility"]["independent_fresh_processes"], 2
         )
 
     def test_timing_flag_is_restricted_to_exact_aa_scope(self) -> None:
@@ -148,7 +152,7 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
         )
         for changes in invalid:
             with self.subTest(changes=changes):
-                with self.assertRaisesRegex(ValueError, "Strict deterministic A/A"):
+                with self.assertRaisesRegex(ValueError, "Controlled A/A"):
                     validate_timing_args(_timing_args(**changes))
 
     def test_comparison_ignores_timing_but_not_scientific_trace(self) -> None:
@@ -156,28 +160,41 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
         run_b = copy.deepcopy(run_a)
         run_b["epochs"][0]["seconds_including_validation"] = 99.0
         run_b["epochs"][0]["peak_cuda_memory_bytes"] = 999
-        self.assertTrue(compare_summaries(run_a, run_b)["all_exact_gates_passed"])
+        self.assertTrue(
+            compare_summaries(run_a, run_b)["execution_control_gates_passed"]
+        )
 
         run_b["epochs"][1]["train_loss"] = 1.0001
         result = compare_summaries(run_a, run_b)
-        self.assertFalse(result["all_exact_gates_passed"])
-        self.assertIn("epoch_trace", result["failures"])
+        self.assertTrue(result["execution_control_gates_passed"])
+        self.assertFalse(
+            result["numerical_observation_not_a_smoke_gate"]["epoch_metrics"][
+                "all_reported_values_exact"
+            ]
+        )
+
+        run_b["epochs"][1]["input_stream_sha256"] = "different-input"
+        result = compare_summaries(run_a, run_b)
+        self.assertFalse(result["execution_control_gates_passed"])
+        self.assertIn("epoch_input_rng_control", result["failures"])
 
     def test_h200_entry_sets_environment_and_runs_two_process_orchestrator(self) -> None:
         script = SCRIPT.read_text(encoding="utf-8")
-        for key, value in STRICT_ENVIRONMENT.items():
+        for key, value in CONTROLLED_ENVIRONMENT.items():
             self.assertIn(f"export {key}={value}", script)
         self.assertIn(
-            "ibkd_seg.phase1.run_cub_ibkd_deterministic_aa_smoke", script
+            "ibkd_seg.phase1.run_cub_ibkd_controlled_aa_smoke", script
         )
         self.assertNotIn("--access-official-test", script)
         self.assertTrue(SCRIPT.stat().st_mode & 0o111)
 
-    def test_fail_closed_torch_setting_is_present(self) -> None:
-        source = inspect.getsource(configure_strict_determinism)
+    def test_warn_only_limitation_is_explicit(self) -> None:
+        source = inspect.getsource(configure_controlled_reproducibility)
         self.assertIn(
-            "torch.use_deterministic_algorithms(True, warn_only=False)", source
+            "torch.use_deterministic_algorithms(True, warn_only=True)", source
         )
+        self.assertIn('"formal_bitwise_determinism": False', source)
+        self.assertIn('"kernel": "compute_grad_input"', source)
         self.assertIn('torch.set_float32_matmul_precision("highest")', source)
 
     def test_config_exact_gate_covers_inputs_rng_and_model_states(self) -> None:
@@ -187,9 +204,8 @@ class Phase1CubReproducibilityTest(unittest.TestCase):
             {
                 "epoch_input_stream_sha256",
                 "epoch_rng_state_sha256",
-                "final_student_state_sha256",
-                "final_guidance_state_sha256",
-                "controller_state",
+                "runtime_contract",
+                "known_nondeterministic_operation_disclosure",
             }.issubset(fields)
         )
 

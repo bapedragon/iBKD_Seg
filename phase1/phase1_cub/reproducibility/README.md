@@ -7,9 +7,11 @@
 H200 smoke 진입점:
 
 ```bash
-bash phase1/phase1_cub/reproducibility/scripts/run_main_l0_ibkd_deterministic_aa_smoke_b128_seed1.sh
+bash phase1/phase1_cub/reproducibility/scripts/run_main_l0_ibkd_controlled_aa_smoke_b128_seed1.sh
 ```
 
-Smoke는 동일한 2-epoch full-data 실행을 독립 process 두 번 수행하고 자동으로
-비교합니다. 성능값은 과학 결과가 아니며 Git에는 smoke 결과나 checkpoint를
-보존하지 않습니다. PASS 후 별도의 300-epoch A/A 본실험 계약을 고정합니다.
+Smoke는 동일한 2-epoch full-data 실행을 독립 process 두 번 수행하고 입력·RNG
+제어와 실제 수치 차이를 자동 비교합니다. iBKD의 CUDA deformable-conv backward는
+결정론 구현이 없으므로 이 실험은 완전 bitwise 결정론을 주장하지 않습니다.
+성능값은 과학 결과가 아니며 Git에는 smoke 결과나 checkpoint를 보존하지 않습니다.
+실행 gate PASS 후 별도의 300-epoch 제어 A/A 본실험 계약을 고정합니다.

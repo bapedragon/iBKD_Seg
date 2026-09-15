@@ -62,7 +62,7 @@ METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
 TEACHER_ARCHITECTURES = ("resnet56_32", "resnet50_224_scratch")
 KD_TEMPERATURE = 4.0
 KD_ALPHA = 0.9
-STRICT_DETERMINISM_ENV = {
+CONTROLLED_REPRODUCIBILITY_ENV = {
     "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
     "OMP_NUM_THREADS": "1",
     "MKL_NUM_THREADS": "1",
@@ -167,17 +167,20 @@ def seed_everything(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def configure_strict_determinism(seed: int) -> dict[str, Any]:
-    """Enable the fail-closed deterministic contract used by the CUB A/A audit.
+def configure_controlled_reproducibility(seed: int) -> dict[str, Any]:
+    """Enable the controlled CUDA reproducibility contract for the CUB A/A audit.
 
     Environment variables that must be present before CUDA initialization are
     validated rather than silently set here.  The H200 entry script owns those
-    process-level settings.
+    process-level settings.  iBKD contains torchvision's CUDA deformable-conv
+    backward, whose ``compute_grad_input`` implementation has no deterministic
+    alternative.  Warn-only mode preserves the submitted model and exposes that
+    limitation while the independent A/A runner compares the actual trajectories.
     """
 
     expected_environment = {
         "PYTHONHASHSEED": str(seed),
-        **STRICT_DETERMINISM_ENV,
+        **CONTROLLED_REPRODUCIBILITY_ENV,
     }
     mismatches = {
         key: {"expected": expected, "actual": os.environ.get(key)}
@@ -186,11 +189,11 @@ def configure_strict_determinism(seed: int) -> dict[str, Any]:
     }
     if mismatches:
         raise RuntimeError(
-            "Strict deterministic environment mismatch: "
+            "Controlled reproducibility environment mismatch: "
             + json.dumps(mismatches, sort_keys=True)
         )
 
-    torch.use_deterministic_algorithms(True, warn_only=False)
+    torch.use_deterministic_algorithms(True, warn_only=True)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -201,13 +204,24 @@ def configure_strict_determinism(seed: int) -> dict[str, Any]:
         torch.set_num_interop_threads(1)
     except RuntimeError as error:
         raise RuntimeError(
-            "Strict determinism must be configured before parallel work starts"
+            "Controlled reproducibility must be configured before parallel work starts"
         ) from error
     seed_everything(seed)
     return {
         "enabled": True,
-        "fail_on_nondeterministic_operation": True,
+        "mode": "controlled_empirical_aa",
+        "formal_bitwise_determinism": False,
+        "warn_only": True,
+        "known_nondeterministic_operation": {
+            "operator": "torchvision.ops.deform_conv2d CUDA backward",
+            "kernel": "compute_grad_input",
+            "reason": "no deterministic CUDA implementation in torchvision",
+            "scientific_path_preserved": True,
+        },
         "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+        "torch_deterministic_warn_only": (
+            torch.is_deterministic_algorithms_warn_only_enabled()
+        ),
         "cudnn_benchmark": torch.backends.cudnn.benchmark,
         "cudnn_deterministic": torch.backends.cudnn.deterministic,
         "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
@@ -388,11 +402,12 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--strict-deterministic-aa-smoke",
+        "--controlled-aa-smoke",
         action="store_true",
         help=(
-            "Fail-closed two-epoch CUB main-L0 iBKD lambda-0.25 A/A "
-            "reproducibility smoke. Requires num_workers=0 and sealed test."
+            "Controlled two-epoch CUB main-L0 iBKD lambda-0.25 A/A "
+            "reproducibility smoke. The known deform-conv CUDA backward is "
+            "warn-only; requires num_workers=0 and sealed test."
         ),
     )
     return parser.parse_args()
@@ -415,20 +430,20 @@ def validate_args(args: argparse.Namespace) -> None:
     loader_followup_smoke = bool(
         getattr(args, "loader_followup_smoke", False)
     )
-    strict_deterministic_aa_smoke = bool(
-        getattr(args, "strict_deterministic_aa_smoke", False)
+    controlled_aa_smoke = bool(
+        getattr(args, "controlled_aa_smoke", False)
     )
     if sum(
         (
             loader_pilot_smoke,
             loader_followup_smoke,
-            strict_deterministic_aa_smoke,
+            controlled_aa_smoke,
         )
     ) > 1:
         raise ValueError("CUB timing smoke modes are mutually exclusive")
     if loader_profile not in LOADER_PROFILE_ORDER:
         raise ValueError("Unknown CUB loader profile")
-    if strict_deterministic_aa_smoke:
+    if controlled_aa_smoke:
         if not (
             dataset_key == "cub"
             and args.kind == "student"
@@ -446,7 +461,7 @@ def validate_args(args: argparse.Namespace) -> None:
             and args.num_workers == 0
         ):
             raise ValueError(
-                "Strict deterministic A/A smoke requires CUB main-L0 iBKD "
+                "Controlled A/A smoke requires CUB main-L0 iBKD "
                 "lambda 0.25, batch 128, seed 1, the audited ResNet-50/224 "
                 "teacher, num_workers=0, checkpoint export, and sealed test"
             )
@@ -987,12 +1002,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         weight_decay=0.05,
     )
     scheduler = create_scheduler(optimizer, teacher=False)
-    strict_deterministic = bool(
-        getattr(args, "strict_deterministic_aa_smoke", False)
+    controlled_aa = bool(
+        getattr(args, "controlled_aa_smoke", False)
     )
     # Match the scientific full trainer: guidance construction must not shift
     # the student's DropPath RNG stream.  The DataLoader owns its own generator.
-    if strict_deterministic:
+    if controlled_aa:
         seed_everything(args.seed)
     epoch_rows: list[dict[str, Any]] = []
     log(
@@ -1004,7 +1019,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
         f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
-        f"strict_deterministic_aa_smoke={strict_deterministic} "
+        f"controlled_aa_smoke={controlled_aa} "
         f"initial_guidance_sha256={initial_guidance_hash}"
     )
 
@@ -1020,7 +1035,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         total = 0
         correct = 0
         totals = {"loss": 0.0, "ce": 0.0, "guidance": 0.0, "align": 0.0, "fuse": 0.0}
-        input_stream_digest = hashlib.sha256() if strict_deterministic else None
+        input_stream_digest = hashlib.sha256() if controlled_aa else None
         for batch_index, (images, targets) in enumerate(train_loader):
             if input_stream_digest is not None:
                 update_tensor_sha256(
@@ -1253,7 +1268,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "student_state_sha256": student_state_hash,
                     "initial_guidance_state_sha256": initial_guidance_hash,
                     "guidance_state_sha256": guidance_state_hash,
-                    "strict_deterministic_aa_smoke": strict_deterministic,
+                    "controlled_aa_smoke": controlled_aa,
                     "ibkd_aggregation": aggregation_audit,
                     "official_test_evaluations_at_checkpoint_write": int(
                         bool(getattr(args, "access_official_test", False))
@@ -1292,7 +1307,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "loader_followup_smoke": bool(
             getattr(args, "loader_followup_smoke", False)
         ),
-        "strict_deterministic_aa_smoke": strict_deterministic,
+        "controlled_aa_smoke": controlled_aa,
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
         ),
@@ -1327,7 +1342,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "checkpoint_sha256": checkpoint_sha256,
         "student_state_sha256": student_state_hash,
         "guidance_state_sha256": guidance_state_hash,
-        "strict_determinism": getattr(args, "strict_determinism_contract", None),
+        "controlled_reproducibility": getattr(
+            args, "controlled_reproducibility_contract", None
+        ),
         "optimizer_contract": "shared_single_group_adamw_all_trainable_parameters_wd_0.05",
         "split_manifest": manifest,
         "epochs": epoch_rows,
@@ -1344,10 +1361,18 @@ def main() -> None:
 
         if timm.__version__ != "1.0.27":
             raise RuntimeError(f"Expected timm==1.0.27, found {timm.__version__}")
-        if bool(getattr(args, "strict_deterministic_aa_smoke", False)):
-            args.strict_determinism_contract = configure_strict_determinism(args.seed)
+        if bool(getattr(args, "controlled_aa_smoke", False)):
+            args.controlled_reproducibility_contract = (
+                configure_controlled_reproducibility(args.seed)
+            )
+            log(
+                "[CONTROLLED_AA_LIMITATION] formal_bitwise_determinism=false "
+                "known_nondeterministic_operation="
+                "torchvision.ops.deform_conv2d_cuda_backward:compute_grad_input "
+                "scientific_model_path_changed=false"
+            )
         else:
-            args.strict_determinism_contract = None
+            args.controlled_reproducibility_contract = None
             torch.backends.cudnn.benchmark = False
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log(
@@ -1356,8 +1381,8 @@ def main() -> None:
             f"teacher_architecture={args.teacher_architecture} "
             f"batch={args.batch_size} device={device} actual_epochs=2 "
             f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
-            "strict_deterministic_aa_smoke="
-            f"{bool(getattr(args, 'strict_deterministic_aa_smoke', False))} "
+            "controlled_aa_smoke="
+            f"{bool(getattr(args, 'controlled_aa_smoke', False))} "
             "planned_epochs="
             f"{_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )
