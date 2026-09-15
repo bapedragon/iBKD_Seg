@@ -1,6 +1,6 @@
 # main-L0 iBKD 레이어 연결 원인 분석 프로토콜
 
-상태: **기존 checkpoint 관찰 감사 완료, 인과 full 설정 사전 고정, smoke 대기**
+상태: **기존 checkpoint 관찰 감사 완료, 본실험 과학 설정·실행 분할 고정**
 
 ## 질문
 
@@ -79,19 +79,30 @@ Controller 종료 epoch는 고정 입력이 아니라 연결 변경 뒤에 생�
 `1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8`에
 고정했습니다.
 
-## Smoke
+## 실행 release와 산출물 규칙
 
-Smoke는 encoder seed 1에서 네 연결을 각 2 epoch 학습하고, 각 frozen encoder에
-probe seed 1 × LR 3개 × 2 epoch를 적용합니다. Train/validation 전체를 사용해
-시간과 메모리를 현실적으로 측정하지만 official test dataset은 생성하지 않습니다.
+H200 smoke에서 네 분류 경로 `4/4`와 probe 후보 `12/12`의 실행 및 메모리를
+확인했습니다. 마지막으로 발견된 문제는 학습이나 평가가 아니라 종료 summary의
+teacher audit 카운터 누락이었고, 과학 설정을 바꾸지 않고 회귀 테스트와 함께
+수정했습니다. Smoke 수치로 variant, λ, seed, LR, epoch 또는 full 수행 여부를
+선택하지 않았습니다.
 
-```bash
-bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_smoke_b128_seed1.sh
-```
+과학 프로토콜 원본은 위 SHA로 그대로 보존합니다. 실행 release와 H200 분할은
+`configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_execution_v1.json`에
+별도로 고정했으며 SHA-256은
+`145eb88ebba5134f8fcd4b5bf11861465407baff15aaaa41c69809762f0e469c`입니다.
+Smoke에서 분류만 seed당 약 `4.46시간`으로 추정되었으므로
+10시간 제한의 여유를 확보하기 위해 encoder seed `1/2/3`을 각각 한 issue로
+실행합니다.
 
-Smoke config SHA-256은
-`1fb71d3e076e592df3209c176bcea05a296f4745b243664b09afccef59de2400`입니다.
-완료 기준은 분류/checkpoint/aggregation audit `4/4`, probe 후보 `12/12`,
-validation 선택/checkpoint `4/4`, official-test 평가 `0`입니다. Smoke 결과로
-variant, λ, seed, LR, epoch 또는 full 수행 여부를 선택하지 않습니다. Full job
-분할만 실제 시간으로 정합니다.
+각 seed의 종료 gate는 다음과 같습니다.
+
+- teacher 다운로드·무결성 감사 `1/1`
+- 분류 학습·validation 선택·official test `4/4`
+- probe LR 후보 `60/60`, validation 선택 `20/20`, official test `20/20`
+- 새 checkpoint `24/24`(분류 4개 + 선택 probe 20개)
+
+Official test는 해당 seed의 분류 4개와 probe 20개의 **모든 validation 선택이 끝난
+뒤** 한 번씩만 평가합니다. Seed 1의 결과와 관계없이 seed 2와 3도 동일한 고정
+설정으로 수행합니다. Smoke 로그/checkpoint는 제거하고, 최종 Git에는 정리된
+본실험 결과와 해시 manifest만 반영합니다.

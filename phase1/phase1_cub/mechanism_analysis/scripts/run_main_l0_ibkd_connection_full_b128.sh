@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+encoder_seed="${1:-}"
+case "${encoder_seed}" in
+  1|2|3) ;;
+  *)
+    echo "usage: $0 <encoder-seed: 1|2|3>" >&2
+    exit 2
+    ;;
+esac
+
 data_dir="${PHASE1_CUB_DATA_DIR:-/app/scratch/phase1_cub_data}"
-output_root="${PHASE1_CUB_MECHANISM_SMOKE_OUTPUT_DIR:-/app/output/phase1_cub_main_l0_ibkd_connection_smoke_v1}"
-cache_dir="${PHASE1_CUB_MECHANISM_SMOKE_CACHE_DIR:-/app/scratch/phase1_cub_main_l0_ibkd_connection_smoke_cache_v1}"
+output_root="${PHASE1_CUB_MECHANISM_FULL_OUTPUT_DIR:-/app/output/phase1_cub_main_l0_ibkd_connection_full_v1_seed${encoder_seed}}"
+cache_dir="${PHASE1_CUB_MECHANISM_FULL_CACHE_DIR:-/app/scratch/phase1_cub_main_l0_ibkd_connection_full_v1_seed${encoder_seed}_cache}"
 teacher_dir="${PHASE1_CUB_R50_TEACHER_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_issue722}"
 teacher_download_dir="${PHASE1_CUB_R50_TEACHER_DOWNLOAD_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_download}"
 teacher_manifest="phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json"
-config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_smoke_v1.json"
+protocol_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json"
+execution_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_execution_v1.json"
 
 mkdir -p "${output_root}" "${cache_dir}"
 
@@ -17,15 +27,18 @@ run_suite() {
     --manifest "${teacher_manifest}" \
     --destination "${teacher_dir}" \
     --download-dir "${teacher_download_dir}"
-  python -m ibkd_seg.phase1.run_cub_ibkd_connection_smoke \
-    --smoke \
+  python -m ibkd_seg.phase1.run_cub_ibkd_connection_full \
+    --full-run \
+    --encoder-seed "${encoder_seed}" \
     --data-dir "${data_dir}" \
     --output-dir "${output_root}" \
     --cache-dir "${cache_dir}" \
     --teacher-checkpoint "${teacher_dir}/teacher_best_validation.pt" \
-    --config "${config}" \
+    --protocol-config "${protocol_config}" \
+    --execution-config "${execution_config}" \
     --device cuda \
     --feature-batch-size 32 \
+    --eval-batch-size 200 \
     --num-workers 4
 }
 

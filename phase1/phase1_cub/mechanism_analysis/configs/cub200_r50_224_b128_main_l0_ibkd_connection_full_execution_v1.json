@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "execution_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_full_execution_v1",
+  "status": "ready_for_unconditional_three_seed_full_2026-09-15",
+  "scientific_result": true,
+  "posthoc_mechanism_analysis": true,
+  "scientific_protocol": {
+    "path": "phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json",
+    "sha256": "1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8"
+  },
+  "base_protocol": {
+    "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+    "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+  },
+  "release_decision": {
+    "reason": "all four classification paths and all twelve smoke probe candidates executed; only non-scientific terminal bookkeeping failed and was regression-tested after correction",
+    "scientific_settings_changed_from_smoke": false,
+    "variant_selection_from_smoke": false,
+    "all_encoder_seeds_run_regardless_of_earlier_results": true,
+    "retain_smoke_outputs": false
+  },
+  "shared": {
+    "teacher_source_h200_issue": 722,
+    "teacher_checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "teacher_model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "batch_size": 128,
+    "classification_epochs": 300,
+    "aggregation_variants": [
+      "learned_all",
+      "fixed_uniform_all",
+      "fixed_stage_match",
+      "fixed_last"
+    ],
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "probe_learning_rates": [0.01, 0.03, 0.1],
+    "probe_epochs": 100,
+    "official_test_after_all_validation_selections_within_shard": true
+  },
+  "h200_shards": [
+    {
+      "id": "encoder_seed1",
+      "encoder_seed": 1,
+      "planned_issue_group": 1,
+      "estimated_classification_hours_from_smoke": 4.46
+    },
+    {
+      "id": "encoder_seed2",
+      "encoder_seed": 2,
+      "planned_issue_group": 2,
+      "estimated_classification_hours_from_smoke": 4.46
+    },
+    {
+      "id": "encoder_seed3",
+      "encoder_seed": 3,
+      "planned_issue_group": 3,
+      "estimated_classification_hours_from_smoke": 4.46
+    }
+  ],
+  "per_shard_completion_gate": {
+    "teacher_download_and_audit": 1,
+    "classification_students": 4,
+    "classification_validation_selections": 4,
+    "classification_official_test_evaluations": 4,
+    "segmentation_probe_lr_candidates": 60,
+    "segmentation_probe_validation_selections": 20,
+    "segmentation_probe_official_test_evaluations": 20,
+    "retained_new_checkpoints": 24
+  },
+  "global_completion_gate": {
+    "completed_encoder_seed_shards": 3,
+    "classification_students": 12,
+    "classification_official_test_evaluations": 12,
+    "segmentation_probe_lr_candidates": 180,
+    "segmentation_probe_official_test_evaluations": 60,
+    "retained_new_checkpoints": 72
+  },
+  "runtime": {
+    "requested_mig_slices": 7,
+    "precision": "float32",
+    "num_workers": 4,
+    "feature_batch_size": 32,
+    "retain_dataset_or_feature_cache_in_output": false
+  },
+  "artifact_policy": {
+    "git": [
+      "locked protocols",
+      "execution code",
+      "curated full-result tables",
+      "checkpoint release manifests and hashes"
+    ],
+    "github_release": [
+      "full classification checkpoints",
+      "full selected probe checkpoints",
+      "full raw result archive"
+    ],
+    "discard": [
+      "smoke logs",
+      "smoke checkpoints",
+      "dataset archives",
+      "feature caches"
+    ]
+  }
+}

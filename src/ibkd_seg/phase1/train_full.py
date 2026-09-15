@@ -31,6 +31,7 @@ from .data import (
 )
 from .models import (
     IBKD,
+    IBKD_AGGREGATION_MODES,
     LocalityGuidance,
     RESNET50_TEACHER_CHANNELS,
     ResNet56,
@@ -41,6 +42,7 @@ from .models import (
 from .train_timing import (
     KD_ALPHA,
     PLANNED_EPOCHS,
+    _ibkd_aggregation_audit,
     atomic_torch_save,
     create_scheduler,
     evaluate,
@@ -69,6 +71,9 @@ CUB_R50_LOADER_PILOT_FULL_CONFIG_SHA256 = (
 )
 CUB_R50_LOADER_FOLLOWUP_FULL_CONFIG_SHA256 = (
     "d1138ac889fd6bd7ec6503776be9444d9e7915ec37d0eb0c4ac1692a63c24907"
+)
+CUB_R50_MECHANISM_FULL_CONFIG_SHA256 = (
+    "1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8"
 )
 ALG_WARMUP20_DIAGNOSTIC_ID = (
     "oxford_iiit_pet_alg_controller_warmup20_posthoc_v1"
@@ -136,6 +141,17 @@ def parse_args() -> argparse.Namespace:
         help="Run the selected-L2 guided seed-1 preliminary full experiment.",
     )
     parser.add_argument(
+        "--mechanism-ablation-full",
+        action="store_true",
+        help="Run one cell from the locked main-L0 iBKD connection ablation.",
+    )
+    parser.add_argument(
+        "--ibkd-aggregation-mode",
+        choices=IBKD_AGGREGATION_MODES,
+        default="learned_all",
+        help="iBKD block-to-teacher-stage connection for the mechanism ablation.",
+    )
+    parser.add_argument(
         "--defer-official-test",
         action="store_true",
         help="Leave official test sealed for the parent orchestrator.",
@@ -160,6 +176,7 @@ def parse_args() -> argparse.Namespace:
             "posthoc_exploratory_batch_sensitivity",
             "exploratory_loader_pilot",
             "exploratory_selected_loader_followup",
+            "posthoc_main_l0_mechanism_ablation",
         ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=200)
@@ -186,6 +203,12 @@ def validate_args(args: argparse.Namespace) -> None:
     seed_extension_full = bool(getattr(args, "seed_extension_full", False))
     loader_pilot_full = bool(getattr(args, "loader_pilot_full", False))
     loader_followup_full = bool(getattr(args, "loader_followup_full", False))
+    mechanism_ablation_full = bool(
+        getattr(args, "mechanism_ablation_full", False)
+    )
+    aggregation_mode = str(
+        getattr(args, "ibkd_aggregation_mode", "learned_all")
+    )
     defer_official_test = bool(getattr(args, "defer_official_test", False))
     cub_loader_profile = str(
         getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
@@ -202,9 +225,11 @@ def validate_args(args: argparse.Namespace) -> None:
             or seed_extension_full
             or loader_pilot_full
             or loader_followup_full
+            or mechanism_ablation_full
             or defer_official_test
             or protocol_config is not None
             or cub_loader_profile != L0_CURRENT_STRONG
+            or aggregation_mode != "learned_all"
         ):
             raise ValueError("Legacy teacher training cannot use the CUB R50 student flags")
         if teacher_architecture != "resnet56_32":
@@ -222,17 +247,32 @@ def validate_args(args: argparse.Namespace) -> None:
         return
     if args.seed not in {1, 2, 3}:
         raise ValueError("Student seed must be 1, 2, or 3")
-    if sum((seed_extension_full, loader_pilot_full, loader_followup_full)) > 1:
-        raise ValueError(
-            "Seed extension, loader pilot, and selected-loader follow-up are mutually exclusive"
+    if aggregation_mode not in IBKD_AGGREGATION_MODES:
+        raise ValueError("Unknown iBKD aggregation mode")
+    if sum(
+        (
+            seed_extension_full,
+            loader_pilot_full,
+            loader_followup_full,
+            mechanism_ablation_full,
         )
-    if defer_official_test and not loader_followup_full:
+    ) > 1:
         raise ValueError(
-            "Deferred official test is restricted to the selected-loader follow-up"
+            "CUB full experiment modes are mutually exclusive"
+        )
+    if defer_official_test and not (
+        loader_followup_full or mechanism_ablation_full
+    ):
+        raise ValueError(
+            "Deferred official test is restricted to an approved parent orchestrator"
         )
     if loader_followup_full and not defer_official_test:
         raise ValueError(
             "Selected-loader follow-up must defer official test until all four selections"
+        )
+    if mechanism_ablation_full and not defer_official_test:
+        raise ValueError(
+            "Mechanism-ablation classification must defer test until all four selections"
         )
     if teacher_architecture == "resnet50_224_scratch":
         if not scientific_cub_r50 or dataset_key != "cub":
@@ -250,7 +290,34 @@ def validate_args(args: argparse.Namespace) -> None:
             and cub_loader_profile != L0_CURRENT_STRONG
         ):
             raise ValueError("Non-pilot CUB runs must use the locked L0 loader")
-        if loader_followup_full:
+        if mechanism_ablation_full:
+            if file_sha256(protocol_config) != CUB_R50_MECHANISM_FULL_CONFIG_SHA256:
+                raise ValueError("CUB mechanism-ablation full protocol SHA-256 changed")
+            if protocol.get("protocol_id") != (
+                "cub200_phase1_r50_224_b128_main_l0_ibkd_"
+                "layer_connection_ablation_full_v1"
+            ):
+                raise ValueError("Unexpected CUB mechanism-ablation protocol")
+            if (
+                args.batch_size != 128
+                or args.seed not in {1, 2, 3}
+                or args.method != "ibkd"
+                or args.fusion_ratio != 0.25
+                or cub_loader_profile != L0_CURRENT_STRONG
+            ):
+                raise ValueError(
+                    "Mechanism ablation requires CUB main-L0 iBKD lambda 0.25, "
+                    "batch 128, and encoder seed 1, 2, or 3"
+                )
+            if batch_profile_role != "posthoc_main_l0_mechanism_ablation":
+                raise ValueError("Mechanism ablation requires its post-hoc role")
+            variant_ids = [
+                row.get("id")
+                for row in protocol.get("classification", {}).get("variants", [])
+            ]
+            if aggregation_mode not in variant_ids:
+                raise ValueError("Aggregation mode is outside the locked protocol")
+        elif loader_followup_full:
             if (
                 file_sha256(protocol_config)
                 != CUB_R50_LOADER_FOLLOWUP_FULL_CONFIG_SHA256
@@ -326,14 +393,21 @@ def validate_args(args: argparse.Namespace) -> None:
             if args.seed != 1:
                 raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
         allowed = (
-            protocol.get("classification", {}).get("variants", [])
+            [
+                row.get("id")
+                for row in protocol.get("classification", {}).get("variants", [])
+            ]
+            if mechanism_ablation_full
+            else protocol.get("classification", {}).get("variants", [])
             if loader_followup_full
             else protocol.get("scope", {}).get("variants", [])
             if loader_pilot_full
             else protocol.get("result_scope", {}).get("variants", [])
         )
         variant = (
-            f"ibkd_lambda_{args.fusion_ratio}"
+            aggregation_mode
+            if mechanism_ablation_full
+            else f"ibkd_lambda_{args.fusion_ratio}"
             if args.method == "ibkd"
             else "alg_warmup20"
             if args.method == "alg"
@@ -346,6 +420,7 @@ def validate_args(args: argparse.Namespace) -> None:
         or seed_extension_full
         or loader_pilot_full
         or loader_followup_full
+        or mechanism_ablation_full
         or protocol_config is not None
         or batch_profile_role
         or cub_loader_profile != L0_CURRENT_STRONG
@@ -358,6 +433,10 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError("iBKD lambda must be 0.25 or 0.5")
     elif args.fusion_ratio is not None:
         raise ValueError("Only iBKD accepts --fusion-ratio")
+    if not mechanism_ablation_full and aggregation_mode != "learned_all":
+        raise ValueError(
+            "Non-canonical iBKD aggregation requires --mechanism-ablation-full"
+        )
     if args.method != "vanilla" and args.teacher_checkpoint is None:
         raise ValueError("Guided student run requires --teacher-checkpoint")
     if args.method == "alg":
@@ -410,6 +489,9 @@ def write_epoch_status(
             "method": args.method,
             "batch_size": args.batch_size,
             "fusion_ratio_lambda": args.fusion_ratio,
+            "ibkd_aggregation_mode": getattr(
+                args, "ibkd_aggregation_mode", "learned_all"
+            ),
             "seed": args.seed,
             "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
             "alg_controller_warmup_epochs": args.alg_controller_warmup_epochs,
@@ -663,6 +745,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     seed_extension_full = bool(args.seed_extension_full)
     loader_pilot_full = bool(args.loader_pilot_full)
     loader_followup_full = bool(args.loader_followup_full)
+    mechanism_ablation_full = bool(
+        getattr(args, "mechanism_ablation_full", False)
+    )
+    aggregation_mode = str(
+        getattr(args, "ibkd_aggregation_mode", "learned_all")
+    )
     defer_official_test = bool(getattr(args, "defer_official_test", False))
     cub_loader_profile = str(args.cub_loader_profile)
     protocol_config_sha256 = (
@@ -718,7 +806,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         guidance = IBKD(
             teacher_channels=(
                 RESNET50_TEACHER_CHANNELS if scientific_cub_r50 else (16, 32, 64)
-            )
+            ),
+            aggregation_mode=aggregation_mode,
         ).to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
 
@@ -750,6 +839,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"lambda={args.fusion_ratio} seed={args.seed} initial_sha256={initial_hash} "
         f"loader_pilot_full={loader_pilot_full} "
         f"loader_followup_full={loader_followup_full} "
+        f"mechanism_ablation_full={mechanism_ablation_full} "
+        f"ibkd_aggregation_mode={aggregation_mode} "
         f"defer_official_test={defer_official_test} "
         f"cub_loader_profile={cub_loader_profile} "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
@@ -894,13 +985,21 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         raise RuntimeError("Student training produced no selected checkpoint")
     student.load_state_dict(best_student_state, strict=True)
     selected_student_hash = state_dict_sha256(student)
+    aggregation_audit: dict[str, Any] | None = None
+    if isinstance(guidance, IBKD):
+        if best_guidance_state is None:
+            raise RuntimeError("Selected iBKD checkpoint is missing guidance state")
+        guidance.load_state_dict(best_guidance_state, strict=True)
+        aggregation_audit = _ibkd_aggregation_audit(guidance)
     is_alg_warmup20_diagnostic = (
         _dataset_key(args) == "pet"
         and args.posthoc_diagnostic_id == ALG_WARMUP20_DIAGNOSTIC_ID
     )
     metadata = {
         "purpose": (
-            "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
+            "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
+            if scientific_cub_r50 and mechanism_ablation_full
+            else "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
             if scientific_cub_r50 and loader_followup_full
             else "phase1_cub_r50_224_loader_pilot_full_student_v1"
             if scientific_cub_r50 and loader_pilot_full
@@ -912,12 +1011,23 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             if is_alg_warmup20_diagnostic
             else "phase1_scientific_full_student"
         ),
+        "scientific_result": True,
+        "confirmatory_main_result": (
+            False
+            if loader_pilot_full or loader_followup_full or mechanism_ablation_full
+            else args.batch_size == 128
+            if scientific_cub_r50
+            else not is_alg_warmup20_diagnostic
+        ),
         "posthoc_diagnostic": is_alg_warmup20_diagnostic,
         "posthoc_diagnostic_id": args.posthoc_diagnostic_id,
         "canonical_phase1_result_replaced": False,
         "seed_extension_full": seed_extension_full,
         "loader_pilot_full": loader_pilot_full,
         "loader_followup_full": loader_followup_full,
+        "mechanism_ablation_full": mechanism_ablation_full,
+        "ibkd_aggregation_mode": aggregation_mode,
+        "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,
         "exploratory_selected_loader_followup": loader_followup_full,
@@ -946,6 +1056,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             and args.batch_size == 128
             and not loader_pilot_full
             and not loader_followup_full
+            and not mechanism_ablation_full
         ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_warmup_epochs": args.alg_controller_warmup_epochs,
@@ -1009,7 +1120,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "scientific_result": True,
         "confirmatory_main_result": (
             False
-            if loader_pilot_full or loader_followup_full
+            if loader_pilot_full or loader_followup_full or mechanism_ablation_full
             else args.batch_size == 128
             if scientific_cub_r50
             else not is_alg_warmup20_diagnostic
@@ -1020,6 +1131,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "seed_extension_full": seed_extension_full,
         "loader_pilot_full": loader_pilot_full,
         "loader_followup_full": loader_followup_full,
+        "mechanism_ablation_full": mechanism_ablation_full,
+        "ibkd_aggregation_mode": aggregation_mode,
+        "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,
         "exploratory_selected_loader_followup": loader_followup_full,
@@ -1062,6 +1176,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             and args.batch_size == 128
             and not loader_pilot_full
             and not loader_followup_full
+            and not mechanism_ablation_full
         ),
         "final_confirmatory_matrix_complete": False if scientific_cub_r50 else None,
         "controller_final": None if controller is None else controller.state_dict(),
