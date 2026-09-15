@@ -62,6 +62,12 @@ METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
 TEACHER_ARCHITECTURES = ("resnet56_32", "resnet50_224_scratch")
 KD_TEMPERATURE = 4.0
 KD_ALPHA = 0.9
+STRICT_DETERMINISM_ENV = {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NVIDIA_TF32_OVERRIDE": "0",
+}
 
 
 def _ibkd_aggregation_audit(guidance: IBKD) -> dict[str, Any]:
@@ -159,6 +165,87 @@ def seed_everything(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def configure_strict_determinism(seed: int) -> dict[str, Any]:
+    """Enable the fail-closed deterministic contract used by the CUB A/A audit.
+
+    Environment variables that must be present before CUDA initialization are
+    validated rather than silently set here.  The H200 entry script owns those
+    process-level settings.
+    """
+
+    expected_environment = {
+        "PYTHONHASHSEED": str(seed),
+        **STRICT_DETERMINISM_ENV,
+    }
+    mismatches = {
+        key: {"expected": expected, "actual": os.environ.get(key)}
+        for key, expected in expected_environment.items()
+        if os.environ.get(key) != expected
+    }
+    if mismatches:
+        raise RuntimeError(
+            "Strict deterministic environment mismatch: "
+            + json.dumps(mismatches, sort_keys=True)
+        )
+
+    torch.use_deterministic_algorithms(True, warn_only=False)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    torch.set_float32_matmul_precision("highest")
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError as error:
+        raise RuntimeError(
+            "Strict determinism must be configured before parallel work starts"
+        ) from error
+    seed_everything(seed)
+    return {
+        "enabled": True,
+        "fail_on_nondeterministic_operation": True,
+        "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+        "cudnn_benchmark": torch.backends.cudnn.benchmark,
+        "cudnn_deterministic": torch.backends.cudnn.deterministic,
+        "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+        "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+        "float32_matmul_precision": torch.get_float32_matmul_precision(),
+        "torch_num_threads": torch.get_num_threads(),
+        "torch_num_interop_threads": torch.get_num_interop_threads(),
+        "environment": expected_environment,
+    }
+
+
+def rng_state_sha256() -> str:
+    """Hash Python, NumPy, CPU Torch, and every visible CUDA RNG state."""
+
+    digest = hashlib.sha256()
+    digest.update(repr(random.getstate()).encode("utf-8"))
+    numpy_state = np.random.get_state()
+    digest.update(str(numpy_state[0]).encode("ascii"))
+    digest.update(np.asarray(numpy_state[1]).tobytes(order="C"))
+    digest.update(repr(numpy_state[2:]).encode("utf-8"))
+    digest.update(torch.get_rng_state().cpu().numpy().tobytes(order="C"))
+    if torch.cuda.is_available():
+        for index, state in enumerate(torch.cuda.get_rng_state_all()):
+            digest.update(str(index).encode("ascii"))
+            digest.update(state.cpu().numpy().tobytes(order="C"))
+    return digest.hexdigest()
+
+
+def update_tensor_sha256(
+    digest: Any, label: str, tensor: torch.Tensor
+) -> None:
+    """Append one CPU tensor, including its contract, to an input-stream hash."""
+
+    value = tensor.detach().cpu().contiguous()
+    digest.update(label.encode("utf-8"))
+    digest.update(str(value.dtype).encode("ascii"))
+    digest.update(str(tuple(value.shape)).encode("ascii"))
+    digest.update(value.numpy().tobytes(order="C"))
 
 
 def synchronize(device: torch.device) -> None:
@@ -300,6 +387,14 @@ def parse_args() -> argparse.Namespace:
             "preliminary follow-up."
         ),
     )
+    parser.add_argument(
+        "--strict-deterministic-aa-smoke",
+        action="store_true",
+        help=(
+            "Fail-closed two-epoch CUB main-L0 iBKD lambda-0.25 A/A "
+            "reproducibility smoke. Requires num_workers=0 and sealed test."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -320,13 +415,42 @@ def validate_args(args: argparse.Namespace) -> None:
     loader_followup_smoke = bool(
         getattr(args, "loader_followup_smoke", False)
     )
-    if sum((loader_pilot_smoke, loader_followup_smoke)) > 1:
-        raise ValueError(
-            "CUB loader smoke modes are mutually exclusive"
+    strict_deterministic_aa_smoke = bool(
+        getattr(args, "strict_deterministic_aa_smoke", False)
+    )
+    if sum(
+        (
+            loader_pilot_smoke,
+            loader_followup_smoke,
+            strict_deterministic_aa_smoke,
         )
+    ) > 1:
+        raise ValueError("CUB timing smoke modes are mutually exclusive")
     if loader_profile not in LOADER_PROFILE_ORDER:
         raise ValueError("Unknown CUB loader profile")
-    if loader_pilot_smoke:
+    if strict_deterministic_aa_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method == "ibkd"
+            and args.fusion_ratio == 0.25
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and not access_official_test
+            and not seed_extension_smoke
+            and loader_profile == L0_CURRENT_STRONG
+            and args.num_workers == 0
+        ):
+            raise ValueError(
+                "Strict deterministic A/A smoke requires CUB main-L0 iBKD "
+                "lambda 0.25, batch 128, seed 1, the audited ResNet-50/224 "
+                "teacher, num_workers=0, checkpoint export, and sealed test"
+            )
+    elif loader_pilot_smoke:
         if not (
             dataset_key == "cub"
             and args.kind == "student"
@@ -848,6 +972,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         guidance = IBKD(teacher_channels=_teacher_channels(args)).to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
 
+    initial_guidance_hash = (
+        None if guidance is None else state_dict_sha256(guidance)
+    )
+
     parameters = list(student.parameters())
     if guidance is not None:
         parameters.extend(guidance.parameters())
@@ -859,6 +987,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         weight_decay=0.05,
     )
     scheduler = create_scheduler(optimizer, teacher=False)
+    strict_deterministic = bool(
+        getattr(args, "strict_deterministic_aa_smoke", False)
+    )
+    # Match the scientific full trainer: guidance construction must not shift
+    # the student's DropPath RNG stream.  The DataLoader owns its own generator.
+    if strict_deterministic:
+        seed_everything(args.seed)
     epoch_rows: list[dict[str, Any]] = []
     log(
         "[TIMING_ONLY] student validation accuracy is diagnostic only; "
@@ -868,7 +1003,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"[STUDENT_CONTRACT] method={args.method} batch={args.batch_size} "
         f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
-        f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)}"
+        f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
+        f"strict_deterministic_aa_smoke={strict_deterministic} "
+        f"initial_guidance_sha256={initial_guidance_hash}"
     )
 
     for epoch in range(1, ACTUAL_EPOCHS + 1):
@@ -883,7 +1020,19 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         total = 0
         correct = 0
         totals = {"loss": 0.0, "ce": 0.0, "guidance": 0.0, "align": 0.0, "fuse": 0.0}
-        for images, targets in train_loader:
+        input_stream_digest = hashlib.sha256() if strict_deterministic else None
+        for batch_index, (images, targets) in enumerate(train_loader):
+            if input_stream_digest is not None:
+                update_tensor_sha256(
+                    input_stream_digest,
+                    f"epoch={epoch}:batch={batch_index}:images",
+                    images,
+                )
+                update_tensor_sha256(
+                    input_stream_digest,
+                    f"epoch={epoch}:batch={batch_index}:targets",
+                    targets,
+                )
             images = images.to(device, non_blocking=True)
             targets = targets.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
@@ -973,6 +1122,17 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             "peak_cuda_memory_bytes": peak_memory,
             "peak_cuda_memory_reserved_bytes": peak_reserved,
         }
+        if input_stream_digest is not None:
+            row.update(
+                {
+                    "input_stream_sha256": input_stream_digest.hexdigest(),
+                    "student_state_sha256_after_epoch": state_dict_sha256(student),
+                    "guidance_state_sha256_after_epoch": (
+                        None if guidance is None else state_dict_sha256(guidance)
+                    ),
+                    "rng_state_sha256_after_epoch": rng_state_sha256(),
+                }
+            )
         epoch_rows.append(row)
         log(
             f"[STUDENT_EPOCH] method={args.method} batch={args.batch_size} "
@@ -1016,6 +1176,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     checkpoint_path: Path | None = None
     checkpoint_sha256: str | None = None
     student_state_hash: str | None = None
+    guidance_state_hash = (
+        None if guidance is None else state_dict_sha256(guidance)
+    )
     aggregation_audit: dict[str, Any] | None = None
     if isinstance(guidance, IBKD):
         aggregation_audit = _ibkd_aggregation_audit(guidance)
@@ -1088,6 +1251,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                         "validation_image_ids_sha256"
                     ],
                     "student_state_sha256": student_state_hash,
+                    "initial_guidance_state_sha256": initial_guidance_hash,
+                    "guidance_state_sha256": guidance_state_hash,
+                    "strict_deterministic_aa_smoke": strict_deterministic,
                     "ibkd_aggregation": aggregation_audit,
                     "official_test_evaluations_at_checkpoint_write": int(
                         bool(getattr(args, "access_official_test", False))
@@ -1126,6 +1292,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "loader_followup_smoke": bool(
             getattr(args, "loader_followup_smoke", False)
         ),
+        "strict_deterministic_aa_smoke": strict_deterministic,
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
         ),
@@ -1137,6 +1304,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "official_test": official_test,
         "official_test_seconds": official_test_seconds,
         "initial_student_state_sha256": initial_hash,
+        "initial_guidance_state_sha256": initial_guidance_hash,
         "teacher_checkpoint_sha256": teacher_hash,
         "teacher_model_state_sha256": teacher_model_state_hash,
         "teacher_checkpoint_kind": (
@@ -1158,6 +1326,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         ),
         "checkpoint_sha256": checkpoint_sha256,
         "student_state_sha256": student_state_hash,
+        "guidance_state_sha256": guidance_state_hash,
+        "strict_determinism": getattr(args, "strict_determinism_contract", None),
         "optimizer_contract": "shared_single_group_adamw_all_trainable_parameters_wd_0.05",
         "split_manifest": manifest,
         "epochs": epoch_rows,
@@ -1174,7 +1344,11 @@ def main() -> None:
 
         if timm.__version__ != "1.0.27":
             raise RuntimeError(f"Expected timm==1.0.27, found {timm.__version__}")
-        torch.backends.cudnn.benchmark = False
+        if bool(getattr(args, "strict_deterministic_aa_smoke", False)):
+            args.strict_determinism_contract = configure_strict_determinism(args.seed)
+        else:
+            args.strict_determinism_contract = None
+            torch.backends.cudnn.benchmark = False
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log(
             f"[PHASE1_TIMING_START] dataset={_dataset_key(args)} "
@@ -1182,6 +1356,8 @@ def main() -> None:
             f"teacher_architecture={args.teacher_architecture} "
             f"batch={args.batch_size} device={device} actual_epochs=2 "
             f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
+            "strict_deterministic_aa_smoke="
+            f"{bool(getattr(args, 'strict_deterministic_aa_smoke', False))} "
             "planned_epochs="
             f"{_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )

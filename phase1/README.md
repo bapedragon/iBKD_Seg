@@ -5,7 +5,7 @@ Phase 1 실험은 데이터셋별로 분리해 관리합니다.
 | 폴더 | 데이터셋 | 상태 |
 |---|---|---|
 | [phase1_pet](phase1_pet/README.md) | Oxford-IIIT Pet | 분류·frozen probe·ALG 진단 완료, No-Go |
-| [phase1_cub](phase1_cub/README.md) | CUB-200-2011 | ResNet-50/224 guided 3-seed 분류·probe·직접 공간정보 진단 완료 |
+| [phase1_cub](phase1_cub/README.md) | CUB-200-2011 | guided 3-seed 진단 완료, main-L0 iBKD 결정론 A/A 재현성 점검 중 |
 
 완료된 실험은 본학습 결과·감사 manifest·재현용 본학습 진입점만 남기며, 선행
 실행 점검 산출물은 보존하지 않습니다. 두 폴더의 config, 실행 기록과 결과를 서로

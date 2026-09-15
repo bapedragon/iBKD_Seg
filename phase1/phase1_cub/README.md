@@ -18,6 +18,8 @@ checkpoint와 학습형 probe는 validation으로만 선택하고, official test
 | 직접 공간정보 진단, 3 seeds | Part PCK·CKA는 LG 1위; attention 평균은 iBKD-0.25 1위 | [Issue 737+739](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md) |
 | 이미지 loader L0/L1/L2 | 사전 주 지표 Part PCK에서 L2 선택 | [Loader 결과](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md) |
 | L2 guided 예비 본실험, seed 1 | 분류 LG 1위, probe ALG-w20 1위 | [L2 결과](image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md) |
+| main-L0 레이어 연결 사후 분석 | seed-1 canonical 재현 실패로 연결 방식 결론 보류 | [Mechanism](mechanism_analysis/README.md) |
+| main-L0 결정론 A/A | 동일 iBKD-0.25 두 실행의 bitwise 재현성 smoke 준비 | [Reproducibility](reproducibility/README.md) |
 | ResNet-56/32 구버전 | 완결된 별도 보존 결과; v3와 합치지 않음 | [Legacy v2](reports/legacy_resnet56_v2_guided/RESULTS.md) |
 
 현재 CUB 결과는 iBKD가 LG/ALG보다 공간정보를 전반적으로 더 잘 보존한다는 가설을
@@ -46,6 +48,8 @@ bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seeds2_3.sh
 과학 설정은 [PROTOCOL.md](PROTOCOL.md), 직접 공간정보 지표 정의는
 [DIRECT_SPATIAL_PROTOCOL.md](DIRECT_SPATIAL_PROTOCOL.md), 이미지 loader 탐색은
 [image_loader_experiment](image_loader_experiment/README.md)에 분리했습니다.
+현재 같은-seed 변동을 확인하는 결정론 gate는
+[reproducibility](reproducibility/README.md)에 분리했습니다.
 
 ## 보존 원칙
 

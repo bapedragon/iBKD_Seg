@@ -27,20 +27,22 @@
 2. 네 연결 조건과 3 encoder seed의 과학 설정을 결과 전에 고정 완료
 3. H200 smoke에서 분류 4/4와 probe 후보 12/12의 계산 경로·메모리 확인 완료
 4. smoke 수치로 조건을 고르지 않았으며 smoke 로그와 checkpoint는 Git에서 제거
-5. 10시간 제한을 피하려고 encoder seed 하나당 H200 issue 하나로 본실험 실행
+5. Seed-1 본실험에서 `learned_all` 기준 경로가 기존 main-L0 성능을 재현하지
+   못했고 연결 조건별 controller 종료 epoch도 달라 인과 해석을 보류
+6. [결정론 A/A 재현성 gate](../reproducibility/README.md)를 먼저 수행
 
-## 본실험 실행
+## 본실험 실행 보류
 
-이번 첫 실행은 seed 1입니다.
+아래 진입점의 seed-1 실행은 완료됐지만 재현성 및 guidance 기간 혼입 때문에 현재
+추가 seed 실행에 사용하지 않습니다.
 
 ```bash
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_full_b128.sh 1
 ```
 
-이후 seed 1 결과와 관계없이 같은 명령의 마지막 인자만 `2`, `3`으로 바꾸어 모두
-수행합니다. 각 seed는 분류 checkpoint 4개와 validation에서 선택된 probe
-checkpoint 20개, 총 24개의 새 checkpoint를 남깁니다. 모든 validation 선택이
-끝나기 전에는 official test를 열지 않습니다.
+결정론 full A/A가 안정된 뒤에는 네 연결 방식 모두 guidance 기간을 동일하게
+고정한 새 protocol을 만들고 다시 비교합니다. 기존 v1 결과만으로 레이어 연결의
+효과를 결론내리지 않습니다.
 
 Git에는 코드·프로토콜·정리된 본실험 표·checkpoint 해시 manifest만 반영합니다.
 본실험 checkpoint와 원시 결과 archive는 GitHub Release로 보존하고, dataset,

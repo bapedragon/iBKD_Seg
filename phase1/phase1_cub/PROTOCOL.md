@@ -71,3 +71,11 @@ Teacher 결과와 hash는
 - GitHub Release: 큰 teacher/student/probe checkpoint와 원시 실행 증거
 - Git 제외: CUB 데이터 archive, feature/target cache, 중복 원시 출력
 - 완료된 본실험의 선행 실행 점검 산출물은 보존하지 않음
+
+## 사후 재현성 gate
+
+main-L0 iBKD λ=0.25 seed 1의 반복 실행에서 분류 정확도와 guidance controller
+종료 시점이 크게 달랐습니다. 따라서 레이어 연결 원인 분석을 계속하기 전에
+[완전 결정론 A/A 프로토콜](reproducibility/PROTOCOL.md)의 2-epoch smoke와
+300-epoch full A/A를 순서대로 통과해야 합니다. 이 진단은 기존 v3 주 결과를
+덮어쓰지 않으며 official test나 방법 선택에 사용하지 않습니다.

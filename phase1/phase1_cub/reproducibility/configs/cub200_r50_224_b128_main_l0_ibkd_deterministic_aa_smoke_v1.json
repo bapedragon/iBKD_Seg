@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_deterministic_aa_smoke_v1",
+  "status": "ready_for_h200_smoke",
+  "scientific_result": false,
+  "posthoc_reproducibility_audit": true,
+  "question": "Do two fresh, strictly deterministic executions of the same main-L0 iBKD lambda-0.25 seed-1 training path remain bitwise identical for two full-data epochs?",
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "base_protocol": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "observed_same_seed_variation": [
+      {
+        "run": "issue727_canonical",
+        "selected_epoch": 239,
+        "controller_stop_epoch": 123,
+        "test_macro_top1_percent": 27.03605890274048
+      },
+      {
+        "run": "issue760_mechanism_learned_all",
+        "selected_epoch": 288,
+        "controller_stop_epoch": 55,
+        "test_macro_top1_percent": 10.4095958173275
+      },
+      {
+        "run": "exact_old_commit_replay",
+        "selected_epoch": 255,
+        "controller_stop_epoch": 103,
+        "test_macro_top1_percent": 22.377
+      }
+    ]
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong"
+  },
+  "teacher": {
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "method": "ibkd",
+    "aggregation_mode": "learned_all",
+    "fusion_ratio_lambda": 0.25,
+    "batch_size": 128,
+    "seed": 1,
+    "precision": "float32",
+    "smoke_epochs": 2,
+    "planned_full_epochs": 300,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0005,
+    "weight_decay": 0.05,
+    "learning_rate_warmup_epochs": 20,
+    "guidance_beta": 2.5,
+    "guidance_controller_warmup_epochs": 20
+  },
+  "strict_determinism": {
+    "independent_fresh_processes": 2,
+    "run_labels": [
+      "A",
+      "B"
+    ],
+    "torch_use_deterministic_algorithms": true,
+    "warn_only": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "pythonhashseed": 1,
+    "cublas_workspace_config": ":4096:8",
+    "omp_num_threads": 1,
+    "mkl_num_threads": 1,
+    "num_workers": 0
+  },
+  "comparison_gate": {
+    "exact_match_required": [
+      "initial_student_state_sha256",
+      "initial_guidance_state_sha256",
+      "teacher_checkpoint_sha256",
+      "teacher_model_state_sha256",
+      "validation_split_manifest",
+      "epoch_input_stream_sha256",
+      "epoch_metric_trace_excluding_wall_time_and_memory",
+      "epoch_student_state_sha256",
+      "epoch_guidance_state_sha256",
+      "epoch_rng_state_sha256",
+      "final_student_state_sha256",
+      "final_guidance_state_sha256",
+      "controller_state",
+      "aggregation_state"
+    ],
+    "checkpoint_file_sha256": "reported_but_not_a_gate_because_serialization_container_bytes_are_not_model_state",
+    "pass": "all exact-match fields are identical and neither run raises a nondeterministic-operation error",
+    "fail": "any exact-match field differs or either run fails"
+  },
+  "official_test_policy": {
+    "accessed": false,
+    "evaluations": 0,
+    "reason": "A/A smoke validates execution determinism, not performance"
+  },
+  "decision_rule": {
+    "on_pass": "release a separate 300-epoch deterministic A/A full protocol with the same settings",
+    "on_fail": "do not resume the layer-connection ablation; locate the first mismatching input, RNG, or state hash",
+    "smoke_metrics_must_not_select_method_lambda_loader_or_checkpoint": true
+  },
+  "artifact_policy": {
+    "retain_from_smoke_output": [
+      "run_A/summary.json",
+      "run_B/summary.json",
+      "aa_comparison.json",
+      "completion_status.json",
+      "run.log"
+    ],
+    "do_not_commit_to_git": [
+      "smoke checkpoints",
+      "smoke logs",
+      "dataset archive"
+    ]
+  }
+}
