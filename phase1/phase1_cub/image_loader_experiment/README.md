@@ -3,6 +3,12 @@
 완료된 CUB ResNet-50/224 v3 주 실험과 분리해, 학생 입력 loader의 crop·광학
 증강만 바꾼 사후 실험을 한곳에서 관리합니다.
 
+이 폴더에서 재실행한 L0는 혼동 방지를 위해 `pilot-L0` 또는
+`loader_pilot_l0_seed1`로 부릅니다. Issue 727/730의 기존 주 결과
+`main_l0_v3`와 동일한 loader 정의를 쓰지만 서로 다른 학습 실행이며 checkpoint를
+서로 대체하지 않습니다. 전체 계보는 [실험 색인](../EXPERIMENT_INDEX.md)에
+고정했습니다.
+
 - [PROTOCOL.md](PROTOCOL.md): L0/L1/L2 정의, 선택 규칙, test 접근 규칙
 - `configs/`: 학습 전 잠근 machine-readable 설정
 - `scripts/`: H200 진입점

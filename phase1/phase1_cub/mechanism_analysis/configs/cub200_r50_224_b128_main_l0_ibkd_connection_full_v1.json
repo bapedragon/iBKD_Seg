@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_layer_connection_ablation_full_v1",
+  "status": "scientific_settings_locked_before_smoke_or_full_results_2026-09-15",
+  "scientific_result": true,
+  "posthoc_mechanism_analysis": true,
+  "completed_main_result_replaced": false,
+  "question": "Is the CUB classification behavior of iBKD lambda 0.25 caused by its learned 12-block-to-3-stage connection rather than by stronger final-layer spatial structure?",
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "loader_profile": "l0_current_strong",
+    "loader_pilot_l0_checkpoints_allowed": false,
+    "selected_l2_checkpoints_allowed": false,
+    "base_protocol": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "completed_main_l0_guided_result": {
+      "path": "phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md",
+      "encoder_seeds": [1, 2, 3],
+      "source_h200_issues": [727, 730],
+      "role": "motivation_and_external_reference_only_not_reused_as_an_ablation_cell"
+    }
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "num_classes": 200,
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027,
+      "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+    },
+    "student_train_loader": {
+      "profile": "l0_current_strong",
+      "input_size": 224,
+      "random_resized_crop_scale": [0.08, 1.0],
+      "random_resized_crop_ratio": [0.75, 1.3333333333333333],
+      "horizontal_flip_probability": 0.5,
+      "color_jitter_argument": 0.4,
+      "auto_augment": "rand-m9-mstd0.5-inc1",
+      "random_erasing_probability": 0.25,
+      "interpolation": "bicubic",
+      "normalization": "imagenet",
+      "teacher_student_random_geometry_shared": true
+    },
+    "spatial_annotations_used_for_student_training": false
+  },
+  "teacher": {
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50",
+    "input_size": 224,
+    "initialization": "scratch",
+    "training_epochs": 200,
+    "checkpoint_release_manifest": "phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "strict_frozen_reuse": true
+  },
+  "classification": {
+    "student_architecture": "deit_tiny_patch16_224",
+    "input_size": 224,
+    "batch_size": 128,
+    "epochs": 300,
+    "encoder_seeds": [1, 2, 3],
+    "fusion_ratio_lambda": 0.25,
+    "controller": {
+      "kind": "ibkd",
+      "beta_on": 2.5,
+      "threshold": -0.02,
+      "window": 50,
+      "warmup_epochs": 20,
+      "same_controller_code_for_all_variants": true,
+      "termination_is_a_measured_downstream_outcome": true
+    },
+    "optimizer": {
+      "name": "adamw",
+      "learning_rate": 0.0005,
+      "betas": [0.9, 0.999],
+      "eps": 1e-8,
+      "weight_decay": 0.05
+    },
+    "scheduler": {
+      "name": "cosine",
+      "minimum_learning_rate": 0.000005,
+      "warmup_epochs": 20,
+      "warmup_learning_rate": 5e-7
+    },
+    "variants": [
+      {
+        "id": "learned_all",
+        "connection": "three independently learned softmax rows over all 12 blocks",
+        "role": "canonical iBKD rerun inside the paired ablation"
+      },
+      {
+        "id": "fixed_uniform_all",
+        "connection": "each teacher stage receives the fixed arithmetic mean of all 12 blocks",
+        "role": "tests whether learning the aggregation weights matters"
+      },
+      {
+        "id": "fixed_stage_match",
+        "connection": "teacher stages receive fixed student blocks 0, 6, and 11",
+        "role": "tests the learned cross-layer connection against the LG-style stage map"
+      },
+      {
+        "id": "fixed_last",
+        "connection": "all three teacher stages receive fixed student block 11",
+        "role": "tests whether the final block alone explains the effect"
+      }
+    ],
+    "only_intended_factor_changed": "iBKD TransformerAggregationPooling block-to-stage connection",
+    "same_student_initial_state_within_seed": true,
+    "selection": {
+      "split": "validation",
+      "metric": "macro_top1",
+      "direction": "maximize",
+      "tie_break": "earlier_epoch"
+    }
+  },
+  "frozen_segmentation_probe": {
+    "encoder": "validation-selected classification checkpoint strictly reloaded, eval mode, all parameters frozen",
+    "feature": "student block 11 pre-final-norm patch grid 192x14x14",
+    "head": "Conv2d(192,2,1,bias=True)",
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "nesterov": false
+    },
+    "scheduler": "cosine_to_zero",
+    "selection": "maximum validation grid mean_iou then lower learning rate then earlier epoch",
+    "primary_report_metric": "official_test_input_224_binary_mean_iou"
+  },
+  "observational_checkpoint_analysis": {
+    "source": "completed main_l0_v3 iBKD checkpoints from issues 727 and 730",
+    "quantities": [
+      "softmax aggregation probability for every teacher stage and student block",
+      "top block and top probability",
+      "normalized entropy",
+      "early middle late block mass"
+    ],
+    "causal_claim_allowed": false
+  },
+  "official_test_policy": {
+    "smoke_access": false,
+    "full_access": "after all validation selections for the submitted shard",
+    "one_evaluation_per_selected_classification_checkpoint": true,
+    "one_evaluation_per_selected_probe_checkpoint": true,
+    "test_used_for_selection": false,
+    "settings_changed_from_test": false
+  },
+  "statistics": {
+    "independent_unit": "encoder_seed",
+    "paired_comparison_within_seed": true,
+    "probe_seed_nested_within_encoder_seed": true,
+    "report": "per-seed values, mean, sample standard deviation, and paired differences from learned_all",
+    "small_n_policy": "three seeds are descriptive mechanism evidence; do not overstate null-hypothesis tests"
+  },
+  "interpretation": {
+    "supports_learned_connection_mechanism_if": "learned_all has a consistent paired classification advantage over both fixed_uniform_all and fixed_stage_match without a general training failure",
+    "weakens_learned_connection_mechanism_if": "fixed_uniform_all is statistically and practically indistinguishable from learned_all",
+    "supports_final_block_explanation_if": "fixed_last preserves the learned_all classification behavior",
+    "followup_if_controller_stop_epochs_diverge": "run a separately versioned matched-guidance-duration control; do not silently change this protocol",
+    "no_result_replaces_main_v3": true
+  },
+  "execution": {
+    "precision": "float32",
+    "requested_mig_slices": 7,
+    "num_workers": 4,
+    "retain_classification_checkpoints": true,
+    "retain_selected_probe_checkpoints": true,
+    "retain_dataset_or_feature_cache_in_output": false,
+    "full_job_partition": "set only from smoke runtime without changing scientific settings"
+  },
+  "execution_gate": {
+    "current_state": "full_blocked_until_smoke_passes",
+    "smoke_may_change_scientific_settings": false,
+    "smoke_may_change_only_job_partition_or_fix_semantics_preserving_runtime_bugs": true
+  },
+  "completion_gate": {
+    "classification_students": 12,
+    "classification_validation_selections": 12,
+    "classification_official_test_evaluations": 12,
+    "segmentation_probe_lr_candidates": 180,
+    "segmentation_probe_validation_selections": 60,
+    "segmentation_probe_official_test_evaluations": 60,
+    "retained_new_checkpoints": 72
+  }
+}

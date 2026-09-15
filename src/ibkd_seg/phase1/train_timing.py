@@ -43,8 +43,10 @@ from .data import (
 )
 from .models import (
     IBKD,
+    IBKD_AGGREGATION_MODES,
     LocalityGuidance,
     RESNET50_TEACHER_CHANNELS,
+    STUDENT_BLOCKS,
     ResNet50CUB,
     ResNet56,
     create_student,
@@ -275,6 +277,20 @@ def parse_args() -> argparse.Namespace:
             "preliminary follow-up."
         ),
     )
+    parser.add_argument(
+        "--mechanism-ablation-smoke",
+        action="store_true",
+        help=(
+            "Validation-only CUB main-L0 iBKD layer-connection smoke. "
+            "This mode is post-hoc and cannot replace the completed v3 result."
+        ),
+    )
+    parser.add_argument(
+        "--ibkd-aggregation-mode",
+        choices=IBKD_AGGREGATION_MODES,
+        default="learned_all",
+        help="iBKD block-to-teacher-stage connection used by a mechanism ablation.",
+    )
     return parser.parse_args()
 
 
@@ -295,9 +311,17 @@ def validate_args(args: argparse.Namespace) -> None:
     loader_followup_smoke = bool(
         getattr(args, "loader_followup_smoke", False)
     )
-    if loader_pilot_smoke and loader_followup_smoke:
+    mechanism_ablation_smoke = bool(
+        getattr(args, "mechanism_ablation_smoke", False)
+    )
+    aggregation_mode = str(
+        getattr(args, "ibkd_aggregation_mode", "learned_all")
+    )
+    if aggregation_mode not in IBKD_AGGREGATION_MODES:
+        raise ValueError("Unknown iBKD aggregation mode")
+    if sum((loader_pilot_smoke, loader_followup_smoke, mechanism_ablation_smoke)) > 1:
         raise ValueError(
-            "CUB loader-pilot and selected-loader follow-up modes are exclusive"
+            "CUB loader and mechanism-ablation smoke modes are mutually exclusive"
         )
     if loader_profile not in LOADER_PROFILE_ORDER:
         raise ValueError("Unknown CUB loader profile")
@@ -339,11 +363,37 @@ def validate_args(args: argparse.Namespace) -> None:
                 "batch-128 seed-1 guided student, the audited ResNet-50 teacher, "
                 "and the locked L2 loader"
             )
+    elif mechanism_ablation_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method == "ibkd"
+            and args.fusion_ratio == 0.25
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and not access_official_test
+            and not seed_extension_smoke
+            and loader_profile == L0_CURRENT_STRONG
+        ):
+            raise ValueError(
+                "CUB mechanism-ablation smoke requires validation-only main-L0 "
+                "iBKD lambda 0.25, batch 128, seed 1, and the audited teacher"
+            )
     elif loader_profile != L0_CURRENT_STRONG:
         raise ValueError(
             "Non-default CUB loader profiles require --loader-pilot-smoke or "
             "--loader-followup-smoke"
         )
+    if not mechanism_ablation_smoke and aggregation_mode != "learned_all":
+        raise ValueError(
+            "Non-canonical iBKD aggregation requires --mechanism-ablation-smoke"
+        )
+    if args.method != "ibkd" and aggregation_mode != "learned_all":
+        raise ValueError("Only iBKD accepts a non-canonical aggregation mode")
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
     if access_official_test and not (
@@ -820,7 +870,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             ),
         )
     elif args.method == "ibkd":
-        guidance = IBKD(teacher_channels=_teacher_channels(args)).to(device)
+        guidance = IBKD(
+            teacher_channels=_teacher_channels(args),
+            aggregation_mode=str(
+                getattr(args, "ibkd_aggregation_mode", "learned_all")
+            ),
+        ).to(device)
         controller = GuidanceController(kind="ibkd", warmup_epochs=20)
 
     parameters = list(student.parameters())
@@ -843,7 +898,8 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"[STUDENT_CONTRACT] method={args.method} batch={args.batch_size} "
         f"lambda={args.fusion_ratio} initial_sha256={initial_hash} fp32=True "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
-        f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)}"
+        f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
+        f"ibkd_aggregation_mode={getattr(args, 'ibkd_aggregation_mode', 'learned_all')}"
     )
 
     for epoch in range(1, ACTUAL_EPOCHS + 1):
@@ -991,6 +1047,24 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     checkpoint_path: Path | None = None
     checkpoint_sha256: str | None = None
     student_state_hash: str | None = None
+    aggregation_audit: dict[str, Any] | None = None
+    if isinstance(guidance, IBKD):
+        probabilities = guidance.aggregation.normalized_weights().detach().cpu()
+        entropy = -(probabilities * probabilities.clamp_min(1e-12).log()).sum(dim=1)
+        aggregation_audit = {
+            "mode": guidance.aggregation.mode,
+            "probabilities": probabilities.tolist(),
+            "raw_logits": (
+                None
+                if guidance.aggregation.weights is None
+                else guidance.aggregation.weights.detach().cpu().tolist()
+            ),
+            "top_block_by_teacher_stage": probabilities.argmax(dim=1).tolist(),
+            "top_weight_by_teacher_stage": probabilities.max(dim=1).values.tolist(),
+            "normalized_entropy_by_teacher_stage": (
+                entropy / math.log(STUDENT_BLOCKS)
+            ).tolist(),
+        }
     if args.save_student_checkpoint:
         checkpoint_path = run_dir / "timing_student_latest.pt"
         student_state = {
@@ -1003,7 +1077,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                 "student": student_state,
                 "metadata": {
                     "purpose": (
-                        "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
+                        "phase1_cub_r50_224_main_l0_ibkd_connection_smoke_student_v1"
+                        if bool(
+                            getattr(args, "mechanism_ablation_smoke", False)
+                        )
+                        else "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
                         if bool(
                             getattr(args, "loader_followup_smoke", False)
                         )
@@ -1035,6 +1113,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "loader_followup_smoke": bool(
                         getattr(args, "loader_followup_smoke", False)
                     ),
+                    "mechanism_ablation_smoke": bool(
+                        getattr(args, "mechanism_ablation_smoke", False)
+                    ),
                     "cub_loader_profile": str(
                         getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
                     ),
@@ -1060,6 +1141,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                         "validation_image_ids_sha256"
                     ],
                     "student_state_sha256": student_state_hash,
+                    "ibkd_aggregation": aggregation_audit,
                     "official_test_evaluations_at_checkpoint_write": int(
                         bool(getattr(args, "access_official_test", False))
                     ),
@@ -1097,6 +1179,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "loader_followup_smoke": bool(
             getattr(args, "loader_followup_smoke", False)
         ),
+        "mechanism_ablation_smoke": bool(
+            getattr(args, "mechanism_ablation_smoke", False)
+        ),
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
         ),
@@ -1123,6 +1208,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "guidance_controller_warmup_epochs": (
             None if controller is None else controller.warmup_epochs
         ),
+        "ibkd_aggregation": aggregation_audit,
         "checkpoint": (
             None if checkpoint_path is None else str(checkpoint_path.resolve())
         ),
@@ -1152,6 +1238,7 @@ def main() -> None:
             f"teacher_architecture={args.teacher_architecture} "
             f"batch={args.batch_size} device={device} actual_epochs=2 "
             f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
+            f"ibkd_aggregation_mode={getattr(args, 'ibkd_aggregation_mode', 'learned_all')} "
             f"planned_epochs={_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )
         payload = (
@@ -1192,6 +1279,12 @@ def main() -> None:
                 "method": args.method,
                 "batch_size": args.batch_size,
                 "fusion_ratio_lambda": args.fusion_ratio,
+                "ibkd_aggregation_mode": getattr(
+                    args, "ibkd_aggregation_mode", "learned_all"
+                ),
+                "mechanism_ablation_smoke": bool(
+                    getattr(args, "mechanism_ablation_smoke", False)
+                ),
                 "failure_kind": failure_kind,
                 "error_type": type(error).__name__,
                 "error": message,

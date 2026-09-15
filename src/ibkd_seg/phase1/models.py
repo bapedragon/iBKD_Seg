@@ -19,6 +19,12 @@ RESNET50_TEACHER_CHANNELS = (512, 1024, 2048)
 STUDENT_CHANNELS = 192
 STUDENT_BLOCKS = 12
 LG_STUDENT_BLOCKS = (0, 6, 11)
+IBKD_AGGREGATION_MODES = (
+    "learned_all",
+    "fixed_uniform_all",
+    "fixed_stage_match",
+    "fixed_last",
+)
 
 
 class BasicTransform(nn.Module):
@@ -329,24 +335,64 @@ class ConvCrossAttention(nn.Module):
 
 
 class TransformerAggregationPooling(nn.Module):
-    def __init__(self) -> None:
+    """Map 12 student blocks to the three teacher stages.
+
+    ``learned_all`` is the submitted iBKD implementation and deliberately keeps
+    the original ``aggregation.weights`` state-dict contract.  The fixed modes
+    are post-hoc mechanism ablations; their matrices are non-persistent buffers
+    so they cannot be mistaken for learned checkpoint parameters.
+    """
+
+    def __init__(self, mode: str = "learned_all") -> None:
         super().__init__()
-        self.weights = nn.Parameter(torch.zeros(3, STUDENT_BLOCKS))
+        if mode not in IBKD_AGGREGATION_MODES:
+            raise ValueError(
+                f"unknown iBKD aggregation mode {mode!r}; expected one of "
+                f"{IBKD_AGGREGATION_MODES}"
+            )
+        self.mode = mode
+        if mode == "learned_all":
+            self.weights = nn.Parameter(torch.zeros(3, STUDENT_BLOCKS))
+            self.register_buffer("_fixed_weights", None, persistent=False)
+        else:
+            self.register_parameter("weights", None)
+            fixed = torch.zeros(3, STUDENT_BLOCKS)
+            if mode == "fixed_uniform_all":
+                fixed.fill_(1.0 / STUDENT_BLOCKS)
+            elif mode == "fixed_stage_match":
+                fixed[torch.arange(3), torch.tensor(LG_STUDENT_BLOCKS)] = 1.0
+            elif mode == "fixed_last":
+                fixed[:, -1] = 1.0
+            self.register_buffer("_fixed_weights", fixed, persistent=False)
+
+    def normalized_weights(self) -> torch.Tensor:
+        if self.weights is not None:
+            return torch.softmax(self.weights, dim=-1)
+        if self._fixed_weights is None:
+            raise RuntimeError("fixed iBKD aggregation matrix is missing")
+        return self._fixed_weights
 
     def forward(self, features: Sequence[torch.Tensor]) -> torch.Tensor:
         if len(features) != STUDENT_BLOCKS:
             raise ValueError(f"Expected 12 student features, got {len(features)}")
         stacked = torch.stack(tuple(features), dim=1)
-        return torch.einsum("gl,bldhw->bgdhw", torch.softmax(self.weights, dim=-1), stacked)
+        return torch.einsum(
+            "gl,bldhw->bgdhw", self.normalized_weights(), stacked
+        )
 
 
 class IBKD(nn.Module):
     """Submitted Ours V1 alignment/fusion module with larger-grid resize."""
 
-    def __init__(self, teacher_channels: Sequence[int] = TEACHER_CHANNELS) -> None:
+    def __init__(
+        self,
+        teacher_channels: Sequence[int] = TEACHER_CHANNELS,
+        *,
+        aggregation_mode: str = "learned_all",
+    ) -> None:
         super().__init__()
         self.teacher_channels = tuple(int(value) for value in teacher_channels)
-        self.aggregation = TransformerAggregationPooling()
+        self.aggregation = TransformerAggregationPooling(mode=aggregation_mode)
         self.projections = nn.ModuleList(
             nn.Conv2d(STUDENT_CHANNELS, channels, 1)
             for channels in self.teacher_channels

@@ -1,0 +1,17 @@
+{
+  "analysis_id": "cub200_main_l0_v3_ibkd_aggregation_checkpoint_audit_v1",
+  "checkpoint_count": 6,
+  "checkpoint_sha256": [
+    "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+    "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+    "1c1bf6f6141f1efc0e21fe48e60be9e6a1ef3a126c60d81b6903d462fdc86410",
+    "bf3eade3a6ee2fca0b9d0e1335a2ab89468a0abb97f04620670a8b3a6c03cf09",
+    "87f73dfbc0cb9b8dc6475c61ecbd9dcf270269a3f746105aa6d2de3aa8fd2980",
+    "fea3f7a6512e0670db906877a4b764f2e7ab8cd86964b3a45b9b1c66663bd043"
+  ],
+  "input_lineage_id": "main_l0_v3",
+  "source_h200_issues": [
+    727,
+    730
+  ]
+}

@@ -27,6 +27,8 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 
 ## 디렉터리
 
+- [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md): `main-L0`, loader pilot의 `pilot-L0`,
+  L2 후속 및 원인 분석 계보를 혼동하지 않기 위한 단일 색인
 - `configs/`: 결과를 보기 전에 잠근 CUB 전용 machine-readable 설정
 - `scripts/`: 데이터 감사, smoke, 본실험 및 결과 정리 진입점
 - `reports/classification/`: 200종 분류 결과와 checkpoint manifest
@@ -34,6 +36,7 @@ ResNet-50/224 teacher v3로 바꿨습니다. 따라서 v2 결과는 별도 참�
 - `reports/direct_spatial/`: part PCK, spatial CKA, attention–GT 직접 진단 결과
 - `image_loader_experiment/`: L0/L1/L2 이미지 loader 사후 실험의 protocol, config,
   H200 script와 결과를 모두 분리 보관
+- `mechanism_analysis/`: 완료된 `main_l0_v3` 현상의 레이어 연결 원인 분석
 - `results/raw/`: 로컬 원시 산출물 전용 경로이며 Git에는 포함하지 않음
 
 잠긴 계약과 실행 gate는 [PROTOCOL.md](PROTOCOL.md)에 기록합니다.
