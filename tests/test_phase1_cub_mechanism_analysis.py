@@ -17,6 +17,7 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_smoke import (
     AGGREGATION_VARIANTS,
     EXPECTED_CONFIG_SHA256,
     EXPECTED_FULL_CONFIG_SHA256,
+    _smoke_completion_counts,
     _validate_config,
 )
 from ibkd_seg.phase1.train_timing import (
@@ -150,6 +151,21 @@ class Phase1CubMechanismAnalysisTest(unittest.TestCase):
             "full_blocked_until_smoke_passes",
         )
         self.assertFalse(full["completed_main_result_replaced"])
+
+    def test_runtime_completion_counts_match_the_locked_gate(self) -> None:
+        smoke = json.loads(SMOKE_CONFIG.read_text(encoding="utf-8"))
+        classification_rows = [
+            {"summary": {"ibkd_aggregation": {"mode": mode}}}
+            for mode in AGGREGATION_VARIANTS
+        ]
+        probe_rows = [{"aggregation_mode": mode} for mode in AGGREGATION_VARIANTS]
+        completion = _smoke_completion_counts(
+            classification_rows,
+            probe_rows,
+            [0.01, 0.03, 0.1],
+            teacher_download_and_audit=1,
+        )
+        self.assertEqual(completion, smoke["completion_gate"])
 
     def test_timing_path_allows_only_the_locked_mechanism_scope(self) -> None:
         for mode in AGGREGATION_VARIANTS:

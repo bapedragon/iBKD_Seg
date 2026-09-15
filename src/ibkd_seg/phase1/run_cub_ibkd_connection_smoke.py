@@ -208,6 +208,30 @@ def _write_status(
     )
 
 
+def _smoke_completion_counts(
+    classification_rows: list[dict[str, Any]],
+    probe_rows: list[dict[str, Any]],
+    learning_rates: list[float],
+    *,
+    teacher_download_and_audit: int,
+) -> dict[str, int]:
+    """Build the exact completion contract checked at the end of smoke."""
+
+    return {
+        "teacher_download_and_audit": teacher_download_and_audit,
+        "classification_students": len(classification_rows),
+        "classification_checkpoints": len(classification_rows),
+        "aggregation_audits": sum(
+            row["summary"].get("ibkd_aggregation") is not None
+            for row in classification_rows
+        ),
+        "probe_lr_candidates": len(probe_rows) * len(learning_rates),
+        "probe_validation_selections": len(probe_rows),
+        "selected_probe_checkpoints": len(probe_rows),
+        "official_test_evaluations": 0,
+    }
+
+
 def _run_command(command: list[str], *, label: str) -> None:
     log(f"[MECHANISM_SMOKE_TASK_START] label={label} command={' '.join(command)}")
     subprocess.run(command, check=True)
@@ -686,18 +710,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "paired_initial_student_state_sha256": next(iter(initial_hashes)),
         "classification": classification_rows,
         "frozen_probe": probe_rows,
-        "completion": {
-            "classification_students": len(classification_rows),
-            "classification_checkpoints": len(classification_rows),
-            "aggregation_audits": sum(
-                row["summary"].get("ibkd_aggregation") is not None
-                for row in classification_rows
-            ),
-            "probe_lr_candidates": len(probe_rows) * len(learning_rates),
-            "probe_validation_selections": len(probe_rows),
-            "selected_probe_checkpoints": len(probe_rows),
-            "official_test_evaluations": 0,
-        },
+        "completion": _smoke_completion_counts(
+            classification_rows,
+            probe_rows,
+            learning_rates,
+            teacher_download_and_audit=1,
+        ),
         "timing": {
             "target_cache_seconds": target_seconds,
             "feature_cache_seconds": feature_seconds_total,
@@ -756,7 +774,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         f"{format_duration(rough_seconds)}"
     )
     log(
-        "[MECHANISM_SMOKE_COMPLETE] status=pass classification=4/4 "
+        "[MECHANISM_SMOKE_COMPLETE] status=pass teacher_audit=1/1 classification=4/4 "
         "aggregation_audits=4/4 probe_candidates=12/12 "
         "probe_selections=4/4 official_test=0"
     )
