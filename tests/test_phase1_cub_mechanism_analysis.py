@@ -19,7 +19,11 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_smoke import (
     EXPECTED_FULL_CONFIG_SHA256,
     _validate_config,
 )
-from ibkd_seg.phase1.train_timing import file_sha256, validate_args
+from ibkd_seg.phase1.train_timing import (
+    _ibkd_aggregation_audit,
+    file_sha256,
+    validate_args,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,6 +111,28 @@ class Phase1CubMechanismAnalysisTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown iBKD aggregation mode"):
             TransformerAggregationPooling("unknown")
         self.assertEqual(tuple(IBKD_AGGREGATION_MODES), AGGREGATION_VARIANTS)
+
+    def test_post_training_aggregation_audit_is_executable(self) -> None:
+        expected_entropy = {
+            "learned_all": 1.0,
+            "fixed_uniform_all": 1.0,
+            "fixed_stage_match": 0.0,
+            "fixed_last": 0.0,
+        }
+        for mode in AGGREGATION_VARIANTS:
+            with self.subTest(mode=mode):
+                audit = _ibkd_aggregation_audit(IBKD(aggregation_mode=mode))
+                self.assertEqual(audit["mode"], mode)
+                self.assertEqual(len(audit["probabilities"]), 3)
+                self.assertEqual(
+                    len(audit["normalized_entropy_by_teacher_stage"]), 3
+                )
+                for value in audit["normalized_entropy_by_teacher_stage"]:
+                    self.assertAlmostEqual(
+                        value,
+                        expected_entropy[mode],
+                        places=6,
+                    )
 
     def test_locked_smoke_and_full_configs_validate(self) -> None:
         smoke = json.loads(SMOKE_CONFIG.read_text(encoding="utf-8"))

@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 import random
@@ -62,6 +63,29 @@ METHODS = ("vanilla", "kd", "lg", "alg", "ibkd")
 TEACHER_ARCHITECTURES = ("resnet56_32", "resnet50_224_scratch")
 KD_TEMPERATURE = 4.0
 KD_ALPHA = 0.9
+
+
+def _ibkd_aggregation_audit(guidance: IBKD) -> dict[str, Any]:
+    """Return the connection audit written after an iBKD timing run."""
+
+    probabilities = guidance.aggregation.normalized_weights().detach().cpu()
+    entropy = -(
+        probabilities * probabilities.clamp_min(1e-12).log()
+    ).sum(dim=1)
+    return {
+        "mode": guidance.aggregation.mode,
+        "probabilities": probabilities.tolist(),
+        "raw_logits": (
+            None
+            if guidance.aggregation.weights is None
+            else guidance.aggregation.weights.detach().cpu().tolist()
+        ),
+        "top_block_by_teacher_stage": probabilities.argmax(dim=1).tolist(),
+        "top_weight_by_teacher_stage": probabilities.max(dim=1).values.tolist(),
+        "normalized_entropy_by_teacher_stage": (
+            entropy / math.log(STUDENT_BLOCKS)
+        ).tolist(),
+    }
 
 
 def _dataset_key(args: argparse.Namespace) -> str:
@@ -1049,22 +1073,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     student_state_hash: str | None = None
     aggregation_audit: dict[str, Any] | None = None
     if isinstance(guidance, IBKD):
-        probabilities = guidance.aggregation.normalized_weights().detach().cpu()
-        entropy = -(probabilities * probabilities.clamp_min(1e-12).log()).sum(dim=1)
-        aggregation_audit = {
-            "mode": guidance.aggregation.mode,
-            "probabilities": probabilities.tolist(),
-            "raw_logits": (
-                None
-                if guidance.aggregation.weights is None
-                else guidance.aggregation.weights.detach().cpu().tolist()
-            ),
-            "top_block_by_teacher_stage": probabilities.argmax(dim=1).tolist(),
-            "top_weight_by_teacher_stage": probabilities.max(dim=1).values.tolist(),
-            "normalized_entropy_by_teacher_stage": (
-                entropy / math.log(STUDENT_BLOCKS)
-            ).tolist(),
-        }
+        aggregation_audit = _ibkd_aggregation_audit(guidance)
     if args.save_student_checkpoint:
         checkpoint_path = run_dir / "timing_student_latest.pt"
         student_state = {
