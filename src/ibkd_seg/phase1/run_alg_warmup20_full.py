@@ -26,10 +26,10 @@ from .probe import (
     train_candidate,
 )
 from .probe_data import load_official_test_records, load_train_validation_records
-from .run_alg_warmup20_smoke import (
+from .alg_warmup20_support import (
     DEFAULT_DIAGNOSTIC_CONFIG,
     DIAGNOSTIC_ID,
-    _validate_config as _validate_smoke_diagnostic_config,
+    _validate_config as _validate_diagnostic_config,
 )
 from .run_full import (
     aggregate_students,
@@ -54,7 +54,7 @@ from .run_probe_full import (
     _verify_dataset_identity,
     _write_raw_csv,
 )
-from .run_probe_smoke import (
+from .probe_support import (
     _atomic_json_save,
     _atomic_torch_save,
     _device,
@@ -138,7 +138,7 @@ def _validate_full_config(
     protocol_path: Path,
     release_manifest_path: Path,
 ) -> None:
-    _validate_smoke_diagnostic_config(diagnostic, protocol, protocol_path)
+    _validate_diagnostic_config(diagnostic, protocol, protocol_path)
     classification = full.get("classification", {})
     controller = classification.get("controller", {})
     probe = full.get("frozen_probe", {})

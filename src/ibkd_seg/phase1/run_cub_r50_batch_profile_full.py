@@ -42,7 +42,7 @@ from .cub_probe_data import (
 from .cub_loader_profiles import L2_CONSERVATIVE_SPATIAL, loader_profile_contract
 from .models import create_student
 from .probe import evaluate_probe_both_resolutions, probe_from_state, train_candidate
-from .run_cub_combined_smoke import (
+from .cub_experiment_support import (
     _atomic_json_save,
     _atomic_torch_save,
     _feature_cache,

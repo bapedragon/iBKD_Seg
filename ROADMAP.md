@@ -76,12 +76,12 @@ checkpoint 선택과 모든 방법별 고정값은 결과 확인 전에 v1 confi
 encoder 학습과 frozen segmentation probe를 독립적으로 반복합니다. Pet의 잠긴
 config나 결과를 섞지 않으며, CUB용 데이터·split·mask·ResNet-50 teacher·학습·평가
 계약을 full v3로 잠갔습니다. 결과와 관계없이 여섯 설정×세 encoder seed를 모두
-수행하고 설정을 바꾸지 않습니다. Smoke 시간으로 10시간 이내 shard만 정하며,
-teacher checkpoint 하나는 모든 guided student와 후속 baseline이 공유합니다. 세부 기록은
+수행하고 설정을 바꾸지 않습니다. Teacher checkpoint 하나는 모든 guided student와
+후속 baseline이 공유합니다. 세부 기록은
 [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)입니다.
 
-Guided smoke는 `17/17`로 통과했고, v3 ResNet-50/224 scratch Teacher는 H200 issue
-722에서 200 epoch 학습과 독립 감사를 완료했습니다. H200 issue 727에서는 이
+v3 ResNet-50/224 scratch Teacher는 H200 issue 722에서 200 epoch 학습과 독립
+감사를 완료했습니다. H200 issue 727에서는 이
 Teacher를 공유한 LG, ALG-w20, iBKD λ=0.25/0.5의 batch-128/64 encoder seed 1
 분류·frozen probe를 완료하고 48개 새 checkpoint를 감사했습니다. Seed 1에서는
 두 batch 모두 LG probe가 가장 높았고 iBKD λ=0.25의 ALG 대비 방향은 batch에 따라

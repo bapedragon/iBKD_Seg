@@ -1,1 +1,0 @@
-../image_loader_experiment/scripts/run_r50_224_loader_pilot_smoke_b128_seed1.sh

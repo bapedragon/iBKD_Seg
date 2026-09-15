@@ -39,7 +39,7 @@ from .cub_probe_data import (
 )
 from .models import create_student
 from .probe import evaluate_probe_both_resolutions, probe_from_state, train_candidate
-from .run_cub_combined_smoke import (
+from .cub_experiment_support import (
     EXPECTED_VARIANTS,
     VARIANT_ARGUMENTS,
     _atomic_json_save,

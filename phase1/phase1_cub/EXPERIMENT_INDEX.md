@@ -10,7 +10,7 @@
 | `loader_pilot_l1_seed1` | 강한 광학 증강만 제거한 loader pilot | 완료 로그만 반영, archive/checkpoint 감사 대기 | loader 선택 근거 외 사용 금지 | `image_loader_experiment/reports/full_v1_log_snapshot/` |
 | `loader_pilot_l2_seed1` | crop을 보수적으로 바꾼 loader pilot | Stage B에서 선택 | loader 선택 근거 외 사용 금지 | `image_loader_experiment/reports/full_v1_log_snapshot/` |
 | `l2_guided_preliminary_seed1` | 선택 L2에서 guided 4방법을 다시 학습한 예비실험 | 완료 로그 반영, archive/checkpoint 감사 대기 | 최종 확증 결과나 `main_l0_v3` 대체로 사용 금지 | `image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/` |
-| `main_l0_mechanism_v1` | `main_l0_v3`에서 iBKD 레이어 연결 원인을 분리하는 사후 실험 | 기존 checkpoint 관찰 감사 완료, 3-seed 본실험 release | 새 결과는 별도 사후 원인 분석으로만 사용 | `mechanism_analysis/` |
+| `main_l0_mechanism_v1` | `main_l0_v3`에서 iBKD 레이어 연결 원인을 분리하는 사후 실험 | 기존 checkpoint 관찰 감사 완료, 3-seed 본실험 실행 준비 완료 | 새 결과는 별도 사후 원인 분석으로만 사용 | `mechanism_analysis/` |
 
 ## 이름 규칙
 

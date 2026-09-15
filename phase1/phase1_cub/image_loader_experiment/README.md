@@ -1,58 +1,34 @@
 # CUB 이미지 loader 실험
 
-완료된 CUB ResNet-50/224 v3 주 실험과 분리해, 학생 입력 loader의 crop·광학
-증강만 바꾼 사후 실험을 한곳에서 관리합니다.
+상태: **L0/L1/L2 validation-only 본실험 완료, L2 선택, L2 guided seed-1 예비
+본실험 완료. 결과 archive·checkpoint 독립 감사 대기.**
 
-이 폴더에서 재실행한 L0는 혼동 방지를 위해 `pilot-L0` 또는
-`loader_pilot_l0_seed1`로 부릅니다. Issue 727/730의 기존 주 결과
-`main_l0_v3`와 동일한 loader 정의를 쓰지만 서로 다른 학습 실행이며 checkpoint를
-서로 대체하지 않습니다. 전체 계보는 [실험 색인](../EXPERIMENT_INDEX.md)에
-고정했습니다.
+이 폴더는 완료된 `main_l0_v3`를 덮어쓰지 않는 별도 사후 실험입니다. 정확한 계보
+구분은 [../EXPERIMENT_INDEX.md](../EXPERIMENT_INDEX.md)를 따릅니다.
 
-- [PROTOCOL.md](PROTOCOL.md): L0/L1/L2 정의, 선택 규칙, test 접근 규칙
-- `configs/`: 학습 전 잠근 machine-readable 설정
-- `scripts/`: H200 진입점
-- `reports/`: smoke, 실패 감사, L0/L1/L2 결과와 해석
+## 결과
 
-과거 커밋과 H200 로그가 가리키는 `phase1/phase1_cub/configs/`, `scripts/`,
-`reports/loader_pilot/`, `LOADER_EXPERIMENT_PROTOCOL.md` 경로에는 호환용 symbolic
-link만 남깁니다. 실험 자산의 canonical 위치는 이 폴더이며, 기존 설정 파일의
-내용과 SHA-256은 변경하지 않습니다.
+- 학습 전 augmentation 손상 감사:
+  [damage audit](reports/damage_audit_v1/RESULTS.md)
+- L0/L1/L2 guided 4방법 validation-only 본실험:
+  [전체 표](reports/full_v1_log_snapshot/RESULTS.md)
+- 선택된 L2의 guided 4방법 × encoder seed 1 분류·frozen probe 예비 본실험:
+  [결과](reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md)
 
-현재 Stage B의 세 완료 로그를 합친 표는
-[L0/L1/L2 로그 결과](reports/full_v1_log_snapshot/RESULTS.md)에 있습니다. 사전
-규칙상 L2가 선택됐지만 결과 archive와 checkpoint 감사가 남아 있으므로,
-이 결과는 최종 논문 주장 전까지 예비 결과로 취급합니다.
+사전 주 지표인 평균 Part PCK는 L0 `24.6660%`, L1 `21.7878%`, L2
+`36.0609%`로 L2가 가장 높았습니다. L2 예비 official-test 결과에서는 분류는
+LG `30.0931%`, frozen probe는 ALG-w20 `74.2158%`로 각각 가장 높았습니다.
+iBKD의 공간정보 우위는 관측되지 않았습니다.
 
-선택된 L2로 guided 네 방법과 encoder seed 1만 먼저 확인하는 smoke 진입점은
-다음과 같습니다.
+## 본학습 진입점
 
 ```bash
-bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_l2_guided_preliminary_smoke_b128_seed1.sh
-```
-
-이 smoke는 2-epoch 진단값이며 논문 결과가 아닙니다. 분류 4개와 frozen
-segmentation probe 4개가 validation 선택 뒤 official test까지 각각 한 번
-통과하는지만 확인합니다.
-
-H200 issue 753 smoke는 `classification=4/4`, `probe_candidates=12/12`,
-`selected_probes=4/4`, `tasks=16/16`, `status=pass`로 완료됐습니다. 설정을 바꾸지
-않은 L2 단일-encoder-seed 예비 본학습 진입점은 다음과 같습니다.
-
-```bash
+bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_loader_damage_audit.sh
+bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_loader_pilot_full_b128_seed1.sh
+bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_loader_pilot_full_l1_l2_b128_seed1.sh
 bash phase1/phase1_cub/image_loader_experiment/scripts/run_r50_224_l2_guided_preliminary_full_b128_seed1.sh
 ```
 
-본학습은 분류 4개 × 300 epoch와 frozen probe 4 encoder × 5 probe seeds ×
-LR 3개 × 100 epoch를 수행합니다. validation 선택이 모두 끝난 뒤 선택된 분류·probe
-checkpoint만 official test에서 한 번 평가하며, checkpoint 24개와 최종 표를
-출력에 보존합니다.
-
-재실행 완료 로그에서는 `classification=4/4`, `probe_candidates=60/60`,
-`selections=20/20`, `test_once=20/20`을 통과했고 총 `3시간 16분 10초`가
-걸렸습니다. Test macro Top-1은 LG `30.0931%`, ALG-w20 `25.4625%`,
-iBKD-0.25 `21.9337%`, iBKD-0.5 `22.6542%`였습니다. Frozen probe mIoU는
-각각 `74.1203%`, `74.2158%`, `72.9239%`, `73.6347%`입니다. 결과 archive
-감사 전의 정확한 범위와 표는
-[L2 seed-1 예비 본실험 로그 결과](reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md)에
-기록했습니다.
+세부 계약은 [PROTOCOL.md](PROTOCOL.md)에 있습니다. Git에는 정리된 본학습 표와
+manifest만 두며, 결과 archive가 도착하면 checkpoint hash와 machine-readable
+원본을 감사해 로그 스냅샷 상태를 확정 보고서로 승격합니다.

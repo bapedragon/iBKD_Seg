@@ -13,7 +13,8 @@ Vanilla/LG/ALG/iBKD GPU smoke 구성을 추가했습니다. Cityscapes 데이터
 합성 입력으로 먼저 점검하며 실제 Cityscapes 성능은 아직 측정하지 않았습니다. 기존 Phase 1 gate 판단은
 그대로 유지합니다. 실행 절차는 [Cityscapes 안내](phase4/phase4_cityscapes/README.md)에 있습니다.
 
-**Phase 0.5 완료 — Phase 1-PET No-Go, Phase 1-CUB-200 v3 guided seed-1 부분 결과 감사 완료.**
+**Phase 0.5 완료 — Phase 1-PET No-Go, Phase 1-CUB-200 v3 guided 3-seed 및 직접
+공간정보 진단 완료.**
 
 Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metric 구현을
 감사했습니다. Flowers 자동 마스크에는 전경이 없는 사례 220개와 배경이 사실상
@@ -23,8 +24,9 @@ Phase 0에서 코드·체크포인트·공식 파일·split·feature shape·metr
 
 첫 공간정보 보존 검증은 공식 pixel-level trimap을 사용하는 Phase 1-PET에서
 완료했습니다. 데이터셋 의존성을 분리해서 확인하기 위한 CUB-200-2011 독립 반복은
-`phase1/phase1_cub/`에서 진행 중입니다. v3 공용 Teacher와 guided 네 방법의
-batch-128/64 seed-1 분류·frozen probe까지 완료하고 독립 감사를 통과했습니다.
+`phase1/phase1_cub/`에서 진행 중입니다. v3 공용 Teacher, guided 네 방법의
+batch-128 3-seed 분류·frozen probe와 3-seed 직접 공간정보 진단까지 완료하고
+독립 감사를 통과했습니다.
 
 Phase 1-PET은 공식 test를 selection에 사용하지 않는 `2,940/740/3,669` split을
 사용합니다. 12-way full-data 2-epoch timing이 모두 성공했으며, 결과를 사후

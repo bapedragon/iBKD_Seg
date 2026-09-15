@@ -34,22 +34,16 @@ Probe는 bias를 포함해 386개 parameter만 가집니다. encoder는 `eval()`
 machine-readable 설정은
 [`configs/flowers102_phase05_v1.json`](configs/flowers102_phase05_v1.json)에 있습니다.
 
-## 실행
+## 본실험 재현
 
-먼저 16/16/16 표본의 2-epoch smoke test를 실행합니다.
-
-```bash
-bash phase0.5/scripts/run_smoke.sh /path/to/IBAM_KD_H200_V2
-```
-
-통과 후 Ours/ALG와 탐색용 KD의 전체 공식 split을 실행합니다.
+Ours/ALG와 탐색용 KD의 전체 공식 split을 실행합니다.
 
 ```bash
 bash phase0.5/scripts/run_full.sh /path/to/IBAM_KD_H200_V2
 ```
 
 feature와 target cache는 `phase0.5/results/raw/cache/`, probe와 원시 예측은
-`phase0.5/results/runs/`, 전체 로컬 JSON은 `phase0.5/reports/*.local.json`에
+`phase0.5/results/runs/`, 전체 로컬 JSON은 `phase0.5/reports/full.local.json`에
 저장되며 Git에서 제외됩니다.
 
 ## 보존한 결과

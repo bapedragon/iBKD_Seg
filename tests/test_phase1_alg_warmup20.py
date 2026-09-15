@@ -13,9 +13,8 @@ from ibkd_seg.phase1.run_alg_warmup20_full import (
     _validate_full_config,
     _write_status,
 )
-from ibkd_seg.phase1.run_alg_warmup20_smoke import (
+from ibkd_seg.phase1.alg_warmup20_support import (
     DIAGNOSTIC_ID,
-    _select_candidate,
     _validate_config,
 )
 from ibkd_seg.phase1.train_full import (
@@ -23,6 +22,7 @@ from ibkd_seg.phase1.train_full import (
     validate_args as validate_full_args,
 )
 from ibkd_seg.phase1.train_timing import validate_args as validate_timing_args
+from ibkd_seg.phase1.run_probe_full import _select_candidate
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +31,6 @@ DIAGNOSTIC_PATH = (
     REPOSITORY_ROOT
     / "phase1/phase1_pet/configs/oxford_iiit_pet_alg_warmup20_diagnostic_v1.json"
 )
-SCRIPT_PATH = REPOSITORY_ROOT / "phase1/phase1_pet/scripts/run_alg_warmup20_smoke_b128.sh"
 FULL_CONFIG_PATH = (
     REPOSITORY_ROOT
     / "phase1/phase1_pet/configs/oxford_iiit_pet_alg_warmup20_full_v1.json"
@@ -221,13 +220,6 @@ class Phase1AlgWarmup20DiagnosticTest(unittest.TestCase):
             )
         self.assertTrue(status["probe_official_test_accessed"])
         self.assertEqual(status["probe_test_evaluations_complete"], 0)
-
-    def test_h200_entry_script_runs_one_combined_smoke(self) -> None:
-        script = SCRIPT_PATH.read_text(encoding="utf-8")
-        self.assertIn("ibkd_seg.phase1.run_alg_warmup20_smoke", script)
-        self.assertIn("--smoke", script)
-        self.assertIn("--device cuda", script)
-        self.assertTrue(SCRIPT_PATH.stat().st_mode & 0o111)
 
     def test_h200_full_entry_runs_classification_then_probe(self) -> None:
         script = FULL_SCRIPT_PATH.read_text(encoding="utf-8")

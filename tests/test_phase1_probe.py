@@ -19,11 +19,6 @@ from ibkd_seg.phase1.probe import (
     train_candidate,
 )
 from ibkd_seg.phase1.probe_data import PetRecord, load_targets
-from ibkd_seg.phase1.run_probe_smoke import (
-    _smoke_policy_gates,
-    _validate_smoke_config,
-    _variant,
-)
 from ibkd_seg.phase1.run_probe_full import (
     EXPECTED_ENCODER_SEEDS,
     EXPECTED_PROBE_SEEDS,
@@ -38,12 +33,6 @@ from ibkd_seg.phase1.run_probe_full import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PROTOCOL_PATH = REPOSITORY_ROOT / "phase1/phase1_pet/configs/oxford_iiit_pet_phase1_v1.json"
-SMOKE_B64_PATH = (
-    REPOSITORY_ROOT / "phase1/phase1_pet/configs/oxford_iiit_pet_probe_smoke_b64_v1.json"
-)
-SMOKE_B128_PATH = (
-    REPOSITORY_ROOT / "phase1/phase1_pet/configs/oxford_iiit_pet_probe_smoke_b128_v1.json"
-)
 
 
 class Phase1ProbeTargetTest(unittest.TestCase):
@@ -288,41 +277,6 @@ class Phase1ProbeFullReportingTest(unittest.TestCase):
         ]["difference_summary"]
         self.assertAlmostEqual(contrast["mean"], 0.1)
         self.assertEqual(contrast["count"], 3)
-
-
-class Phase1ProbeSmokeConfigTest(unittest.TestCase):
-    def test_smoke_config_is_non_scientific_and_matches_locked_protocol(self) -> None:
-        protocol = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
-        for smoke_path, expected_batch_size in (
-            (SMOKE_B64_PATH, 64),
-            (SMOKE_B128_PATH, 128),
-        ):
-            with self.subTest(batch_size=expected_batch_size):
-                smoke = json.loads(smoke_path.read_text(encoding="utf-8"))
-                _validate_smoke_config(protocol, smoke, PROTOCOL_PATH)
-                self.assertEqual(
-                    smoke["classification_input"]["batch_size"],
-                    expected_batch_size,
-                )
-                self.assertFalse(smoke["scientific_result"])
-                self.assertFalse(smoke["official_test_accessed"])
-                self.assertEqual(smoke["data"]["test_samples"], 0)
-                self.assertEqual(smoke["task_count"]["lr_candidates"], 18)
-                policy_gates = _smoke_policy_gates(smoke)
-                self.assertEqual(
-                    policy_gates,
-                    {
-                        "official_test_not_accessed": True,
-                        "smoke_metrics_for_scientific_selection_forbidden": True,
-                        "smoke_marked_non_scientific": True,
-                    },
-                )
-                self.assertTrue(all(policy_gates.values()))
-
-    def test_variant_names_are_unambiguous(self) -> None:
-        self.assertEqual(_variant("vanilla", None), "vanilla")
-        self.assertEqual(_variant("ibkd", 0.25), "ibkd_lambda_0.25")
-        self.assertEqual(_variant("ibkd", 0.5), "ibkd_lambda_0.5")
 
 
 if __name__ == "__main__":

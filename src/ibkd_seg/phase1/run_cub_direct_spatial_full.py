@@ -35,11 +35,11 @@ from .cub_probe_data import (
     load_official_test_records,
     load_train_validation_records,
 )
-from .run_cub_combined_smoke import _atomic_json_save, _atomic_torch_save, _runtime
-from .run_cub_direct_spatial_smoke import (
+from .cub_experiment_support import _atomic_json_save, _atomic_torch_save, _runtime
+from .cub_direct_spatial_support import (
     EXPECTED_VALIDATION_SHA256,
     EXPECTED_VARIANTS,
-    _cka_smoke,
+    _run_cka_analysis,
     _extract_last_features,
     _load_json,
     _load_student,
@@ -54,6 +54,16 @@ from .train_timing import file_sha256
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+SEED1_METRIC_CONTRACT = (
+    REPOSITORY_ROOT
+    / "phase1/phase1_cub/configs/"
+    "cub200_r50_224_b128_seed1_direct_spatial_metric_contract_v1.json"
+)
+SEED23_METRIC_CONTRACT = (
+    REPOSITORY_ROOT
+    / "phase1/phase1_cub/configs/"
+    "cub200_r50_224_b128_seed2_3_direct_spatial_metric_contract_v2.json"
+)
 DEFAULT_CONFIG = (
     REPOSITORY_ROOT
     / "phase1/phase1_cub/configs/"
@@ -255,7 +265,7 @@ def _validate_seed1_config(config: dict[str, Any], path: Path) -> dict[str, Any]
         )
 
     metric_source = config["locked_metric_protocol"]
-    metric_path = _resolve_repository_path(metric_source["path"])
+    metric_path = SEED1_METRIC_CONTRACT
     if (
         metric_source.get("sha256") != EXPECTED_METRIC_CONFIG_SHA256
         or not metric_path.is_file()
@@ -423,7 +433,11 @@ def _validate_seed23_config(config: dict[str, Any], path: Path) -> dict[str, Any
         ("seed1_full_v2_path", "seed1_full_v2_sha256"),
         ("seed2_3_smoke_v2_path", "seed2_3_smoke_v2_sha256"),
     ):
-        source_path = _resolve_repository_path(inheritance[path_key])
+        source_path = (
+            SEED23_METRIC_CONTRACT
+            if path_key == "seed2_3_smoke_v2_path"
+            else _resolve_repository_path(inheritance[path_key])
+        )
         if (
             not source_path.is_file()
             or file_sha256(source_path) != inheritance[digest_key]
@@ -431,7 +445,7 @@ def _validate_seed23_config(config: dict[str, Any], path: Path) -> dict[str, Any
             raise RuntimeError(f"direct-spatial inherited protocol changed: {path_key}")
 
     metric_source = config["locked_metric_protocol"]
-    metric_path = _resolve_repository_path(metric_source["path"])
+    metric_path = SEED23_METRIC_CONTRACT
     if (
         metric_source.get("sha256") != SEED23_METRIC_CONFIG_SHA256
         or not metric_path.is_file()
@@ -1034,7 +1048,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         selections.extend(variant_selections)
         for seed, digest in initial_hashes.items():
             matched_initial_hashes[seed].add(digest)
-        variant_cka = _cka_smoke(
+        variant_cka = _run_cka_analysis(
             variant=variant,
             encoder_seed=encoder_seed,
             student=student,

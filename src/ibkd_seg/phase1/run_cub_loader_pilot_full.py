@@ -33,7 +33,7 @@ from .cub_loader_profiles import LOADER_PROFILE_ORDER, loader_profile_contract
 from .cub_probe_data import CubProbeRecord, load_train_validation_records
 from .models import create_student
 from .probe import evaluate_probe_both_resolutions, probe_from_state, train_candidate
-from .run_cub_combined_smoke import (
+from .cub_experiment_support import (
     _atomic_json_save,
     _atomic_torch_save,
     _feature_cache,
@@ -42,13 +42,13 @@ from .run_cub_combined_smoke import (
     _target_cache,
 )
 from .run_cub_direct_spatial_full import _run_part_validation
-from .run_cub_direct_spatial_smoke import (
-    _attention_smoke,
-    _cka_smoke,
+from .cub_direct_spatial_support import (
+    _run_attention_analysis,
+    _run_cka_analysis,
     _save_cka_heatmap,
     _write_csv,
 )
-from .run_cub_loader_pilot_smoke import (
+from .cub_loader_pilot_support import (
     EXPECTED_TEACHER_SHA256,
     EXPECTED_TEACHER_STATE_SHA256,
     EXPECTED_VALIDATION_SHA256,
@@ -98,8 +98,6 @@ def _validate_provenance(config: dict[str, Any]) -> None:
         (provenance["base_v3"], "path", "sha256"),
         (provenance["loader_damage_audit_v1"], "config_path", "config_sha256"),
         (provenance["loader_damage_audit_v1"], "result_path", "result_sha256"),
-        (provenance["loader_pilot_smoke_v2"], "config_path", "config_sha256"),
-        (provenance["loader_pilot_smoke_v2"], "result_path", "result_sha256"),
     )
     for source, path_key, hash_key in sources:
         path = _repository_path(source[path_key])
@@ -1031,7 +1029,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         for key, value in initial_hashes.items():
             part_initial[key].add(value)
 
-        variant_cka = _cka_smoke(
+        variant_cka = _run_cka_analysis(
             variant=variant,
             encoder_seed=1,
             student=model,
@@ -1050,7 +1048,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 }
             )
         cka_rows.extend(variant_cka)
-        attention = _attention_smoke(
+        attention = _run_attention_analysis(
             variant=variant,
             encoder_seed=1,
             student=model,

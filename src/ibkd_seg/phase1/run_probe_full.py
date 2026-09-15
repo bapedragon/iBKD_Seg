@@ -37,7 +37,7 @@ from .probe_data import (
     load_official_test_records,
     load_train_validation_records,
 )
-from .run_probe_smoke import (
+from .probe_support import (
     DEFAULT_PROTOCOL,
     EXPECTED_VARIANTS,
     _atomic_json_save,

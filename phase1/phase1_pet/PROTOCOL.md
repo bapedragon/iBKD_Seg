@@ -418,7 +418,7 @@ checkpoint는 과학 결과가 아니며 batch, λ, method 또는 checkpoint 선
 2. 7,349개 split ID의 image/label/trimap 1:1 감사 통과
 3. `2,940/740/3,669` split manifest와 hash 생성
 4. teacher/student/method loss 및 동일 초기화 단위 테스트 통과
-5. 여섯 variant × 두 batch의 2-epoch full-data timing/smoke 완료
+5. 여섯 variant × 두 batch의 본학습 실행 경로 사전 점검 완료
 6. 예상 시간이 H200 요청의 Pod 제한 안에 들어가는지 확인
 7. timing accuracy를 보지 않고 batch 64/128과 λ 0.25/0.5를 모두 보고하기로 LOCK
 
