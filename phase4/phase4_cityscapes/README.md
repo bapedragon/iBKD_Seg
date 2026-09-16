@@ -10,6 +10,7 @@ train 2,975장·val 500장 및 대응 정답의 전체 검증을 완료했습니
 H200 컨테이너에서 사용할 데이터 경로는 운영진 배치 후 확인해야 합니다.
 
 - [실제 데이터 준비 명령·운영진 전달 요청](DATA_PREPARATION.md)
+- [Chaoyang 폴더에 올린 ZIP 확인용 H200 이슈 입력안](H200_UPLOAD_CHECK_ISSUE.md)
 - [현재 smoke 조건·공식 프로토콜 구분](DEEPLAB_SEGMENTER_SMOKE.md)
 - [H200 제출 본문](H200_SMOKE_ISSUE.md)
 - [H200 smoke 이슈 #448](https://github.com/Aerodrone-H200/gpu-request/issues/448)

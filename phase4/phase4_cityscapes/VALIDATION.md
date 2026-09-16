@@ -12,6 +12,19 @@ ZIP 전체 CRC도 통과했습니다. Test는 추출하거나 평가하지 않�
 경로 이탈·중복 목적지 거부를 확인했으며 기존 테스트와 합쳐 **14개 통과**했습니다.
 이는 실제 데이터 준비 검증이며 본학습 성능 측정이 아닙니다.
 
+## H200 업로드 확인 코드 — 로컬 검증
+
+2026-09-16, Python 표준 라이브러리만 사용하는 `check_cityscapes_upload.py`를
+원본 두 ZIP이 있는 하위 폴더를 대상으로 실행했습니다. 크기·SHA-256, 전체 CRC,
+train/val/test 개수 및 이미지·labelIds ID 대응이 모두 일치해 `status=passed`를 확인했습니다.
+하위 폴더 처리를 포함한 정상 사례 외에 해시 불일치·중복 경로·CRC 오류·마운트 누락·ZIP 누락의
+실패 처리도 별도 작은 fixture로 확인했습니다.
+
+원시 보고서: `outputs/cityscapes_upload_check_local_v1/summary.json`.
+기존 Chaoyang 실행 로그에 근거해 H200에서는 `/app/data/chaoyang` 아래를 검색합니다.
+이번 결과는 로컬 코드 검증이며 H200의 ZIP 업로드 완료를 뜻하지 않습니다.
+이슈 입력안은 [H200_UPLOAD_CHECK_ISSUE.md](H200_UPLOAD_CHECK_ISSUE.md)에 있습니다.
+
 ## DeepLabV3 → Segmenter smoke v1
 
 2026-09-14, 기존과 같은 로컬 CPU 환경에서 실제 DeepLabV3-ResNet101 /
