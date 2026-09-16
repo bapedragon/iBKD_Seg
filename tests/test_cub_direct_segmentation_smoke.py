@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import stat
 from pathlib import Path
 
 import numpy as np
@@ -15,6 +16,20 @@ from ibkd_seg.phase1.cub_probe_data import CubProbeRecord
 
 
 class CubDirectSegmentationSmokeContract(unittest.TestCase):
+    def test_entrypoint_stays_in_the_separate_phase1_cub_seg_folder(self):
+        repository = Path(__file__).resolve().parents[1]
+        expected_config = (
+            repository
+            / "phase1/phase1_cub_Seg/configs/direct_segmentation_smoke_v1.json"
+        )
+        script = (
+            repository
+            / "phase1/phase1_cub_Seg/scripts/run_direct_segmentation_smoke.sh"
+        )
+        self.assertEqual(CONFIG, expected_config)
+        self.assertTrue(script.is_file())
+        self.assertTrue(bool(script.stat().st_mode & stat.S_IXUSR))
+
     def test_config_is_bounded_binary_four_method_smoke(self):
         config = load_config(CONFIG)
         self.assertFalse(config["scientific_result"])

@@ -17,7 +17,7 @@
 코드 실행 명령어:
 
 ```bash
-bash phase3/phase3_cub/scripts/run_direct_segmentation_smoke.sh
+bash phase1/phase1_cub_Seg/scripts/run_direct_segmentation_smoke.sh
 ```
 
 ## 목적

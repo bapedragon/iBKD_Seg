@@ -32,7 +32,7 @@ from ibkd_seg.cityscapes.runtime import (
 from .data import prepare_fixed_batches
 
 
-CONFIG = REPO / "phase3/phase3_cub/configs/direct_segmentation_smoke_v1.json"
+CONFIG = REPO / "phase1/phase1_cub_Seg/configs/direct_segmentation_smoke_v1.json"
 METHODS = ("vanilla", "lg", "alg", "ibkd")
 
 
