@@ -15,7 +15,7 @@ DECODER_BLOCKS = (2, 5, 8, 11)
 
 class MultiLevelDecoder(nn.Module):
     """Four lateral projections followed by a common convolutional fusion head."""
-    def __init__(self, input_channels, channels):
+    def __init__(self, input_channels, channels, num_classes=19):
         super().__init__()
         def block(in_channels, out_channels, kernel):
             return nn.Sequential(
@@ -23,7 +23,10 @@ class MultiLevelDecoder(nn.Module):
                 nn.GroupNorm(8, out_channels), nn.GELU(),
             )
         self.lateral = nn.ModuleList(block(c, channels, 1) for c in input_channels)
-        self.fuse = nn.Sequential(block(4 * channels, channels, 3), nn.Conv2d(channels, 19, 1))
+        self.fuse = nn.Sequential(
+            block(4 * channels, channels, 3),
+            nn.Conv2d(channels, num_classes, 1),
+        )
 
     def forward(self, features):
         size = features[0].shape[-2:]
@@ -55,7 +58,11 @@ class Segmenter(nn.Module):
             channels = (192,) * 4
         else:
             raise ValueError(kind)
-        self.decoder = MultiLevelDecoder(channels, config["decoder_channels"])
+        self.decoder = MultiLevelDecoder(
+            channels,
+            config["decoder_channels"],
+            num_classes=config.get("num_classes", 19),
+        )
 
     def features(self, images):
         if self.kind == "student":
