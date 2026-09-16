@@ -3,6 +3,8 @@
 사용자가 직접 제출하는 입력안입니다. 이슈를 자동 생성하지 않습니다.
 **한 GPU에서 한 방법씩**, 앞 작업이 끝난 뒤 다음 방법을 제출합니다.
 네 방법은 같은 student 초기 가중치에서 독립적으로 학습합니다.
+아래 명령은 검증한 코드 commit `c0b80011fd715b88a6892f84407a3e389fcbd848`로
+먼저 이동합니다. 뒤에 다른 작업의 commit이 추가되어도 본실험 코드를 유지합니다.
 
 [H200 요청 양식](https://github.com/Aerodrone-H200/gpu-request/issues/new?template=request-container.yml)에
 아래 공통 항목과 원하는 방법의 명령을 입력합니다.
@@ -20,7 +22,7 @@
 제목: `[Request]: Cityscapes Segmenter-L16 Vanilla seed1 본학습 216epoch`
 
 ```bash
-bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh vanilla
+git checkout --detach c0b80011fd715b88a6892f84407a3e389fcbd848 && bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh vanilla
 ```
 
 ## 2. LG
@@ -28,7 +30,7 @@ bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh vanill
 제목: `[Request]: Cityscapes DeepLabV3-to-Segmenter-L16 LG seed1 본학습 216epoch`
 
 ```bash
-bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh lg
+git checkout --detach c0b80011fd715b88a6892f84407a3e389fcbd848 && bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh lg
 ```
 
 ## 3. ALG
@@ -36,7 +38,7 @@ bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh lg
 제목: `[Request]: Cityscapes DeepLabV3-to-Segmenter-L16 ALG seed1 본학습 216epoch`
 
 ```bash
-bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh alg
+git checkout --detach c0b80011fd715b88a6892f84407a3e389fcbd848 && bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh alg
 ```
 
 ## 4. iBKD
@@ -44,7 +46,7 @@ bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh alg
 제목: `[Request]: Cityscapes DeepLabV3-to-Segmenter-L16 iBKD seed1 본학습 216epoch`
 
 ```bash
-bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh ibkd
+git checkout --detach c0b80011fd715b88a6892f84407a3e389fcbd848 && bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh ibkd
 ```
 
 명령은 승인된 사용 기간 안에서 실행합니다. 아래 예상 시간은 예약 승인 자체가 아닙니다.
@@ -118,7 +120,7 @@ H200 안내상 종료된 컨테이너는 삭제됩니다. 서버에 보관되는
 `resume.json`과 `checkpoints/`가 있도록 올렸을 때:
 
 ```bash
-bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh ibkd --resume /app/data/chaoyang/cityscapes_ibkd_resume/resume.json
+git checkout --detach c0b80011fd715b88a6892f84407a3e389fcbd848 && bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh ibkd --resume /app/data/chaoyang/cityscapes_ibkd_resume/resume.json
 ```
 
 이 경로는 예시입니다. 전달받은 실제 경로를 사용합니다. 같은 코드 commit과 런타임 버전이
