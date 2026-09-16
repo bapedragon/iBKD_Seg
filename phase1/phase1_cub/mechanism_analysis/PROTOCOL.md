@@ -83,11 +83,11 @@ mechanism 계열의 `learned_all` 하나만 분리해 확인합니다.
 
 - CUB main-L0, audited issue-722 teacher, DeiT-Tiny, iBKD λ=0.25
 - batch 128, seed 1, learned-all, 300 epoch
-- 먼저 full-data 2-epoch smoke: official test와 frozen probe를 열지 않음
+- full-data 2-epoch smoke는 H200 issue 767에서 `11/11` gate 통과
 - smoke에서는 입력·RNG·student·guidance state hash와 메모리·시간만 확인
 - smoke 수치로 checkpoint, epoch, λ 또는 방법을 선택하지 않음
-- smoke 통과 뒤 별도 300-epoch classification replay에서 validation으로 checkpoint를
-  선택하고 official test를 정확히 한 번 평가
+- 별도 300-epoch classification replay에서 validation으로 checkpoint를 선택하고
+  official test를 정확히 한 번 평가하며 frozen probe는 수행하지 않음
 - 단일 재현이 안정되기 전에는 네 연결 조건 비교를 재개하지 않음
 
 이는 새 과학 결과가 아니라 issue 760의 실행 경로를 진단하는 사후 gate입니다.

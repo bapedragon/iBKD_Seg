@@ -30,6 +30,10 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_replay_smoke import (
     _validate_summary as validate_replay_smoke_summary,
     validate_config as validate_replay_smoke_config,
 )
+from ibkd_seg.phase1.run_cub_ibkd_connection_replay_full import (
+    EXPECTED_CONFIG_SHA256 as EXPECTED_REPLAY_FULL_CONFIG_SHA256,
+    validate_config as validate_replay_full_config,
+)
 from ibkd_seg.phase1.train_full import validate_args as validate_full_args
 from ibkd_seg.phase1.train_timing import (
     _ibkd_aggregation_audit,
@@ -57,6 +61,14 @@ REPLAY_SMOKE_SCRIPT = (
     EXPERIMENT
     / "scripts/run_main_l0_ibkd_learned_all_replay_smoke_b128_seed1.sh"
 )
+REPLAY_FULL_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_learned_all_replay_full_v1.json"
+)
+REPLAY_FULL_SCRIPT = (
+    EXPERIMENT
+    / "scripts/run_main_l0_ibkd_learned_all_replay_full_b128_seed1.sh"
+)
 AUDIT = (
     EXPERIMENT
     / "reports/main_l0_aggregation_checkpoint_audit_v1/"
@@ -82,6 +94,8 @@ def _full_args(**changes: object) -> argparse.Namespace:
         "loader_pilot_full": False,
         "loader_followup_full": False,
         "mechanism_ablation_full": True,
+        "controlled_aa_full": False,
+        "mechanism_replay_full": False,
         "ibkd_aggregation_mode": "fixed_uniform_all",
         "defer_official_test": True,
         "batch_size": 128,
@@ -127,7 +141,54 @@ def _replay_timing_args(**changes: object) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
+def _replay_full_args(**changes: object) -> argparse.Namespace:
+    values = vars(
+        _full_args(
+            mechanism_ablation_full=False,
+            mechanism_replay_full=True,
+            ibkd_aggregation_mode="learned_all",
+            defer_official_test=False,
+            protocol_config=REPLAY_FULL_CONFIG,
+            batch_profile_role="posthoc_issue760_learned_all_replay",
+            num_workers=0,
+        )
+    )
+    values.update(changes)
+    return argparse.Namespace(**values)
+
+
 class Phase1CubMechanismAnalysisTest(unittest.TestCase):
+    def test_single_learned_all_replay_full_is_released_after_smoke(self) -> None:
+        self.assertEqual(
+            file_sha256(REPLAY_FULL_CONFIG),
+            EXPECTED_REPLAY_FULL_CONFIG_SHA256,
+        )
+        config = validate_replay_full_config(REPLAY_FULL_CONFIG)
+        self.assertEqual(config["smoke_gate"]["source_h200_issue"], 767)
+        self.assertEqual(config["smoke_gate"]["execution_gates"], "11/11")
+        self.assertEqual(config["scope"]["variants"], ["learned_all"])
+        self.assertFalse(config["scope"]["frozen_probe"])
+        self.assertEqual(config["official_test_policy"]["total_evaluations"], 1)
+
+        validate_full_args(_replay_full_args())
+        invalid = (
+            {"num_workers": 4},
+            {"defer_official_test": True},
+            {"fusion_ratio": 0.5},
+            {"batch_size": 64},
+            {"seed": 2},
+            {"ibkd_aggregation_mode": "fixed_uniform_all"},
+        )
+        for changes in invalid:
+            with self.subTest(changes=changes):
+                with self.assertRaises(ValueError):
+                    validate_full_args(_replay_full_args(**changes))
+
+        script = REPLAY_FULL_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("run_cub_ibkd_connection_replay_full", script)
+        self.assertNotIn("run_cub_ibkd_connection_full ", script)
+        self.assertTrue(REPLAY_FULL_SCRIPT.stat().st_mode & 0o111)
+
     def test_single_learned_all_replay_smoke_is_locked_and_test_sealed(self) -> None:
         self.assertEqual(
             file_sha256(REPLAY_SMOKE_CONFIG),

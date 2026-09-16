@@ -43,10 +43,20 @@
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_learned_all_replay_smoke_b128_seed1.sh
 ```
 
+H200 issue 767에서 `11/11` gate가 통과했고, 300 epoch 예상 시간은 약
+`3시간 12분`, peak CUDA allocated/reserved는 약 `11.25/16.14 GiB`였습니다.
 Smoke 통과는 실행 경로와 입력 신원이 정상이라는 뜻일 뿐, issue 760의 `10.41%`가
-재현되거나 반박됐다는 뜻이 아닙니다. 통과 후 별도 본실험에서 `learned_all` 하나만
-300 epoch 학습하고 validation checkpoint 선택 뒤 official test를 한 번 평가합니다.
-이 단일 재현이 안정되기 전에는 네 연결 조건 ablation을 재개하지 않습니다.
+재현되거나 반박됐다는 뜻은 아닙니다.
+
+단일 본실험은 아래 진입점으로 `learned_all` 하나만 300 epoch 학습하고 validation
+checkpoint 선택 뒤 official test를 정확히 한 번 평가합니다. frozen probe는 수행하지
+않습니다.
+
+```bash
+bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_learned_all_replay_full_b128_seed1.sh
+```
+
+이 단일 재현 결과를 확인하기 전에는 네 연결 조건 ablation을 재개하지 않습니다.
 
 ## 본실험 실행 보류
 

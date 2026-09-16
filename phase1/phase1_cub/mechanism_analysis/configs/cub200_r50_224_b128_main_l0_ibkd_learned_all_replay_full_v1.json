@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_learned_all_replay_full_v1",
+  "status": "ready_after_h200_smoke_issue_767",
+  "scientific_result": false,
+  "posthoc_mechanism_path_diagnostic": true,
+  "question": "Does one controlled 300-epoch learned_all classification replay remain near the current main-L0/A-A observations, or reproduce the anomalous issue-760 result?",
+  "smoke_gate": {
+    "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_learned_all_replay_smoke_v1",
+    "source_h200_issue": 767,
+    "status": "passed",
+    "execution_gates": "11/11",
+    "actual_epochs": 2,
+    "average_epoch_seconds": 38.48,
+    "estimated_300_epoch_seconds": 11544,
+    "peak_cuda_memory_bytes": 12078236160,
+    "peak_cuda_memory_reserved_bytes": 17335058432,
+    "official_test_evaluations": 0,
+    "frozen_probe_runs": 0
+  },
+  "scope": {
+    "source_h200_issue_under_diagnosis": 760,
+    "variants": [
+      "learned_all"
+    ],
+    "encoder_seeds": [
+      1
+    ],
+    "classification_runs": 1,
+    "classification_epochs": 300,
+    "frozen_probe": false
+  },
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "issue760_mechanism_protocol": {
+      "path": "phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json",
+      "sha256": "1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8"
+    },
+    "base_main_l0_protocol": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "locked_initial_identity": {
+      "student_state_sha256": "34e2122bcf137af67b7a52981980aa503446331c5e207cccfeb326a7140b684d",
+      "guidance_state_sha256": "77ed222f04dd4355e8d36e0acc29e8e88c1584620af496b24b79d6c4e3d6f33f"
+    },
+    "prior_seed1_observations": [
+      {
+        "run": "issue727_canonical",
+        "selected_epoch": 239,
+        "controller_stop_epoch": 123,
+        "test_macro_top1_percent": 27.03605890274048
+      },
+      {
+        "run": "issue760_mechanism_learned_all",
+        "selected_epoch": 288,
+        "controller_stop_epoch": 55,
+        "test_macro_top1_percent": 10.4095958173275
+      },
+      {
+        "run": "issue766_controlled_aa_A",
+        "selected_epoch": 259,
+        "controller_stop_epoch": 109,
+        "test_macro_top1_percent": 24.761137
+      },
+      {
+        "run": "issue766_controlled_aa_B",
+        "selected_epoch": 162,
+        "controller_stop_epoch": 133,
+        "test_macro_top1_percent": 25.509816
+      }
+    ]
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong"
+  },
+  "teacher": {
+    "train_in_this_run": false,
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "external_pretraining": false,
+    "method": "ibkd",
+    "aggregation_mode": "learned_all",
+    "fusion_ratio_lambda": 0.25,
+    "batch_size": 128,
+    "eval_batch_size": 200,
+    "seed": 1,
+    "precision": "float32",
+    "epochs": 300,
+    "optimizer": {
+      "name": "AdamW",
+      "learning_rate": 0.0005,
+      "minimum_learning_rate": 0.000005,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "weight_decay": 0.05
+    },
+    "scheduler": {
+      "name": "cosine",
+      "warmup_epochs": 20,
+      "warmup_learning_rate": 5e-07
+    },
+    "regularization": {
+      "drop_path_rate": 0.1,
+      "label_smoothing": 0.0,
+      "mixup": false,
+      "cutmix": false
+    },
+    "guidance_beta": 2.5,
+    "guidance_controller_warmup_epochs": 20,
+    "selection_metric": "validation_macro_top1",
+    "selection_tie_break": "earlier_epoch"
+  },
+  "controlled_trace": {
+    "torch_use_deterministic_algorithms": true,
+    "warn_only": true,
+    "formal_bitwise_determinism": false,
+    "scientific_model_path_changed": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "pythonhashseed": 1,
+    "cublas_workspace_config": ":4096:8",
+    "omp_num_threads": 1,
+    "mkl_num_threads": 1,
+    "num_workers": 0,
+    "record_each_epoch": [
+      "input_stream_sha256",
+      "rng_state_sha256_after_epoch",
+      "student_state_sha256_after_epoch",
+      "guidance_state_sha256_after_epoch"
+    ]
+  },
+  "official_test_policy": {
+    "selection_uses_official_test": false,
+    "evaluation": "exactly_once_after_validation_checkpoint_selection_and_strict_reload",
+    "total_evaluations": 1,
+    "test_must_not_select_epoch_method_lambda_loader_or_followup": true
+  },
+  "interpretation": {
+    "numerical_pass_threshold": null,
+    "reason": "This is a post-hoc diagnostic with previously observed same-seed spread; report its distance from every prior observation without inventing a new threshold.",
+    "if_near_current_main_or_aa": "The issue-760 10.41% value is not reproduced by the current controlled learned_all path; do not use the old four-way issue-760 comparison as causal evidence.",
+    "if_near_issue760": "The low learned_all behavior is reproducible on this path; stop before any four-way ablation and diagnose the path/controller trajectory.",
+    "regardless_of_result": "Do not replace the completed main_l0_v3 result and do not run frozen probe from this diagnostic unless separately prespecified."
+  },
+  "execution": {
+    "device": "one_H200_MIG_slice",
+    "requested_mig_slices": 1,
+    "ten_hour_limit_seconds": 36000,
+    "estimated_compute_seconds_from_smoke": 11544,
+    "retain_selected_classification_checkpoint": true
+  },
+  "artifact_policy": {
+    "retain": [
+      "student/student_best_validation.pt",
+      "student/summary.json",
+      "student/training_status.json",
+      "student/validation_split.json",
+      "full_summary.json",
+      "checkpoint_manifest.json",
+      "completion_status.json",
+      "run.log"
+    ],
+    "do_not_retain": [
+      "dataset archive",
+      "pip cache",
+      "teacher download scratch copy"
+    ]
+  }
+}
