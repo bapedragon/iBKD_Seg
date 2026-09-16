@@ -1,6 +1,24 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: 공식 소스·공개 가중치 L/16 smoke v2
+## 현재 작업: 공개 소스 L/16 본학습 v1
+
+H200 `bapedragon_771`에서 공식 소스·공개 가중치 L/16 smoke **4/4 통과**를
+사용자 제공 로그로 확인했습니다. 본학습은 seed1의 Vanilla/LG/ALG/iBKD를
+각각216epoch 학습하고 val500 전체의 pixel accuracy로 선택합니다.
+
+- [본학습 H200 이슈 입력안·예상 시간·재개 방법](H200_OFFICIAL_L16_FULL_ISSUES.md)
+- [고정 프로토콜과 공개 결과와의 구분](OFFICIAL_L16_FULL_PROTOCOL.md)
+- [본학습 설정](configs/official_l16_full_v1.json)
+
+```bash
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_full.sh vanilla
+```
+
+한 방법이 끝난 뒤 `vanilla`를 `lg`, `alg`, `ibkd`로 바꾸어 별도 이슈로 실행합니다.
+본학습 실행 코드와 작은 입력 CPU 학습·재개 검증이 준비되었습니다.
+실제216epoch H200 결과는 아직 없습니다. [본학습 코드 검증 기록](OFFICIAL_L16_FULL_VALIDATION.md)을 참고합니다.
+
+## 이전 작업: 공식 소스·공개 가중치 L/16 smoke v2
 
 2026-09-16 기존 S/16 smoke와 공개 학습 구성의 차이를 확인하여 실행 경로를 교체했습니다.
 **[새 H200 이슈 입력안](H200_OFFICIAL_L16_SMOKE_ISSUE.md)**을 사용합니다.
@@ -13,7 +31,7 @@ bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_smoke.sh
 Cityscapes 학습 가중치, 원본 데이터 증강·optimizer·inference를 연결합니다.
 H200 crop768/batch8/FP32에서 Vanilla/LG/ALG/iBKD 각 3step과 val 2장을 점검합니다.
 로컬의 작은 입력 CPU 학습·재개 검사 4/4 및 전체 크기 입력 준비 검사가 통과했습니다.
-**H200 전체 크기 학습은 이번 이슈로 확인할 항목입니다.**
+사용자 제공 `bapedragon_771` 로그에서 **H200 전체 크기 3step 학습·재개 검사4/4 통과**를 확인했습니다.
 
 공개 저장소의 학습 기본값을 사용하지만, 접근되지 않는 model-zoo `variant.yml`과
 README의 파라미터 수 차이 때문에 배포 논문 결과의 완전 재현으로 표기하지 않습니다.
