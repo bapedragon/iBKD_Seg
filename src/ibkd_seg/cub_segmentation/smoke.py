@@ -583,9 +583,29 @@ def main():
             raise RuntimeError("child data identity differs from parent audit")
         report["status"] = "passed"
         save_json(output / "smoke_summary.json", report)
+        final_results = {
+            "teacher": {
+                "losses": report["teacher"]["losses"],
+                "diagnostic_validation": report["teacher"]["diagnostic_validation"],
+            },
+            "methods": {
+                row["method"]: {
+                    "losses": row["losses"],
+                    "diagnostic_validation": row["diagnostic_validation"],
+                    "controller": row["controller"],
+                    "peak_cuda_allocated_bytes": row["peak_cuda_allocated_bytes"],
+                }
+                for row in report["runs"]
+            },
+        }
         print(
             "[CUB_DIRECT_SEGMENTATION_SMOKE_DONE] "
             f"status=passed methods=4/4 scientific_result=false summary={output / 'smoke_summary.json'}",
+            flush=True,
+        )
+        print(
+            "[CUB_DIRECT_SEGMENTATION_SMOKE_FINAL_RESULTS] "
+            + json.dumps(final_results, sort_keys=True),
             flush=True,
         )
     except Exception as error:

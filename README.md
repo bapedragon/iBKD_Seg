@@ -67,7 +67,7 @@ canonical profile 모두 1위였습니다. 따라서 Phase 1-PET 핵심 가설�
 - CUB-200-2011 v3 Teacher 및 독립 반복: [phase1/phase1_cub/README.md](phase1/phase1_cub/README.md)
 - CUB ResNet-50/224 guided seed-1 결과: [phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md](phase1/phase1_cub/reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md)
 - CUB 직접 공간정보 진단 LOCK: [phase1/phase1_cub/DIRECT_SPATIAL_PROTOCOL.md](phase1/phase1_cub/DIRECT_SPATIAL_PROTOCOL.md)
-- CUB 직접 segmentation 탐색 smoke: [phase1/phase1_cub_Seg/README.md](phase1/phase1_cub_Seg/README.md)
+- CUB 직접 segmentation smoke·탐색 본학습: [phase1/phase1_cub_Seg/README.md](phase1/phase1_cub_Seg/README.md)
 - 기존 Phase 3 CUB segmentation 경로: [phase3/phase3_cub/README.md](phase3/phase3_cub/README.md)
 
 ## 저장소 구성 원칙

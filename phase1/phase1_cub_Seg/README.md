@@ -7,6 +7,9 @@ Vanilla/LG/ALG/iBKD **real-data smoke**뿐이며 Phase gate 통과나 본실험 
 - H200 제출 입력안: [H200_SMOKE_ISSUE.md](H200_SMOKE_ISSUE.md)
 - 고정 smoke 설정: [configs/direct_segmentation_smoke_v1.json](configs/direct_segmentation_smoke_v1.json)
 - 실행 스크립트: [scripts/run_direct_segmentation_smoke.sh](scripts/run_direct_segmentation_smoke.sh)
+- 탐색 본학습 프로토콜: [FULL_PROTOCOL.md](FULL_PROTOCOL.md)
+- 본학습 설정: [configs/direct_segmentation_full_v1.json](configs/direct_segmentation_full_v1.json)
+- 본학습 실행: [scripts/run_direct_segmentation_full.sh](scripts/run_direct_segmentation_full.sh)
 
 대표 metric은 2-class mIoU이고, foreground IoU·background IoU·foreground Dice·pixel
 accuracy를 함께 저장합니다. 3step/validation 8장의 값은 연결 진단에만 사용합니다.
