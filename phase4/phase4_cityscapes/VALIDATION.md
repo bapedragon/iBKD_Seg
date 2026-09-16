@@ -174,3 +174,58 @@ PYTHONPATH=src .venv/bin/python -m ibkd_seg.cityscapes.run smoke \
 `bca3c2ff37ee30f9e1d5dd3bdf7270ef74fdb38a7b80c34d5178f6ef41e1d25f`
 
 원시 보고서의 합성 mIoU는 경로 검증용 값이며, 방법 간 성능 비교에 사용하지 않습니다.
+## 2026-09-16 공식 소스 L/16 smoke v2 검증
+
+새 실행 경로: [H200_OFFICIAL_L16_SMOKE_ISSUE.md](H200_OFFICIAL_L16_SMOKE_ISSUE.md).
+
+- 원본 Segmenter commit `20d1bfad354165ee45c3f65972a4d9c131f58d53`.
+- 원본 MMSeg 0.14.1 commit `26032167e005f391aad1bf151a7e8f9a98973266`.
+- 원본 MMCV 1.3.8 commit `db097bd1e97fc446a7551c715970611d2fcc848d`.
+- Google AugReg L/16 NPZ: 1,218,991,142 bytes,
+  SHA-256 `8700cf38ba82082d95347ad16ea3294d588b359077a7c46da9da6618165c3288`.
+- MMSeg Cityscapes DeepLabV3-R101-D8: 348,988,299 bytes,
+  SHA-256 `9e428899b279f29964cec79ab21bb19193328b8c4d42c0db49ff9070e9ab3b2d`.
+
+실제 공개 가중치를 내려받아 로딩했습니다. Teacher는 auxiliary head를 포함해 strict-load를
+통과했으며, student는 원본 timm NPZ 로더와 원본 모델을 사용했습니다.
+모델 전체 L/16(334,845,966 parameters)을 유지한 CPU 검사에서 Vanilla/LG/ALG/iBKD
+**4/4 학습·gradient·teacher freeze·checkpoint strict-load·마지막 update 재현·val 평가 통과**.
+CPU에서는 crop32, batch2, 작은 평가 입력을 사용했습니다. GPU 메모리 성공 근거로 사용하지 않습니다.
+
+원시 결과(로컬, Git 제외):
+
+- `outputs/cityscapes_official_l16_cpu_v2/smoke_summary.json`
+- `outputs/cityscapes_official_fullshape_input_v2.json`: 원본 증강으로 train batch8/crop768
+  세 배치, val 1024×2048 두 장 준비 성공. 모델 학습은 실행하지 않은 입력 검사입니다.
+- `outputs/cityscapes_official_l16_fresh_deps_v2/summary.json`: 자동 준비 명령으로 빈
+  의존성 폴더에 설치한 뒤 iBKD 학습·재개 검사를 다시 통과했습니다. 앞선 실행과
+  초기 student/teacher hash, 데이터·증강 hash 및 진단 confusion 기반 metric이 같았습니다.
+- `outputs/cityscapes_official_recompute_parity_v2.json`: 작은 원본 transformer로
+  dropout/drop-path를 켠 상태에서 activation recomputation 전후 logit과 모든
+  parameter gradient가 bitwise 일치함을 확인했습니다.
+
+검증된 Cityscapes source SHA-256:
+`652942621b63e1f28a39709c1bb1f40d130dc5e30dbe2dd6bc8ccf4d46d25739`.
+
+Cityscapes 회귀/새 24블록 guidance 검사 19개와 기존 Phase1 모델 계약 검사 8개가 통과했습니다.
+12블록 기본 인자 및 기존 checkpoint key/shape 호환성을 유지했습니다.
+
+```bash
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -p 'test_cityscapes*.py' -v
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -p test_phase1_timing.py -v
+PYTHONPATH=src .venv/bin/python -m ibkd_seg.cityscapes.official_smoke \
+  --cache-root /private/tmp/cityscapes_official_runtime_v2 \
+  --data-dir data/cityscapes --manifest data/cityscapes/manifest.json \
+  --output-dir outputs/cityscapes_official_l16_cpu_new --device cpu --cpu-small
+```
+
+원본 block activation recomputation과 모든 key를 유지하는 iBKD query chunking을 사용합니다.
+원본 소스를 수정하지 않는 import/구버전 SyncBN 초기화 호환 계층은
+`official_api.py`에 분리했습니다. PyTorch 자체는 2.11.0을 유지합니다.
+H200 FP32/crop768/batch8의 실제 학습·메모리 검증은 사용자 제출 이슈에서 수행합니다.
+
+저자 model-zoo Cityscapes variant 링크가 HTTP403으로 접근되지 않고 공개 README의
+322M과 기본 코드 구성의 334.8M이 달라, 논문 수치의 완전 재현 확인은 남아 있습니다.
+이번 smoke가 완료되어도 이 제한은 해소된 것으로 기록하지 않습니다.
+
+---

@@ -1,15 +1,35 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: DeepLabV3 → Segmenter 실제 데이터 GPU smoke
+## 현재 작업: 공식 소스·공개 가중치 L/16 smoke v2
 
-2026-09-14 사용자 선택에 따라 **DeepLabV3-ResNet101 → Segmenter-S/16 mask decoder**로
+2026-09-16 기존 S/16 smoke와 공개 학습 구성의 차이를 확인하여 실행 경로를 교체했습니다.
+**[새 H200 이슈 입력안](H200_OFFICIAL_L16_SMOKE_ISSUE.md)**을 사용합니다.
+
+```bash
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_official_l16_smoke.sh
+```
+
+원본 Segmenter L/16 구현과 ImageNet 초기 가중치, 원본 MMSeg DeepLabV3-R101-D8와
+Cityscapes 학습 가중치, 원본 데이터 증강·optimizer·inference를 연결합니다.
+H200 crop768/batch8/FP32에서 Vanilla/LG/ALG/iBKD 각 3step과 val 2장을 점검합니다.
+로컬의 작은 입력 CPU 학습·재개 검사 4/4 및 전체 크기 입력 준비 검사가 통과했습니다.
+**H200 전체 크기 학습은 이번 이슈로 확인할 항목입니다.**
+
+공개 저장소의 학습 기본값을 사용하지만, 접근되지 않는 model-zoo `variant.yml`과
+README의 파라미터 수 차이 때문에 배포 논문 결과의 완전 재현으로 표기하지 않습니다.
+구체적 기준·차이·호환 계층은 새 이슈 입력안에 기록했습니다.
+
+## 이전 작업: S/16 실제 데이터 연결 smoke v1
+
+2026-09-14 초기 구현에서는 **DeepLabV3-ResNet101 → Segmenter-S/16 mask decoder**로
 Vanilla/LG/ALG/iBKD의 H200 합성 smoke를 수행했고, 사용자 제공 로그에서 **4/4 통과**를 확인했습니다.
 이는 **합성 입력·임의 가중치로 실행한 구조 검증**이며 실제 Cityscapes 성능 평가가 아닙니다.
 사용자가 실제 데이터 ZIP 두 개를 내려받았으며, 로컬 `data/cityscapes`에서
 train 2,975장·val 500장 및 대응 정답의 전체 검증을 완료했습니다.
 2026-09-16 사용자 제공 H200 실행 로그(`bapedragon_768`)에서 두 ZIP이
 `/app/data/chaoyang`에 있고 로컬 원본과 크기·SHA-256·전체 CRC 및 split별 ID 대응이
-일치함을 확인했습니다. 다음 실행은 train/val 압축 해제 후 실제 이미지로 수행하는 smoke입니다.
+일치함을 확인했습니다. 이후 `bapedragon_769` 실행 로그에서 실제 데이터 준비와
+S/16 무작위 가중치 smoke 4/4 통과를 확인했습니다. 아래 명령은 그 실행의 이력입니다.
 
 - **[압축 해제 + 실제 데이터 smoke 이슈 입력안](H200_REAL_SMOKE_ISSUE.md)**
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_real_smoke.sh` — H200 GPU 할당량 `7`.

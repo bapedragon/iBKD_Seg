@@ -185,11 +185,17 @@ def forward_student_spatial(
 class LocalityGuidance(nn.Module):
     """Official LG projections and summed stage-mean MSE."""
 
-    def __init__(self, teacher_channels: Sequence[int] = TEACHER_CHANNELS) -> None:
+    def __init__(self, teacher_channels: Sequence[int] = TEACHER_CHANNELS, *,
+                 student_channels: int = STUDENT_CHANNELS,
+                 student_blocks: int = STUDENT_BLOCKS) -> None:
         super().__init__()
+        if student_blocks < 3 or student_channels < 1:
+            raise ValueError("Guidance requires at least three blocks and positive width")
+        self.student_blocks = student_blocks
+        self.selected_blocks = (0, student_blocks // 2, student_blocks - 1)
         self.teacher_channels = tuple(int(value) for value in teacher_channels)
         self.projections = nn.ModuleList(
-            nn.Conv2d(STUDENT_CHANNELS, channels, kernel_size=1)
+            nn.Conv2d(student_channels, channels, kernel_size=1)
             for channels in self.teacher_channels
         )
 
@@ -198,11 +204,11 @@ class LocalityGuidance(nn.Module):
         student_features: Sequence[torch.Tensor],
         teacher_features: Sequence[torch.Tensor],
     ) -> torch.Tensor:
-        if len(student_features) != STUDENT_BLOCKS or len(teacher_features) != 3:
-            raise ValueError("LG expects 12 student blocks and three teacher stages")
+        if len(student_features) != self.student_blocks or len(teacher_features) != 3:
+            raise ValueError("LG feature count differs from configured student/teacher")
         loss = teacher_features[0].new_zeros(())
         for block, projection, teacher_feature in zip(
-            LG_STUDENT_BLOCKS, self.projections, teacher_features, strict=True
+            self.selected_blocks, self.projections, teacher_features, strict=True
         ):
             student_feature = projection(student_features[block])
             target_size = (
@@ -343,8 +349,11 @@ class TransformerAggregationPooling(nn.Module):
     so they cannot be mistaken for learned checkpoint parameters.
     """
 
-    def __init__(self, mode: str = "learned_all") -> None:
+    def __init__(self, mode: str = "learned_all", *, student_blocks: int = STUDENT_BLOCKS) -> None:
         super().__init__()
+        if student_blocks < 3:
+            raise ValueError("Aggregation requires at least three blocks")
+        self.student_blocks = student_blocks
         if mode not in IBKD_AGGREGATION_MODES:
             raise ValueError(
                 f"unknown iBKD aggregation mode {mode!r}; expected one of "
@@ -352,15 +361,15 @@ class TransformerAggregationPooling(nn.Module):
             )
         self.mode = mode
         if mode == "learned_all":
-            self.weights = nn.Parameter(torch.zeros(3, STUDENT_BLOCKS))
+            self.weights = nn.Parameter(torch.zeros(3, student_blocks))
             self.register_buffer("_fixed_weights", None, persistent=False)
         else:
             self.register_parameter("weights", None)
-            fixed = torch.zeros(3, STUDENT_BLOCKS)
+            fixed = torch.zeros(3, student_blocks)
             if mode == "fixed_uniform_all":
-                fixed.fill_(1.0 / STUDENT_BLOCKS)
+                fixed.fill_(1.0 / student_blocks)
             elif mode == "fixed_stage_match":
-                fixed[torch.arange(3), torch.tensor(LG_STUDENT_BLOCKS)] = 1.0
+                fixed[torch.arange(3), torch.tensor((0, student_blocks // 2, student_blocks - 1))] = 1.0
             elif mode == "fixed_last":
                 fixed[:, -1] = 1.0
             self.register_buffer("_fixed_weights", fixed, persistent=False)
@@ -373,8 +382,8 @@ class TransformerAggregationPooling(nn.Module):
         return self._fixed_weights
 
     def forward(self, features: Sequence[torch.Tensor]) -> torch.Tensor:
-        if len(features) != STUDENT_BLOCKS:
-            raise ValueError(f"Expected 12 student features, got {len(features)}")
+        if len(features) != self.student_blocks:
+            raise ValueError(f"Expected {self.student_blocks} student features, got {len(features)}")
         stacked = torch.stack(tuple(features), dim=1)
         return torch.einsum(
             "gl,bldhw->bgdhw", self.normalized_weights(), stacked
@@ -389,12 +398,14 @@ class IBKD(nn.Module):
         teacher_channels: Sequence[int] = TEACHER_CHANNELS,
         *,
         aggregation_mode: str = "learned_all",
+        student_channels: int = STUDENT_CHANNELS,
+        student_blocks: int = STUDENT_BLOCKS,
     ) -> None:
         super().__init__()
         self.teacher_channels = tuple(int(value) for value in teacher_channels)
-        self.aggregation = TransformerAggregationPooling(mode=aggregation_mode)
+        self.aggregation = TransformerAggregationPooling(mode=aggregation_mode, student_blocks=student_blocks)
         self.projections = nn.ModuleList(
-            nn.Conv2d(STUDENT_CHANNELS, channels, 1)
+            nn.Conv2d(student_channels, channels, 1)
             for channels in self.teacher_channels
         )
         self.fusion = nn.ModuleList(
