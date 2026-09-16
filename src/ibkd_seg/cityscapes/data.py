@@ -112,9 +112,11 @@ def verify_manifest(root: Path, manifest: dict) -> None:
 
 
 class Cityscapes(Dataset):
-    def __init__(self, root: Path, rows: list[dict], config: dict, *, training: bool, seed: int):
+    def __init__(self, root: Path, rows: list[dict], config: dict, *, training: bool, seed: int,
+                 normalize: bool = True):
         self.root, self.rows, self.config = root, rows, config
         self.training, self.seed, self.epoch = training, seed, 0
+        self.normalize = normalize
 
     def __len__(self):
         return len(self.rows)
@@ -151,4 +153,4 @@ class Cityscapes(Dataset):
                 image, mask = ImageOps.mirror(image), ImageOps.mirror(mask)
         pixels = torch.from_numpy(np.array(image, copy=True)).permute(2, 0, 1).float() / 255
         target = torch.from_numpy(np.array(mask, dtype=np.int64, copy=True))
-        return (pixels - MEAN) / STD, target, row["id"]
+        return (pixels - MEAN) / STD if self.normalize else pixels, target, row["id"]

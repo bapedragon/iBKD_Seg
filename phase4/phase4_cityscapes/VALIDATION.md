@@ -1,5 +1,39 @@
 # Cityscapes 구성 로컬 검증
 
+## 실제 데이터 모델 smoke 준비 — 2026-09-16
+
+사용자 제공 H200 로그(`bapedragon_768`)에서 `/app/data/chaoyang`의 두 ZIP이
+원본 크기·SHA-256, 전체 CRC, train/val/test 개수 및 이미지·labelIds 대응을 모두
+통과했습니다. `errors=[]`, `status=passed`이며 압축 해제·학습은 수행하지 않은 로그입니다.
+
+후속 압축 해제와 DeepLabV3 → Segmenter 실제 데이터 smoke를 하나의 shell 명령으로 연결했습니다.
+현재 로컬 검증 결과는 다음과 같습니다.
+
+- 실제 데이터 CPU 축소 smoke: **Vanilla/LG/ALG/iBKD 4/4 통과**.
+  Train 6장으로 각 3step, val 2장으로 평가; crop32×64/val48×96/FP32.
+- 네 방법의 초기 student와 입력 이미지·target·crop hash 동일,
+  guided teacher hash 동일 및 freeze 보존 확인.
+- Gradient 경로, checkpoint strict reload, optimizer/RNG/controller 복원 후
+  마지막 step 전체 state **bitwise 일치** 확인.
+- 기존 합성 smoke를 같은 변경 코드로 재실행: **4/4 통과**.
+- Cityscapes 테스트 **16개 통과**. Raw RGB와 기존 ImageNet 입력 정규화 일치,
+  합성·불완전 split·test 포함·ID 중복·잘못된 해상도·경로 이탈 manifest 거부 포함.
+- GPU 설정의 실제 데이터 구성만 CPU에서 별도 확인: train 3배치 각각
+  RGB `[2,3,768,768]`, target `[2,768,768]`; val 2장 각각 `[1,3,1024,2048]`.
+  이 점검에서 GPU 해상도로 모델 연산을 수행한 것은 아닙니다.
+
+검증 코드 SHA-256: `5da4824987cf8b0b045073d802a7cc74d3c24bcb4f0652e0681b27dd6ac4e9f7`.
+
+원시 기록:
+
+- `outputs/cityscapes_real_data_cpu_smoke_v1_final/smoke_summary.json`
+- `outputs/cityscapes_synthetic_regression_after_real_v1/smoke_summary.json`
+- `outputs/cityscapes_real_input_fullsize_v1.json`
+
+실제 이미지의 GPU768/BF16 경로는 이번 [H200 제출 입력안](H200_REAL_SMOKE_ISSUE.md)의
+검증 대상이며 아직 결과가 없습니다. 임의 가중치·일부 표본의 진단 정확도를
+본실험 성능이나 방법별 우열로 해석하지 않습니다. 이슈는 사용자 요청에 따라 직접 등록하지 않았습니다.
+
 ## 실제 Cityscapes 데이터 준비
 
 2026-09-14 사용자 제공 ZIP 두 개를 검사하고 `data/cityscapes`에 train/val을 준비했습니다.

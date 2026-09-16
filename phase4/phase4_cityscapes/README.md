@@ -1,22 +1,27 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: DeepLabV3 → Segmenter GPU smoke
+## 현재 작업: DeepLabV3 → Segmenter 실제 데이터 GPU smoke
 
 2026-09-14 사용자 선택에 따라 **DeepLabV3-ResNet101 → Segmenter-S/16 mask decoder**로
 Vanilla/LG/ALG/iBKD의 H200 합성 smoke를 수행했고, 사용자 제공 로그에서 **4/4 통과**를 확인했습니다.
 이는 **합성 입력·임의 가중치로 실행한 구조 검증**이며 실제 Cityscapes 성능 평가가 아닙니다.
 사용자가 실제 데이터 ZIP 두 개를 내려받았으며, 로컬 `data/cityscapes`에서
 train 2,975장·val 500장 및 대응 정답의 전체 검증을 완료했습니다.
-H200 컨테이너에서 사용할 데이터 경로는 운영진 배치 후 확인해야 합니다.
+2026-09-16 사용자 제공 H200 실행 로그(`bapedragon_768`)에서 두 ZIP이
+`/app/data/chaoyang`에 있고 로컬 원본과 크기·SHA-256·전체 CRC 및 split별 ID 대응이
+일치함을 확인했습니다. 다음 실행은 train/val 압축 해제 후 실제 이미지로 수행하는 smoke입니다.
 
+- **[압축 해제 + 실제 데이터 smoke 이슈 입력안](H200_REAL_SMOKE_ISSUE.md)**
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_real_smoke.sh` — H200 GPU 할당량 `7`.
+- 실제 train 6장으로 네 방법 각각 3step + val 2장 평가. 임의 가중치이므로 정확도는 연결 점검용입니다.
 - [실제 데이터 준비 명령·운영진 전달 요청](DATA_PREPARATION.md)
 - [Chaoyang 폴더에 올린 ZIP 확인용 H200 이슈 입력안](H200_UPLOAD_CHECK_ISSUE.md)
-- [현재 smoke 조건·공식 프로토콜 구분](DEEPLAB_SEGMENTER_SMOKE.md)
-- [H200 제출 본문](H200_SMOKE_ISSUE.md)
+- [이전 합성 smoke 조건·공식 프로토콜 구분](DEEPLAB_SEGMENTER_SMOKE.md)
+- [이전 합성 smoke H200 제출 본문](H200_SMOKE_ISSUE.md)
 - [H200 smoke 이슈 #448](https://github.com/Aerodrone-H200/gpu-request/issues/448)
 - [GPU smoke 설정](configs/deeplabv3_segmenter_smoke_v1.json)
-- 실행: `bash phase4/phase4_cityscapes/scripts/run_deeplabv3_segmenter_smoke.sh`
-- 로컬: `PYTHONPATH=src .venv/bin/python -m ibkd_seg.cityscapes.public_smoke --device cpu --cpu-small --output-dir outputs/cityscapes_arch_smoke_new`
+- 이전 합성 smoke 실행: `bash phase4/phase4_cityscapes/scripts/run_deeplabv3_segmenter_smoke.sh`
+- 이전 합성 smoke 로컬: `PYTHONPATH=src .venv/bin/python -m ibkd_seg.cityscapes.public_smoke --device cpu --cpu-small --output-dir outputs/cityscapes_arch_smoke_new`
 
 아래는 모델 선택 전 만들었던 **ResNet50/DeiT + 자체 convolution decoder pilot 이력**입니다.
 그 실행 명령은 DeepLabV3/Segmenter 실험에 사용하지 않습니다.

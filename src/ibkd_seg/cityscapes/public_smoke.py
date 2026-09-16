@@ -1,7 +1,8 @@
-"""Bounded synthetic-only H200 smoke for DeepLabV3 -> Segmenter.
+"""Synthetic H200 smoke entrypoint and shared DeepLabV3 -> Segmenter checks.
 
 Not a Cityscapes training entrypoint. No data or model downloads, no full-run
 option, no ranking or accuracy claims. Every method runs in its own process.
+The separate real_smoke entrypoint supplies real batches to measure().
 """
 from __future__ import annotations
 
@@ -60,10 +61,17 @@ def verify_controller_paths(config):
     return result
 
 
-def measure(method, config, device, output):
+def measure(method, config, device, output, *, train_batches=None, eval_batches=None, data_identity=None):
     import timm
     import torchvision
 
+    synthetic = data_identity is None
+    if synthetic:
+        if train_batches is not None or eval_batches is not None:
+            raise ValueError("Real batches require data provenance")
+    elif train_batches is None or len(train_batches) != config["steps"] or not eval_batches:
+        raise ValueError("Real smoke requires one batch per step and validation samples")
+    marker = "CITYSCAPES_ARCH_SMOKE" if synthetic else "CITYSCAPES_REAL_SMOKE"
     check_device(device, config)
     torch.set_num_threads(4 if device.type == "cuda" else 2)
     seed_all(config["seed"])
@@ -86,7 +94,8 @@ def measure(method, config, device, output):
                                 momentum=config["momentum"], weight_decay=config["weight_decay"])
     controller = controller_for(method, config)
     beta = 0.0 if controller is None else controller.beta_for_epoch(1)
-    rgb, target = synthetic_batch(config, device)
+    rgb, target = (synthetic_batch(config, device) if synthetic else
+                   tuple(value.to(device) for value in train_batches[0]))
     if teacher is not None:
         with torch.no_grad(), autocast(device, config["precision"]):
             teacher_logits, teacher_features = teacher(teacher_input(rgb), return_features=True)
@@ -138,6 +147,8 @@ def measure(method, config, device, output):
     elapsed, losses = [], []
     checkpoint_path = output / "resume_checkpoint.pt"
     for index in range(config["steps"]):
+        if not synthetic:
+            rgb, target = (value.to(device) for value in train_batches[index])
         if index == config["steps"] - 1:
             torch.save({"model": model.state_dict(),
                         "guidance": None if guidance is None else guidance.state_dict(),
@@ -148,13 +159,14 @@ def measure(method, config, device, output):
                         "completed_steps": index, "config": config,
                         "config_sha256": json_hash(config), "source_sha256": source_hash(),
                         "method": method, "teacher_state_sha256": teacher_hash,
-                        "synthetic": True, "scientific_result": False}, checkpoint_path)
+                        "data_identity": data_identity,
+                        "synthetic": synthetic, "scientific_result": False}, checkpoint_path)
         start = time.perf_counter()
         losses.append(step())
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         elapsed.append(time.perf_counter() - start)
-        print(f"[CITYSCAPES_ARCH_SMOKE_STEP] method={method} step={index+1} loss={losses[-1]['total']:.6g} seconds={elapsed[-1]:.3f}", flush=True)
+        print(f"[{marker}_STEP] method={method} step={index+1} loss={losses[-1]['total']:.6g} seconds={elapsed[-1]:.3f}", flush=True)
     peak_allocated = torch.cuda.max_memory_allocated(device) if device.type == "cuda" else None
     peak_reserved = torch.cuda.max_memory_reserved(device) if device.type == "cuda" else None
     if state_hash(model) == initial:
@@ -167,6 +179,8 @@ def measure(method, config, device, output):
     saved = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     if saved["config_sha256"] != json_hash(config) or saved["source_sha256"] != source_hash():
         raise RuntimeError("Resume provenance mismatch")
+    if saved["data_identity"] != data_identity:
+        raise RuntimeError("Resume dataset/input provenance mismatch")
     model.load_state_dict(saved["model"], strict=True)
     if guidance is not None:
         guidance.load_state_dict(saved["guidance"], strict=True)
@@ -192,19 +206,25 @@ def measure(method, config, device, output):
     if teacher is not None and state_hash(teacher) != teacher_hash:
         raise RuntimeError("Frozen teacher parameters or BatchNorm buffers changed")
     model.eval()
-    eval_h, eval_w = config["native_eval_size"]
-    eval_rgb = torch.rand(1, 3, eval_h, eval_w, generator=torch.Generator().manual_seed(777))
-    eval_target = torch.arange(eval_w).remainder(19)[None, None].expand(1, eval_h, eval_w).clone()
-    eval_target[:, :2] = 255
+    if synthetic:
+        eval_h, eval_w = config["native_eval_size"]
+        eval_rgb = torch.rand(1, 3, eval_h, eval_w, generator=torch.Generator().manual_seed(777))
+        eval_target = torch.arange(eval_w).remainder(19)[None, None].expand(1, eval_h, eval_w).clone()
+        eval_target[:, :2] = 255
+        eval_batches = [(eval_rgb, eval_target)]
     start = time.perf_counter()
-    prediction = sliding_logits(model, (eval_rgb - 0.5) / 0.5, config, device).argmax(1).cpu()
     matrix = torch.zeros(19, 19, dtype=torch.int64)
-    confusion_update(matrix, prediction, eval_target)
+    expected_pixels = 0
+    for eval_rgb, eval_target in eval_batches:
+        prediction = sliding_logits(model, (eval_rgb - 0.5) / 0.5, config, device).argmax(1).cpu()
+        confusion_update(matrix, prediction, eval_target)
+        expected_pixels += int((eval_target != 255).sum())
     result_metrics = metrics(matrix)
-    if result_metrics["valid_pixels"] != (eval_h - 2) * eval_w:
+    if result_metrics["valid_pixels"] != expected_pixels:
         raise RuntimeError("Void exclusion or native evaluation geometry failed")
+    eval_seconds = time.perf_counter() - start
     result = {
-        "status": "passed", "synthetic": True, "scientific_result": False,
+        "status": "passed", "synthetic": synthetic, "scientific_result": False,
         "method": method, "config_sha256": json_hash(config), "source_sha256": source_hash(),
         "student_initial_state_sha256": initial, "teacher_state_sha256": teacher_hash,
         "teacher_frozen_verified": teacher is not None,
@@ -219,7 +239,7 @@ def measure(method, config, device, output):
         "step_seconds": elapsed, "seconds_per_step_after_first": sum(elapsed[1:]) / (len(elapsed)-1),
         "train_peak_allocated_bytes": peak_allocated, "train_peak_reserved_bytes": peak_reserved,
         "native_synthetic_eval_size": config["native_eval_size"],
-        "native_synthetic_eval_seconds": time.perf_counter() - start,
+        "native_synthetic_eval_seconds": eval_seconds,
         "synthetic_pixel_accuracy": result_metrics["pixel_accuracy"], "synthetic_miou": result_metrics["miou"],
         "synthetic_metrics": result_metrics,
         "checkpoint": {"path": str(checkpoint_path), "bytes": checkpoint_path.stat().st_size,
@@ -228,6 +248,17 @@ def measure(method, config, device, output):
         "resume_tolerance": tolerance,
         "controller_diagnostics": verify_controller_paths(config),
     }
+    if not synthetic:
+        for key in ("native_synthetic_eval_size", "native_synthetic_eval_seconds",
+                    "synthetic_pixel_accuracy", "synthetic_miou", "synthetic_metrics"):
+            result.pop(key)
+        result.update(data_identity=data_identity, validation_samples=len(eval_batches),
+                      eval_sizes_hw=[list(rgb.shape[-2:]) for rgb, _ in eval_batches],
+                      diagnostic_eval_seconds=eval_seconds,
+                      diagnostic_pixel_accuracy=result_metrics["pixel_accuracy"],
+                      diagnostic_miou=result_metrics["miou"], diagnostic_metrics=result_metrics,
+                      pretrained_weights_used=False, full_validation=False,
+                      score_use="smoke diagnostic only; no checkpoint selection or method ranking")
     save_json(output / "summary.json", result)
     return result
 

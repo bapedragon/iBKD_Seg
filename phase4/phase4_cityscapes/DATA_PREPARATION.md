@@ -51,7 +51,11 @@ val pixel accuracy를 우선 보고하고 같은 checkpoint의 mIoU를 함께 �
 > 압축을 풀어 배치하시면 `leftImg8bit/`와 `gtFine/`이 바로 아래에 있는 데이터 루트 경로를
 > 알려주세요. 학습에는 train 2,975장, 검증에는 val 500장과 labelIds 정답을 사용합니다.
 
-Mac 다운로드 완료와 H200 데이터 배치는 별도 단계입니다. 현재 서버 경로는 아직 없습니다.
+Mac 다운로드 완료와 H200 데이터 배치는 별도 단계입니다.
+2026-09-16 사용자 제공 H200 로그(`bapedragon_768`)에서 두 ZIP이
+`/app/data/chaoyang` 바로 아래에 있음을 확인했습니다. 로컬 원본과 byte size·SHA-256,
+ZIP 전체 CRC 및 이미지·labelIds ID 대응 검사가 모두 통과했습니다.
+후속 압축 해제·모델 점검은 [실제 데이터 smoke 이슈](H200_REAL_SMOKE_ISSUE.md)로 진행합니다.
 [H200 운영 안내](https://github.com/Aerodrone-H200/gpu-request/blob/main/README.md)는
 이슈로 컨테이너를 생성하고 코드 저장소를 clone하는 방식을 설명하며,
 사용자의 컨테이너 직접 접속은 지원하지 않는다고 명시합니다.
