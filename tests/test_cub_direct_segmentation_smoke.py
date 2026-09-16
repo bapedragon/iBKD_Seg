@@ -26,9 +26,22 @@ class CubDirectSegmentationSmokeContract(unittest.TestCase):
             repository
             / "phase1/phase1_cub_Seg/scripts/run_direct_segmentation_smoke.sh"
         )
+        phase3_config = (
+            repository
+            / "phase3/phase3_cub/configs/direct_segmentation_smoke_v1.json"
+        )
+        phase3_script = (
+            repository
+            / "phase3/phase3_cub/scripts/run_direct_segmentation_smoke.sh"
+        )
         self.assertEqual(CONFIG, expected_config)
         self.assertTrue(script.is_file())
         self.assertTrue(bool(script.stat().st_mode & stat.S_IXUSR))
+        self.assertTrue(phase3_config.is_file())
+        self.assertTrue(phase3_script.is_file())
+        self.assertTrue(bool(phase3_script.stat().st_mode & stat.S_IXUSR))
+        self.assertIn(str(expected_config.relative_to(repository)), script.read_text())
+        self.assertIn(str(phase3_config.relative_to(repository)), phase3_script.read_text())
 
     def test_config_is_bounded_binary_four_method_smoke(self):
         config = load_config(CONFIG)

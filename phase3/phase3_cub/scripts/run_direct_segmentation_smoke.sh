@@ -10,7 +10,7 @@ run_suite() {
   echo "[CUB_DIRECT_SEGMENTATION_PIPELINE] stage=real_data_four_method_smoke"
   python -m ibkd_seg.cub_segmentation.smoke \
     --device cuda \
-    --config phase1/phase1_cub_Seg/configs/direct_segmentation_smoke_v1.json \
+    --config phase3/phase3_cub/configs/direct_segmentation_smoke_v1.json \
     --data-dir "${data_dir}" \
     --output-dir "${output_root}/artifacts"
 }

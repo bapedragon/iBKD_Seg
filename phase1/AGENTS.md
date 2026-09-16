@@ -2,6 +2,8 @@
 
 - `phase1_cub/`는 CUB classification, frozen probe, 직접 공간정보 진단을 소유합니다.
 - `phase1_cub_Seg/`는 CUB mask를 정답으로 사용하는 직접 segmentation 실험을 소유합니다.
+- `../phase3/phase3_cub/`도 별도로 보존합니다. `phase1_cub_Seg/`를 만들거나 정리할 때
+  이 기존 Phase 3 경로를 이동 또는 삭제하지 않습니다.
 - 한쪽 실험의 로그·산출물·진입점을 정리할 때 다른 쪽 폴더를 삭제, 이동, 이름 변경하거나
   관련 커밋을 revert하지 않습니다. 사용자가 두 영역을 함께 지정한 경우에만 함께 변경합니다.
 - “classification 폴더에서 segmentation 로그를 제거”하는 요청은 `phase1_cub/` 내부만
