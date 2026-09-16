@@ -74,6 +74,25 @@ Controller 종료 epoch는 고정 입력이 아니라 연결 변경 뒤에 생�
   커집니다.
 - 어느 결과도 완료된 `main_l0_v3` 주 결과를 대체하지 않습니다.
 
+## M1 재개 전 gate — issue 760 `learned_all` 단일 재현
+
+기존 M1 seed-1의 `learned_all`은 test macro Top-1 `10.4096%`로 main-L0의
+`27.0361%`를 재현하지 못했습니다. 이후 제어 A/A 두 실행은 `24.7611%`와
+`25.5098%`였으므로, 네 연결 조건을 그대로 다시 돌리기 전에 issue 760에서 사용한
+mechanism 계열의 `learned_all` 하나만 분리해 확인합니다.
+
+- CUB main-L0, audited issue-722 teacher, DeiT-Tiny, iBKD λ=0.25
+- batch 128, seed 1, learned-all, 300 epoch
+- 먼저 full-data 2-epoch smoke: official test와 frozen probe를 열지 않음
+- smoke에서는 입력·RNG·student·guidance state hash와 메모리·시간만 확인
+- smoke 수치로 checkpoint, epoch, λ 또는 방법을 선택하지 않음
+- smoke 통과 뒤 별도 300-epoch classification replay에서 validation으로 checkpoint를
+  선택하고 official test를 정확히 한 번 평가
+- 단일 재현이 안정되기 전에는 네 연결 조건 비교를 재개하지 않음
+
+이는 새 과학 결과가 아니라 issue 760의 실행 경로를 진단하는 사후 gate입니다.
+단순 smoke 통과만으로 `10.41%`를 이상치로 폐기하지 않습니다.
+
 공식 full 계약은
 `configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json`, SHA-256
 `1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8`에

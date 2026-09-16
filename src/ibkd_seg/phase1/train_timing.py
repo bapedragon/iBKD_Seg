@@ -428,6 +428,15 @@ def parse_args() -> argparse.Namespace:
             "warn-only; requires num_workers=0 and sealed test."
         ),
     )
+    parser.add_argument(
+        "--mechanism-replay-smoke",
+        action="store_true",
+        help=(
+            "Single two-epoch CUB main-L0 iBKD learned-all path smoke for "
+            "the issue-760 mechanism-runner replay. Records controlled input, "
+            "RNG, and model-state hashes; requires num_workers=0 and sealed test."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -451,11 +460,15 @@ def validate_args(args: argparse.Namespace) -> None:
     controlled_aa_smoke = bool(
         getattr(args, "controlled_aa_smoke", False)
     )
+    mechanism_replay_smoke = bool(
+        getattr(args, "mechanism_replay_smoke", False)
+    )
     if sum(
         (
             loader_pilot_smoke,
             loader_followup_smoke,
             controlled_aa_smoke,
+            mechanism_replay_smoke,
         )
     ) > 1:
         raise ValueError("CUB timing smoke modes are mutually exclusive")
@@ -482,6 +495,29 @@ def validate_args(args: argparse.Namespace) -> None:
                 "Controlled A/A smoke requires CUB main-L0 iBKD "
                 "lambda 0.25, batch 128, seed 1, the audited ResNet-50/224 "
                 "teacher, num_workers=0, checkpoint export, and sealed test"
+            )
+    elif mechanism_replay_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method == "ibkd"
+            and args.fusion_ratio == 0.25
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and not access_official_test
+            and not seed_extension_smoke
+            and loader_profile == L0_CURRENT_STRONG
+            and args.num_workers == 0
+        ):
+            raise ValueError(
+                "Mechanism replay smoke requires CUB main-L0 iBKD "
+                "lambda 0.25 learned-all, batch 128, seed 1, the audited "
+                "ResNet-50/224 teacher, num_workers=0, checkpoint export, "
+                "and sealed test"
             )
     elif loader_pilot_smoke:
         if not (
@@ -1020,12 +1056,14 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         weight_decay=0.05,
     )
     scheduler = create_scheduler(optimizer, teacher=False)
-    controlled_aa = bool(
-        getattr(args, "controlled_aa_smoke", False)
+    controlled_aa = bool(getattr(args, "controlled_aa_smoke", False))
+    mechanism_replay = bool(
+        getattr(args, "mechanism_replay_smoke", False)
     )
+    controlled_trace = controlled_aa or mechanism_replay
     # Match the scientific full trainer: guidance construction must not shift
     # the student's DropPath RNG stream.  The DataLoader owns its own generator.
-    if controlled_aa:
+    if controlled_trace:
         seed_everything(args.seed)
     epoch_rows: list[dict[str, Any]] = []
     log(
@@ -1038,6 +1076,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
         f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
         f"controlled_aa_smoke={controlled_aa} "
+        f"mechanism_replay_smoke={mechanism_replay} "
         f"initial_guidance_sha256={initial_guidance_hash}"
     )
 
@@ -1053,7 +1092,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         total = 0
         correct = 0
         totals = {"loss": 0.0, "ce": 0.0, "guidance": 0.0, "align": 0.0, "fuse": 0.0}
-        input_stream_digest = hashlib.sha256() if controlled_aa else None
+        input_stream_digest = hashlib.sha256() if controlled_trace else None
         for batch_index, (images, targets) in enumerate(train_loader):
             if input_stream_digest is not None:
                 update_tensor_sha256(
@@ -1227,7 +1266,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                 "student": student_state,
                 "metadata": {
                     "purpose": (
-                        "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
+                        "phase1_cub_main_l0_ibkd_learned_all_replay_smoke_v1"
+                        if mechanism_replay
+                        else "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
                         if bool(
                             getattr(args, "loader_followup_smoke", False)
                         )
@@ -1287,6 +1328,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "initial_guidance_state_sha256": initial_guidance_hash,
                     "guidance_state_sha256": guidance_state_hash,
                     "controlled_aa_smoke": controlled_aa,
+                    "mechanism_replay_smoke": mechanism_replay,
                     "ibkd_aggregation": aggregation_audit,
                     "official_test_evaluations_at_checkpoint_write": int(
                         bool(getattr(args, "access_official_test", False))
@@ -1326,6 +1368,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             getattr(args, "loader_followup_smoke", False)
         ),
         "controlled_aa_smoke": controlled_aa,
+        "mechanism_replay_smoke": mechanism_replay,
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
         ),
@@ -1379,12 +1422,16 @@ def main() -> None:
 
         if timm.__version__ != "1.0.27":
             raise RuntimeError(f"Expected timm==1.0.27, found {timm.__version__}")
-        if bool(getattr(args, "controlled_aa_smoke", False)):
+        controlled_trace_smoke = bool(
+            getattr(args, "controlled_aa_smoke", False)
+            or getattr(args, "mechanism_replay_smoke", False)
+        )
+        if controlled_trace_smoke:
             args.controlled_reproducibility_contract = (
                 configure_controlled_reproducibility(args.seed)
             )
             log(
-                "[CONTROLLED_AA_LIMITATION] formal_bitwise_determinism=false "
+                "[CONTROLLED_TRACE_LIMITATION] formal_bitwise_determinism=false "
                 "observed_nondeterministic_operations="
                 "compute_grad_input,adaptive_max_pool2d_backward_cuda,"
                 "memory_efficient_attention_backward_cuda "
@@ -1402,6 +1449,8 @@ def main() -> None:
             f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
             "controlled_aa_smoke="
             f"{bool(getattr(args, 'controlled_aa_smoke', False))} "
+            "mechanism_replay_smoke="
+            f"{bool(getattr(args, 'mechanism_replay_smoke', False))} "
             "planned_epochs="
             f"{_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )

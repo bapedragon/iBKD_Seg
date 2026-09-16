@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_learned_all_replay_smoke_v1",
+  "status": "locked_before_h200_smoke",
+  "scientific_result": false,
+  "posthoc_mechanism_path_diagnostic": true,
+  "question": "Can the issue-760 mechanism path execute the learned_all control alone with the locked main-L0 inputs, audited teacher, and complete input/RNG/state tracing before a new 300-epoch replay is released?",
+  "scope": {
+    "source_h200_issue": 760,
+    "aggregation_variants": [
+      "learned_all"
+    ],
+    "encoder_seeds": [
+      1
+    ],
+    "classification_only": true,
+    "frozen_probe": false,
+    "official_test_accessed": false,
+    "actual_epochs": 2,
+    "planned_full_epochs": 300
+  },
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "issue760_mechanism_protocol": {
+      "path": "phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json",
+      "sha256": "1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8"
+    },
+    "base_main_l0_protocol": {
+      "path": "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json",
+      "sha256": "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
+    },
+    "prior_seed1_observations": [
+      {
+        "run": "issue727_canonical",
+        "selected_epoch": 239,
+        "controller_stop_epoch": 123,
+        "test_macro_top1_percent": 27.03605890274048
+      },
+      {
+        "run": "issue760_mechanism_learned_all",
+        "selected_epoch": 288,
+        "controller_stop_epoch": 55,
+        "test_macro_top1_percent": 10.4095958173275
+      },
+      {
+        "run": "issue766_controlled_aa_A",
+        "selected_epoch": 259,
+        "controller_stop_epoch": 109,
+        "test_macro_top1_percent": 24.761137
+      },
+      {
+        "run": "issue766_controlled_aa_B",
+        "selected_epoch": 162,
+        "controller_stop_epoch": 133,
+        "test_macro_top1_percent": 25.509816
+      }
+    ]
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong"
+  },
+  "teacher": {
+    "train_in_this_run": false,
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "method": "ibkd",
+    "aggregation_mode": "learned_all",
+    "fusion_ratio_lambda": 0.25,
+    "batch_size": 128,
+    "eval_batch_size": 200,
+    "seed": 1,
+    "precision": "float32",
+    "optimizer": "AdamW",
+    "learning_rate": 0.0005,
+    "weight_decay": 0.05,
+    "learning_rate_warmup_epochs": 20,
+    "guidance_beta": 2.5,
+    "guidance_controller_warmup_epochs": 20
+  },
+  "execution_control": {
+    "independent_processes": 1,
+    "torch_use_deterministic_algorithms": true,
+    "warn_only": true,
+    "formal_bitwise_determinism": false,
+    "scientific_model_path_changed": false,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "pythonhashseed": 1,
+    "cublas_workspace_config": ":4096:8",
+    "omp_num_threads": 1,
+    "mkl_num_threads": 1,
+    "num_workers": 0
+  },
+  "smoke_gate": {
+    "required": [
+      "two_full_data_epochs_complete",
+      "initial_student_state_sha256_present",
+      "initial_guidance_state_sha256_present",
+      "teacher_checkpoint_and_state_sha256_match",
+      "validation_split_sha256_matches",
+      "epoch_input_stream_sha256_present",
+      "epoch_rng_state_sha256_present",
+      "epoch_student_and_guidance_state_sha256_present",
+      "learned_all_aggregation_audit_present",
+      "peak_cuda_memory_recorded",
+      "official_test_evaluations_zero"
+    ],
+    "smoke_metrics_must_not_select_checkpoint_epoch_lambda_or_method": true,
+    "on_pass": "release one separate 300-epoch learned_all classification replay through the issue-760 mechanism protocol; select by validation and evaluate official test once",
+    "on_fail": "do not run the 300-epoch replay; fix the first failed path or identity gate"
+  },
+  "artifact_policy": {
+    "retain_temporarily": [
+      "student/summary.json",
+      "smoke_summary.json",
+      "completion_status.json",
+      "run.log"
+    ],
+    "do_not_commit_to_git": [
+      "smoke checkpoint",
+      "smoke log",
+      "dataset archive"
+    ]
+  }
+}

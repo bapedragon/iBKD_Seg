@@ -25,8 +25,17 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_full import (
     _validate_configs,
     run,
 )
+from ibkd_seg.phase1.run_cub_ibkd_connection_replay_smoke import (
+    EXPECTED_CONFIG_SHA256 as EXPECTED_REPLAY_SMOKE_CONFIG_SHA256,
+    _validate_summary as validate_replay_smoke_summary,
+    validate_config as validate_replay_smoke_config,
+)
 from ibkd_seg.phase1.train_full import validate_args as validate_full_args
-from ibkd_seg.phase1.train_timing import _ibkd_aggregation_audit, file_sha256
+from ibkd_seg.phase1.train_timing import (
+    _ibkd_aggregation_audit,
+    file_sha256,
+    validate_args as validate_timing_args,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +49,14 @@ EXECUTION_CONFIG = (
     / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_execution_v1.json"
 )
 FULL_SCRIPT = EXPERIMENT / "scripts/run_main_l0_ibkd_connection_full_b128.sh"
+REPLAY_SMOKE_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_learned_all_replay_smoke_v1.json"
+)
+REPLAY_SMOKE_SCRIPT = (
+    EXPERIMENT
+    / "scripts/run_main_l0_ibkd_learned_all_replay_smoke_b128_seed1.sh"
+)
 AUDIT = (
     EXPERIMENT
     / "reports/main_l0_aggregation_checkpoint_audit_v1/"
@@ -83,7 +100,115 @@ def _full_args(**changes: object) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
+def _replay_timing_args(**changes: object) -> argparse.Namespace:
+    values: dict[str, object] = {
+        "dataset": "cub",
+        "kind": "student",
+        "teacher_architecture": "resnet50_224_scratch",
+        "access_official_test": False,
+        "method": "ibkd",
+        "batch_size": 128,
+        "fusion_ratio": 0.25,
+        "teacher_checkpoint": Path("teacher.pt"),
+        "scientific_cub_r50_teacher": True,
+        "seed_extension_smoke": False,
+        "eval_batch_size": 200,
+        "num_workers": 0,
+        "seed": 1,
+        "alg_controller_warmup_epochs": 0,
+        "save_student_checkpoint": True,
+        "cub_loader_profile": "l0_current_strong",
+        "loader_pilot_smoke": False,
+        "loader_followup_smoke": False,
+        "controlled_aa_smoke": False,
+        "mechanism_replay_smoke": True,
+    }
+    values.update(changes)
+    return argparse.Namespace(**values)
+
+
 class Phase1CubMechanismAnalysisTest(unittest.TestCase):
+    def test_single_learned_all_replay_smoke_is_locked_and_test_sealed(self) -> None:
+        self.assertEqual(
+            file_sha256(REPLAY_SMOKE_CONFIG),
+            EXPECTED_REPLAY_SMOKE_CONFIG_SHA256,
+        )
+        config = validate_replay_smoke_config(REPLAY_SMOKE_CONFIG)
+        self.assertEqual(config["scope"]["aggregation_variants"], ["learned_all"])
+        self.assertFalse(config["scope"]["official_test_accessed"])
+        self.assertFalse(config["scope"]["frozen_probe"])
+
+        validate_timing_args(_replay_timing_args())
+        for changes in (
+            {"num_workers": 4},
+            {"access_official_test": True},
+            {"fusion_ratio": 0.5},
+            {"batch_size": 64},
+            {"seed": 2},
+            {"method": "lg", "fusion_ratio": None},
+        ):
+            with self.subTest(changes=changes):
+                with self.assertRaisesRegex(ValueError, "Mechanism replay"):
+                    validate_timing_args(_replay_timing_args(**changes))
+
+        script = REPLAY_SMOKE_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("run_cub_ibkd_connection_replay_smoke", script)
+        self.assertNotIn("--access-official-test", script)
+        self.assertTrue(REPLAY_SMOKE_SCRIPT.stat().st_mode & 0o111)
+
+    def test_replay_smoke_summary_requires_complete_hash_trace(self) -> None:
+        epoch = {
+            "input_stream_sha256": "input",
+            "rng_state_sha256_after_epoch": "rng",
+            "student_state_sha256_after_epoch": "student",
+            "guidance_state_sha256_after_epoch": "guidance",
+            "peak_cuda_memory_bytes": 1,
+            "peak_cuda_memory_reserved_bytes": 2,
+        }
+        summary = {
+            "status": "complete",
+            "method": "ibkd",
+            "fusion_ratio_lambda": 0.25,
+            "batch_size": 128,
+            "seed": 1,
+            "cub_loader_profile": "l0_current_strong",
+            "mechanism_replay_smoke": True,
+            "controlled_aa_smoke": False,
+            "ibkd_aggregation": {"mode": "learned_all"},
+            "actual_epochs": 2,
+            "planned_epochs": 300,
+            "official_test_accessed": False,
+            "official_test": None,
+            "split_manifest": {
+                "validation_image_ids_sha256": (
+                    "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854"
+                )
+            },
+            "teacher_checkpoint_sha256": (
+                "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3"
+            ),
+            "teacher_model_state_sha256": (
+                "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7"
+            ),
+            "initial_student_state_sha256": "initial-student",
+            "initial_guidance_state_sha256": "initial-guidance",
+            "checkpoint_sha256": "checkpoint",
+            "student_state_sha256": "student",
+            "guidance_state_sha256": "guidance",
+            "controlled_reproducibility": {
+                "enabled": True,
+                "formal_bitwise_determinism": False,
+                "scientific_path_preserved": True,
+            },
+            "epochs": [epoch, dict(epoch)],
+        }
+        checks = validate_replay_smoke_summary(summary)
+        self.assertTrue(all(checks.values()), checks)
+        summary["epochs"][1]["input_stream_sha256"] = None
+        self.assertFalse(
+            validate_replay_smoke_summary(summary)["epoch_trace_hashes"]
+        )
+
     def test_canonical_aggregation_state_dict_contract_is_unchanged(self) -> None:
         aggregation = TransformerAggregationPooling()
         self.assertEqual(aggregation.mode, "learned_all")
