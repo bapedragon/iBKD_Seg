@@ -1,4 +1,4 @@
-# Phase 1 CUB 직접 segmentation 탐색
+# Phase 3 CUB 직접 segmentation 탐색
 
 이 폴더는 기존 CUB classification/frozen-probe 실험과 분리해, CUB mask를 직접 정답으로
 사용하는 segmentation 확장 가능성을 먼저 확인합니다. 현재 추가된 것은
