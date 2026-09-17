@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "role": "derived_qualitative_attention_comparison",
+  "source_h200_issue": 737,
+  "encoder_seed": 1,
+  "selection_policy": "all eight image ids fixed before the direct-spatial evaluation; no post-hoc example selection",
+  "columns": [
+    "Original",
+    "GT foreground",
+    "LG",
+    "ALG-w20",
+    "iBKD 0.25",
+    "iBKD 0.5"
+  ],
+  "interpretation": {
+    "green": "ground-truth foreground mask overlay",
+    "red": "CLS-to-patch attention rollout overlay",
+    "supports_metrics": [
+      "attention_patch_AP",
+      "pointing",
+      "foreground_attention_mass"
+    ],
+    "does_not_visualize": [
+      "part_PCK",
+      "normalized_location_error",
+      "spatial_CKA"
+    ],
+    "quantitative_result_source": "three encoder seeds; these grids show encoder seed 1 only"
+  },
+  "outputs": [
+    {
+      "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/attention_method_comparison_seed1_group1.png",
+      "sha256": "45b744d8ab11609a01cb39ffc064a60abeb5c6e294ebdbf658d2e1f34d9faeff",
+      "width": 1494,
+      "height": 1012,
+      "image_ids": [
+        787,
+        2285,
+        3735,
+        5205
+      ],
+      "source_files": [
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image787.png",
+          "sha256": "2e2a1dcaa66dc40a7c8b8f20db575d822d115a98a12193a8e55a189b2d058ca9"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image787.png",
+          "sha256": "aeaf353e4a4a4395d8a6f2e8b038e9566514a9439082e49c24e2e580fab6846a"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image787.png",
+          "sha256": "09bbeaf3de0bd384939c40c2098ce990b75d1dab5ba8df40d1ead9d724e66153"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image787.png",
+          "sha256": "fa58b07e784a2f47fcda428ef167c20e91693679ee98b25818d4b80d19f63a0a"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image2285.png",
+          "sha256": "911cd3079d1f5e81e06e1317ebd2e7920f5bc3eb74c022e0bdda668cc1b6689b"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image2285.png",
+          "sha256": "64cc9a4b0cc48ea0af0944e1bdb9b1162d9344132ca00c6038516db6ae2411dd"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image2285.png",
+          "sha256": "62d2fdd7f834ee066ebb472ac49e186e4b547f8e962019f1c42726b197ba1f5a"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image2285.png",
+          "sha256": "a9f4e55387e92ef88062cb95385ff17a28de4650da1aba23c309e99a08a07b66"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image3735.png",
+          "sha256": "7fb378d36882dad68a18fb1d4aeff0919fc1083747117d8b8fb0985068297949"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image3735.png",
+          "sha256": "2461875dc66b99f7f6930b5cd0bed19c49847ccdc745ce23eb7a500365c3cd7b"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image3735.png",
+          "sha256": "dc66cf650bf4fdb6e34ddf6a6527cd6dc219e6e2324c7c1e5283edcb4771a26f"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image3735.png",
+          "sha256": "fab4c6ddd5c797da563d3f8471de41aa4fc24a4ffaea1ce0b19500da79176b19"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image5205.png",
+          "sha256": "0e13e66b78f02f94663c644495a012fb50287c8532940bd1839b308ad6ba483c"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image5205.png",
+          "sha256": "c906ff6cc5ad1d78f6c60cd12fef9edf592eaaf6b164727c1bfb52cb32f473c1"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image5205.png",
+          "sha256": "4192184e1b0b656ab15f8ad1e17c5feee4606cc0fbe817e9b5c1cc1ed640e025"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image5205.png",
+          "sha256": "d1d9b6f3d533b857e8e9752236d7d5eeb1d6a819dcd91174cb79d1542436f896"
+        }
+      ]
+    },
+    {
+      "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/attention_method_comparison_seed1_group2.png",
+      "sha256": "a33264fb91398771650473833f793e4ae49cb3677fd6221064045ec4270fbb3d",
+      "width": 1494,
+      "height": 1012,
+      "image_ids": [
+        6691,
+        8139,
+        9597,
+        11064
+      ],
+      "source_files": [
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image6691.png",
+          "sha256": "c0879c501e28a96ca27d9f64ddfde0d82c4fb908040c313302a47cbbe40cd13e"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image6691.png",
+          "sha256": "445d5de0ff788b91104ebfb7fd7650ac46dd4504a731b199e41af981ab8e17ef"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image6691.png",
+          "sha256": "e191e4a60d3701213bc51eadc674c89ff4b2a11864e2f61265e21a1e288dfa81"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image6691.png",
+          "sha256": "d2d3fa27496f4fed4362f7f476347c13b4daacf2fc21094e508e97dc95628adb"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image8139.png",
+          "sha256": "5eb20151d98c2f02badbf161eb415c194f2f8f037d558adaeef98d0cbe4dab06"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image8139.png",
+          "sha256": "670445dbf5db5eebc819dbe6bc8206b35bfe3fb3e3deea8cc0e65a92b04f6b17"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image8139.png",
+          "sha256": "025e22952498cd4c1d613ecd08f3055722cd298282910ff029d26292bff1c1a7"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image8139.png",
+          "sha256": "0b48783c693004df28f7729ecbe5d8ba8150a08ed041e255b37e714bb1f7afe5"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image9597.png",
+          "sha256": "7a7c5be177b1b8b6c815f7d333c8da5e689c5f754bab91c057d8390b95c33ec8"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image9597.png",
+          "sha256": "b7755cc0b7c7252040101bfce34bfd467c361e36bc7628558a1b0d8a5e2ee58f"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image9597.png",
+          "sha256": "f4ca9fd50d3dfd2aa6a12a1561388d92b169fca3d341d9aa1f40d3a61e99878c"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image9597.png",
+          "sha256": "f8fa96c8605a1e5841d53b4a14a9340e3b4c49add936be1cc275748bb3d8b491"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/lg_encoder_seed1_image11064.png",
+          "sha256": "98a22cf1ad810a28440835352717b4cba3ac9ff911fac428df9a50fabc958487"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/alg_warmup20_encoder_seed1_image11064.png",
+          "sha256": "c69bf5925df24f6a846cabb8e84aa2a10a7b67787ed7a125869005dccb99bae0"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.25_encoder_seed1_image11064.png",
+          "sha256": "3b793dfe859b271199bc020f19a5e0d44d2ccd7a104cd56de2c02d2379672427"
+        },
+        {
+          "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_seed1_v2/attention_qualitative/ibkd_lambda_0.5_encoder_seed1_image11064.png",
+          "sha256": "ce097b5c9ed06a16697e618bd3a579428cf872dbbd35d30222b2dc84038e2eda"
+        }
+      ]
+    }
+  ]
+}

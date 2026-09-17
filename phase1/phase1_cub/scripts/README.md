@@ -21,5 +21,7 @@
 - `curate_r50_v5_guided_seeds2_3_result.py`: issue 730 결과 감사·정리
 - `curate_r50_direct_spatial_seed1_v2_result.py`: issue 737 결과 감사·정리
 - `curate_r50_direct_spatial_seed2_3_v2_result.py`: issue 739 결과 감사·정리
+- `build_direct_spatial_attention_comparison.py`: 사전 고정된 seed-1 이미지 8개의
+  원본·GT·방법별 attention rollout을 재배치한 논문용 정성 비교 패널 생성
 
 완료된 본실험의 선행 실행 점검용 shell은 보존하지 않습니다.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import unittest
@@ -31,6 +32,7 @@ DIRECT_V2_3SEED_REPORT = (
     / "phase1/phase1_cub/reports/direct_spatial/"
     "resnet50_224_b128_guided_3seed_v2"
 )
+ATTENTION_COMPARISON = DIRECT_V2_3SEED_REPORT / "qualitative_comparisons"
 
 
 def _json(path: Path) -> dict:
@@ -38,6 +40,14 @@ def _json(path: Path) -> dict:
     if not isinstance(value, dict):
         raise TypeError(f"expected object: {path}")
     return value
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 class Phase1CubResultTest(unittest.TestCase):
@@ -82,6 +92,24 @@ class Phase1CubResultTest(unittest.TestCase):
         self.assertEqual(list(R50_V5_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(DIRECT_V2_REPORT.rglob("*.pt")), [])
         self.assertEqual(list(DIRECT_V2_3SEED_REPORT.rglob("*.pt")), [])
+
+    def test_direct_spatial_attention_comparison_uses_all_fixed_seed1_images(self) -> None:
+        manifest = _json(ATTENTION_COMPARISON / "manifest.json")
+        self.assertEqual(manifest["source_h200_issue"], 737)
+        self.assertEqual(manifest["encoder_seed"], 1)
+        self.assertIn("no post-hoc", manifest["selection_policy"])
+        self.assertEqual(
+            [
+                image_id
+                for output in manifest["outputs"]
+                for image_id in output["image_ids"]
+            ],
+            [787, 2285, 3735, 5205, 6691, 8139, 9597, 11064],
+        )
+        for output in manifest["outputs"]:
+            path = ROOT / output["path"]
+            self.assertTrue(path.is_file(), str(path))
+            self.assertEqual(_sha256(path), output["sha256"])
 
     def test_r50_v4_guided_seed1_profiles_are_audited_but_partial(self) -> None:
         classification = _json(R50_V4_REPORT / "classification_summary.json")
