@@ -14,6 +14,7 @@ class GuidanceController:
         threshold: float = -0.02,
         window: int = 50,
         warmup_epochs: int = 0,
+        fixed_stop_epoch: int | None = None,
     ) -> None:
         if kind not in {"lg", "alg", "ibkd"}:
             raise ValueError(f"Unknown controller kind {kind!r}")
@@ -22,6 +23,11 @@ class GuidanceController:
         self.threshold = float(threshold)
         self.window = int(window)
         self.warmup_epochs = int(warmup_epochs)
+        if fixed_stop_epoch is not None and int(fixed_stop_epoch) <= 0:
+            raise ValueError("fixed_stop_epoch must be positive when provided")
+        self.fixed_stop_epoch = (
+            None if fixed_stop_epoch is None else int(fixed_stop_epoch)
+        )
         self.active = True
         self.stop_epoch: int | None = None
         self.losses: list[float] = []
@@ -82,6 +88,11 @@ class GuidanceController:
         self.derivatives.append(derivative)
         smoothed = None if epoch < self.warmup_epochs else self._smoothed(epoch)
         self.smoothed_derivatives.append(smoothed)
+        if self.fixed_stop_epoch is not None:
+            if epoch >= self.fixed_stop_epoch:
+                self.active = False
+                self.stop_epoch = epoch
+            return
         if smoothed is None:
             return
         crossed = smoothed >= self.threshold if self.kind == "alg" else smoothed > self.threshold
@@ -96,6 +107,12 @@ class GuidanceController:
             "threshold": self.threshold,
             "smoothing_window": self.window,
             "warmup_epochs": self.warmup_epochs,
+            "stop_policy": (
+                "fixed_epoch"
+                if self.fixed_stop_epoch is not None
+                else "loss_derivative"
+            ),
+            "fixed_stop_epoch": self.fixed_stop_epoch,
             "stop_comparison": "greater_or_equal" if self.kind == "alg" else "strictly_greater",
             "active": self.active,
             "stop_epoch": self.stop_epoch,

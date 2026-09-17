@@ -1,0 +1,107 @@
+{
+  "schema_version": 2,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_matched_duration_full_v2",
+  "status": "blocked_until_matched_duration_smoke_passes",
+  "scientific_result": true,
+  "posthoc_mechanism_analysis": true,
+  "completed_main_result_replaced": false,
+  "question": "Does learned block-to-stage aggregation improve classification when guidance duration and every other training input are held fixed?",
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "source_teacher_issue": 722,
+    "source_canonical_student_issue": 727,
+    "issue760_result_used_as_causal_evidence": false,
+    "issue770_replay_archive_required_as_training_input": false
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong",
+    "input_size": 224
+  },
+  "teacher": {
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "strict_frozen_reuse": true
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "batch_size": 128,
+    "encoder_seeds": [1, 2, 3],
+    "epochs": 300,
+    "fusion_ratio_lambda": 0.25,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0005,
+    "minimum_learning_rate": 0.000005,
+    "weight_decay": 0.05,
+    "learning_rate_warmup_epochs": 20,
+    "precision": "float32"
+  },
+  "guidance": {
+    "beta_on": 2.5,
+    "policy": "fixed_common_horizon",
+    "active_epochs_inclusive": [1, 123],
+    "beta_zero_from_epoch": 124,
+    "horizon_source": "issue727 canonical main_l0_v3 seed1 controller stop epoch fixed before this v2 comparison",
+    "adaptive_controller_selects_stop": false,
+    "same_duration_for_every_variant_and_seed": true
+  },
+  "aggregation_variants": [
+    "learned_all",
+    "fixed_uniform_all",
+    "fixed_stage_match",
+    "fixed_last"
+  ],
+  "only_intended_factor_changed": "TransformerAggregationPooling block-to-teacher-stage connection",
+  "paired_controls": {
+    "same_student_initial_state_within_seed": true,
+    "same_teacher": true,
+    "same_augmented_input_stream_within_seed": true,
+    "same_guidance_duration": true,
+    "num_workers": 0,
+    "formal_bitwise_determinism": false,
+    "known_warn_only_cuda_operations": [
+      "compute_grad_input",
+      "adaptive_max_pool2d_backward_cuda",
+      "memory_efficient_attention_backward_cuda"
+    ]
+  },
+  "classification_selection": {
+    "split": "validation",
+    "metric": "macro_top1",
+    "direction": "maximize",
+    "tie_break": "earlier_epoch"
+  },
+  "frozen_probe": {
+    "run_after_classification": true,
+    "encoder_frozen": true,
+    "feature_block": 11,
+    "probe_seeds": [1, 2, 3, 4, 5],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "primary_metric": "official_test_input_224_binary_mean_iou"
+  },
+  "official_test_policy": {
+    "smoke_access": false,
+    "selection_uses_test": false,
+    "full_evaluation": "once after every validation selection in its prespecified shard"
+  },
+  "interpretation": {
+    "supports_learned_weight_mechanism_if": "learned_all consistently exceeds fixed_uniform_all and fixed_stage_match across paired encoder seeds",
+    "weakens_learned_weight_mechanism_if": "fixed_uniform_all is practically indistinguishable from learned_all",
+    "supports_final_block_explanation_if": "fixed_last preserves learned_all classification behavior",
+    "no_result_replaces_main_l0_v3": true
+  },
+  "execution": {
+    "full_partition_decided_only_from_smoke_runtime": true,
+    "ten_hour_limit_seconds": 36000,
+    "retain_classification_checkpoints": true,
+    "retain_selected_probe_checkpoints": true
+  }
+}

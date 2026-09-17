@@ -14,6 +14,13 @@ from ibkd_seg.phase1.models import (
     STUDENT_BLOCKS,
     TransformerAggregationPooling,
 )
+from ibkd_seg.phase1.controllers import GuidanceController
+from ibkd_seg.phase1.run_cub_ibkd_connection_matched_smoke import (
+    EXPECTED_CONFIG_SHA256 as EXPECTED_MATCHED_SMOKE_CONFIG_SHA256,
+    EXPECTED_FULL_CONFIG_SHA256 as EXPECTED_MATCHED_FULL_CONFIG_SHA256,
+    _probability_contract,
+    validate_config as validate_matched_smoke_config,
+)
 from ibkd_seg.phase1.run_cub_ibkd_connection_full import (
     AGGREGATION_VARIANTS,
     EXPECTED_EXECUTION_SHA256,
@@ -68,6 +75,18 @@ REPLAY_FULL_CONFIG = (
 REPLAY_FULL_SCRIPT = (
     EXPERIMENT
     / "scripts/run_main_l0_ibkd_learned_all_replay_full_b128_seed1.sh"
+)
+MATCHED_SMOKE_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_smoke_v2.json"
+)
+MATCHED_FULL_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json"
+)
+MATCHED_SMOKE_SCRIPT = (
+    EXPERIMENT
+    / "scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh"
 )
 AUDIT = (
     EXPERIMENT
@@ -141,6 +160,19 @@ def _replay_timing_args(**changes: object) -> argparse.Namespace:
     return argparse.Namespace(**values)
 
 
+def _matched_timing_args(mode: str, **changes: object) -> argparse.Namespace:
+    values = vars(_replay_timing_args(mechanism_replay_smoke=False))
+    values.update(
+        {
+            "mechanism_ablation_smoke": True,
+            "ibkd_aggregation_mode": mode,
+            "ibkd_fixed_guidance_epochs": 123,
+        }
+    )
+    values.update(changes)
+    return argparse.Namespace(**values)
+
+
 def _replay_full_args(**changes: object) -> argparse.Namespace:
     values = vars(
         _full_args(
@@ -158,6 +190,51 @@ def _replay_full_args(**changes: object) -> argparse.Namespace:
 
 
 class Phase1CubMechanismAnalysisTest(unittest.TestCase):
+    def test_matched_duration_smoke_is_locked_and_executable(self) -> None:
+        self.assertEqual(
+            file_sha256(MATCHED_SMOKE_CONFIG),
+            EXPECTED_MATCHED_SMOKE_CONFIG_SHA256,
+        )
+        self.assertEqual(
+            file_sha256(MATCHED_FULL_CONFIG),
+            EXPECTED_MATCHED_FULL_CONFIG_SHA256,
+        )
+        config = validate_matched_smoke_config(MATCHED_SMOKE_CONFIG)
+        self.assertEqual(config["student"]["fixed_guidance_epochs"], 123)
+        self.assertEqual(
+            config["scope"]["aggregation_variants"],
+            list(AGGREGATION_VARIANTS),
+        )
+        for mode in AGGREGATION_VARIANTS:
+            validate_timing_args(_matched_timing_args(mode))
+        with self.assertRaisesRegex(ValueError, "fixed guidance epoch 123"):
+            validate_timing_args(
+                _matched_timing_args("learned_all", ibkd_fixed_guidance_epochs=103)
+            )
+        script = MATCHED_SMOKE_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("run_cub_ibkd_connection_matched_smoke", script)
+        self.assertNotIn("--access-official-test", script)
+        self.assertTrue(MATCHED_SMOKE_SCRIPT.stat().st_mode & 0o111)
+
+    def test_fixed_guidance_horizon_is_inclusive(self) -> None:
+        controller = GuidanceController(
+            kind="ibkd", warmup_epochs=20, fixed_stop_epoch=123
+        )
+        for epoch in range(1, 124):
+            self.assertEqual(controller.beta_for_epoch(epoch), 2.5)
+            controller.observe(epoch, 1.0, beta_used=2.5)
+        self.assertEqual(controller.stop_epoch, 123)
+        self.assertFalse(controller.active)
+        self.assertEqual(controller.beta_for_epoch(124), 0.0)
+        state = controller.state_dict()
+        self.assertEqual(state["stop_policy"], "fixed_epoch")
+        self.assertEqual(state["fixed_stop_epoch"], 123)
+
+    def test_fixed_connection_probability_contracts(self) -> None:
+        for mode in AGGREGATION_VARIANTS:
+            audit = _ibkd_aggregation_audit(IBKD(aggregation_mode=mode))
+            self.assertTrue(_probability_contract(mode, audit), mode)
+
     def test_single_learned_all_replay_full_is_released_after_smoke(self) -> None:
         self.assertEqual(
             file_sha256(REPLAY_FULL_CONFIG),

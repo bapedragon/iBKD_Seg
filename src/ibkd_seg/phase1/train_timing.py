@@ -44,6 +44,7 @@ from .data import (
 )
 from .models import (
     IBKD,
+    IBKD_AGGREGATION_MODES,
     LocalityGuidance,
     RESNET50_TEACHER_CHANNELS,
     STUDENT_BLOCKS,
@@ -437,6 +438,26 @@ def parse_args() -> argparse.Namespace:
             "RNG, and model-state hashes; requires num_workers=0 and sealed test."
         ),
     )
+    parser.add_argument(
+        "--mechanism-ablation-smoke",
+        action="store_true",
+        help=(
+            "Controlled two-epoch four-mode CUB iBKD connection smoke. "
+            "The scientific follow-up fixes guidance through epoch 123."
+        ),
+    )
+    parser.add_argument(
+        "--ibkd-aggregation-mode",
+        choices=IBKD_AGGREGATION_MODES,
+        default="learned_all",
+        help="iBKD student-block aggregation used by a mechanism smoke.",
+    )
+    parser.add_argument(
+        "--ibkd-fixed-guidance-epochs",
+        type=int,
+        default=None,
+        help="Keep iBKD beta active through this epoch, bypassing adaptive stop.",
+    )
     return parser.parse_args()
 
 
@@ -463,12 +484,22 @@ def validate_args(args: argparse.Namespace) -> None:
     mechanism_replay_smoke = bool(
         getattr(args, "mechanism_replay_smoke", False)
     )
+    mechanism_ablation_smoke = bool(
+        getattr(args, "mechanism_ablation_smoke", False)
+    )
+    aggregation_mode = str(
+        getattr(args, "ibkd_aggregation_mode", "learned_all")
+    )
+    fixed_guidance_epochs = getattr(args, "ibkd_fixed_guidance_epochs", None)
+    if aggregation_mode not in IBKD_AGGREGATION_MODES:
+        raise ValueError("Unknown iBKD aggregation mode")
     if sum(
         (
             loader_pilot_smoke,
             loader_followup_smoke,
             controlled_aa_smoke,
             mechanism_replay_smoke,
+            mechanism_ablation_smoke,
         )
     ) > 1:
         raise ValueError("CUB timing smoke modes are mutually exclusive")
@@ -519,6 +550,29 @@ def validate_args(args: argparse.Namespace) -> None:
                 "ResNet-50/224 teacher, num_workers=0, checkpoint export, "
                 "and sealed test"
             )
+    elif mechanism_ablation_smoke:
+        if not (
+            dataset_key == "cub"
+            and args.kind == "student"
+            and args.method == "ibkd"
+            and args.fusion_ratio == 0.25
+            and teacher_architecture == "resnet50_224_scratch"
+            and scientific_cub_teacher
+            and args.teacher_checkpoint is not None
+            and args.batch_size == 128
+            and args.seed == 1
+            and args.save_student_checkpoint
+            and not access_official_test
+            and not seed_extension_smoke
+            and loader_profile == L0_CURRENT_STRONG
+            and args.num_workers == 0
+            and fixed_guidance_epochs == 123
+        ):
+            raise ValueError(
+                "Mechanism ablation smoke requires controlled CUB main-L0 "
+                "iBKD lambda 0.25, batch 128, seed 1, the audited teacher, "
+                "num_workers=0, sealed test, and fixed guidance epoch 123"
+            )
     elif loader_pilot_smoke:
         if not (
             dataset_key == "cub"
@@ -562,6 +616,18 @@ def validate_args(args: argparse.Namespace) -> None:
             "Non-default CUB loader profiles require --loader-pilot-smoke or "
             "--loader-followup-smoke"
         )
+    if not mechanism_ablation_smoke and aggregation_mode != "learned_all":
+        raise ValueError(
+            "Non-canonical iBKD aggregation requires --mechanism-ablation-smoke"
+        )
+    if not mechanism_ablation_smoke and fixed_guidance_epochs is not None:
+        raise ValueError(
+            "Fixed iBKD guidance is reserved for the matched mechanism smoke"
+        )
+    if args.method != "ibkd" and (
+        aggregation_mode != "learned_all" or fixed_guidance_epochs is not None
+    ):
+        raise ValueError("Only iBKD accepts aggregation or fixed-guidance controls")
     if teacher_architecture == "resnet50_224_scratch" and dataset_key != "cub":
         raise ValueError("ResNet-50/224 timing teacher is CUB-only")
     if access_official_test and not (
@@ -1038,8 +1104,17 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             ),
         )
     elif args.method == "ibkd":
-        guidance = IBKD(teacher_channels=_teacher_channels(args)).to(device)
-        controller = GuidanceController(kind="ibkd", warmup_epochs=20)
+        guidance = IBKD(
+            teacher_channels=_teacher_channels(args),
+            aggregation_mode=str(
+                getattr(args, "ibkd_aggregation_mode", "learned_all")
+            ),
+        ).to(device)
+        controller = GuidanceController(
+            kind="ibkd",
+            warmup_epochs=20,
+            fixed_stop_epoch=getattr(args, "ibkd_fixed_guidance_epochs", None),
+        )
 
     initial_guidance_hash = (
         None if guidance is None else state_dict_sha256(guidance)
@@ -1060,7 +1135,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     mechanism_replay = bool(
         getattr(args, "mechanism_replay_smoke", False)
     )
-    controlled_trace = controlled_aa or mechanism_replay
+    mechanism_ablation = bool(
+        getattr(args, "mechanism_ablation_smoke", False)
+    )
+    controlled_trace = controlled_aa or mechanism_replay or mechanism_ablation
     # Match the scientific full trainer: guidance construction must not shift
     # the student's DropPath RNG stream.  The DataLoader owns its own generator.
     if controlled_trace:
@@ -1077,6 +1155,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"cub_loader_profile={getattr(args, 'cub_loader_profile', L0_CURRENT_STRONG)} "
         f"controlled_aa_smoke={controlled_aa} "
         f"mechanism_replay_smoke={mechanism_replay} "
+        f"mechanism_ablation_smoke={mechanism_ablation} "
+        "ibkd_aggregation_mode="
+        f"{getattr(args, 'ibkd_aggregation_mode', 'learned_all')} "
+        "ibkd_fixed_guidance_epochs="
+        f"{getattr(args, 'ibkd_fixed_guidance_epochs', None)} "
         f"initial_guidance_sha256={initial_guidance_hash}"
     )
 
@@ -1266,7 +1349,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                 "student": student_state,
                 "metadata": {
                     "purpose": (
-                        "phase1_cub_main_l0_ibkd_learned_all_replay_smoke_v1"
+                        "phase1_cub_main_l0_ibkd_connection_matched_smoke_v2"
+                        if mechanism_ablation
+                        else "phase1_cub_main_l0_ibkd_learned_all_replay_smoke_v1"
                         if mechanism_replay
                         else "phase1_cub_r50_224_l2_guided_preliminary_smoke_student_v1"
                         if bool(
@@ -1329,6 +1414,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
                     "guidance_state_sha256": guidance_state_hash,
                     "controlled_aa_smoke": controlled_aa,
                     "mechanism_replay_smoke": mechanism_replay,
+                    "mechanism_ablation_smoke": mechanism_ablation,
+                    "ibkd_aggregation_mode": getattr(
+                        args, "ibkd_aggregation_mode", "learned_all"
+                    ),
+                    "ibkd_fixed_guidance_epochs": getattr(
+                        args, "ibkd_fixed_guidance_epochs", None
+                    ),
                     "ibkd_aggregation": aggregation_audit,
                     "official_test_evaluations_at_checkpoint_write": int(
                         bool(getattr(args, "access_official_test", False))
@@ -1369,6 +1461,13 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         ),
         "controlled_aa_smoke": controlled_aa,
         "mechanism_replay_smoke": mechanism_replay,
+        "mechanism_ablation_smoke": mechanism_ablation,
+        "ibkd_aggregation_mode": getattr(
+            args, "ibkd_aggregation_mode", "learned_all"
+        ),
+        "ibkd_fixed_guidance_epochs": getattr(
+            args, "ibkd_fixed_guidance_epochs", None
+        ),
         "cub_loader_profile": str(
             getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
         ),
@@ -1425,6 +1524,7 @@ def main() -> None:
         controlled_trace_smoke = bool(
             getattr(args, "controlled_aa_smoke", False)
             or getattr(args, "mechanism_replay_smoke", False)
+            or getattr(args, "mechanism_ablation_smoke", False)
         )
         if controlled_trace_smoke:
             args.controlled_reproducibility_contract = (
@@ -1451,6 +1551,8 @@ def main() -> None:
             f"{bool(getattr(args, 'controlled_aa_smoke', False))} "
             "mechanism_replay_smoke="
             f"{bool(getattr(args, 'mechanism_replay_smoke', False))} "
+            "mechanism_ablation_smoke="
+            f"{bool(getattr(args, 'mechanism_ablation_smoke', False))} "
             "planned_epochs="
             f"{_teacher_planned_epochs(args) if args.kind == 'teacher' else PLANNED_EPOCHS}"
         )

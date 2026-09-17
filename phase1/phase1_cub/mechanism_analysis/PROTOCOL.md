@@ -93,7 +93,26 @@ mechanism 계열의 `learned_all` 하나만 분리해 확인합니다.
 이는 새 과학 결과가 아니라 issue 760의 실행 경로를 진단하는 사후 gate입니다.
 단순 smoke 통과만으로 `10.41%`를 이상치로 폐기하지 않습니다.
 
-공식 full 계약은
+### Issue 770 재현 뒤 M1-v2
+
+Issue 770 단일 replay는 validation-selected test macro Top-1 `26.3989%`로
+issue 760의 `10.4096%`를 재현하지 않았습니다. 결과 archive 감사 전 잠정값이지만,
+네 연결 방식 실행 경로를 다시 점검하는 smoke는 먼저 진행할 수 있습니다.
+
+재개 실험은 연결 방식 이외의 차이를 줄이기 위해 기존 동적 종료 M1-v1과 분리한
+matched-duration v2입니다. 원래 현상의 canonical source인 issue 727 seed 1에서
+관측된 종료 epoch `123`을 결과 확인 전에 공통 horizon으로 고정합니다. 네 방식 모두
+epoch `1–123`에는 beta `2.5`, epoch `124–300`에는 beta `0`을 사용합니다. Smoke는
+두 full-data epoch만 실행하며 official test와 frozen probe를 열지 않습니다.
+
+- Full v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json`
+- Smoke v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_smoke_v2.json`
+- H200 진입점: `scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh`
+
+아래 v1 계약은 기존 동적 controller 실행의 역사적 기록이며 v2 본실험에는 사용하지
+않습니다.
+
+기존 full v1 계약은
 `configs/cub200_r50_224_b128_main_l0_ibkd_connection_full_v1.json`, SHA-256
 `1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8`에
 고정했습니다.

@@ -56,7 +56,19 @@ checkpoint 선택 뒤 official test를 정확히 한 번 평가합니다. frozen
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_learned_all_replay_full_b128_seed1.sh
 ```
 
-이 단일 재현 결과를 확인하기 전에는 네 연결 조건 ablation을 재개하지 않습니다.
+## 네 연결 방식 matched-duration v2 smoke
+
+Issue 770 replay가 정상 범위로 돌아온 뒤, 연결 방식만 비교하기 위해 가이던스 기간을
+canonical issue 727의 `123 epoch`로 네 방식 모두 동일하게 고정한 v2를 추가했습니다.
+아래 smoke는 각 방식을 full-data 2 epoch씩 실행해 초기 student·Teacher·split·실제
+augmentation 입력 stream과 고정 beta schedule을 검사합니다. Official test와 frozen
+probe는 실행하지 않으며 smoke 점수는 과학 결과가 아닙니다.
+
+```bash
+bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh
+```
+
+Issue 770 로그 gate가 통과했으므로 위 matched-duration smoke를 다음 gate로 사용합니다.
 
 ## 본실험 실행 보류
 
@@ -67,10 +79,8 @@ bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_learned_all_r
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_full_b128.sh 1
 ```
 
-제어 full A/A의 같은-seed 변동 범위를 확인했으며, 다음 gate는 위 `learned_all`
-단일 경로 재현입니다. 이 재현이 안정된 뒤에는 네 연결 방식 모두 guidance 기간을
-동일하게 고정한 새 protocol을 만들고 다시 비교합니다. 기존 v1 결과만으로 레이어
-연결의 효과를 결론내리지 않습니다.
+기존 동적 controller v1 결과만으로 레이어 연결의 효과를 결론내리지 않습니다.
+이후 비교는 위 matched-duration v2만 사용합니다.
 
 Git에는 코드·프로토콜·정리된 본실험 표·checkpoint 해시 manifest만 반영합니다.
 본실험 checkpoint와 원시 결과 archive는 GitHub Release로 보존하고, dataset,
