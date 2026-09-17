@@ -1,0 +1,111 @@
+{
+  "schema_version": 3,
+  "protocol_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_classification_only_full_v3",
+  "status": "locked_after_issue776_classification_only_smoke",
+  "scientific_result": true,
+  "posthoc_mechanism_analysis": true,
+  "completed_main_result_replaced": false,
+  "question": "Does learned block-to-stage aggregation improve CUB classification when guidance duration and every other training input are held fixed?",
+  "scope": {
+    "classification_only": true,
+    "frozen_probe_runs": 0,
+    "segmentation_metrics": false
+  },
+  "smoke_gate": {
+    "source_h200_issue": 776,
+    "smoke_protocol_sha256": "b0ec4af0f1eb350725fdc14d33be9ea09446dd9143cbe477accb3ae568fc897d",
+    "variants_complete": 4,
+    "cross_gates_complete": 6,
+    "official_test_evaluations": 0,
+    "frozen_probe_runs": 0,
+    "classification_settings_unchanged": true,
+    "only_downstream_change": "omit frozen segmentation probe from the full run"
+  },
+  "lineage": {
+    "input_lineage_id": "main_l0_v3",
+    "source_teacher_issue": 722,
+    "source_canonical_student_issue": 727,
+    "source_smoke_issue": 776
+  },
+  "dataset": {
+    "name": "CUB-200-2011",
+    "train": 5394,
+    "validation": 600,
+    "official_test": 5794,
+    "split_seed": 2027,
+    "validation_image_ids_sha256": "263d2f165326262706101e52af3763c6d183be709dafe3578a9aca0f546bf854",
+    "loader_profile": "l0_current_strong",
+    "input_size": 224
+  },
+  "teacher": {
+    "source_h200_issue": 722,
+    "architecture": "torchvision_resnet50_224_scratch",
+    "checkpoint_sha256": "ca6860f55f440dbe0018e7cc6d4f70dd257ba48e3cf692553408abdde7f1f3a3",
+    "model_state_sha256": "96fea19b4556e1f6736d84e5f6ac139ec508ea04fa1fdd2d643498c382cdfba7",
+    "strict_frozen_reuse": true
+  },
+  "student": {
+    "architecture": "deit_tiny_patch16_224",
+    "initialization": "scratch",
+    "batch_size": 128,
+    "encoder_seeds": [1, 2, 3],
+    "epochs": 300,
+    "fusion_ratio_lambda": 0.25,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0005,
+    "minimum_learning_rate": 0.000005,
+    "weight_decay": 0.05,
+    "learning_rate_warmup_epochs": 20,
+    "precision": "float32"
+  },
+  "guidance": {
+    "beta_on": 2.5,
+    "policy": "fixed_common_horizon",
+    "active_epochs_inclusive": [1, 123],
+    "beta_zero_from_epoch": 124,
+    "horizon_source": "issue727 canonical main_l0_v3 seed1 controller stop epoch fixed before this comparison",
+    "adaptive_controller_selects_stop": false,
+    "same_duration_for_every_variant_and_seed": true
+  },
+  "aggregation_variants": [
+    "learned_all",
+    "fixed_uniform_all",
+    "fixed_stage_match",
+    "fixed_last"
+  ],
+  "only_intended_factor_changed": "TransformerAggregationPooling block-to-teacher-stage connection",
+  "paired_controls": {
+    "same_student_initial_state_within_seed": true,
+    "same_teacher": true,
+    "same_augmented_input_stream_within_seed": true,
+    "same_guidance_duration": true,
+    "num_workers": 0,
+    "formal_bitwise_determinism": false
+  },
+  "classification_selection": {
+    "split": "validation",
+    "metric": "macro_top1",
+    "direction": "maximize",
+    "tie_break": "earlier_epoch"
+  },
+  "official_test_policy": {
+    "selection_uses_test": false,
+    "evaluation": "once per validation-selected classification checkpoint after all four selections within a seed shard",
+    "evaluations_per_seed": 4
+  },
+  "interpretation": {
+    "supports_learned_weight_mechanism_if": "learned_all consistently exceeds fixed_uniform_all and fixed_stage_match across paired encoder seeds",
+    "weakens_learned_weight_mechanism_if": "fixed_uniform_all is practically indistinguishable from learned_all",
+    "supports_final_block_explanation_if": "fixed_last preserves learned_all classification behavior",
+    "cannot_claim": "spatial information preservation or segmentation superiority",
+    "no_result_replaces_main_l0_v3": true
+  },
+  "execution": {
+    "requested_mig_slices": 7,
+    "num_workers": 0,
+    "ten_hour_limit_seconds": 36000,
+    "one_encoder_seed_per_issue": true,
+    "retain_classification_checkpoints": true,
+    "retain_probe_checkpoints": false
+  }
+}

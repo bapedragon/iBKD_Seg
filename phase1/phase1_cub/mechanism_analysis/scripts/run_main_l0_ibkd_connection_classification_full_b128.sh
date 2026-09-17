@@ -17,13 +17,13 @@ export MKL_NUM_THREADS=1
 export NVIDIA_TF32_OVERRIDE=0
 
 data_dir="${PHASE1_CUB_DATA_DIR:-/app/scratch/phase1_cub_data}"
-output_root="${PHASE1_CUB_MATCHED_CONNECTION_FULL_OUTPUT_DIR:-/app/output/phase1_cub_main_l0_ibkd_connection_matched_full_v2_seed${encoder_seed}}"
-cache_dir="${PHASE1_CUB_MATCHED_CONNECTION_FULL_CACHE_DIR:-/app/scratch/phase1_cub_main_l0_ibkd_connection_matched_full_v2_seed${encoder_seed}_cache}"
+output_root="${PHASE1_CUB_CONNECTION_CLASSIFICATION_OUTPUT_DIR:-/app/output/phase1_cub_main_l0_ibkd_connection_classification_full_v3_seed${encoder_seed}}"
+cache_dir="${PHASE1_CUB_CONNECTION_CLASSIFICATION_CACHE_DIR:-/app/scratch/phase1_cub_main_l0_ibkd_connection_classification_full_v3_seed${encoder_seed}_cache}"
 teacher_dir="${PHASE1_CUB_R50_TEACHER_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_issue722}"
 teacher_download_dir="${PHASE1_CUB_R50_TEACHER_DOWNLOAD_DIR:-/app/scratch/phase1_cub_r50_224_teacher_v3_download}"
 teacher_manifest="phase1/phase1_cub/reports/classification/resnet50_224_teacher_v3/checkpoint_release.json"
-protocol_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json"
-execution_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_execution_v2.json"
+protocol_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_v3.json"
+execution_config="phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_execution_v3.json"
 
 mkdir -p "${output_root}" "${cache_dir}"
 

@@ -72,16 +72,23 @@ Issue 776 smoke는 네 분류 경로 `4/4`, 개별 gate `11/11`, 교차 gate `6/
 통과했습니다. 같은 student 초기 상태와 epoch별 augmentation 입력 stream, Teacher,
 split, beta schedule을 확인했고 official test와 frozen probe는 열지 않았습니다.
 
-## Matched-duration v2 본실험
+## Classification-only v3 본실험
 
-본실험은 10시간 제한을 지키기 위해 encoder seed 하나씩 독립 issue로 실행합니다.
-각 shard는 네 연결 방식의 300 epoch 분류, validation checkpoint 선택, frozen probe
-`5 seeds × 3 LR`, 모든 선택 완료 뒤 official test를 포함합니다. Seed 1의 결과와
-관계없이 seed 2와 3도 같은 설정으로 실행합니다.
+Issue 776 smoke 자체가 이미 classification-only(`official_test=0`,
+`frozen_probe=0`)였으므로 추가 smoke는 반복하지 않습니다. 본실험도 원인 분석의
+핵심 범위에 맞춰 frozen probe를 제외했습니다. Encoder seed 하나씩 독립 issue로
+실행하며, 각 shard는 네 연결 방식의 300 epoch 분류와 validation checkpoint 선택,
+네 선택이 모두 끝난 뒤 official classification test만 포함합니다. Seed 1의 결과와
+관계없이 seed 2와 3도 같은 설정으로 실행합니다. Segmentation mask archive는
+다운로드하거나 읽지 않습니다.
 
 ```bash
-bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_matched_full_b128.sh 1
+bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_classification_full_b128.sh 1
 ```
+
+Probe를 포함했던 matched-duration v2 full 실행기는 실제 실행 전에 제거했습니다.
+필요할 경우 classification 결과를 확인한 뒤 별도 버전의 후속 공간정보 분석으로만
+다시 설계합니다.
 
 ## 기존 동적 종료 본실험 보류
 
@@ -93,7 +100,7 @@ bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_fu
 ```
 
 기존 동적 controller v1 결과만으로 레이어 연결의 효과를 결론내리지 않습니다.
-이후 비교는 위 matched-duration v2만 사용합니다.
+이후 비교는 위 classification-only v3만 사용합니다.
 
 Git에는 코드·프로토콜·정리된 본실험 표·checkpoint 해시 manifest만 반영합니다.
 본실험 checkpoint와 원시 결과 archive는 GitHub Release로 보존하고, dataset,

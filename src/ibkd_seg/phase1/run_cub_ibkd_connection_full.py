@@ -17,7 +17,14 @@ from typing import Any, Sequence
 
 import torch
 
-from .cub_data import DATASET_NAME, NUM_CLASSES, build_official_test_loader
+from .cub_data import (
+    DATASET_NAME,
+    NUM_CLASSES,
+    build_official_test_loader,
+    build_stratified_split,
+    ensure_cub200,
+    read_records,
+)
 from .cub_loader_profiles import L0_CURRENT_STRONG
 from .cub_probe_data import (
     CubProbeRecord,
@@ -63,6 +70,12 @@ EXPECTED_MATCHED_PROTOCOL_SHA256 = (
 EXPECTED_MATCHED_EXECUTION_SHA256 = (
     "30ef6886128a23bce5ee991ce55060cff93f2e74761397203dd8310660e52572"
 )
+EXPECTED_CLASSIFICATION_PROTOCOL_SHA256 = (
+    "d993075479b737e7e41643bbe54681c23bdb032478632753ec10661f45fdf588"
+)
+EXPECTED_CLASSIFICATION_EXECUTION_SHA256 = (
+    "033d8882b2a1686ce39eaba0751410b485d0ad4b8c058cafaeef96202fe04a40"
+)
 EXPECTED_BASE_SHA256 = (
     "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
 )
@@ -93,10 +106,28 @@ MATCHED_CLASSIFICATION_PURPOSE = (
 MATCHED_PROBE_PURPOSE = (
     "phase1_cub_r50_224_main_l0_ibkd_connection_matched_full_probe_v2"
 )
+CLASSIFICATION_ONLY_PURPOSE = (
+    "phase1_cub_r50_224_main_l0_ibkd_connection_classification_full_student_v3"
+)
 
 
 def log(message: str = "") -> None:
     print(message, flush=True)
+
+
+def _is_matched_duration_protocol(protocol_sha256: str) -> bool:
+    return protocol_sha256 in {
+        EXPECTED_MATCHED_PROTOCOL_SHA256,
+        EXPECTED_CLASSIFICATION_PROTOCOL_SHA256,
+    }
+
+
+def _classification_purpose(protocol_sha256: str) -> str:
+    if protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256:
+        return CLASSIFICATION_ONLY_PURPOSE
+    if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256:
+        return MATCHED_CLASSIFICATION_PURPOSE
+    return CLASSIFICATION_PURPOSE
 
 
 def _resolve_repository_path(value: str) -> Path:
@@ -267,6 +298,131 @@ def _validate_matched_configs(
     return base, base_path
 
 
+def _validate_classification_configs(
+    protocol: dict[str, Any],
+    protocol_path: Path,
+    execution: dict[str, Any],
+    execution_path: Path,
+    encoder_seed: int,
+) -> tuple[dict[str, Any], Path]:
+    if file_sha256(execution_path) != EXPECTED_CLASSIFICATION_EXECUTION_SHA256:
+        raise RuntimeError("classification-only execution config SHA-256 changed")
+    base_path = (
+        REPOSITORY_ROOT
+        / "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json"
+    )
+    base = _load_json(base_path)
+    dataset = protocol.get("dataset", {})
+    student = protocol.get("student", {})
+    guidance = protocol.get("guidance", {})
+    smoke = protocol.get("smoke_gate", {})
+    checks = {
+        "protocol_id": protocol.get("protocol_id")
+        == "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_classification_only_full_v3",
+        "scope": protocol.get("scientific_result") is True
+        and protocol.get("scope")
+        == {
+            "classification_only": True,
+            "frozen_probe_runs": 0,
+            "segmentation_metrics": False,
+        },
+        "smoke_gate": smoke.get("source_h200_issue") == 776
+        and smoke.get("smoke_protocol_sha256")
+        == "b0ec4af0f1eb350725fdc14d33be9ea09446dd9143cbe477accb3ae568fc897d"
+        and smoke.get("variants_complete") == 4
+        and smoke.get("cross_gates_complete") == 6
+        and smoke.get("frozen_probe_runs") == 0
+        and smoke.get("classification_settings_unchanged") is True,
+        "base": base_path.is_file()
+        and file_sha256(base_path) == EXPECTED_BASE_SHA256,
+        "dataset": dataset.get("name") == DATASET_NAME
+        and dataset.get("train") == 5394
+        and dataset.get("validation") == 600
+        and dataset.get("official_test") == 5794
+        and dataset.get("split_seed") == 2027
+        and dataset.get("validation_image_ids_sha256")
+        == EXPECTED_VALIDATION_HASH
+        and dataset.get("loader_profile") == L0_CURRENT_STRONG
+        and dataset.get("input_size") == 224,
+        "teacher": protocol.get("teacher", {}).get("source_h200_issue") == 722
+        and protocol.get("teacher", {}).get("checkpoint_sha256")
+        == EXPECTED_TEACHER_SHA256
+        and protocol.get("teacher", {}).get("model_state_sha256")
+        == EXPECTED_TEACHER_STATE_SHA256,
+        "classification": student.get("batch_size") == 128
+        and student.get("encoder_seeds") == [1, 2, 3]
+        and student.get("epochs") == 300
+        and student.get("fusion_ratio_lambda") == 0.25
+        and student.get("precision") == "float32"
+        and protocol.get("aggregation_variants") == list(AGGREGATION_VARIANTS),
+        "fixed_guidance": guidance.get("beta_on") == 2.5
+        and guidance.get("policy") == "fixed_common_horizon"
+        and guidance.get("active_epochs_inclusive") == [1, 123]
+        and guidance.get("beta_zero_from_epoch") == 124
+        and guidance.get("adaptive_controller_selects_stop") is False,
+        "test_policy": protocol.get("official_test_policy", {}).get(
+            "selection_uses_test"
+        )
+        is False
+        and protocol.get("official_test_policy", {}).get(
+            "evaluations_per_seed"
+        )
+        == 4,
+        "execution_id": execution.get("execution_id")
+        == "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_classification_only_full_execution_v3",
+        "execution_ready": str(execution.get("status", "")).startswith(
+            "ready_for_unconditional_three_seed_classification_full"
+        )
+        and execution.get("release_decision", {}).get("source_h200_issue") == 776
+        and execution.get("release_decision", {}).get(
+            "classification_settings_changed_from_smoke"
+        )
+        is False
+        and execution.get("release_decision", {}).get(
+            "frozen_probe_removed_from_full_scope"
+        )
+        is True
+        and execution.get("release_decision", {}).get(
+            "all_encoder_seeds_run_regardless_of_earlier_results"
+        )
+        is True,
+        "execution_protocol": execution.get("scientific_protocol")
+        == {
+            "path": str(protocol_path.relative_to(REPOSITORY_ROOT)),
+            "sha256": EXPECTED_CLASSIFICATION_PROTOCOL_SHA256,
+        },
+        "seed_shards": [
+            (row.get("encoder_seed"), row.get("planned_issue_group"))
+            for row in execution.get("h200_shards", [])
+        ]
+        == [(1, 1), (2, 2), (3, 3)]
+        and encoder_seed in {1, 2, 3},
+        "runtime": execution.get("runtime")
+        == {
+            "requested_mig_slices": 7,
+            "ten_hour_limit_seconds": 36000,
+            "precision": "float32",
+            "num_workers": 0,
+        },
+        "per_shard_gate": execution.get("per_shard_completion_gate")
+        == {
+            "teacher_download_and_audit": 1,
+            "classification_students": 4,
+            "classification_validation_selections": 4,
+            "classification_official_test_evaluations": 4,
+            "frozen_probe_runs": 0,
+            "retained_new_checkpoints": 4,
+        },
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid classification-only CUB connection contract: "
+            + ", ".join(failures)
+        )
+    return base, base_path
+
+
 def _validate_configs(
     protocol: dict[str, Any],
     protocol_path: Path,
@@ -275,6 +431,14 @@ def _validate_configs(
     encoder_seed: int,
 ) -> tuple[dict[str, Any], Path]:
     protocol_sha256 = file_sha256(protocol_path)
+    if protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256:
+        return _validate_classification_configs(
+            protocol,
+            protocol_path,
+            execution,
+            execution_path,
+            encoder_seed,
+        )
     if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256:
         return _validate_matched_configs(
             protocol,
@@ -420,6 +584,7 @@ def _write_status(
     probe_tests_complete: int,
     active: str | None = None,
     failure: str | None = None,
+    classification_only: bool = False,
 ) -> None:
     _atomic_json_save(
         {
@@ -428,13 +593,14 @@ def _write_status(
             "classification_complete": classification_complete,
             "classification_expected": 4,
             "probe_candidates_complete": probe_candidates_complete,
-            "probe_candidates_expected": 60,
+            "probe_candidates_expected": 0 if classification_only else 60,
             "probe_selections_complete": probe_selections_complete,
-            "probe_selections_expected": 20,
+            "probe_selections_expected": 0 if classification_only else 20,
             "classification_tests_complete": classification_tests_complete,
             "classification_tests_expected": 4,
             "probe_tests_complete": probe_tests_complete,
-            "probe_tests_expected": 20,
+            "probe_tests_expected": 0 if classification_only else 20,
+            "classification_only": classification_only,
             "official_test_used_for_selection": False,
             "active": active,
             "failure": failure,
@@ -480,11 +646,7 @@ def _load_encoder(
     metadata = payload.get("metadata", {})
     mode = str(row["aggregation_mode"])
     expected = {
-        "purpose": (
-            MATCHED_CLASSIFICATION_PURPOSE
-            if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
-            else CLASSIFICATION_PURPOSE
-        ),
+        "purpose": _classification_purpose(protocol_sha256),
         "scientific_result": True,
         "confirmatory_main_result": False,
         "canonical_phase1_result_replaced": False,
@@ -507,8 +669,10 @@ def _load_encoder(
         "batch_profile_role": ROLE,
         "official_test_evaluations_at_checkpoint_write": 0,
     }
-    if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256:
+    if _is_matched_duration_protocol(protocol_sha256):
         expected["ibkd_fixed_guidance_epochs"] = 123
+    if protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256:
+        expected["classification_only_mechanism"] = True
     failures = [key for key, value in expected.items() if metadata.get(key) != value]
     aggregation = metadata.get("ibkd_aggregation")
     if not isinstance(aggregation, dict) or aggregation.get("mode") != mode:
@@ -555,7 +719,10 @@ def _train_classifiers(
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     root = args.output_dir / "classification" / "students"
-    matched_duration = protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+    matched_duration = _is_matched_duration_protocol(protocol_sha256)
+    classification_only = (
+        protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256
+    )
     for mode in AGGREGATION_VARIANTS:
         _write_status(
             args.output_dir,
@@ -567,6 +734,7 @@ def _train_classifiers(
             classification_tests_complete=0,
             probe_tests_complete=0,
             active=mode,
+            classification_only=classification_only,
         )
         run_name = (
             f"cub_r50_224_ibkd_lambda_0.25_{mode}_b128_full_300ep_"
@@ -647,6 +815,8 @@ def _train_classifiers(
         }
         if matched_duration:
             expected["ibkd_fixed_guidance_epochs"] = 123
+        if protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256:
+            expected["classification_only_mechanism"] = True
         failures = [key for key, value in expected.items() if summary.get(key) != value]
         controller = summary.get("controller_final") or {}
         if matched_duration and not (
@@ -715,6 +885,103 @@ def _train_classifiers(
         args.output_dir / "classification_selection_complete_before_test.json",
     )
     return rows
+
+
+def _evaluate_classification_only_test(
+    args: argparse.Namespace,
+    *,
+    protocol_sha256: str,
+    execution_sha256: str,
+    validation_hash: str,
+    classification_rows: list[dict[str, Any]],
+    device: torch.device,
+) -> list[dict[str, Any]]:
+    selection_marker = _load_json(
+        args.output_dir / "classification_selection_complete_before_test.json"
+    )
+    if not (
+        selection_marker.get("status") == "complete"
+        and selection_marker.get("completed_validation_selections") == 4
+        and selection_marker.get("expected_validation_selections") == 4
+        and selection_marker.get("official_test_accessed") is False
+        and selection_marker.get("fixed_guidance_epochs") == 123
+    ):
+        raise RuntimeError("classification-only pre-test selection gate failed")
+    _atomic_json_save(
+        {
+            "status": "complete",
+            "protocol_config_sha256": protocol_sha256,
+            "execution_config_sha256": execution_sha256,
+            "encoder_seed": args.encoder_seed,
+            "classification_validation_selections": 4,
+            "frozen_probe_runs": 0,
+            "official_test_accessed": False,
+        },
+        args.output_dir / "all_classification_selections_complete_before_test.json",
+    )
+    loader = build_official_test_loader(
+        args.data_dir,
+        eval_batch_size=args.eval_batch_size,
+        num_workers=args.num_workers,
+        device=device,
+    )
+    journal: list[dict[str, Any]] = []
+    for row in classification_rows:
+        model, audit = _load_encoder(
+            row,
+            protocol_sha256=protocol_sha256,
+            validation_hash=validation_hash,
+            device=device,
+        )
+        metrics = evaluate(
+            model,
+            loader,
+            device,
+            teacher=False,
+            num_classes=NUM_CLASSES,
+        )
+        del model
+        if not all(math.isfinite(float(value)) for value in metrics.values()):
+            raise RuntimeError("non-finite classification official-test metric")
+        row["official_test"] = metrics
+        journal.append(
+            {
+                "aggregation_mode": row["aggregation_mode"],
+                "encoder_checkpoint_sha256": audit["checkpoint_sha256"],
+                "metrics": metrics,
+                "official_test_evaluations": 1,
+            }
+        )
+        _atomic_json_save(
+            {
+                "status": "complete" if len(journal) == 4 else "in_progress",
+                "encoder_seed": args.encoder_seed,
+                "settings_locked_before_first_test": True,
+                "entries": journal,
+            },
+            args.output_dir / "classification" / "official_test_results.json",
+        )
+        _write_status(
+            args.output_dir,
+            status="running",
+            phase="classification_official_test_evaluation",
+            classification_complete=4,
+            probe_candidates_complete=0,
+            probe_selections_complete=0,
+            classification_tests_complete=len(journal),
+            probe_tests_complete=0,
+            active=str(row["aggregation_mode"]),
+            classification_only=True,
+        )
+        log(
+            "[MECHANISM_CLASSIFICATION_TEST] "
+            f"encoder_seed={args.encoder_seed} mode={row['aggregation_mode']} "
+            f"test_macro_top1={metrics['macro_top1']:.4f}"
+        )
+        torch.cuda.empty_cache()
+    if len(journal) != 4:
+        raise RuntimeError("classification-only official-test gate failed")
+    return journal
 
 
 def _train_probes(
@@ -1371,7 +1638,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
     protocol_sha256 = file_sha256(args.protocol_config)
     execution_sha256 = file_sha256(args.execution_config)
-    matched_duration = protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+    matched_duration = _is_matched_duration_protocol(protocol_sha256)
+    classification_only = (
+        protocol_sha256 == EXPECTED_CLASSIFICATION_PROTOCOL_SHA256
+    )
     if matched_duration and args.num_workers != 0:
         raise RuntimeError("matched-duration full requires num_workers=0")
     device = torch.device("cuda")
@@ -1386,26 +1656,49 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         probe_selections_complete=0,
         classification_tests_complete=0,
         probe_tests_complete=0,
+        classification_only=classification_only,
     )
     log("=" * 88)
     log("CUB PHASE 1 — MAIN-L0 iBKD CONNECTION MECHANISM FULL")
     log("=" * 88)
     log(
         f"[MECHANISM_FULL_POLICY] encoder_seed={args.encoder_seed} "
-        "variants=4 classification_epochs=300 probe_seeds=5 probe_lrs=3 "
-        "probe_epochs=100 official_test_after_all_validation_selections=true "
+        "variants=4 classification_epochs=300 "
+        f"classification_only={str(classification_only).lower()} "
+        f"frozen_probe_runs={0 if classification_only else 20} "
+        "official_test_after_all_validation_selections=true "
         f"matched_duration={str(matched_duration).lower()} "
         f"fixed_guidance_epochs={123 if matched_duration else 'adaptive'}"
     )
 
-    partitions, split_manifest, dataset_source = load_train_validation_records(
-        args.data_dir, download=True
-    )
-    records = {
-        "train": partitions["train"],
-        "validation": partitions["validation"],
-    }
-    counts = {key: len(value) for key, value in records.items()}
+    if classification_only:
+        dataset_root = ensure_cub200(args.data_dir, download=True)
+        official_train = [
+            record for record in read_records(dataset_root) if record.is_train
+        ]
+        train_indices, validation_indices, split_manifest = build_stratified_split(
+            official_train
+        )
+        counts = {
+            "train": len(train_indices),
+            "validation": len(validation_indices),
+        }
+        records: dict[str, list[CubProbeRecord]] = {}
+        dataset_source = {
+            "dataset": DATASET_NAME,
+            "dataset_root": str(dataset_root),
+            "classification_images_only": True,
+            "segmentation_annotations_loaded": False,
+        }
+    else:
+        partitions, split_manifest, dataset_source = load_train_validation_records(
+            args.data_dir, download=True
+        )
+        records = {
+            "train": partitions["train"],
+            "validation": partitions["validation"],
+        }
+        counts = {key: len(value) for key, value in records.items()}
     validation_hash = str(split_manifest["validation_image_ids_sha256"])
     if counts != {"train": 5394, "validation": 600}:
         raise RuntimeError(f"unexpected train/validation counts: {counts}")
@@ -1450,6 +1743,143 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         teacher_hash=teacher_hash,
         device=device,
     )
+    if classification_only:
+        classification_journal = _evaluate_classification_only_test(
+            args,
+            protocol_sha256=protocol_sha256,
+            execution_sha256=execution_sha256,
+            validation_hash=validation_hash,
+            classification_rows=classification_rows,
+            device=device,
+        )
+        classification_flat = _classification_flat_rows(classification_rows)
+        completion = {
+            "teacher_download_and_audit": 1,
+            "classification_students": len(classification_rows),
+            "classification_validation_selections": len(classification_rows),
+            "classification_official_test_evaluations": len(
+                classification_journal
+            ),
+            "frozen_probe_runs": 0,
+            "retained_new_checkpoints": len(classification_rows),
+        }
+        if completion != execution["per_shard_completion_gate"]:
+            raise RuntimeError(
+                f"classification-only completion gate failed: {completion!r}"
+            )
+        manifest = {
+            "count_including_external_teacher": 1 + len(classification_rows),
+            "retained_new_checkpoint_count": len(classification_rows),
+            "entries": [
+                {
+                    "kind": "external_shared_teacher",
+                    "source_h200_issue": 722,
+                    "path": str(args.teacher_checkpoint.resolve()),
+                    "sha256": teacher_hash,
+                }
+            ]
+            + [
+                {
+                    "kind": "classification_encoder",
+                    "aggregation_mode": row["aggregation_mode"],
+                    "encoder_seed": row["encoder_seed"],
+                    "path": row["checkpoint_path"],
+                    "sha256": row["summary"]["checkpoint_sha256"],
+                }
+                for row in classification_rows
+            ],
+        }
+        _write_csv(
+            classification_flat,
+            args.output_dir / "classification_results.csv",
+        )
+        _atomic_json_save(manifest, args.output_dir / "checkpoint_manifest.json")
+        elapsed = time.monotonic() - started
+        summary = {
+            "status": "complete",
+            "scientific_result": True,
+            "posthoc_mechanism_analysis": True,
+            "classification_only": True,
+            "frozen_probe_runs": 0,
+            "encoder_seed": args.encoder_seed,
+            "protocol_config_sha256": protocol_sha256,
+            "execution_config_sha256": execution_sha256,
+            "input_lineage_id": "main_l0_v3",
+            "loader_profile": L0_CURRENT_STRONG,
+            "fixed_guidance_epochs": 123,
+            "classification": classification_flat,
+            "completion": completion,
+            "checkpoint_manifest": manifest,
+            "official_test_journal": classification_journal,
+            "official_test_used_for_training_or_selection": False,
+            "elapsed_seconds": elapsed,
+            "runtime": _runtime(device),
+        }
+        _atomic_json_save(summary, args.output_dir / "full_summary.json")
+        _write_status(
+            args.output_dir,
+            status="complete",
+            phase="complete",
+            classification_complete=4,
+            probe_candidates_complete=0,
+            probe_selections_complete=0,
+            classification_tests_complete=4,
+            probe_tests_complete=0,
+            classification_only=True,
+        )
+        terminal_results = []
+        for row in classification_rows:
+            flat = next(
+                item
+                for item in classification_flat
+                if item["aggregation_mode"] == row["aggregation_mode"]
+            )
+            terminal_results.append(
+                {
+                    "aggregation_mode": row["aggregation_mode"],
+                    "final_train_loss": row["summary"]["history"][-1][
+                        "train_loss"
+                    ],
+                    "selected_epoch": flat["selected_epoch"],
+                    "validation_macro_top1": flat["validation_macro_top1"],
+                    "test_macro_top1": flat["test_macro_top1"],
+                    "test_overall_top1": flat["test_overall_top1"],
+                    "test_top5": flat["test_top5"],
+                    "controller_stop_epoch": flat["controller_stop_epoch"],
+                }
+            )
+        log("")
+        log("[MECHANISM_CLASSIFICATION_RESULTS]")
+        for row in terminal_results:
+            log(
+                f"  {row['aggregation_mode']}: test_macro_top1="
+                f"{float(row['test_macro_top1']):.4f}% "
+                f"test_overall_top1={float(row['test_overall_top1']):.4f}%"
+            )
+        log(
+            "[MECHANISM_CLASSIFICATION_COMPLETE] "
+            f"status=pass encoder_seed={args.encoder_seed} "
+            "classification=4/4 classification_test=4/4 "
+            "frozen_probe=0 checkpoints=4/4 "
+            f"elapsed={format_duration(elapsed)}"
+        )
+        log(
+            "[MECHANISM_CLASSIFICATION_FINAL] "
+            + json.dumps(
+                {
+                    "status": "pass",
+                    "encoder_seed": args.encoder_seed,
+                    "fixed_guidance_epochs": 123,
+                    "classification": terminal_results,
+                    "frozen_probe_runs": 0,
+                    "completion": completion,
+                    "official_test_used_for_selection": False,
+                    "elapsed_seconds": elapsed,
+                },
+                sort_keys=True,
+            )
+        )
+        return summary
     probe_rows = _train_probes(
         args,
         base=base,

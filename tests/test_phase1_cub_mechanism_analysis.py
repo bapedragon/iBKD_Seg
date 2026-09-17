@@ -23,8 +23,9 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_matched_smoke import (
 )
 from ibkd_seg.phase1.run_cub_ibkd_connection_full import (
     AGGREGATION_VARIANTS,
+    EXPECTED_CLASSIFICATION_EXECUTION_SHA256,
+    EXPECTED_CLASSIFICATION_PROTOCOL_SHA256,
     EXPECTED_EXECUTION_SHA256,
-    EXPECTED_MATCHED_EXECUTION_SHA256,
     EXPECTED_MATCHED_PROTOCOL_SHA256,
     EXPECTED_PROTOCOL_SHA256,
     _classification_flat_rows,
@@ -86,17 +87,21 @@ MATCHED_FULL_CONFIG = (
     EXPERIMENT
     / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json"
 )
-MATCHED_FULL_EXECUTION_CONFIG = (
-    EXPERIMENT
-    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_execution_v2.json"
-)
 MATCHED_SMOKE_SCRIPT = (
     EXPERIMENT
     / "scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh"
 )
-MATCHED_FULL_SCRIPT = (
+CLASSIFICATION_FULL_CONFIG = (
     EXPERIMENT
-    / "scripts/run_main_l0_ibkd_connection_matched_full_b128.sh"
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_v3.json"
+)
+CLASSIFICATION_FULL_EXECUTION_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_execution_v3.json"
+)
+CLASSIFICATION_FULL_SCRIPT = (
+    EXPERIMENT
+    / "scripts/run_main_l0_ibkd_connection_classification_full_b128.sh"
 )
 AUDIT = (
     EXPERIMENT
@@ -201,55 +206,63 @@ def _replay_full_args(**changes: object) -> argparse.Namespace:
 
 
 class Phase1CubMechanismAnalysisTest(unittest.TestCase):
-    def test_matched_duration_full_is_released_and_seed_sharded(self) -> None:
+    def test_classification_only_full_reuses_issue776_smoke_without_probe(self) -> None:
         self.assertEqual(
-            file_sha256(MATCHED_FULL_CONFIG), EXPECTED_MATCHED_PROTOCOL_SHA256
+            file_sha256(CLASSIFICATION_FULL_CONFIG),
+            EXPECTED_CLASSIFICATION_PROTOCOL_SHA256,
         )
         self.assertEqual(
-            file_sha256(MATCHED_FULL_EXECUTION_CONFIG),
-            EXPECTED_MATCHED_EXECUTION_SHA256,
+            file_sha256(CLASSIFICATION_FULL_EXECUTION_CONFIG),
+            EXPECTED_CLASSIFICATION_EXECUTION_SHA256,
         )
-        protocol = json.loads(MATCHED_FULL_CONFIG.read_text(encoding="utf-8"))
+        protocol = json.loads(
+            CLASSIFICATION_FULL_CONFIG.read_text(encoding="utf-8")
+        )
         execution = json.loads(
-            MATCHED_FULL_EXECUTION_CONFIG.read_text(encoding="utf-8")
+            CLASSIFICATION_FULL_EXECUTION_CONFIG.read_text(encoding="utf-8")
         )
-        self.assertEqual(execution["release_decision"]["source_h200_issue"], 776)
-        self.assertEqual(execution["shared"]["fixed_guidance_epochs_inclusive"], 123)
+        self.assertEqual(
+            protocol["scope"],
+            {
+                "classification_only": True,
+                "frozen_probe_runs": 0,
+                "segmentation_metrics": False,
+            },
+        )
+        self.assertNotIn("frozen_probe", protocol)
+        self.assertEqual(protocol["smoke_gate"]["source_h200_issue"], 776)
+        self.assertTrue(
+            execution["release_decision"]["frozen_probe_removed_from_full_scope"]
+        )
         for seed in (1, 2, 3):
-            base, base_path = _validate_configs(
+            _validate_configs(
                 protocol,
-                MATCHED_FULL_CONFIG,
+                CLASSIFICATION_FULL_CONFIG,
                 execution,
-                MATCHED_FULL_EXECUTION_CONFIG,
+                CLASSIFICATION_FULL_EXECUTION_CONFIG,
                 seed,
             )
-            self.assertTrue(base_path.is_file())
-            self.assertIn("frozen_probe", base)
             for mode in AGGREGATION_VARIANTS:
                 validate_full_args(
                     _full_args(
                         seed=seed,
                         ibkd_aggregation_mode=mode,
                         ibkd_fixed_guidance_epochs=123,
-                        protocol_config=MATCHED_FULL_CONFIG,
+                        protocol_config=CLASSIFICATION_FULL_CONFIG,
                         num_workers=0,
                     )
                 )
-        for fixed_epoch in (None, 103, 124):
-            with self.subTest(fixed_epoch=fixed_epoch):
-                with self.assertRaisesRegex(ValueError, "epoch 123"):
-                    validate_full_args(
-                        _full_args(
-                            ibkd_fixed_guidance_epochs=fixed_epoch,
-                            protocol_config=MATCHED_FULL_CONFIG,
-                            num_workers=0,
-                        )
-                    )
-        script = MATCHED_FULL_SCRIPT.read_text(encoding="utf-8")
-        self.assertIn('encoder_seed="${1:-}"', script)
-        self.assertIn("matched_full_execution_v2.json", script)
+        script = CLASSIFICATION_FULL_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("connection_classification_full_v3.json", script)
         self.assertIn("--num-workers 0", script)
-        self.assertTrue(MATCHED_FULL_SCRIPT.stat().st_mode & 0o111)
+        self.assertNotIn("probe", script.lower())
+        self.assertTrue(CLASSIFICATION_FULL_SCRIPT.stat().st_mode & 0o111)
+        run_source = inspect.getsource(run)
+        self.assertLess(
+            run_source.index("if classification_only:"),
+            run_source.index("probe_rows = _train_probes"),
+        )
+        self.assertIn('"segmentation_annotations_loaded": False', run_source)
 
     def test_matched_duration_smoke_is_locked_and_executable(self) -> None:
         self.assertEqual(

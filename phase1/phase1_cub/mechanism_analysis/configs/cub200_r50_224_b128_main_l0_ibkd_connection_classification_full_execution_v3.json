@@ -1,0 +1,61 @@
+{
+  "schema_version": 3,
+  "execution_id": "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_classification_only_full_execution_v3",
+  "status": "ready_for_unconditional_three_seed_classification_full_after_issue776",
+  "scientific_result": true,
+  "scientific_protocol": {
+    "path": "phase1/phase1_cub/mechanism_analysis/configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_v3.json",
+    "sha256": "d993075479b737e7e41643bbe54681c23bdb032478632753ec10661f45fdf588"
+  },
+  "release_decision": {
+    "source_h200_issue": 776,
+    "smoke_completion_marker": "MATCHED_CONNECTION_SMOKE_COMPLETE",
+    "smoke_variants_complete": 4,
+    "smoke_cross_gates_complete": 6,
+    "classification_settings_changed_from_smoke": false,
+    "frozen_probe_removed_from_full_scope": true,
+    "variant_selection_from_smoke": false,
+    "all_encoder_seeds_run_regardless_of_earlier_results": true,
+    "retain_smoke_outputs": false
+  },
+  "h200_shards": [
+    {"encoder_seed": 1, "planned_issue_group": 1},
+    {"encoder_seed": 2, "planned_issue_group": 2},
+    {"encoder_seed": 3, "planned_issue_group": 3}
+  ],
+  "per_shard_completion_gate": {
+    "teacher_download_and_audit": 1,
+    "classification_students": 4,
+    "classification_validation_selections": 4,
+    "classification_official_test_evaluations": 4,
+    "frozen_probe_runs": 0,
+    "retained_new_checkpoints": 4
+  },
+  "global_completion_gate": {
+    "completed_encoder_seed_shards": 3,
+    "classification_students": 12,
+    "classification_official_test_evaluations": 12,
+    "frozen_probe_runs": 0,
+    "retained_new_checkpoints": 12
+  },
+  "runtime": {
+    "requested_mig_slices": 7,
+    "ten_hour_limit_seconds": 36000,
+    "precision": "float32",
+    "num_workers": 0
+  },
+  "artifact_policy": {
+    "retain": [
+      "classification summaries",
+      "four validation-selected classification checkpoints",
+      "official classification test journal",
+      "run log"
+    ],
+    "discard": [
+      "smoke logs",
+      "smoke checkpoints",
+      "dataset archives",
+      "feature caches"
+    ]
+  }
+}

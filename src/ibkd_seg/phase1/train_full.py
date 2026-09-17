@@ -82,6 +82,9 @@ CUB_R50_MECHANISM_FULL_CONFIG_SHA256 = (
 CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256 = (
     "a2fadff0b93e1878b27cbd78e9249141b67202bcd6911ce27f4b19810ea3ca5b"
 )
+CUB_R50_MECHANISM_CLASSIFICATION_FULL_CONFIG_SHA256 = (
+    "d993075479b737e7e41643bbe54681c23bdb032478632753ec10661f45fdf588"
+)
 CUB_R50_MECHANISM_REPLAY_FULL_CONFIG_SHA256 = (
     "74a7d88e7cc23f428dbb82ac894699572fb6eed4970a2b8411aa04c9e30fae30"
 )
@@ -403,13 +406,22 @@ def validate_args(args: argparse.Namespace) -> None:
             if mechanism_protocol_sha256 not in {
                 CUB_R50_MECHANISM_FULL_CONFIG_SHA256,
                 CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256,
+                CUB_R50_MECHANISM_CLASSIFICATION_FULL_CONFIG_SHA256,
             }:
                 raise ValueError("CUB mechanism-ablation full protocol SHA-256 changed")
             matched_duration = (
                 mechanism_protocol_sha256
-                == CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256
+                in {
+                    CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256,
+                    CUB_R50_MECHANISM_CLASSIFICATION_FULL_CONFIG_SHA256,
+                }
             )
             expected_protocol_id = (
+                "cub200_phase1_r50_224_b128_main_l0_ibkd_"
+                "connection_classification_only_full_v3"
+                if mechanism_protocol_sha256
+                == CUB_R50_MECHANISM_CLASSIFICATION_FULL_CONFIG_SHA256
+                else
                 "cub200_phase1_r50_224_b128_main_l0_ibkd_"
                 "connection_matched_duration_full_v2"
                 if matched_duration
@@ -906,6 +918,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     protocol_config_sha256 = (
         file_sha256(args.protocol_config) if args.protocol_config is not None else None
     )
+    classification_only_mechanism = (
+        protocol_config_sha256
+        == CUB_R50_MECHANISM_CLASSIFICATION_FULL_CONFIG_SHA256
+    )
     teacher: nn.Module | None = None
     teacher_metadata: dict[str, Any] | None = None
     teacher_checkpoint_hash: str | None = None
@@ -1203,6 +1219,12 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             if scientific_cub_r50
             and mechanism_ablation_full
             and fixed_guidance_epochs == 123
+            and not classification_only_mechanism
+            else "phase1_cub_r50_224_main_l0_ibkd_connection_classification_full_student_v3"
+            if scientific_cub_r50
+            and mechanism_ablation_full
+            and fixed_guidance_epochs == 123
+            and classification_only_mechanism
             else "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
             if scientific_cub_r50 and mechanism_ablation_full
             else "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
@@ -1246,6 +1268,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
         "ibkd_fixed_guidance_epochs": fixed_guidance_epochs,
+        "classification_only_mechanism": classification_only_mechanism,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,
@@ -1372,6 +1395,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
         "ibkd_fixed_guidance_epochs": fixed_guidance_epochs,
+        "classification_only_mechanism": classification_only_mechanism,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,

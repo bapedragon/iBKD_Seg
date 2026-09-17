@@ -105,18 +105,36 @@ matched-duration v2입니다. 원래 현상의 canonical source인 issue 727 see
 epoch `1–123`에는 beta `2.5`, epoch `124–300`에는 beta `0`을 사용합니다. Smoke는
 두 full-data epoch만 실행하며 official test와 frozen probe를 열지 않습니다.
 
-- Full v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json`
+- Full v2 계약(실행하지 않고 v3로 대체):
+  `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json`
 - Smoke v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_smoke_v2.json`
 - Smoke 진입점: `scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh`
-- Full 진입점: `scripts/run_main_l0_ibkd_connection_matched_full_b128.sh <seed>`
-- Full 실행 release:
-  `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_execution_v2.json`
+- Probe를 포함했던 full v2 실행 release와 진입점은 실제 실행 전에 제거했습니다.
 
 Issue 776 smoke는 `variants=4/4`, `cross_gates=6/6`, `official_test=0`,
 `frozen_probe=0`으로 통과했습니다. 측정 최대 guided epoch 시간은 약 `40.87초`,
 peak reserved CUDA memory는 약 `17.34 GB`였습니다. 본실험은 seed별 한 issue로
-분리하고 MIG 7, `num_workers=0`을 유지합니다. 각 seed에서 분류 4개와 선택 probe
-20개를 완료한 뒤에만 official test를 평가합니다.
+분리하고 MIG 7, `num_workers=0`을 유지합니다. 이 smoke는 분류 실행 경로만
+검증했으며 probe를 수행하지 않았습니다.
+
+### Classification-only v3 결정
+
+레이어 연결이 분류 성능 상승의 원인인지 확인하는 핵심 질문에는 frozen probe가
+필요하지 않으므로 v2 full은 실행하지 않습니다. Issue 776 smoke의 분류 조건을 그대로
+유지하고 downstream probe만 제거한 v3를 사용합니다.
+
+- Full v3 계약:
+  `configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_v3.json`
+- Full v3 실행 release:
+  `configs/cub200_r50_224_b128_main_l0_ibkd_connection_classification_full_execution_v3.json`
+- H200 진입점:
+  `scripts/run_main_l0_ibkd_connection_classification_full_b128.sh <seed>`
+- seed별 완료 gate: 분류 `4/4`, official classification test `4/4`,
+  frozen probe `0`, 새 checkpoint `4/4`
+
+Official test는 seed 내 네 validation checkpoint 선택이 모두 끝난 뒤에만 각 checkpoint에
+한 번씩 평가합니다. 이 실험으로 공간정보 보존이나 segmentation 우위는 주장하지
+않습니다. CUB segmentation mask archive도 다운로드하거나 읽지 않습니다.
 
 아래 v1 계약은 기존 동적 controller 실행의 역사적 기록이며 v2 본실험에는 사용하지
 않습니다.
