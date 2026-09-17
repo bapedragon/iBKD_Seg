@@ -97,3 +97,11 @@ GPU를 공유하지 않습니다.
 고정합니다. 300-epoch 본실험 계약은
 [`configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_full_v1.json`](configs/cub200_r50_224_b128_main_l0_ibkd_controlled_aa_full_v1.json)에
 별도로 고정합니다.
+
+## 완료 결과
+
+입력·RNG·환경 통제 gate를 통과한 A/B의 validation-selected official-test macro
+Top-1은 각각 `24.7611%`, `25.5098%`로 차이는 `0.7487%p`였습니다. 선택 epoch는
+`259/162`, controller 종료 epoch는 `109/133`으로 완전히 같은 학습 궤적은
+아닙니다. 따라서 “bitwise 동일 재현”이 아니라 “통제된 두 실행이 같은 성능 범위에
+도달했고 issue 760의 10.4096% 저성능 이상 현상은 재현되지 않음”으로 해석합니다.

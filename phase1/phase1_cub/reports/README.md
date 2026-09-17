@@ -29,9 +29,3 @@ attention–GT 결과는
 전체 원시 증거는 Git history가 아닌 검증된
 [Release 자산](direct_spatial/resnet50_224_b128_guided_3seed_v2/artifact_release.json)에
 연결했습니다.
-
-H200 issue 716의 ResNet-56/32 v2 guided 결과는 제출 시점의 계약대로 완결됐지만,
-v3 확정 전의 구버전입니다. 결과와 55개 checkpoint는
-[v2 보존 보고서](legacy_resnet56_v2_guided/RESULTS.md)에 별도로 보존하며 v3
-6방법 비교에는 합치지 않습니다. 큰 checkpoint 묶음은 Git 객체가 아닌 각 보고서에
-연결된 GitHub Release 자산으로 관리합니다.

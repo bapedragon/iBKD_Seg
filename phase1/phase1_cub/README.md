@@ -15,12 +15,11 @@ checkpoint와 학습형 probe는 validation으로만 선택하고, official test
 | Scratch ResNet-50/224 Teacher | test macro Top-1 41.178% | [Teacher](reports/classification/resnet50_224_teacher_v3/RESULTS.md) |
 | Guided batch 128/64, seed 1 | 분류 iBKD-0.25 1위, probe LG 1위 | [Issue 727](reports/frozen_probe/resnet50_224_b128_b64_guided_seed1_v4/RESULTS.md) |
 | Guided batch 128, 3 seeds | 분류 iBKD-0.25 24.429%, probe LG 73.470%로 각각 1위 | [Issue 727+730](reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md) |
-| 직접 공간정보 진단, 3 seeds | Part PCK·CKA는 LG 1위; attention 평균은 iBKD-0.25 1위 | [Issue 737+739](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md) |
-| 이미지 loader L0/L1/L2 | 사전 주 지표 Part PCK에서 L2 선택 | [Loader 결과](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md) |
+| 직접 공간정보 진단, main-L0 3 seeds | 기존 issues 727/730 checkpoint 평가; Part PCK·CKA는 LG 1위 | [Issue 737+739](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md) |
+| 이미지 loader pilot-L0/L1/L2, seed 1 | 세 loader에서 encoder를 별도 재학습; Part PCK로 L2 선택 | [Loader 결과](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md) |
 | L2 guided 예비 본실험, seed 1 | 분류 LG 1위, probe ALG-w20 1위 | [L2 결과](image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md) |
-| main-L0 레이어 연결 사후 분석 | seed-1 canonical 재현 실패로 연결 방식 결론 보류 | [Mechanism](mechanism_analysis/README.md) |
-| main-L0 제어 A/A | 동일 iBKD-0.25 CUDA 경로 두 실행의 입력·RNG 통제 및 수치 변동 smoke 준비 | [Reproducibility](reproducibility/README.md) |
-| ResNet-56/32 구버전 | 완결된 별도 보존 결과; v3와 합치지 않음 | [Legacy v2](reports/legacy_resnet56_v2_guided/RESULTS.md) |
+| main-L0 레이어 연결 사후 분석 | 공통 guidance 123 epoch·4연결 방식 classification-only 본실험 진행 중 | [Mechanism](mechanism_analysis/README.md) |
+| main-L0 제어 A/A | 완료; 입력·RNG 통제 확인, test 24.761/25.510%로 동일 범위 재현 | [Reproducibility](reproducibility/README.md) |
 
 현재 CUB 결과는 iBKD가 LG/ALG보다 공간정보를 전반적으로 더 잘 보존한다는 가설을
 지지하지 않습니다. Guided 3-seed frozen probe와 주 직접지표 Part PCK 모두 LG가
@@ -29,6 +28,13 @@ checkpoint와 학습형 probe는 validation으로만 선택하고, official test
 
 실험 계보와 `main-L0`, `pilot-L0`, `L2 preliminary`의 구분은
 [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md)를 기준으로 합니다.
+
+`main-L0 직접 공간정보 진단`과 loader 실험의 `pilot-L0`는 같은 L0 transform과
+같은 네 guided 방법을 사용하지만 같은 실행은 아닙니다. 전자는 이미 완료된
+main-L0 3-seed checkpoint를 재사용해 official test까지 진단했고, 후자는 L1/L2와
+paired 비교를 위해 seed 1 encoder를 새로 학습해 validation에서만 평가했습니다.
+따라서 pilot-L0는 loader 비교의 기준군이며 main-L0 결과와 합치거나 중복 결과로
+취급하지 않습니다.
 
 ## 본학습 재현 진입점
 

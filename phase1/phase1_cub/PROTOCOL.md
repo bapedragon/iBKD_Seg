@@ -75,9 +75,9 @@ Teacher 결과와 hash는
 ## 사후 재현성 gate
 
 main-L0 iBKD λ=0.25 seed 1의 반복 실행에서 분류 정확도와 guidance controller
-종료 시점이 크게 달랐습니다. 따라서 레이어 연결 원인 분석을 계속하기 전에
-[제어 A/A 재현성 프로토콜](reproducibility/PROTOCOL.md)의 2-epoch smoke와
-300-epoch full A/A를 순서대로 수행해야 합니다. iBKD의 CUDA deformable-conv
-backward는 결정론 구현이 없어 완전 bitwise 결정론을 주장하지 않으며, 동일한
-입력·RNG 아래 장기 결과 변동을 직접 측정합니다. 이 진단은 기존 v3 주 결과를
-덮어쓰지 않으며 official test나 방법 선택에 사용하지 않습니다.
+종료 시점이 크게 달라 [제어 A/A 재현성 프로토콜](reproducibility/PROTOCOL.md)의
+2-epoch smoke와 300-epoch full A/A를 수행했습니다. 입력·RNG 통제 gate는
+통과했고, 두 full 실행의 test macro Top-1은 `24.7611%`와 `25.5098%`였습니다.
+수치가 bitwise 동일하지는 않지만 같은 성능 범위였고 issue 760의 `10.4096%`
+저성능은 재현되지 않았습니다. 이 진단은 기존 v3 주 결과를 덮어쓰지 않으며
+official test나 방법 선택에 사용하지 않습니다.

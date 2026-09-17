@@ -9,7 +9,6 @@
   분류와 frozen probe
 - `run_r50_224_direct_spatial_full_b128_seed1.sh`: seed 1 직접 공간정보 진단
 - `run_r50_224_direct_spatial_full_b128_seeds2_3.sh`: seed 2·3 직접 공간정보 진단
-- `run_full_guided_b128.sh`: ResNet-56/32 legacy guided 본실험
 
 이미지 loader 관련 진입점은
 [`../image_loader_experiment/scripts/`](../image_loader_experiment/scripts/)에 있습니다.
@@ -22,6 +21,5 @@
 - `curate_r50_v5_guided_seeds2_3_result.py`: issue 730 결과 감사·정리
 - `curate_r50_direct_spatial_seed1_v2_result.py`: issue 737 결과 감사·정리
 - `curate_r50_direct_spatial_seed2_3_v2_result.py`: issue 739 결과 감사·정리
-- `curate_resnet56_v2_guided_result.py`: legacy issue 716 결과 감사·정리
 
 완료된 본실험의 선행 실행 점검용 shell은 보존하지 않습니다.

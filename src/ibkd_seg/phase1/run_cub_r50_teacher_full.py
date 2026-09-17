@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Train the locked CUB Phase 1 ResNet-50/224 scratch teacher.
 
-This entry point is intentionally separate from the legacy ResNet-56/32
-trainer.  It accepts no hyperparameter overrides: every scientific setting is
-read from, and checked against, the locked v3 protocol before data or CUDA
+This entry point accepts no hyperparameter overrides: every scientific setting
+is read from, and checked against, the locked v3 protocol before data or CUDA
 training is started.
 """
 

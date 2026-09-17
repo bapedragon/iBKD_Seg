@@ -101,9 +101,6 @@ iBKD-0.5 `15.426±1.858%`이고 CKA도 LG가 가장 높았습니다. Attention �
 지지하지 않습니다. 상세 결과는
 [3-seed 직접진단 보고서](phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md)에 있습니다.
 
-이전 ResNet-56/32 v2 guided shard도 H200 issue 716에서 완료됐지만, v3로 교체한 뒤
-회수한 구버전 결과이므로 현재 결과와 합치지 않고 참고 자료로만 보존합니다.
-
 ## Phase 2 — 공간적 대조 실험
 
 **상태: 진입 보류.** Phase 1에서 검증하려던 iBKD의 LG/ALG 우위가 관측되지 않아

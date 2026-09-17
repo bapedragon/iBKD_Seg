@@ -28,10 +28,12 @@
 3. H200 smoke에서 분류 4/4와 probe 후보 12/12의 계산 경로·메모리 확인 완료
 4. smoke 수치로 조건을 고르지 않았으며 smoke 로그와 checkpoint는 Git에서 제거
 5. Seed-1 본실험에서 `learned_all` 기준 경로가 기존 main-L0 성능을 재현하지
-   못했고 연결 조건별 controller 종료 epoch도 달라 인과 해석을 보류
-6. [제어 A/A 재현성 gate](../reproducibility/README.md)를 먼저 수행
-7. 제어 A/A 결과 뒤에는 기존 네 조건을 그대로 재실행하지 않고, issue 760의
-   `learned_all` 경로 하나만 먼저 재현하는 진단을 추가
+   못했고 연결 조건별 controller 종료 epoch도 달라 해당 v1 인과 해석을 보류
+6. [제어 A/A 재현성 gate](../reproducibility/README.md) 완료: test
+   `24.7611/25.5098%`, issue 760의 `10.4096%` 저성능은 재현되지 않음
+7. Issue 770 단일 replay도 `26.3989%`로 정상 범위 복귀 확인
+8. 공통 guidance 기간을 123 epoch로 고정한 네 연결 방식 classification-only
+   v3 본실험 진행 중
 
 ## Issue 760 `learned_all` 단일 경로 재현
 

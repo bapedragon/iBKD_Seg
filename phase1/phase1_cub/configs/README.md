@@ -9,7 +9,6 @@
 | `cub200_r50_224_b128_seed2_3_direct_spatial_full_v2.json` | 직접 공간정보 진단 seed 2·3 본실험 |
 | `cub200_r50_224_b128_seed1_direct_spatial_metric_contract_v1.json` | Seed 1 metric 정의와 checkpoint inventory의 불변 계약 |
 | `cub200_r50_224_b128_seed2_3_direct_spatial_metric_contract_v2.json` | Seed 2·3 metric 정의와 checkpoint inventory의 불변 계약 |
-| `cub200_b128_full_v2.json` | ResNet-56/32 legacy 본실험 보존 설정 |
 
 이미지 loader 관련 본실험 설정은
 [`../image_loader_experiment/configs/`](../image_loader_experiment/configs/)에만 둡니다.
