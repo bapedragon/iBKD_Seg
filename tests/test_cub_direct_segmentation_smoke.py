@@ -52,6 +52,36 @@ class CubDirectSegmentationSmokeContract(unittest.TestCase):
         self.assertEqual(config["primary_metric"], "two_class_miou")
         self.assertEqual(config["train_samples"], config["steps"] * config["batch_size"])
 
+    def test_window30_smoke_changes_only_controller_window(self):
+        repository = Path(__file__).resolve().parents[1]
+        candidate_path = (
+            repository
+            / "phase1/phase1_cub_Seg/configs/direct_segmentation_window30_smoke_v1.json"
+        )
+        script = (
+            repository
+            / "phase1/phase1_cub_Seg/scripts/run_direct_segmentation_window30_smoke.sh"
+        )
+        baseline = load_config(CONFIG)
+        candidate = load_config(candidate_path)
+        differences = {
+            key: (baseline[key], candidate[key])
+            for key in baseline
+            if baseline[key] != candidate[key]
+        }
+        self.assertEqual(
+            differences,
+            {
+                "protocol_id": (
+                    "cub200_direct_binary_segmentation_smoke_v1",
+                    "cub200_direct_binary_segmentation_window30_smoke_v1",
+                ),
+                "alg_window": (50, 30),
+            },
+        )
+        self.assertTrue(script.is_file())
+        self.assertIn(str(candidate_path.relative_to(repository)), script.read_text())
+
     def test_shared_decoder_supports_binary_output_without_changing_default(self):
         features = [
             torch.randn(2, channels, size, size)

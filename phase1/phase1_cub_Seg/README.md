@@ -7,6 +7,8 @@ Vanilla/LG/ALG/iBKD **real-data smoke**뿐이며 Phase gate 통과나 본실험 
 - H200 제출 입력안: [H200_SMOKE_ISSUE.md](H200_SMOKE_ISSUE.md)
 - 고정 smoke 설정: [configs/direct_segmentation_smoke_v1.json](configs/direct_segmentation_smoke_v1.json)
 - 실행 스크립트: [scripts/run_direct_segmentation_smoke.sh](scripts/run_direct_segmentation_smoke.sh)
+- window 30 진단 smoke 설정: [configs/direct_segmentation_window30_smoke_v1.json](configs/direct_segmentation_window30_smoke_v1.json)
+- window 30 진단 smoke 실행: [scripts/run_direct_segmentation_window30_smoke.sh](scripts/run_direct_segmentation_window30_smoke.sh)
 - 탐색 본학습 프로토콜: [FULL_PROTOCOL.md](FULL_PROTOCOL.md)
 - 본학습 설정: [configs/direct_segmentation_full_v1.json](configs/direct_segmentation_full_v1.json)
 - 본학습 실행: [scripts/run_direct_segmentation_full.sh](scripts/run_direct_segmentation_full.sh)

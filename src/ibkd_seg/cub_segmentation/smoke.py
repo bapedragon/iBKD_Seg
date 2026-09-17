@@ -584,6 +584,14 @@ def main():
         report["status"] = "passed"
         save_json(output / "smoke_summary.json", report)
         final_results = {
+            "protocol_id": config["protocol_id"],
+            "scientific_result": False,
+            "controller_configuration": {
+                "alg_window": config["alg_window"],
+                "alg_threshold": config["alg_threshold"],
+                "alg_warmup_epochs": config["alg_warmup_epochs"],
+                "ibkd_warmup_epochs": config["ibkd_warmup_epochs"],
+            },
             "teacher": {
                 "losses": report["teacher"]["losses"],
                 "diagnostic_validation": report["teacher"]["diagnostic_validation"],
@@ -600,7 +608,8 @@ def main():
         }
         print(
             "[CUB_DIRECT_SEGMENTATION_SMOKE_DONE] "
-            f"status=passed methods=4/4 scientific_result=false summary={output / 'smoke_summary.json'}",
+            f"status=passed methods=4/4 scientific_result=false "
+            f"alg_window={config['alg_window']} summary={output / 'smoke_summary.json'}",
             flush=True,
         )
         print(
