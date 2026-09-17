@@ -13,24 +13,61 @@ PCK@0.1이 주 직접지표이고 CKA와 attention–GT는 보조지표입니다
 | iBKD λ=0.25 | 20.109 ± 2.024% | 0.2946 ± 0.0179 | 0.3184 ± 0.0152 | 0.2816 ± 0.0546 | 0.5195 ± 0.0356 | 0.2093 ± 0.0083 |
 | iBKD λ=0.5 | 15.426 ± 1.858% | 0.3407 ± 0.0344 | 0.2351 ± 0.0311 | 0.2408 ± 0.0245 | 0.4956 ± 0.0165 | 0.2059 ± 0.0131 |
 
-## 사진 위 attention 정성 비교
+## 지표별 전체 시각 확인
 
-Issue 737에서 결과 확인 전에 고정한 image ID 8개를 모두 사용했습니다. 좋은 사례만
-사후 선택하지 않았으며, 모든 방법에 같은 encoder seed 1과 같은 이미지를
-적용했습니다. 왼쪽부터 원본, 초록색 GT foreground, LG·ALG-w20·iBKD 두 설정의
-CLS-to-patch attention rollout입니다. 붉은색이 강할수록 해당 위치에 attention이
-더 많이 모인 것입니다.
+### 1. Part PCK@0.1 · 정규화 위치오차
+
+Issue 737에서 결과 확인 전에 고정한 official-test image ID 8개를 모두 사용했습니다.
+왼쪽 열은 원본 사진의 **GT 15개 part(청록 원)**와 **정규화 기준 bbox(노란색)**이고,
+나머지 열은 같은 seed-1 encoder에 validation으로 선택한 probe seed 5개의 예측을 모두
+겹쳐 표시한 것입니다. **초록 ×는 PCK@0.1 정답, 빨강 ×는 오답**입니다. 각 사진 아래의
+`5-probe PCK`와 `norm. err`는 보이는 모든 part × probe seed 5개를 모아 계산했습니다.
+같은 위치의 ×는 서로 겹칠 수 있습니다.
+
+![고정 image ID 787, 2285, 3735, 5205의 part GT와 방법별 예측](qualitative_comparisons/part_localization_seed1_group1.png)
+
+![고정 image ID 6691, 8139, 9597, 11064의 part GT와 방법별 예측](qualitative_comparisons/part_localization_seed1_group2.png)
+
+이 두 그림은 표의 **Part PCK@0.1**과 **정규화 위치오차**가 실제 사진에서 무엇을
+측정하는지 보여줍니다. 최종 수치 자체는 8장 예시가 아니라 official test 전체와
+encoder seed 3개를 사용한 위 표를 기준으로 합니다.
+
+### 2. Spatial CKA block11
+
+CKA는 한 사진의 영역을 칠하는 지표가 아니라, 고정 validation 600장에서 student
+block11의 공간 feature와 ResNet-50 layer3 공간 feature가 얼마나 닮았는지를 측정한
+집계값입니다. 따라서 사진 overlay 대신 encoder seed별 값을 그대로 heatmap으로
+표시했습니다.
+
+![방법 및 encoder seed별 spatial CKA block11](qualitative_comparisons/cka_block11_three_seed_heatmap.png)
+
+### 3. Attention AP · Pointing · FG mass
+
+같은 고정 8장과 같은 seed-1 encoder를 사용했습니다. 왼쪽부터 원본, 초록색 GT
+foreground, LG·ALG-w20·iBKD 두 설정의 CLS-to-patch attention rollout입니다.
+붉은색이 강할수록 해당 위치에 attention이 더 많이 모인 것입니다.
 
 ![고정 image ID 787, 2285, 3735, 5205의 방법별 attention 비교](qualitative_comparisons/attention_method_comparison_seed1_group1.png)
 
 ![고정 image ID 6691, 8139, 9597, 11064의 방법별 attention 비교](qualitative_comparisons/attention_method_comparison_seed1_group2.png)
 
-이 그림은 표의 Attention AP·Pointing·FG mass를 직관적으로 확인하는 보조 자료입니다.
-Part PCK·정규화 위치오차는 part 좌표 예측 그림이 필요하고, CKA는 이미지별 mask가
-아니므로 이 attention 그림으로 대신 해석하지 않습니다. 또한 그림은 seed 1의 정성
-예시이며 최종 순위 판단은 위 3-seed 정량 평균을 기준으로 합니다. 생성 규칙·입력
-파일 hash·출력 hash는
-[qualitative manifest](qualitative_comparisons/manifest.json)에 고정했습니다.
+이 그림은 표의 **Attention AP·Pointing·FG mass**를 직관적으로 확인하는 보조
+자료입니다. 사진 예시는 seed 1이고 최종 순위 판단은 위 3-seed 정량 평균을
+기준으로 합니다.
+
+| 표의 지표 | 확인할 그림 |
+|---|---|
+| Part PCK@0.1 | part 그림의 초록/빨강 ×와 `5-probe PCK` |
+| 정규화 위치오차 | part 그림의 GT–예측 거리와 `norm. err` |
+| CKA block11 | encoder seed 1·2·3 CKA heatmap |
+| Attention AP | attention rollout과 전체 GT patch의 정렬 정도 |
+| Pointing | attention 최고점이 GT foreground 안에 있는지 |
+| FG mass | 전체 attention 중 GT foreground 내부에 들어간 비율 |
+
+part·CKA 생성 규칙, 사진별 집계값, checkpoint hash, 출력 hash는
+[전체 시각화 manifest](qualitative_comparisons/complete_visualization_manifest.json)에,
+attention 입력·출력 hash는
+[attention manifest](qualitative_comparisons/manifest.json)에 고정했습니다.
 
 ## 감사
 

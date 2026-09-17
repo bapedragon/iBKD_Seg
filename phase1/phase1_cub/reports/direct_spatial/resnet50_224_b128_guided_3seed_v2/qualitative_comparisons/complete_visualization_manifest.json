@@ -1,0 +1,571 @@
+{
+  "schema_version": 1,
+  "role": "complete_direct_spatial_visual_evidence",
+  "selection_policy": "all eight official-test image ids fixed before issue 737 evaluation; no post-hoc qualitative example selection",
+  "fixed_image_ids": [
+    787,
+    2285,
+    3735,
+    5205,
+    6691,
+    8139,
+    9597,
+    11064
+  ],
+  "dataset": {
+    "name": "CUB-200-2011",
+    "official_archive_sha256": "0c685df5597a8b24909f6a7c9db6d11e008733779a671760afef78feb49bf081",
+    "part_names": [
+      "back",
+      "beak",
+      "belly",
+      "breast",
+      "crown",
+      "forehead",
+      "left eye",
+      "left leg",
+      "left wing",
+      "nape",
+      "right eye",
+      "right leg",
+      "right wing",
+      "tail",
+      "throat"
+    ]
+  },
+  "part_localization": {
+    "encoder_seed": 1,
+    "probe_seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "probe_selection": "validation_micro_PCK_at_0.1",
+    "display_aggregation": "all five selected probe predictions are drawn; per-image footer pools all valid keypoints across the same five probe seeds",
+    "supports_metrics": [
+      "part_PCK_at_0.1",
+      "mean_normalized_location_error"
+    ],
+    "checkpoint_sources": {
+      "lg": {
+        "student_checkpoint_sha256": "27029c5d1042e5b118a679cc6465d5b9763c1c83e9fb7e352cbd336a05582414",
+        "student_model_state_sha256": "ed12d72166eb48d9897f1d37d7b81ebed3ccabb67adec3ef81480f1f690c0068",
+        "part_probes": [
+          {
+            "probe_seed": 1,
+            "checkpoint_sha256": "95528f58ce5186f94cc0d88a0ffb28752942080cd39e2b0bb5c28d82989f7a05"
+          },
+          {
+            "probe_seed": 2,
+            "checkpoint_sha256": "33ed74bc1b3edcfbb5bccced46ae3adba482ed55f87c9930f8c121ed8f449296"
+          },
+          {
+            "probe_seed": 3,
+            "checkpoint_sha256": "438934fd9f6e11bfc52dbe07c32f567f0262a17566087608157654bd630391ed"
+          },
+          {
+            "probe_seed": 4,
+            "checkpoint_sha256": "8fa111f22336ef0601216fc70de0aed38a43a29394cb23051cb5994c58a99073"
+          },
+          {
+            "probe_seed": 5,
+            "checkpoint_sha256": "f6a99ef68fd3ea8a728af2f051d7d64fd49df2ca3ef62ee938e3f26ff4383a8e"
+          }
+        ]
+      },
+      "alg_warmup20": {
+        "student_checkpoint_sha256": "6ba968d3e4bfe9a5da6807b3fc4cdbccc41c5f45b12b5f613b61ebce2b50abc9",
+        "student_model_state_sha256": "ead91c40f3222482fcb3f91942e0cacbee8681cd1afcb02f02389b4b6fec44f2",
+        "part_probes": [
+          {
+            "probe_seed": 1,
+            "checkpoint_sha256": "2012f1aaa2043675adcaa8a83f87ac2b7fbad1c1148c3bf81b22c2299c62232d"
+          },
+          {
+            "probe_seed": 2,
+            "checkpoint_sha256": "c683ee6e6f871ca988e1a88458edb647b414e8cf57b17a699daca4c09c6b4beb"
+          },
+          {
+            "probe_seed": 3,
+            "checkpoint_sha256": "191a07808042ed579e2df619887f214e3f9e79d97fe1cc20714db046609571ba"
+          },
+          {
+            "probe_seed": 4,
+            "checkpoint_sha256": "7126033bdbe9d37d2db311d46cc93d038ee4cf3f3ddb784190ec10dd0f20e827"
+          },
+          {
+            "probe_seed": 5,
+            "checkpoint_sha256": "7554b06f0ee998e831a4384309efa4168e488dc1b527c899d870ebb1b6d427ae"
+          }
+        ]
+      },
+      "ibkd_lambda_0.25": {
+        "student_checkpoint_sha256": "fb8c141be32e101f8ad91689ea809d8ecc8d9701ef7b843efdcd88c3b3ac7bd8",
+        "student_model_state_sha256": "d2f3d0e6789d2e0ffcadf4a1aa27ca69dce5674580e1aa14fb95ec525cf1b681",
+        "part_probes": [
+          {
+            "probe_seed": 1,
+            "checkpoint_sha256": "d30fe3ecc8ab2c98933aa8ccc88dce159bd1c11e73a9030327e66317562cbf78"
+          },
+          {
+            "probe_seed": 2,
+            "checkpoint_sha256": "3018aa818e227dbc1ebfebb65f4d8875871190432c96d481cf4cfa6cec6c6216"
+          },
+          {
+            "probe_seed": 3,
+            "checkpoint_sha256": "650341f9d45414646c1bdb7f88e725605765c144987d48a05b97ae4f494d208c"
+          },
+          {
+            "probe_seed": 4,
+            "checkpoint_sha256": "d3e5419a2d850c0d9abdd09bc9d875bdaa2cbcafeab31b64c22eceb48860caf6"
+          },
+          {
+            "probe_seed": 5,
+            "checkpoint_sha256": "bdca45aa59257cce009521a1d7e2b2febe8c31258c2af51d8fa36db36cc6fb8a"
+          }
+        ]
+      },
+      "ibkd_lambda_0.5": {
+        "student_checkpoint_sha256": "d9dd2e97e39783cb813467c2f263aa7b41bf4b5c8f6bf866dfa8e7afa60f4979",
+        "student_model_state_sha256": "7a4cc97388c8b6856ba8240c3560e9cf8e53a52de24ec2507a3bb27cba85146d",
+        "part_probes": [
+          {
+            "probe_seed": 1,
+            "checkpoint_sha256": "65c8840ca907b0147b2c36eb7af94193dc242e803dafe8f893ac80adf4ee2863"
+          },
+          {
+            "probe_seed": 2,
+            "checkpoint_sha256": "2359ef32636eecb53caec87d5486650e21e33eae411afc6f02fbaba7d5ff9a39"
+          },
+          {
+            "probe_seed": 3,
+            "checkpoint_sha256": "5c016bb41c1a014be70c60269cffac4faefbbb2c759bb3505906f4b173ed80e3"
+          },
+          {
+            "probe_seed": 4,
+            "checkpoint_sha256": "3522e53238d07e2be4c0daa72313a1febecd8de5b837872ea0d543ab5c593c1a"
+          },
+          {
+            "probe_seed": 5,
+            "checkpoint_sha256": "7ddd231170434415a10fecba120a66828525b4c1f706e4dcc2882de3e5b58630"
+          }
+        ]
+      }
+    },
+    "outputs": [
+      {
+        "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/part_localization_seed1_group1.png",
+        "sha256": "194a24986feca27614b071ea56ab8fe0f021437d32f814e2caf41a6000df7743",
+        "width": 1638,
+        "height": 1554,
+        "image_ids": [
+          787,
+          2285,
+          3735,
+          5205
+        ],
+        "rows": [
+          {
+            "image_id": 787,
+            "relative_path": "015.Lazuli_Bunting/Lazuli_Bunting_0085_14627.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.5692307692307692,
+                "five_probe_seed_mean_normalized_location_error": 0.13744118809700012,
+                "evaluated_keypoints": 65
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.15384615384615385,
+                "five_probe_seed_mean_normalized_location_error": 0.21506954729557037,
+                "evaluated_keypoints": 65
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.2,
+                "five_probe_seed_mean_normalized_location_error": 0.20658181607723236,
+                "evaluated_keypoints": 65
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.07692307692307693,
+                "five_probe_seed_mean_normalized_location_error": 0.4373685419559479,
+                "evaluated_keypoints": 65
+              }
+            }
+          },
+          {
+            "image_id": 2285,
+            "relative_path": "040.Olive_sided_Flycatcher/Olive_Sided_Flycatcher_0057_796898.jpg",
+            "valid_part_ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.4727272727272727,
+                "five_probe_seed_mean_normalized_location_error": 0.1304101049900055,
+                "evaluated_keypoints": 55
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.38181818181818183,
+                "five_probe_seed_mean_normalized_location_error": 0.15231162309646606,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.43636363636363634,
+                "five_probe_seed_mean_normalized_location_error": 0.12783026695251465,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.23636363636363636,
+                "five_probe_seed_mean_normalized_location_error": 0.18014585971832275,
+                "evaluated_keypoints": 55
+              }
+            }
+          },
+          {
+            "image_id": 3735,
+            "relative_path": "065.Slaty_backed_Gull/Slaty_Backed_Gull_0015_796004.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              13,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.3333333333333333,
+                "five_probe_seed_mean_normalized_location_error": 0.30376940965652466,
+                "evaluated_keypoints": 60
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.15,
+                "five_probe_seed_mean_normalized_location_error": 0.31536781787872314,
+                "evaluated_keypoints": 60
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.2833333333333333,
+                "five_probe_seed_mean_normalized_location_error": 0.31416264176368713,
+                "evaluated_keypoints": 60
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.23333333333333334,
+                "five_probe_seed_mean_normalized_location_error": 0.27764764428138733,
+                "evaluated_keypoints": 60
+              }
+            }
+          },
+          {
+            "image_id": 5205,
+            "relative_path": "089.Hooded_Merganser/Hooded_Merganser_0072_78973.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.2,
+                "five_probe_seed_mean_normalized_location_error": 0.2015836387872696,
+                "evaluated_keypoints": 50
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.22,
+                "five_probe_seed_mean_normalized_location_error": 0.32998907566070557,
+                "evaluated_keypoints": 50
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.28,
+                "five_probe_seed_mean_normalized_location_error": 0.31651195883750916,
+                "evaluated_keypoints": 50
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.06,
+                "five_probe_seed_mean_normalized_location_error": 0.3311365842819214,
+                "evaluated_keypoints": 50
+              }
+            }
+          }
+        ]
+      },
+      {
+        "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/part_localization_seed1_group2.png",
+        "sha256": "e0e046c698aa9145aca8285e19f3254c1c6e3f17ace4a25d5abf2728aec1f198",
+        "width": 1638,
+        "height": 1554,
+        "image_ids": [
+          6691,
+          8139,
+          9597,
+          11064
+        ],
+        "rows": [
+          {
+            "image_id": 6691,
+            "relative_path": "115.Brewer_Sparrow/Brewer_Sparrow_0072_796715.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.06153846153846154,
+                "five_probe_seed_mean_normalized_location_error": 0.27731800079345703,
+                "evaluated_keypoints": 65
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.07692307692307693,
+                "five_probe_seed_mean_normalized_location_error": 0.38356736302375793,
+                "evaluated_keypoints": 65
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.36923076923076925,
+                "five_probe_seed_mean_normalized_location_error": 0.2402104139328003,
+                "evaluated_keypoints": 65
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.0,
+                "five_probe_seed_mean_normalized_location_error": 0.5049679279327393,
+                "evaluated_keypoints": 65
+              }
+            }
+          },
+          {
+            "image_id": 8139,
+            "relative_path": "139.Scarlet_Tanager/Scarlet_Tanager_0009_138076.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.23333333333333334,
+                "five_probe_seed_mean_normalized_location_error": 0.25708240270614624,
+                "evaluated_keypoints": 60
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.0,
+                "five_probe_seed_mean_normalized_location_error": 0.44366106390953064,
+                "evaluated_keypoints": 60
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.16666666666666666,
+                "five_probe_seed_mean_normalized_location_error": 0.35942521691322327,
+                "evaluated_keypoints": 60
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.1,
+                "five_probe_seed_mean_normalized_location_error": 0.2792286276817322,
+                "evaluated_keypoints": 60
+              }
+            }
+          },
+          {
+            "image_id": 9597,
+            "relative_path": "164.Cerulean_Warbler/Cerulean_Warbler_0093_797196.jpg",
+            "valid_part_ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.21818181818181817,
+                "five_probe_seed_mean_normalized_location_error": 0.23967358469963074,
+                "evaluated_keypoints": 55
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.16363636363636364,
+                "five_probe_seed_mean_normalized_location_error": 0.34605956077575684,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.2,
+                "five_probe_seed_mean_normalized_location_error": 0.3374629020690918,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.3090909090909091,
+                "five_probe_seed_mean_normalized_location_error": 0.2259192019701004,
+                "evaluated_keypoints": 55
+              }
+            }
+          },
+          {
+            "image_id": 11064,
+            "relative_path": "188.Pileated_Woodpecker/Pileated_Woodpecker_0114_180455.jpg",
+            "valid_part_ids": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "methods": {
+              "lg": {
+                "five_probe_seed_micro_pck_at_0.1": 0.18181818181818182,
+                "five_probe_seed_mean_normalized_location_error": 0.29624366760253906,
+                "evaluated_keypoints": 55
+              },
+              "alg_warmup20": {
+                "five_probe_seed_micro_pck_at_0.1": 0.18181818181818182,
+                "five_probe_seed_mean_normalized_location_error": 0.2911667823791504,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.25": {
+                "five_probe_seed_micro_pck_at_0.1": 0.18181818181818182,
+                "five_probe_seed_mean_normalized_location_error": 0.37561360001564026,
+                "evaluated_keypoints": 55
+              },
+              "ibkd_lambda_0.5": {
+                "five_probe_seed_micro_pck_at_0.1": 0.18181818181818182,
+                "five_probe_seed_mean_normalized_location_error": 0.3245476186275482,
+                "evaluated_keypoints": 55
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "spatial_cka": {
+    "path": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/cka_block11_three_seed_heatmap.png",
+    "sha256": "8fc2df6c33ecd91a63eaab105a03a6ae2ce1a22144276330ed7a207fcb639bb1",
+    "source_csv": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/spatial_cka_block11_per_encoder_seed.csv",
+    "source_csv_sha256": "a1f93d3857416a116badee079c74717954133ae9853397478ed4e2c3342dc133",
+    "rows": [
+      {
+        "variant": "lg",
+        "encoder_seed_values": [
+          0.44199694137985773,
+          0.4335542944734917,
+          0.40988783884136953
+        ],
+        "mean": 0.42847969156490634,
+        "sample_sd": 0.016645188868458498
+      },
+      {
+        "variant": "alg_warmup20",
+        "encoder_seed_values": [
+          0.4023404477221058,
+          0.34772504795445075,
+          0.380379897157402
+        ],
+        "mean": 0.37681513094465285,
+        "sample_sd": 0.027481650997690486
+      },
+      {
+        "variant": "ibkd_lambda_0.25",
+        "encoder_seed_values": [
+          0.33409563861252933,
+          0.30376840656841136,
+          0.31746346455551416
+        ],
+        "mean": 0.31844250324548495,
+        "sample_sd": 0.015187301881235809
+      },
+      {
+        "variant": "ibkd_lambda_0.5",
+        "encoder_seed_values": [
+          0.2656008506457484,
+          0.23616878124479565,
+          0.20340724651812864
+        ],
+        "mean": 0.23505895946955757,
+        "sample_sd": 0.031111651786354336
+      }
+    ]
+  },
+  "attention": {
+    "supports_metrics": [
+      "attention_patch_AP",
+      "pointing",
+      "foreground_attention_mass"
+    ],
+    "manifest": "phase1/phase1_cub/reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/qualitative_comparisons/manifest.json",
+    "manifest_sha256": "34a59b302f30f1fa3b6e7f91867de5040aa595a913e906772cc04565df8690ae"
+  },
+  "metric_to_visual": {
+    "Part PCK@0.1": "part_localization outputs (green/red prediction crosses)",
+    "normalized location error": "part_localization outputs (GT-to-prediction distances and footer)",
+    "CKA block11": "spatial_cka output",
+    "Attention AP": "attention comparison outputs (red rollout over green GT)",
+    "Pointing": "attention comparison outputs (rollout peak location vs. GT)",
+    "FG mass": "attention comparison outputs (attention mass inside GT foreground)"
+  },
+  "not_training": true
+}

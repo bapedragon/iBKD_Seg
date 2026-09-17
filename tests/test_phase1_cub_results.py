@@ -111,6 +111,35 @@ class Phase1CubResultTest(unittest.TestCase):
             self.assertTrue(path.is_file(), str(path))
             self.assertEqual(_sha256(path), output["sha256"])
 
+    def test_direct_spatial_complete_visualization_covers_all_six_metrics(self) -> None:
+        manifest = _json(ATTENTION_COMPARISON / "complete_visualization_manifest.json")
+        self.assertTrue(manifest["not_training"])
+        self.assertIn("no post-hoc", manifest["selection_policy"])
+        self.assertEqual(
+            manifest["fixed_image_ids"],
+            [787, 2285, 3735, 5205, 6691, 8139, 9597, 11064],
+        )
+        self.assertEqual(manifest["part_localization"]["probe_seeds"], [1, 2, 3, 4, 5])
+        self.assertEqual(
+            set(manifest["metric_to_visual"]),
+            {
+                "Part PCK@0.1",
+                "normalized location error",
+                "CKA block11",
+                "Attention AP",
+                "Pointing",
+                "FG mass",
+            },
+        )
+        outputs = [
+            *manifest["part_localization"]["outputs"],
+            manifest["spatial_cka"],
+        ]
+        for output in outputs:
+            path = ROOT / output["path"]
+            self.assertTrue(path.is_file(), str(path))
+            self.assertEqual(_sha256(path), output["sha256"])
+
     def test_r50_v4_guided_seed1_profiles_are_audited_but_partial(self) -> None:
         classification = _json(R50_V4_REPORT / "classification_summary.json")
         probe = _json(R50_V4_REPORT / "probe_summary.json")
