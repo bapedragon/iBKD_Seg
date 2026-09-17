@@ -33,7 +33,8 @@
    `24.7611/25.5098%`, issue 760의 `10.4096%` 저성능은 재현되지 않음
 7. Issue 770 단일 replay도 `26.3989%`로 정상 범위 복귀 확인
 8. 공통 guidance 기간을 123 epoch로 고정한 네 연결 방식 classification-only
-   v3 본실험 진행 중
+   v3 설정까지 준비했으나, 직접 segmentation으로 연구 방향을 전환해 후속 확장은
+   보류
 
 ## Issue 760 `learned_all` 단일 경로 재현
 
@@ -74,15 +75,16 @@ Issue 776 smoke는 네 분류 경로 `4/4`, 개별 gate `11/11`, 교차 gate `6/
 통과했습니다. 같은 student 초기 상태와 epoch별 augmentation 입력 stream, Teacher,
 split, beta schedule을 확인했고 official test와 frozen probe는 열지 않았습니다.
 
-## Classification-only v3 본실험
+## Classification-only v3 — 후속 확장 보류
 
-Issue 776 smoke 자체가 이미 classification-only(`official_test=0`,
-`frozen_probe=0`)였으므로 추가 smoke는 반복하지 않습니다. 본실험도 원인 분석의
-핵심 범위에 맞춰 frozen probe를 제외했습니다. Encoder seed 하나씩 독립 issue로
-실행하며, 각 shard는 네 연결 방식의 300 epoch 분류와 validation checkpoint 선택,
-네 선택이 모두 끝난 뒤 official classification test만 포함합니다. Seed 1의 결과와
-관계없이 seed 2와 3도 같은 설정으로 실행합니다. Segmentation mask archive는
-다운로드하거나 읽지 않습니다.
+Issue 776 smoke 자체가 classification-only(`official_test=0`, `frozen_probe=0`)로
+통과했으므로 당시 계획에서는 추가 smoke 없이 encoder seed 하나씩 독립 issue로
+실행하도록 고정했습니다. 각 shard는 네 연결 방식의 300 epoch 분류와 validation
+checkpoint 선택, 네 선택이 모두 끝난 뒤 official classification test만 포함하고
+segmentation mask는 읽지 않는 설계였습니다.
+
+현재는 분류 encoder 뒤에 decoder/probe를 붙이는 경로를 더 확장하지 않기로 했으므로
+이 설정은 실행 근거가 아니라 기존 사후분석의 재현 기록으로만 보존합니다.
 
 ```bash
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_classification_full_b128.sh 1

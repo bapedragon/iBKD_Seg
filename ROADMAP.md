@@ -5,11 +5,17 @@
 공간정보 차이의 존재를 확인한 뒤 원인, 실제 활용성, 외부 일반화, 새 방법론
 개발 순서로 단계별 gate를 통과합니다.
 
+> **2026-09-17 방향 변경:** 분류 encoder를 먼저 학습한 뒤 decoder/probe를 바꾸는
+> 후속 경로는 더 진행하지 않습니다. 기존 Phase 1 분류·frozen probe 결과는 진단
+> 근거로 보존하고, 다음 CUB 실험은 pixel mask를 처음부터 사용하는 직접
+> segmentation 학습으로 분리합니다. 현재 진입점은
+> [`phase1/phase1_cub_Seg/`](phase1/phase1_cub_Seg/README.md)입니다.
+
 | Phase | 확인하려는 핵심 | 앞 Phase에서 넘어오는 논리 |
 |---|---|---|
 | **1. Frozen spatial probe** | iBKD encoder가 LG/ALG보다 위치·형태 정보를 더 잘 보존하는가? | Pet에서 먼저 확인하고 CUB-200-2011로 데이터셋 의존성을 독립 점검 |
 | **2. 공간적 대조 실험** | Phase 1 차이가 shortcut이나 우연이 아니라 실제 공간정보 때문인가? | Phase 1에서 iBKD 우위가 관측될 때만 원인과 통계적 안정성을 검증 |
-| **3. 공통 decoder** | 작은 probe뿐 아니라 실제 segmentation 학습에서도 우위가 유지되는가? | 표현 자체의 공간성이 확인될 때 실용적인 decoder 조건으로 확장 |
+| **3. 직접 segmentation 학습** | 분류 사전학습 없이 pixel GT로 학습할 때 방법별 차이가 나타나는가? | Phase 1 결과는 진단 근거로만 참고하고 segmentation 목적함수를 직접 최적화 |
 | **4. 표준 segmentation** | Pet에만 국한되지 않고 표준 multi-class segmentation에서도 일반화되는가? | 실제 segmentation 효과가 확인될 때 외부 데이터셋에서 재검증 |
 | **5. Dense iBKD** | segmentation에 특화된 새 iBKD 방법을 설계할 가치가 있는가? | 여러 조건에서 확장성이 확인될 때 새로운 방법론으로 발전 |
 
@@ -111,11 +117,13 @@ Mean-mask/center-prior, translation, 고정 grid permutation, layer별 probe, pa
 bootstrap confidence interval과 추가 encoder seed를 사용해 Phase 1 차이가 실제
 공간 신호인지 확인합니다.
 
-## Phase 3 — 공통 decoder
+## Phase 3 — 직접 segmentation 학습
 
-모든 encoder에 동일한 경량 decoder를 사용합니다. Frozen, partial fine-tuning,
-full fine-tuning 조건을 분리합니다. 출력 해상도가 충분히 높아진 뒤에만 boundary
-평가를 추가합니다.
+기존의 “분류 encoder 학습 → 동일 decoder/probe 교체” 순차 경로는 보류합니다.
+Segmentation mask를 처음부터 정답으로 사용해 encoder와 decoder를 함께 학습하고,
+Vanilla/LG/ALG/iBKD를 같은 구조·split·학습 예산으로 비교합니다. 기존 Phase 1
+분류 checkpoint는 이 학습의 초기값이나 선택 근거로 사용하지 않습니다. 현재 CUB
+진입점은 [`phase1/phase1_cub_Seg/`](phase1/phase1_cub_Seg/README.md)에 분리합니다.
 
 ## Phase 4 — 표준 semantic segmentation
 

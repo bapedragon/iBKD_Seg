@@ -34,20 +34,13 @@ bbox 보존을 측정합니다. 결과는
 Stage B 결과는 [본실험 표](reports/full_v1_log_snapshot/RESULTS.md)에 있으며 L2가
 선택됐습니다.
 
-## Stage C — 선택 loader 예비 본실험
-
-L2에서 guided 네 방법을 encoder seed 1로 다시 300 epoch 학습하고 동일 frozen
-segmentation probe를 수행합니다. Validation으로 checkpoint와 probe를 선택한 뒤
-official test를 정해진 횟수만 평가합니다. 이 결과는 단일 encoder seed 예비 결과로,
-기존 main-L0 결과나 향후 6방법×3seed 확증 결과를 대체하지 않습니다.
-
-결과는
-[L2 예비 본실험 보고서](reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/RESULTS.md)에
-있습니다.
+이 protocol은 Stage B의 loader 영향 관찰에서 종료합니다. 선택된 L2로 분류 encoder를
+다시 학습하고 frozen decoder/probe를 교체하는 후속 예비실험은 정식 근거로 유지하지
+않습니다. 다음 단계는 pixel mask를 처음부터 사용하는 직접 segmentation입니다.
 
 ## 보존과 해석 제한
 
-- L0/L1/L2 간 비교와 L2 예비 결과를 `main_l0_v3`와 합산하지 않음
+- L0/L1/L2 간 비교를 `main_l0_v3`와 합산하지 않음
 - 현재 결과는 로그 기반이며 archive·checkpoint 감사 완료 전 hash 수준 확정으로
   간주하지 않음
 - Git에는 protocol, 작은 결과표와 출처 manifest만 보존

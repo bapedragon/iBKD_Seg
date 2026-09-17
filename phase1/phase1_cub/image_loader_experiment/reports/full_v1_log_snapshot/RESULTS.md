@@ -52,12 +52,11 @@ L1보다 `+14.2731%p` 높습니다. Tie-break인 segmentation mIoU도 L0보다
 - 하지만 L2 안에서도 LG가 Part PCK, segmentation mIoU와 CKA에서 가장 높고,
   ALG도 두 iBKD보다 Part PCK가 높습니다. 따라서 이 결과는 **iBKD 고유의 공간
   우위**를 지지하지 않습니다.
-- 현재 비교는 encoder seed 1 하나뿐입니다. 다음 `L2 × guided 4방법 × seed 1`
-  실행도 6방법×3seed 최종 확증실험이 아니라 선택 loader를 official test까지
-  연결하는 단일-seed 예비 결과로 보고해야 합니다.
+- 현재 비교는 encoder seed 1 하나뿐이므로 최종 방법 순위가 아니라 loader 영향에
+  대한 탐색 결과로만 해석합니다. 분류 encoder를 재학습해 frozen decoder/probe로
+  이어가는 후속 실험은 더 진행하지 않습니다.
 - 결과 archive가 도착하기 전에는 로그 수치와 completion marker만 확인된 상태입니다.
-  후속 Stage C는 별도 예비 본실험으로 완료됐지만, 두 실행 모두 archive를 받은 뒤
-  checkpoint와 machine-readable 결과를 독립 감사해야 합니다.
+  archive를 받은 뒤 checkpoint와 machine-readable 결과를 독립 감사해야 합니다.
 
 원자료를 Git에 복사하지 않고, 로그 식별 정보는
 [source_manifest.json](source_manifest.json)에, 분석용 원수치는

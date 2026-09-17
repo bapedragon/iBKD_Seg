@@ -9,8 +9,7 @@
 | `loader_pilot_l0_seed1` | 이미지-loader Stage B에서 L1/L2와 맞춰 다시 돌린 L0 seed 1 | 완료 로그만 반영, archive/checkpoint 감사 대기 | 원인 분석 입력으로 사용 금지 | `image_loader_experiment/reports/full_v1_log_snapshot/` |
 | `loader_pilot_l1_seed1` | 강한 광학 증강만 제거한 loader pilot | 완료 로그만 반영, archive/checkpoint 감사 대기 | loader 선택 근거 외 사용 금지 | `image_loader_experiment/reports/full_v1_log_snapshot/` |
 | `loader_pilot_l2_seed1` | crop을 보수적으로 바꾼 loader pilot | Stage B에서 선택 | loader 선택 근거 외 사용 금지 | `image_loader_experiment/reports/full_v1_log_snapshot/` |
-| `l2_guided_preliminary_seed1` | 선택 L2에서 guided 4방법을 다시 학습한 예비실험 | 완료 로그 반영, archive/checkpoint 감사 대기 | 최종 확증 결과나 `main_l0_v3` 대체로 사용 금지 | `image_loader_experiment/reports/l2_guided_preliminary_full_seed1_log_snapshot_v1/` |
-| `main_l0_mechanism_v3` | `main_l0_v3`에서 iBKD 레이어 연결 원인을 분리하는 사후 실험 | 단일 replay 정상 범위 복귀 및 matched-duration smoke 통과; 4연결 방식 classification-only 본실험 진행 중 | 새 결과는 별도 사후 원인 분석으로만 사용 | `mechanism_analysis/` |
+| `main_l0_mechanism_v3` | `main_l0_v3`에서 iBKD 레이어 연결 원인을 분리하는 사후 실험 | 단일 replay 정상 범위 복귀 및 matched-duration smoke 통과; 연구 방향 전환으로 후속 확장 보류 | 기존 자료는 사후 진단으로만 보존 | `mechanism_analysis/` |
 | `main_l0_repro_aa_v2` | main-L0 iBKD-0.25 seed 1의 제어 A/A 재현성 진단 | 300-epoch A/A 완료; 입력·RNG 통제 확인, test 24.761/25.510% | 성능 비교나 주 결과로 사용 금지 | `reproducibility/` |
 
 ## 이름 규칙
@@ -18,7 +17,6 @@
 - 기존 3-seed 주 결과를 말할 때: `main-L0` 또는 `main_l0_v3`
 - loader pilot에서 다시 학습한 L0를 말할 때: `pilot-L0` 또는
   `loader_pilot_l0_seed1`
-- L2 후속을 말할 때: `L2 preliminary`; `main-L0`와 합치지 않음
 - 원인 분석에서 기존 checkpoint를 입력으로 쓸 때는 source issue `727/730`과
   `main_l0_v3`를 함께 기록함
 
@@ -30,5 +28,5 @@
 `loader_pilot_l0_seed1`은 이름은 L0지만 별도의 재학습이고 checkpoint archive도
 아직 감사되지 않았으므로 섞지 않습니다. 제어 A/A와 단일 replay에서 issue 760의
 `10.41%` 저성능이 다시 나타나지 않았고 matched-duration smoke도 통과했습니다.
-현재는 네 연결 방식의 guidance를 123 epoch로 고정한 classification-only 본실험을
-진행합니다.
+분류 encoder 기반 후속 실험은 더 확장하지 않으며, 다음 CUB 실험은 pixel mask를
+처음부터 사용하는 직접 segmentation 경로로 분리합니다.
