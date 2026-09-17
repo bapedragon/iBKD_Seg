@@ -18,11 +18,16 @@ from typing import Any, Sequence
 import torch
 
 from .cub_data import (
+    ARCHIVE_BYTES,
+    ARCHIVE_MD5,
+    ARCHIVE_NAME,
+    ARCHIVE_SHA256,
     DATASET_NAME,
     NUM_CLASSES,
     build_official_test_loader,
     build_stratified_split,
     ensure_cub200,
+    file_digest,
     read_records,
 )
 from .cub_loader_profiles import L0_CURRENT_STRONG
@@ -150,6 +155,28 @@ def _write_csv(rows: Sequence[dict[str, Any]], path: Path) -> None:
         writer.writeheader()
         writer.writerows(rows)
     temporary.replace(path)
+
+
+def _classification_archive_audit(data_dir: Path) -> dict[str, Any]:
+    """Audit only the RGB classification archive used by the v3 path."""
+    path = data_dir / ARCHIVE_NAME
+    if not path.is_file():
+        raise RuntimeError(f"CUB image archive missing after setup: {path}")
+    actual = {
+        "path": str(path.resolve()),
+        "bytes": path.stat().st_size,
+        "md5": file_digest(path, "md5"),
+        "sha256": file_digest(path),
+    }
+    expected = {
+        "path": str(path.resolve()),
+        "bytes": ARCHIVE_BYTES,
+        "md5": ARCHIVE_MD5,
+        "sha256": ARCHIVE_SHA256,
+    }
+    if actual != expected:
+        raise RuntimeError("CUB image archive identity mismatch")
+    return {"image": actual}
 
 
 def _validate_matched_configs(
@@ -1726,7 +1753,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "base_protocol_path": str(base_path),
         "base_protocol_sha256": file_sha256(base_path),
         "dataset_source": dataset_source,
-        "dataset_archives": _archive_audit(args.data_dir),
+        "dataset_archives": (
+            _classification_archive_audit(args.data_dir)
+            if classification_only
+            else _archive_audit(args.data_dir)
+        ),
         "counts": counts,
         "split_manifest": split_manifest,
         "teacher_checkpoint_sha256": teacher_hash,

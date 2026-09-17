@@ -263,6 +263,8 @@ class Phase1CubMechanismAnalysisTest(unittest.TestCase):
             run_source.index("probe_rows = _train_probes"),
         )
         self.assertIn('"segmentation_annotations_loaded": False', run_source)
+        self.assertIn("_classification_archive_audit(args.data_dir)", run_source)
+        self.assertIn("else _archive_audit(args.data_dir)", run_source)
 
     def test_matched_duration_smoke_is_locked_and_executable(self) -> None:
         self.assertEqual(
