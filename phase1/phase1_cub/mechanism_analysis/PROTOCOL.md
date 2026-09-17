@@ -107,7 +107,16 @@ epoch `1–123`에는 beta `2.5`, epoch `124–300`에는 beta `0`을 사용합�
 
 - Full v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json`
 - Smoke v2 계약: `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_smoke_v2.json`
-- H200 진입점: `scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh`
+- Smoke 진입점: `scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh`
+- Full 진입점: `scripts/run_main_l0_ibkd_connection_matched_full_b128.sh <seed>`
+- Full 실행 release:
+  `configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_execution_v2.json`
+
+Issue 776 smoke는 `variants=4/4`, `cross_gates=6/6`, `official_test=0`,
+`frozen_probe=0`으로 통과했습니다. 측정 최대 guided epoch 시간은 약 `40.87초`,
+peak reserved CUDA memory는 약 `17.34 GB`였습니다. 본실험은 seed별 한 issue로
+분리하고 MIG 7, `num_workers=0`을 유지합니다. 각 seed에서 분류 4개와 선택 probe
+20개를 완료한 뒤에만 official test를 평가합니다.
 
 아래 v1 계약은 기존 동적 controller 실행의 역사적 기록이며 v2 본실험에는 사용하지
 않습니다.

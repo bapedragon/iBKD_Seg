@@ -79,6 +79,9 @@ CUB_R50_LOADER_FOLLOWUP_FULL_CONFIG_SHA256 = (
 CUB_R50_MECHANISM_FULL_CONFIG_SHA256 = (
     "1650e76da40c235292fca166b8058c1a9ee279165a275b59122f505f3b7235d8"
 )
+CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256 = (
+    "a2fadff0b93e1878b27cbd78e9249141b67202bcd6911ce27f4b19810ea3ca5b"
+)
 CUB_R50_MECHANISM_REPLAY_FULL_CONFIG_SHA256 = (
     "74a7d88e7cc23f428dbb82ac894699572fb6eed4970a2b8411aa04c9e30fae30"
 )
@@ -175,6 +178,15 @@ def parse_args() -> argparse.Namespace:
         help="iBKD block-to-teacher-stage connection for the mechanism ablation.",
     )
     parser.add_argument(
+        "--ibkd-fixed-guidance-epochs",
+        type=int,
+        default=None,
+        help=(
+            "Keep iBKD guidance active through this inclusive epoch. Reserved "
+            "for the locked matched-duration mechanism experiment."
+        ),
+    )
+    parser.add_argument(
         "--defer-official-test",
         action="store_true",
         help="Leave official test sealed for the parent orchestrator.",
@@ -237,6 +249,7 @@ def validate_args(args: argparse.Namespace) -> None:
     aggregation_mode = str(
         getattr(args, "ibkd_aggregation_mode", "learned_all")
     )
+    fixed_guidance_epochs = getattr(args, "ibkd_fixed_guidance_epochs", None)
     defer_official_test = bool(getattr(args, "defer_official_test", False))
     cub_loader_profile = str(
         getattr(args, "cub_loader_profile", L0_CURRENT_STRONG)
@@ -260,6 +273,7 @@ def validate_args(args: argparse.Namespace) -> None:
             or protocol_config is not None
             or cub_loader_profile != L0_CURRENT_STRONG
             or aggregation_mode != "learned_all"
+            or fixed_guidance_epochs is not None
         ):
             raise ValueError("Legacy teacher training cannot use the CUB R50 student flags")
         if teacher_architecture != "resnet56_32":
@@ -385,12 +399,24 @@ def validate_args(args: argparse.Namespace) -> None:
             if batch_profile_role != "posthoc_issue760_learned_all_replay":
                 raise ValueError("Mechanism replay requires its post-hoc role")
         elif mechanism_ablation_full:
-            if file_sha256(protocol_config) != CUB_R50_MECHANISM_FULL_CONFIG_SHA256:
+            mechanism_protocol_sha256 = file_sha256(protocol_config)
+            if mechanism_protocol_sha256 not in {
+                CUB_R50_MECHANISM_FULL_CONFIG_SHA256,
+                CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256,
+            }:
                 raise ValueError("CUB mechanism-ablation full protocol SHA-256 changed")
-            if protocol.get("protocol_id") != (
+            matched_duration = (
+                mechanism_protocol_sha256
+                == CUB_R50_MECHANISM_MATCHED_FULL_CONFIG_SHA256
+            )
+            expected_protocol_id = (
                 "cub200_phase1_r50_224_b128_main_l0_ibkd_"
+                "connection_matched_duration_full_v2"
+                if matched_duration
+                else "cub200_phase1_r50_224_b128_main_l0_ibkd_"
                 "layer_connection_ablation_full_v1"
-            ):
+            )
+            if protocol.get("protocol_id") != expected_protocol_id:
                 raise ValueError("Unexpected CUB mechanism-ablation protocol")
             if (
                 args.batch_size != 128
@@ -405,10 +431,22 @@ def validate_args(args: argparse.Namespace) -> None:
                 )
             if batch_profile_role != "posthoc_main_l0_mechanism_ablation":
                 raise ValueError("Mechanism ablation requires its post-hoc role")
-            variant_ids = [
-                row.get("id")
-                for row in protocol.get("classification", {}).get("variants", [])
-            ]
+            if matched_duration:
+                if fixed_guidance_epochs != 123:
+                    raise ValueError(
+                        "Matched-duration mechanism full requires fixed guidance "
+                        "through epoch 123"
+                    )
+                variant_ids = protocol.get("aggregation_variants", [])
+            else:
+                if fixed_guidance_epochs is not None:
+                    raise ValueError(
+                        "Historical mechanism v1 must retain its adaptive controller"
+                    )
+                variant_ids = [
+                    row.get("id")
+                    for row in protocol.get("classification", {}).get("variants", [])
+                ]
             if aggregation_mode not in variant_ids:
                 raise ValueError("Aggregation mode is outside the locked protocol")
         elif loader_followup_full:
@@ -487,10 +525,13 @@ def validate_args(args: argparse.Namespace) -> None:
             if args.seed != 1:
                 raise ValueError("The v4 guided batch-profile run is fixed to encoder seed 1")
         allowed = (
-            [
-                row.get("id")
-                for row in protocol.get("classification", {}).get("variants", [])
-            ]
+            (
+                protocol.get("aggregation_variants", [])
+                or [
+                    row.get("id")
+                    for row in protocol.get("classification", {}).get("variants", [])
+                ]
+            )
             if mechanism_ablation_full
             else protocol.get("scope", {}).get("variants", [])
             if mechanism_replay_full
@@ -535,6 +576,12 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError(
             "Non-canonical iBKD aggregation requires --mechanism-ablation-full"
         )
+    if not mechanism_ablation_full and fixed_guidance_epochs is not None:
+        raise ValueError(
+            "Fixed iBKD guidance is reserved for --mechanism-ablation-full"
+        )
+    if args.method != "ibkd" and fixed_guidance_epochs is not None:
+        raise ValueError("Only iBKD accepts --ibkd-fixed-guidance-epochs")
     if args.method != "vanilla" and args.teacher_checkpoint is None:
         raise ValueError("Guided student run requires --teacher-checkpoint")
     if args.method == "alg":
@@ -853,6 +900,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
     aggregation_mode = str(
         getattr(args, "ibkd_aggregation_mode", "learned_all")
     )
+    fixed_guidance_epochs = getattr(args, "ibkd_fixed_guidance_epochs", None)
     defer_official_test = bool(getattr(args, "defer_official_test", False))
     cub_loader_profile = str(args.cub_loader_profile)
     protocol_config_sha256 = (
@@ -911,7 +959,11 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             ),
             aggregation_mode=aggregation_mode,
         ).to(device)
-        controller = GuidanceController(kind="ibkd", warmup_epochs=20)
+        controller = GuidanceController(
+            kind="ibkd",
+            warmup_epochs=20,
+            fixed_stop_epoch=fixed_guidance_epochs,
+        )
 
     initial_guidance_hash = (
         None if guidance is None else state_dict_sha256(guidance)
@@ -949,6 +1001,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         f"controlled_aa_full={controlled_aa_full} "
         f"mechanism_replay_full={mechanism_replay_full} "
         f"ibkd_aggregation_mode={aggregation_mode} "
+        f"ibkd_fixed_guidance_epochs={fixed_guidance_epochs} "
         f"defer_official_test={defer_official_test} "
         f"cub_loader_profile={cub_loader_profile} "
         f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
@@ -970,7 +1023,9 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         epoch_lr = float(optimizer.param_groups[0]["lr"])
         input_stream_digest = (
             hashlib.sha256()
-            if controlled_aa_full or mechanism_replay_full
+            if controlled_aa_full
+            or mechanism_replay_full
+            or fixed_guidance_epochs is not None
             else None
         )
         for batch_index, (images, targets) in enumerate(train_loader):
@@ -1144,6 +1199,10 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
             if scientific_cub_r50 and mechanism_replay_full
             else "phase1_cub_r50_224_main_l0_ibkd_controlled_aa_full_student_v1"
             if scientific_cub_r50 and controlled_aa_full
+            else "phase1_cub_r50_224_main_l0_ibkd_connection_matched_full_student_v2"
+            if scientific_cub_r50
+            and mechanism_ablation_full
+            and fixed_guidance_epochs == 123
             else "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
             if scientific_cub_r50 and mechanism_ablation_full
             else "phase1_cub_r50_224_l2_guided_preliminary_full_student_v1"
@@ -1186,6 +1245,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_mechanism_path_diagnostic": mechanism_replay_full,
         "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
+        "ibkd_fixed_guidance_epochs": fixed_guidance_epochs,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,
@@ -1311,6 +1371,7 @@ def run_student(args: argparse.Namespace, device: torch.device) -> dict[str, Any
         "posthoc_mechanism_path_diagnostic": mechanism_replay_full,
         "posthoc_reproducibility_audit": controlled_aa_full,
         "ibkd_aggregation_mode": aggregation_mode,
+        "ibkd_fixed_guidance_epochs": fixed_guidance_epochs,
         "ibkd_aggregation": aggregation_audit,
         "cub_loader_profile": cub_loader_profile,
         "exploratory_loader_pilot": loader_pilot_full,
@@ -1393,6 +1454,7 @@ def main() -> None:
         controlled_trace_full = bool(
             getattr(args, "controlled_aa_full", False)
             or getattr(args, "mechanism_replay_full", False)
+            or getattr(args, "ibkd_fixed_guidance_epochs", None) is not None
         )
         if controlled_trace_full:
             args.controlled_reproducibility_contract = (
@@ -1420,6 +1482,7 @@ def main() -> None:
             f"loader_followup_full={args.loader_followup_full} "
             f"controlled_aa_full={args.controlled_aa_full} "
             f"mechanism_replay_full={args.mechanism_replay_full} "
+            f"ibkd_fixed_guidance_epochs={args.ibkd_fixed_guidance_epochs} "
             f"defer_official_test={args.defer_official_test} "
             f"cub_loader_profile={args.cub_loader_profile} "
             f"alg_controller_warmup={args.alg_controller_warmup_epochs} "
@@ -1472,6 +1535,7 @@ def main() -> None:
                 "mechanism_ablation_full": args.mechanism_ablation_full,
                 "controlled_aa_full": args.controlled_aa_full,
                 "mechanism_replay_full": args.mechanism_replay_full,
+                "ibkd_fixed_guidance_epochs": args.ibkd_fixed_guidance_epochs,
                 "defer_official_test": args.defer_official_test,
                 "cub_loader_profile": args.cub_loader_profile,
                 "failure_kind": failure_kind,

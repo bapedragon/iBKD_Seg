@@ -68,9 +68,22 @@ probe는 실행하지 않으며 smoke 점수는 과학 결과가 아닙니다.
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh
 ```
 
-Issue 770 로그 gate가 통과했으므로 위 matched-duration smoke를 다음 gate로 사용합니다.
+Issue 776 smoke는 네 분류 경로 `4/4`, 개별 gate `11/11`, 교차 gate `6/6`을
+통과했습니다. 같은 student 초기 상태와 epoch별 augmentation 입력 stream, Teacher,
+split, beta schedule을 확인했고 official test와 frozen probe는 열지 않았습니다.
 
-## 본실험 실행 보류
+## Matched-duration v2 본실험
+
+본실험은 10시간 제한을 지키기 위해 encoder seed 하나씩 독립 issue로 실행합니다.
+각 shard는 네 연결 방식의 300 epoch 분류, validation checkpoint 선택, frozen probe
+`5 seeds × 3 LR`, 모든 선택 완료 뒤 official test를 포함합니다. Seed 1의 결과와
+관계없이 seed 2와 3도 같은 설정으로 실행합니다.
+
+```bash
+bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_matched_full_b128.sh 1
+```
+
+## 기존 동적 종료 본실험 보류
 
 아래 진입점의 seed-1 실행은 완료됐지만 재현성 및 guidance 기간 혼입 때문에 현재
 추가 seed 실행에 사용하지 않습니다.

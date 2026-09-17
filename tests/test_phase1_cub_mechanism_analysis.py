@@ -24,6 +24,8 @@ from ibkd_seg.phase1.run_cub_ibkd_connection_matched_smoke import (
 from ibkd_seg.phase1.run_cub_ibkd_connection_full import (
     AGGREGATION_VARIANTS,
     EXPECTED_EXECUTION_SHA256,
+    EXPECTED_MATCHED_EXECUTION_SHA256,
+    EXPECTED_MATCHED_PROTOCOL_SHA256,
     EXPECTED_PROTOCOL_SHA256,
     _classification_flat_rows,
     _completion_counts,
@@ -84,9 +86,17 @@ MATCHED_FULL_CONFIG = (
     EXPERIMENT
     / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_v2.json"
 )
+MATCHED_FULL_EXECUTION_CONFIG = (
+    EXPERIMENT
+    / "configs/cub200_r50_224_b128_main_l0_ibkd_connection_matched_full_execution_v2.json"
+)
 MATCHED_SMOKE_SCRIPT = (
     EXPERIMENT
     / "scripts/run_main_l0_ibkd_connection_matched_smoke_b128_seed1.sh"
+)
+MATCHED_FULL_SCRIPT = (
+    EXPERIMENT
+    / "scripts/run_main_l0_ibkd_connection_matched_full_b128.sh"
 )
 AUDIT = (
     EXPERIMENT
@@ -116,6 +126,7 @@ def _full_args(**changes: object) -> argparse.Namespace:
         "controlled_aa_full": False,
         "mechanism_replay_full": False,
         "ibkd_aggregation_mode": "fixed_uniform_all",
+        "ibkd_fixed_guidance_epochs": None,
         "defer_official_test": True,
         "batch_size": 128,
         "fusion_ratio": 0.25,
@@ -190,6 +201,56 @@ def _replay_full_args(**changes: object) -> argparse.Namespace:
 
 
 class Phase1CubMechanismAnalysisTest(unittest.TestCase):
+    def test_matched_duration_full_is_released_and_seed_sharded(self) -> None:
+        self.assertEqual(
+            file_sha256(MATCHED_FULL_CONFIG), EXPECTED_MATCHED_PROTOCOL_SHA256
+        )
+        self.assertEqual(
+            file_sha256(MATCHED_FULL_EXECUTION_CONFIG),
+            EXPECTED_MATCHED_EXECUTION_SHA256,
+        )
+        protocol = json.loads(MATCHED_FULL_CONFIG.read_text(encoding="utf-8"))
+        execution = json.loads(
+            MATCHED_FULL_EXECUTION_CONFIG.read_text(encoding="utf-8")
+        )
+        self.assertEqual(execution["release_decision"]["source_h200_issue"], 776)
+        self.assertEqual(execution["shared"]["fixed_guidance_epochs_inclusive"], 123)
+        for seed in (1, 2, 3):
+            base, base_path = _validate_configs(
+                protocol,
+                MATCHED_FULL_CONFIG,
+                execution,
+                MATCHED_FULL_EXECUTION_CONFIG,
+                seed,
+            )
+            self.assertTrue(base_path.is_file())
+            self.assertIn("frozen_probe", base)
+            for mode in AGGREGATION_VARIANTS:
+                validate_full_args(
+                    _full_args(
+                        seed=seed,
+                        ibkd_aggregation_mode=mode,
+                        ibkd_fixed_guidance_epochs=123,
+                        protocol_config=MATCHED_FULL_CONFIG,
+                        num_workers=0,
+                    )
+                )
+        for fixed_epoch in (None, 103, 124):
+            with self.subTest(fixed_epoch=fixed_epoch):
+                with self.assertRaisesRegex(ValueError, "epoch 123"):
+                    validate_full_args(
+                        _full_args(
+                            ibkd_fixed_guidance_epochs=fixed_epoch,
+                            protocol_config=MATCHED_FULL_CONFIG,
+                            num_workers=0,
+                        )
+                    )
+        script = MATCHED_FULL_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('encoder_seed="${1:-}"', script)
+        self.assertIn("matched_full_execution_v2.json", script)
+        self.assertIn("--num-workers 0", script)
+        self.assertTrue(MATCHED_FULL_SCRIPT.stat().st_mode & 0o111)
+
     def test_matched_duration_smoke_is_locked_and_executable(self) -> None:
         self.assertEqual(
             file_sha256(MATCHED_SMOKE_CONFIG),

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import math
 import statistics
 import subprocess
@@ -56,6 +57,12 @@ EXPECTED_PROTOCOL_SHA256 = (
 EXPECTED_EXECUTION_SHA256 = (
     "145eb88ebba5134f8fcd4b5bf11861465407baff15aaaa41c69809762f0e469c"
 )
+EXPECTED_MATCHED_PROTOCOL_SHA256 = (
+    "a2fadff0b93e1878b27cbd78e9249141b67202bcd6911ce27f4b19810ea3ca5b"
+)
+EXPECTED_MATCHED_EXECUTION_SHA256 = (
+    "30ef6886128a23bce5ee991ce55060cff93f2e74761397203dd8310660e52572"
+)
 EXPECTED_BASE_SHA256 = (
     "e3faff49101a8cffc5d0836f2cf299177547cea5243715ce51cc288b743626dc"
 )
@@ -80,6 +87,12 @@ CLASSIFICATION_PURPOSE = (
     "phase1_cub_r50_224_main_l0_ibkd_connection_full_student_v1"
 )
 PROBE_PURPOSE = "phase1_cub_r50_224_main_l0_ibkd_connection_full_probe_v1"
+MATCHED_CLASSIFICATION_PURPOSE = (
+    "phase1_cub_r50_224_main_l0_ibkd_connection_matched_full_student_v2"
+)
+MATCHED_PROBE_PURPOSE = (
+    "phase1_cub_r50_224_main_l0_ibkd_connection_matched_full_probe_v2"
+)
 
 
 def log(message: str = "") -> None:
@@ -108,6 +121,152 @@ def _write_csv(rows: Sequence[dict[str, Any]], path: Path) -> None:
     temporary.replace(path)
 
 
+def _validate_matched_configs(
+    protocol: dict[str, Any],
+    protocol_path: Path,
+    execution: dict[str, Any],
+    execution_path: Path,
+    encoder_seed: int,
+) -> tuple[dict[str, Any], Path]:
+    if file_sha256(execution_path) != EXPECTED_MATCHED_EXECUTION_SHA256:
+        raise RuntimeError("matched mechanism execution config SHA-256 changed")
+    base_path = (
+        REPOSITORY_ROOT
+        / "phase1/phase1_cub/configs/cub200_r50_224_b128_full_v3.json"
+    )
+    base = _load_json(base_path)
+    dataset = protocol.get("dataset", {})
+    student = protocol.get("student", {})
+    guidance = protocol.get("guidance", {})
+    probe = protocol.get("frozen_probe", {})
+    shared = execution.get("shared", {})
+    checks = {
+        "protocol_id": protocol.get("protocol_id")
+        == "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_matched_duration_full_v2",
+        "scientific": protocol.get("scientific_result") is True
+        and protocol.get("posthoc_mechanism_analysis") is True,
+        "lineage": protocol.get("lineage", {}).get("input_lineage_id")
+        == "main_l0_v3"
+        and protocol.get("lineage", {}).get("source_teacher_issue") == 722
+        and protocol.get("lineage", {}).get("source_canonical_student_issue")
+        == 727,
+        "base": base_path.is_file()
+        and file_sha256(base_path) == EXPECTED_BASE_SHA256,
+        "dataset": dataset.get("name") == DATASET_NAME
+        and dataset.get("train") == 5394
+        and dataset.get("validation") == 600
+        and dataset.get("official_test") == 5794
+        and dataset.get("split_seed") == 2027
+        and dataset.get("validation_image_ids_sha256")
+        == EXPECTED_VALIDATION_HASH
+        and dataset.get("loader_profile") == L0_CURRENT_STRONG
+        and dataset.get("input_size") == 224,
+        "teacher": protocol.get("teacher", {}).get("checkpoint_sha256")
+        == EXPECTED_TEACHER_SHA256
+        and protocol.get("teacher", {}).get("model_state_sha256")
+        == EXPECTED_TEACHER_STATE_SHA256,
+        "classification": student.get("batch_size") == 128
+        and student.get("encoder_seeds") == [1, 2, 3]
+        and student.get("epochs") == 300
+        and student.get("fusion_ratio_lambda") == 0.25
+        and student.get("precision") == "float32",
+        "fixed_guidance": guidance.get("beta_on") == 2.5
+        and guidance.get("policy") == "fixed_common_horizon"
+        and guidance.get("active_epochs_inclusive") == [1, 123]
+        and guidance.get("beta_zero_from_epoch") == 124
+        and guidance.get("adaptive_controller_selects_stop") is False
+        and guidance.get("same_duration_for_every_variant_and_seed") is True,
+        "variants": protocol.get("aggregation_variants")
+        == list(AGGREGATION_VARIANTS)
+        and set(AGGREGATION_VARIANTS).issubset(set(IBKD_AGGREGATION_MODES)),
+        "probe": probe.get("run_after_classification") is True
+        and probe.get("encoder_frozen") is True
+        and probe.get("probe_seeds") == list(PROBE_SEEDS)
+        and probe.get("learning_rates") == [0.01, 0.03, 0.1]
+        and probe.get("epochs") == 100,
+        "test_policy": protocol.get("official_test_policy", {}).get(
+            "smoke_access"
+        )
+        is False
+        and protocol.get("official_test_policy", {}).get("selection_uses_test")
+        is False,
+        "execution_id": execution.get("execution_id")
+        == "cub200_phase1_r50_224_b128_main_l0_ibkd_connection_matched_duration_full_execution_v2",
+        "execution_ready": str(execution.get("status", "")).startswith(
+            "ready_for_unconditional_three_seed_full"
+        )
+        and execution.get("release_decision", {}).get("source_h200_issue") == 776
+        and execution.get("release_decision", {}).get("smoke_variants_complete")
+        == 4
+        and execution.get("release_decision", {}).get(
+            "smoke_cross_gates_complete"
+        )
+        == 6
+        and execution.get("release_decision", {}).get(
+            "all_encoder_seeds_run_regardless_of_earlier_results"
+        )
+        is True
+        and execution.get("release_decision", {}).get("retain_smoke_outputs")
+        is False,
+        "execution_protocol": execution.get("scientific_protocol")
+        == {
+            "path": str(protocol_path.relative_to(REPOSITORY_ROOT)),
+            "sha256": EXPECTED_MATCHED_PROTOCOL_SHA256,
+        },
+        "execution_base": execution.get("base_protocol")
+        == {
+            "path": str(base_path.relative_to(REPOSITORY_ROOT)),
+            "sha256": EXPECTED_BASE_SHA256,
+        },
+        "execution_shared": shared.get("teacher_source_h200_issue") == 722
+        and shared.get("teacher_checkpoint_sha256") == EXPECTED_TEACHER_SHA256
+        and shared.get("teacher_model_state_sha256")
+        == EXPECTED_TEACHER_STATE_SHA256
+        and shared.get("batch_size") == 128
+        and shared.get("classification_epochs") == 300
+        and shared.get("fixed_guidance_epochs_inclusive") == 123
+        and shared.get("beta_zero_from_epoch") == 124
+        and shared.get("aggregation_variants") == list(AGGREGATION_VARIANTS)
+        and shared.get("probe_seeds") == list(PROBE_SEEDS)
+        and shared.get("probe_learning_rates") == [0.01, 0.03, 0.1]
+        and shared.get("probe_epochs") == 100
+        and shared.get("official_test_after_all_validation_selections_within_shard")
+        is True,
+        "seed_shard": encoder_seed in {1, 2, 3}
+        and encoder_seed
+        in {
+            int(row.get("encoder_seed", -1))
+            for row in execution.get("h200_shards", [])
+        },
+        "one_seed_per_issue": [
+            (row.get("encoder_seed"), row.get("planned_issue_group"))
+            for row in execution.get("h200_shards", [])
+        ]
+        == [(1, 1), (2, 2), (3, 3)],
+        "runtime": execution.get("runtime", {}).get("requested_mig_slices") == 7
+        and execution.get("runtime", {}).get("num_workers") == 0
+        and execution.get("runtime", {}).get("ten_hour_limit_seconds") == 36000,
+        "per_shard_gate": execution.get("per_shard_completion_gate")
+        == {
+            "teacher_download_and_audit": 1,
+            "classification_students": 4,
+            "classification_validation_selections": 4,
+            "classification_official_test_evaluations": 4,
+            "segmentation_probe_lr_candidates": 60,
+            "segmentation_probe_validation_selections": 20,
+            "segmentation_probe_official_test_evaluations": 20,
+            "retained_new_checkpoints": 24,
+        },
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise RuntimeError(
+            "invalid matched CUB iBKD connection full contract: "
+            + ", ".join(failures)
+        )
+    return base, base_path
+
+
 def _validate_configs(
     protocol: dict[str, Any],
     protocol_path: Path,
@@ -115,7 +274,16 @@ def _validate_configs(
     execution_path: Path,
     encoder_seed: int,
 ) -> tuple[dict[str, Any], Path]:
-    if file_sha256(protocol_path) != EXPECTED_PROTOCOL_SHA256:
+    protocol_sha256 = file_sha256(protocol_path)
+    if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256:
+        return _validate_matched_configs(
+            protocol,
+            protocol_path,
+            execution,
+            execution_path,
+            encoder_seed,
+        )
+    if protocol_sha256 != EXPECTED_PROTOCOL_SHA256:
         raise RuntimeError("mechanism scientific protocol SHA-256 changed")
     if file_sha256(execution_path) != EXPECTED_EXECUTION_SHA256:
         raise RuntimeError("mechanism execution config SHA-256 changed")
@@ -312,7 +480,11 @@ def _load_encoder(
     metadata = payload.get("metadata", {})
     mode = str(row["aggregation_mode"])
     expected = {
-        "purpose": CLASSIFICATION_PURPOSE,
+        "purpose": (
+            MATCHED_CLASSIFICATION_PURPOSE
+            if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+            else CLASSIFICATION_PURPOSE
+        ),
         "scientific_result": True,
         "confirmatory_main_result": False,
         "canonical_phase1_result_replaced": False,
@@ -335,6 +507,8 @@ def _load_encoder(
         "batch_profile_role": ROLE,
         "official_test_evaluations_at_checkpoint_write": 0,
     }
+    if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256:
+        expected["ibkd_fixed_guidance_epochs"] = 123
     failures = [key for key, value in expected.items() if metadata.get(key) != value]
     aggregation = metadata.get("ibkd_aggregation")
     if not isinstance(aggregation, dict) or aggregation.get("mode") != mode:
@@ -381,6 +555,7 @@ def _train_classifiers(
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     root = args.output_dir / "classification" / "students"
+    matched_duration = protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
     for mode in AGGREGATION_VARIANTS:
         _write_status(
             args.output_dir,
@@ -443,6 +618,8 @@ def _train_classifiers(
             "--seed",
             str(args.encoder_seed),
         ]
+        if matched_duration:
+            command.extend(["--ibkd-fixed-guidance-epochs", "123"])
         summary = _run_or_resume(
             command,
             summary_path,
@@ -468,7 +645,19 @@ def _train_classifiers(
             "batch_profile_role": ROLE,
             "teacher_checkpoint_sha256": teacher_hash,
         }
+        if matched_duration:
+            expected["ibkd_fixed_guidance_epochs"] = 123
         failures = [key for key, value in expected.items() if summary.get(key) != value]
+        controller = summary.get("controller_final") or {}
+        if matched_duration and not (
+            controller.get("stop_policy") == "fixed_epoch"
+            and controller.get("fixed_stop_epoch") == 123
+            and controller.get("stop_epoch") == 123
+            and controller.get("active") is False
+            and controller.get("beta_history")
+            == [2.5] * 123 + [0.0] * 177
+        ):
+            failures.append("fixed_guidance_schedule")
         if failures:
             raise RuntimeError(
                 f"mechanism classification summary mismatch {mode}: "
@@ -497,6 +686,18 @@ def _train_classifiers(
     }
     if len(initial_hashes) != 1:
         raise RuntimeError("paired student initialization changed across connections")
+    if matched_duration:
+        input_streams = {
+            tuple(
+                epoch.get("input_stream_sha256")
+                for epoch in row["summary"].get("history", [])
+            )
+            for row in rows
+        }
+        if len(input_streams) != 1 or len(next(iter(input_streams), ())) != 300:
+            raise RuntimeError(
+                "paired augmented input stream changed across matched connections"
+            )
     _atomic_json_save(
         {
             "status": "complete",
@@ -505,6 +706,10 @@ def _train_classifiers(
             "completed_validation_selections": 4,
             "expected_validation_selections": 4,
             "paired_initial_student_state_sha256": next(iter(initial_hashes)),
+            "paired_epoch_input_stream_sha256": (
+                list(next(iter(input_streams))) if matched_duration else None
+            ),
+            "fixed_guidance_epochs": 123 if matched_duration else None,
             "official_test_accessed": False,
         },
         args.output_dir / "classification_selection_complete_before_test.json",
@@ -642,7 +847,11 @@ def _train_probes(
             _atomic_torch_save(
                 {
                     "metadata": {
-                        "purpose": PROBE_PURPOSE,
+                        "purpose": (
+                            MATCHED_PROBE_PURPOSE
+                            if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+                            else PROBE_PURPOSE
+                        ),
                         "scientific_result": True,
                         "posthoc_mechanism_analysis": True,
                         "protocol_config_sha256": protocol_sha256,
@@ -871,7 +1080,11 @@ def _evaluate_official_test(
             )
             metadata = saved.get("metadata", {})
             expected = {
-                "purpose": PROBE_PURPOSE,
+                "purpose": (
+                    MATCHED_PROBE_PURPOSE
+                    if protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+                    else PROBE_PURPOSE
+                ),
                 "scientific_result": True,
                 "protocol_config_sha256": protocol_sha256,
                 "execution_config_sha256": execution_sha256,
@@ -1158,6 +1371,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     )
     protocol_sha256 = file_sha256(args.protocol_config)
     execution_sha256 = file_sha256(args.execution_config)
+    matched_duration = protocol_sha256 == EXPECTED_MATCHED_PROTOCOL_SHA256
+    if matched_duration and args.num_workers != 0:
+        raise RuntimeError("matched-duration full requires num_workers=0")
     device = torch.device("cuda")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -1177,7 +1393,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     log(
         f"[MECHANISM_FULL_POLICY] encoder_seed={args.encoder_seed} "
         "variants=4 classification_epochs=300 probe_seeds=5 probe_lrs=3 "
-        "probe_epochs=100 official_test_after_all_validation_selections=true"
+        "probe_epochs=100 official_test_after_all_validation_selections=true "
+        f"matched_duration={str(matched_duration).lower()} "
+        f"fixed_guidance_epochs={123 if matched_duration else 'adaptive'}"
     )
 
     partitions, split_manifest, dataset_source = load_train_validation_records(
@@ -1287,6 +1505,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "execution_config_sha256": execution_sha256,
         "input_lineage_id": "main_l0_v3",
         "loader_profile": L0_CURRENT_STRONG,
+        "matched_guidance_duration": matched_duration,
+        "fixed_guidance_epochs": 123 if matched_duration else None,
         "classification": classification_flat,
         "frozen_probe": probe_flat,
         "frozen_probe_aggregates": probe_aggregates,
@@ -1333,6 +1553,51 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "teacher_audit=1/1 classification=4/4 classification_test=4/4 "
         "probe_candidates=60/60 probe_selections=20/20 probe_test=20/20 "
         "new_checkpoints=24/24"
+    )
+    terminal_results = []
+    for row in classification_rows:
+        mode = str(row["aggregation_mode"])
+        terminal_results.append(
+            {
+                "aggregation_mode": mode,
+                "final_train_loss": row["summary"]["history"][-1]["train_loss"],
+                "selected_epoch": row["summary"]["selected_epoch"],
+                "validation_macro_top1": by_classification[mode][
+                    "validation_macro_top1"
+                ],
+                "test_macro_top1": by_classification[mode]["test_macro_top1"],
+                "test_overall_top1": by_classification[mode][
+                    "test_overall_top1"
+                ],
+                "test_top5": by_classification[mode]["test_top5"],
+                "controller_stop_epoch": by_classification[mode][
+                    "controller_stop_epoch"
+                ],
+                "test_probe_input_miou_mean": by_probe[mode][
+                    "mean_over_probe_seeds"
+                ],
+                "test_probe_input_miou_sample_sd": by_probe[mode][
+                    "sample_standard_deviation_over_probe_seeds"
+                ],
+            }
+        )
+    log(
+        "[MECHANISM_FULL_FINAL] "
+        + json.dumps(
+            {
+                "status": "pass",
+                "encoder_seed": args.encoder_seed,
+                "matched_guidance_duration": matched_duration,
+                "fixed_guidance_epochs": 123 if matched_duration else None,
+                "classification": terminal_results,
+                "frozen_probe": probe_flat,
+                "frozen_probe_aggregates": probe_aggregates,
+                "completion": completion,
+                "official_test_used_for_selection": False,
+                "elapsed_seconds": elapsed,
+            },
+            sort_keys=True,
+        )
     )
     return summary
 
