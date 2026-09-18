@@ -71,6 +71,15 @@ class CityscapesReproducibilityTests(unittest.TestCase):
         self.assertFalse(result["checks"]["student_final_state_exact"])
         self.assertEqual(result["mismatched_steps"], [2])
 
+    def test_empty_failed_runs_never_pass(self):
+        left = self.summary()
+        right = self.summary()
+        left["completed_steps"] = right["completed_steps"] = 0
+        result = compare_runs(left, right, [], [], expected_steps=25)
+        self.assertFalse(result["passed"])
+        self.assertFalse(result["checks"]["nonempty_trajectories"])
+        self.assertFalse(result["checks"]["expected_steps_completed"])
+
 
 if __name__ == "__main__":
     unittest.main()

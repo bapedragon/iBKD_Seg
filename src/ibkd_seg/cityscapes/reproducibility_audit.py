@@ -39,7 +39,14 @@ def canonical_trajectory(rows: list[dict]) -> list[dict]:
     ]
 
 
-def compare_runs(left: dict, right: dict, left_steps: list[dict], right_steps: list[dict]) -> dict:
+def compare_runs(
+    left: dict,
+    right: dict,
+    left_steps: list[dict],
+    right_steps: list[dict],
+    *,
+    expected_steps: int | None = None,
+) -> dict:
     left_trajectory = canonical_trajectory(left_steps)
     right_trajectory = canonical_trajectory(right_steps)
     mismatched_steps = []
@@ -54,6 +61,7 @@ def compare_runs(left: dict, right: dict, left_steps: list[dict], right_steps: l
                   max(len(left_trajectory), len(right_trajectory)) + 1)
         )
     checks = {
+        "nonempty_trajectories": bool(left_trajectory) and bool(right_trajectory),
         "completed_steps_equal": left.get("completed_steps") == right.get("completed_steps"),
         "input_stream_exact": left.get("input_stream_sha256") == right.get("input_stream_sha256"),
         "student_initial_state_exact": (
@@ -72,6 +80,13 @@ def compare_runs(left: dict, right: dict, left_steps: list[dict], right_steps: l
         ),
         "validation_exact": left.get("diagnostic_validation") == right.get("diagnostic_validation"),
     }
+    if expected_steps is not None:
+        checks["expected_steps_completed"] = (
+            len(left_trajectory) == expected_steps
+            and len(right_trajectory) == expected_steps
+            and left.get("completed_steps") == expected_steps
+            and right.get("completed_steps") == expected_steps
+        )
     return {
         "passed": all(checks.values()),
         "checks": checks,
@@ -160,10 +175,12 @@ def run(args) -> int:
             for run_id, _ in plans
         }
         comparisons["lg_repeat"] = compare_runs(
-            runs["lg_a"], runs["lg_b"], steps["lg_a"], steps["lg_b"]
+            runs["lg_a"], runs["lg_b"], steps["lg_a"], steps["lg_b"],
+            expected_steps=config["stability_steps"],
         )
         comparisons["lg_vs_alg_before_controller_action"] = compare_runs(
-            runs["lg_a"], runs["alg"], steps["lg_a"], steps["alg"]
+            runs["lg_a"], runs["alg"], steps["lg_a"], steps["alg"],
+            expected_steps=config["stability_steps"],
         )
 
     deterministic_runs = {
