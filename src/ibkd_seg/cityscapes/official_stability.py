@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import platform
 import statistics
 import subprocess
@@ -103,6 +104,13 @@ def validate_config(config):
             "stability_steps": 500,
             "guidance_beta": 0.05,
             "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05, "ibkd": 0.5},
+        },
+        "cityscapes_segmenter_l16_crop512_repro25_v4": {
+            "methods": ["lg", "alg"],
+            "stability_steps": 25,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05},
+            "strict_determinism": True,
         },
     }
     profile = profiles.get(config.get("protocol_id"))
@@ -213,11 +221,18 @@ def run_method(args, config, output):
     manifest = json.loads(args.manifest.read_text())
     labels = json.loads(args.labels_report.read_text())
     datasets = {split: FullDataset(args.data_dir, manifest, config, split) for split in ("train", "val")}
-    seed_all(config["seed"])
+    strict_determinism = bool(config.get("strict_determinism", False))
+    if strict_determinism and os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {
+        ":4096:8", ":16:8"
+    }:
+        raise RuntimeError(
+            "Strict determinism requires CUBLAS_WORKSPACE_CONFIG=:4096:8 or :16:8"
+        )
+    seed_all(config["seed"], strict_determinism=strict_determinism)
     model = api.student(args.cache_root, image_size=config["crop_size"],
                         decoder_layers=config["decoder_layers"]).to(device).train()
     initial_student = state_hash(model)
-    seed_all(config["seed"] + 1000)
+    seed_all(config["seed"] + 1000, strict_determinism=strict_determinism)
     effective_config = dict(config)
     effective_config["guidance_beta"] = guidance_beta_for(args.method, config)
     guide = api.guidance(args.method, effective_config)
@@ -234,7 +249,7 @@ def run_method(args, config, output):
         raise RuntimeError("Unexpected optimizer or scheduler")
     parameters = [p for group in optimizer.param_groups for p in group["params"]]
     controller = controller_for(args.method, effective_config)
-    seed_all(config["seed"] + 2000)
+    seed_all(config["seed"] + 2000, strict_determinism=strict_determinism)
     torch.cuda.reset_peak_memory_stats()
 
     rows = []
@@ -377,6 +392,8 @@ def run_method(args, config, output):
         "input_checks": input_checks,
         "input_stream_sha256": stream.hexdigest(),
         "student_initial_state_sha256": initial_student,
+        "student_final_state_sha256": state_hash(model),
+        "guidance_final_state_sha256": None if guide is None else state_hash(guide),
         "teacher_state_sha256": teacher_hash,
         "teacher_frozen_verified": teacher_frozen,
         "parameters_finite": parameters_finite,
@@ -401,6 +418,16 @@ def run_method(args, config, output):
             "timm": timm.__version__,
             "cuda": torch.version.cuda,
             "gpu": torch.cuda.get_device_name(),
+            "strict_determinism_requested": strict_determinism,
+            "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+            "torch_deterministic_warn_only": (
+                torch.is_deterministic_algorithms_warn_only_enabled()
+            ),
+            "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+            "cudnn_benchmark": torch.backends.cudnn.benchmark,
+            "cudnn_deterministic": torch.backends.cudnn.deterministic,
+            "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+            "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
         },
     }
     save_json(output / "summary.json", result)

@@ -100,6 +100,20 @@ class CityscapesStabilityTests(unittest.TestCase):
         self.assertEqual(guidance_beta_for("alg", config), 0.05)
         self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
 
+    def test_reproducibility_profile_requires_strict_determinism(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_repro25_v4.json"
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["stability_steps"], 25)
+        self.assertEqual(config["methods"], ["lg", "alg"])
+        self.assertTrue(config["strict_determinism"])
+        self.assertEqual(guidance_beta_for("lg", config), 0.05)
+        self.assertEqual(guidance_beta_for("alg", config), 0.05)
+        config["strict_determinism"] = False
+        with self.assertRaises(ValueError):
+            validate_config(config)
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):

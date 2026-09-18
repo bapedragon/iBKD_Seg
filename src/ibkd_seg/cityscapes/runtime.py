@@ -79,7 +79,7 @@ def validate_config(config: dict):
         raise ValueError("The pilot matrix must include Vanilla/LG/ALG/iBKD")
 
 
-def seed_all(seed):
+def seed_all(seed, *, strict_determinism=False):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -87,6 +87,8 @@ def seed_all(seed):
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+    if strict_determinism:
+        torch.use_deterministic_algorithms(True, warn_only=False)
 
 
 def state_hash(module):
