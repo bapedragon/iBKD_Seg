@@ -1,7 +1,11 @@
 import math
 import unittest
 
-from ibkd_seg.cityscapes.official_stability import stability_decision, validate_config
+from ibkd_seg.cityscapes.official_stability import (
+    stability_decision,
+    terminal_result,
+    validate_config,
+)
 
 
 class CityscapesStabilityTests(unittest.TestCase):
@@ -68,6 +72,43 @@ class CityscapesStabilityTests(unittest.TestCase):
         config["crop_size"] = 768
         with self.assertRaises(ValueError):
             validate_config(config)
+
+    def test_terminal_result_contains_every_method_result(self):
+        runs = []
+        for method in ("vanilla", "lg", "alg", "ibkd"):
+            runs.append({
+                "method": method,
+                "status": "stable",
+                "completed_steps": 500,
+                "expected_steps": 500,
+                "first_step": {"step": 1, "loss": 3.0},
+                "final_step": {"step": 500, "loss": 1.0},
+                "decision": {"diagnostics": {"loss": {}}, "reasons": []},
+                "diagnostic_validation": {"pixel_accuracy": 0.5, "miou": 0.2},
+                "validation_samples": 20,
+                "decoder_layers": 1,
+                "schedule_total_steps": 80_000,
+                "train_seconds": 10.0,
+                "invocation_seconds": 12.0,
+                "peak_cuda_allocated_bytes": 100,
+                "teacher_frozen_verified": True,
+                "parameters_finite": True,
+                "optimizer_state_finite": True,
+                "runtime_error": None,
+            })
+        config = {
+            "methods": ["vanilla", "lg", "alg", "ibkd"],
+            "protocol_id": "test",
+            "crop_size": 512,
+            "batch_size": 8,
+            "total_steps": 80_000,
+        }
+        result = terminal_result(runs, config, [])
+        self.assertTrue(result["all_methods_stable"])
+        self.assertEqual(set(result["methods"]), {"vanilla", "lg", "alg", "ibkd"})
+        self.assertEqual(result["methods"]["ibkd"]["final_step"]["step"], 500)
+        self.assertEqual(result["methods"]["lg"]["diagnostic_miou"], 0.2)
+        self.assertEqual(result["methods"]["vanilla"]["diagnostic_validation"]["pixel_accuracy"], 0.5)
 
 
 if __name__ == "__main__":

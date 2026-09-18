@@ -93,6 +93,53 @@ def validate_config(config):
         raise ValueError("Stability ratios must exceed one")
 
 
+def terminal_result(runs, config, consistency_errors):
+    methods = {}
+    for row in runs:
+        method = row["method"]
+        if "decision" not in row:
+            methods[method] = row
+            continue
+        scores = row.get("diagnostic_validation")
+        methods[method] = {
+            "status": row["status"],
+            "completed_steps": row["completed_steps"],
+            "expected_steps": row["expected_steps"],
+            "first_step": row.get("first_step"),
+            "final_step": row.get("final_step"),
+            "stability_diagnostics": row["decision"]["diagnostics"],
+            "stability_reasons": row["decision"]["reasons"],
+            "diagnostic_pixel_accuracy": None if scores is None else scores["pixel_accuracy"],
+            "diagnostic_miou": None if scores is None else scores["miou"],
+            "diagnostic_validation": scores,
+            "validation_samples": row["validation_samples"],
+            "decoder_layers": row["decoder_layers"],
+            "schedule_total_steps": row["schedule_total_steps"],
+            "train_seconds": row["train_seconds"],
+            "invocation_seconds": row["invocation_seconds"],
+            "peak_cuda_allocated_bytes": row["peak_cuda_allocated_bytes"],
+            "teacher_frozen_verified": row["teacher_frozen_verified"],
+            "parameters_finite": row["parameters_finite"],
+            "optimizer_state_finite": row["optimizer_state_finite"],
+            "runtime_error": row["runtime_error"],
+        }
+    stable_count = sum(row.get("status") == "stable" for row in runs)
+    return {
+        "status": "completed",
+        "protocol_id": config["protocol_id"],
+        "crop_size": config["crop_size"],
+        "batch_size": config["batch_size"],
+        "schedule_total_steps": config["total_steps"],
+        "all_methods_stable": stable_count == len(config["methods"]) and not consistency_errors,
+        "stable_methods": stable_count,
+        "total_methods": len(config["methods"]),
+        "consistency_errors": consistency_errors,
+        "scientific_result": False,
+        "full_training_authorized": False,
+        "methods": methods,
+    }
+
+
 def _module_norm(module):
     import torch
     if module is None:
@@ -280,6 +327,8 @@ def run_method(args, config, output):
         "full_training_authorized": False,
         "completed_steps": len(rows),
         "expected_steps": config["stability_steps"],
+        "first_step": rows[0] if rows else None,
+        "final_step": rows[-1] if rows else None,
         "decision": decision,
         "diagnostic_validation": scores,
         "validation_samples": config["val_samples"] if scores is not None else 0,
@@ -366,25 +415,22 @@ def run_suite(args, config, output, config_path):
     if step_one and (any(value is None for value in step_one)
                      or len({json_hash(value) for value in step_one}) > 1):
         consistency_errors.append("first_batch_mismatch")
-    stable_count = sum(row.get("status") == "stable" for row in runs)
+    terminal = terminal_result(runs, config, consistency_errors)
     final = {
         "status": "completed",
-        "all_methods_stable": stable_count == len(config["methods"]) and not consistency_errors,
-        "stable_methods": stable_count,
+        "all_methods_stable": terminal["all_methods_stable"],
+        "stable_methods": terminal["stable_methods"],
         "total_methods": len(config["methods"]),
         "consistency_errors": consistency_errors,
         "scientific_result": False,
         "full_training_authorized": False,
         "config_sha256": json_hash(config),
+        "terminal_result": terminal,
         "runs": runs,
     }
     save_json(output / "stability_summary.json", final)
-    print(
-        f"[CITYSCAPES_L16_STABILITY_DONE] status=completed "
-        f"stable_methods={stable_count}/{len(config['methods'])} "
-        f"all_methods_stable={str(final['all_methods_stable']).lower()}",
-        flush=True,
-    )
+    print("[CITYSCAPES_L16_STABILITY_DONE] "
+          + json.dumps(terminal, sort_keys=True, allow_nan=False), flush=True)
     return 0
 
 

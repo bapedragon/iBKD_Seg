@@ -6,7 +6,6 @@ H200 3-step smoke에서 네 방법의 실행 경로는 모두 통과했지만, L
 loss가 `4.61 → 43.57 → 527.91`로 증가했습니다. 80,000-step 본학습 전에 현재 설정을
 바꾸지 않고 방법별 최대 500 step을 실행하여 loss와 gradient 안정성을 판정합니다.
 
-- [H200 이슈 입력안](H200_L16_CROP512_STABILITY_ISSUE.md)
 - [고정 설정](configs/paper_l16_crop512_stability_v1.json)
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_stability.sh`
 
