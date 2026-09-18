@@ -82,9 +82,10 @@ def online_divergence_reason(rows, config):
 
 
 def validate_config(config):
+    beta_grid_2000 = "cityscapes_segmenter_l16_crop512_beta_grid2000_v6"
     locked = {
         "train_samples": 2975,
-        "val_samples": 20,
+        "val_samples": 500 if config.get("protocol_id") == beta_grid_2000 else 20,
         "batch_size": 8,
         "image_size": 1024,
         "crop_size": 512,
@@ -130,6 +131,17 @@ def validate_config(config):
         "cityscapes_segmenter_l16_crop512_beta_grid500_v5": {
             "methods": ["lg", "alg", "ibkd"],
             "stability_steps": 500,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "lg": [0.02, 0.05, 0.1, 0.2],
+                "alg": [0.02, 0.05, 0.1, 0.2],
+                "ibkd": [0.1, 0.25, 0.5, 1.0],
+            },
+        },
+        beta_grid_2000: {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 2000,
             "guidance_beta": 0.05,
             "guidance_beta_by_method": None,
             "guidance_beta_candidates_by_method": {

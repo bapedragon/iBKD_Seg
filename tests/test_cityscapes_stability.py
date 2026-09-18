@@ -146,6 +146,19 @@ class CityscapesStabilityTests(unittest.TestCase):
             guidance_beta_for("lg", config, 2.5)
         self.assertEqual(beta_run_id("ibkd", 0.25), "ibkd_beta_0p25")
 
+    def test_extended_beta_grid_uses_two_thousand_steps_and_full_val(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_beta_grid2000_v6.json"
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["stability_steps"], 2000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(config["guidance_beta_candidates_by_method"], {
+            "lg": [0.02, 0.05, 0.1, 0.2],
+            "alg": [0.02, 0.05, 0.1, 0.2],
+            "ibkd": [0.1, 0.25, 0.5, 1.0],
+        })
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):
