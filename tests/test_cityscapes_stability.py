@@ -89,6 +89,17 @@ class CityscapesStabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             guidance_beta_for("alg", config)
 
+    def test_beta_confirmation_locks_all_guided_methods(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_beta_confirm500_v3.json"
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["stability_steps"], 500)
+        self.assertEqual(config["methods"], ["lg", "alg", "ibkd"])
+        self.assertEqual(guidance_beta_for("lg", config), 0.05)
+        self.assertEqual(guidance_beta_for("alg", config), 0.05)
+        self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):

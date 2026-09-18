@@ -1,6 +1,18 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: L/16 crop512 beta 100-step 선별 v2
+## 현재 작업: L/16 crop512 beta 500-step 확인 v3
+
+LG beta 0.05와 iBKD beta 0.5가 100-step 선별을 통과했습니다. 같은 값을 고정하여
+LG·ALG·iBKD를 각각 500 step 실행하고 전체 train 순회와 두 번째 epoch 진입 이후에도
+loss와 gradient가 안정적인지 확인합니다. Vanilla의 기존 500-step 통과 결과는 재사용합니다.
+
+- [고정 설정](configs/paper_l16_crop512_beta_confirm500_v3.json)
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_beta_confirm500.sh`
+
+세 방법이 모두 안정적일 때만 이 beta를 본학습 후보로 확정합니다. 이 검사의 val 20장
+점수는 성능 비교에 사용하지 않습니다.
+
+## 이전 작업: L/16 crop512 beta 100-step 선별 v2
 
 500-step 안정성 검사에서 Vanilla는 통과했지만 LG/ALG는 4 step 뒤, iBKD는 33 step 뒤
 발산했습니다. 다른 조건은 고정하고 LG beta를 0.05, iBKD beta를 0.5로 낮춰 각각

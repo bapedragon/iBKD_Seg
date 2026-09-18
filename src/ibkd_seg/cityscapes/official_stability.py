@@ -98,6 +98,12 @@ def validate_config(config):
             "guidance_beta": 0.05,
             "guidance_beta_by_method": {"lg": 0.05, "ibkd": 0.5},
         },
+        "cityscapes_segmenter_l16_crop512_beta_confirm500_v3": {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 500,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05, "ibkd": 0.5},
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
