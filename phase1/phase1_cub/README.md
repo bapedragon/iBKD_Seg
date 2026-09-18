@@ -17,7 +17,7 @@ checkpoint와 학습형 probe는 validation으로만 선택하고, official test
 | Guided batch 128, 3 seeds | 분류 iBKD-0.25 24.429%, probe LG 73.470%로 각각 1위 | [Issue 727+730](reports/frozen_probe/resnet50_224_b128_guided_3seed_v5/RESULTS.md) |
 | 직접 공간정보 진단, main-L0 3 seeds | 기존 issues 727/730 checkpoint 평가; Part PCK·CKA는 LG 1위 | [Issue 737+739](reports/direct_spatial/resnet50_224_b128_guided_3seed_v2/RESULTS.md) |
 | 이미지 loader pilot-L0/L1/L2, seed 1 | 세 loader에서 encoder를 별도 재학습; Part PCK로 L2 선택 | [Loader 결과](image_loader_experiment/reports/full_v1_log_snapshot/RESULTS.md) |
-| main-L0 레이어 연결 사후 분석 | 기존 설정·감사 결과 보존; classification-only 후속 확장 보류 | [Mechanism](mechanism_analysis/README.md) |
+| main-L0 레이어 연결 사후 분석 | seed-1 classification-only 완료; learned-all 26.337%로 1위, 후속 확장 종료 | [Mechanism](mechanism_analysis/reports/main_l0_connection_classification_seed1_v3/RESULTS.md) |
 | main-L0 제어 A/A | 완료; 입력·RNG 통제 확인, test 24.761/25.510%로 동일 범위 재현 | [Reproducibility](reproducibility/README.md) |
 
 ## 2026-09-17 연구 방향 정리
@@ -75,5 +75,5 @@ bash phase1/phase1_cub/scripts/run_r50_224_direct_spatial_full_b128_seeds2_3.sh
   `checkpoint_release.json` 또는 `artifact_release.json`으로 보존합니다.
 - CUB 이미지·segmentation archive와 feature cache는 Git에 넣지 않습니다.
 - 본학습이 끝난 선행 실행 점검 config·script·중간 보고서는 제거했습니다.
-- 아직 본학습 전인 [mechanism_analysis](mechanism_analysis/README.md)와 Phase 4의
-  실행 점검 자료는 이 정리 대상이 아닙니다.
+- [mechanism_analysis](mechanism_analysis/README.md)는 seed-1 본학습 결과까지만
+  사후 진단으로 보존하며 추가 seed·probe로 확장하지 않습니다.

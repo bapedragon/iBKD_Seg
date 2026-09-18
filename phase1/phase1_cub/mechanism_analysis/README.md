@@ -33,8 +33,10 @@
    `24.7611/25.5098%`, issue 760의 `10.4096%` 저성능은 재현되지 않음
 7. Issue 770 단일 replay도 `26.3989%`로 정상 범위 복귀 확인
 8. 공통 guidance 기간을 123 epoch로 고정한 네 연결 방식 classification-only
-   v3 설정까지 준비했으나, 직접 segmentation으로 연구 방향을 전환해 후속 확장은
-   보류
+   seed-1 본실험 완료: test macro Top-1은 `learned_all` 26.3370%, `fixed_last`
+   23.7932%, `fixed_stage_match` 21.4168%, `fixed_uniform_all` 16.6497%
+9. Seed 1에서는 학습형 연결이 가장 높았지만, 직접 segmentation으로 연구 방향을
+   전환해 seed 2·3 및 frozen probe 확장 없이 사후분석을 종료
 
 ## Issue 760 `learned_all` 단일 경로 재현
 
@@ -75,7 +77,7 @@ Issue 776 smoke는 네 분류 경로 `4/4`, 개별 gate `11/11`, 교차 gate `6/
 통과했습니다. 같은 student 초기 상태와 epoch별 augmentation 입력 stream, Teacher,
 split, beta schedule을 확인했고 official test와 frozen probe는 열지 않았습니다.
 
-## Classification-only v3 — 후속 확장 보류
+## Classification-only v3 — seed 1 완료, 후속 확장 종료
 
 Issue 776 smoke 자체가 classification-only(`official_test=0`, `frozen_probe=0`)로
 통과했으므로 당시 계획에서는 추가 smoke 없이 encoder seed 하나씩 독립 issue로
@@ -83,8 +85,13 @@ Issue 776 smoke 자체가 classification-only(`official_test=0`, `frozen_probe=0
 checkpoint 선택, 네 선택이 모두 끝난 뒤 official classification test만 포함하고
 segmentation mask는 읽지 않는 설계였습니다.
 
+Seed-1 본실험은 완료됐으며 [결과 보고서](reports/main_l0_connection_classification_seed1_v3/RESULTS.md)에
+정리했습니다. `learned_all`이 세 고정 연결보다 높았으므로 seed 1에서는 학습형
+다중 레이어 연결이 분류에 도움을 주는 방향을 지지합니다. 다만 단일 seed이고
+classification-only이므로 공간정보·segmentation 주장은 할 수 없습니다.
+
 현재는 분류 encoder 뒤에 decoder/probe를 붙이는 경로를 더 확장하지 않기로 했으므로
-이 설정은 실행 근거가 아니라 기존 사후분석의 재현 기록으로만 보존합니다.
+seed 2·3 및 frozen probe를 수행하지 않고 기존 사후분석의 재현 기록으로 보존합니다.
 
 ```bash
 bash phase1/phase1_cub/mechanism_analysis/scripts/run_main_l0_ibkd_connection_classification_full_b128.sh 1

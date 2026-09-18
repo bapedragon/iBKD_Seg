@@ -1,0 +1,68 @@
+{
+  "result_id": "cub200_main_l0_ibkd_connection_classification_seed1_v3",
+  "status": "pass",
+  "scope": "classification_only",
+  "encoder_seed": 1,
+  "fixed_guidance_epochs": 123,
+  "official_test_used_for_selection": false,
+  "elapsed_seconds": 38743.44130799826,
+  "completion": {
+    "teacher_download_and_audit": 1,
+    "classification_students": 4,
+    "classification_validation_selections": 4,
+    "classification_official_test_evaluations": 4,
+    "frozen_probe_runs": 0,
+    "retained_new_checkpoints": 4
+  },
+  "classification": [
+    {
+      "aggregation_mode": "learned_all",
+      "controller_stop_epoch": 123,
+      "selected_epoch": 252,
+      "validation_macro_top1": 28.166666626930237,
+      "test_macro_top1": 26.337042450904846,
+      "test_overall_top1": 26.061442871936485,
+      "test_top5": 51.794960303762515,
+      "final_train_loss": 1.7036455954824175
+    },
+    {
+      "aggregation_mode": "fixed_uniform_all",
+      "controller_stop_epoch": 123,
+      "selected_epoch": 256,
+      "validation_macro_top1": 17.16666668653488,
+      "test_macro_top1": 16.649745404720306,
+      "test_overall_top1": 16.551605108733174,
+      "test_top5": 38.41905419399379,
+      "final_train_loss": 3.7338317235310874
+    },
+    {
+      "aggregation_mode": "fixed_stage_match",
+      "controller_stop_epoch": 123,
+      "selected_epoch": 253,
+      "validation_macro_top1": 24.83333647251129,
+      "test_macro_top1": 21.41677737236023,
+      "test_overall_top1": 21.26337590610977,
+      "test_top5": 45.63341387642389,
+      "final_train_loss": 2.0646328046208335
+    },
+    {
+      "aggregation_mode": "fixed_last",
+      "controller_stop_epoch": 123,
+      "selected_epoch": 291,
+      "validation_macro_top1": 25.50000250339508,
+      "test_macro_top1": 23.793192207813263,
+      "test_overall_top1": 23.62789092164308,
+      "test_top5": 49.36140835346911,
+      "final_train_loss": 2.5816649539130077
+    }
+  ],
+  "interpretation_scope": {
+    "supports": "learned_all outperformed the three fixed connection controls for seed 1 under matched guidance duration",
+    "does_not_establish": [
+      "cross-seed generality",
+      "spatial-information preservation",
+      "segmentation superiority"
+    ],
+    "follow_up_status": "closed_without_seed2_seed3_or_frozen_probe_due_to_direct-segmentation_research_direction"
+  }
+}

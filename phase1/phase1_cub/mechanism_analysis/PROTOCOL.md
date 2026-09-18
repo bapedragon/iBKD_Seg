@@ -1,6 +1,7 @@
 # main-L0 iBKD 레이어 연결 원인 분석 프로토콜
 
-상태: **기존 checkpoint 관찰 감사 완료, 본실험 과학 설정·실행 분할 고정**
+상태: **기존 checkpoint 감사 및 matched-duration seed-1 classification 본실험 완료;
+후속 확장 종료**
 
 ## 질문
 
@@ -135,6 +136,13 @@ peak reserved CUDA memory는 약 `17.34 GB`였습니다. 본실험은 seed별 �
 Official test는 seed 내 네 validation checkpoint 선택이 모두 끝난 뒤에만 각 checkpoint에
 한 번씩 평가합니다. 이 실험으로 공간정보 보존이나 segmentation 우위는 주장하지
 않습니다. CUB segmentation mask archive도 다운로드하거나 읽지 않습니다.
+
+Seed-1 본실험은 완료 gate를 통과했습니다. Test macro Top-1은 `learned_all`
+26.3370%, `fixed_last` 23.7932%, `fixed_stage_match` 21.4168%,
+`fixed_uniform_all` 16.6497%였습니다. 네 방식의 validation과 test 순위가 같았으며,
+test는 선택에 사용하지 않았습니다. 결과는
+[`reports/main_l0_connection_classification_seed1_v3/`](reports/main_l0_connection_classification_seed1_v3/RESULTS.md)에
+보존합니다. 연구 방향 전환에 따라 seed 2·3과 frozen probe로 확장하지 않습니다.
 
 아래 v1 계약은 기존 동적 controller 실행의 역사적 기록이며 v2 본실험에는 사용하지
 않습니다.

@@ -1,0 +1,13 @@
+{
+  "result_id": "cub200_main_l0_ibkd_connection_classification_seed1_v3",
+  "source_type": "user_provided_h200_pasted_log",
+  "source_request": "박철현 Phase1 CUB main-L0 iBKD 레이어 연결 4방식 classification-only seed1 본실험",
+  "observed_runner_clone_directory": "bapedragon_780",
+  "log_sha256": "38ca3a332a9360e7011c1eb1471be844681f7184fef71e22d65fc6ec15c46252",
+  "log_bytes": 65004,
+  "log_lines": 417,
+  "log_completeness": "paste_starts_mid_run_but_contains_complete_final_summary_and_completion_gate",
+  "result_archive_received": false,
+  "checkpoint_archive_received": false,
+  "parsed_from_final_summary": true
+}
