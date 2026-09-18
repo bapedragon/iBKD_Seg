@@ -1,6 +1,20 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: 공개 소스 L/16 본학습 v1
+## 현재 작업: 논문 정렬 L/16 crop512 smoke v3
+
+학습 시간을 줄이는 공통 비교 설정을 준비하기 위해 Segmenter 논문의 Cityscapes
+L/16에서 crop과 대응 inference window만 768에서 512로 줄인 smoke를 추가했습니다.
+논문에 명시된 1블록 mask decoder, batch8, 80k-step schedule과 나머지 증강·optimizer는
+유지합니다. Vanilla/LG/ALG/iBKD 각 3step과 val 2장으로 시간·메모리·재개를 확인합니다.
+
+- [H200 이슈 입력안](H200_L16_CROP512_SMOKE_ISSUE.md)
+- [설정](configs/paper_l16_crop512_smoke_v3.json)
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_smoke.sh`
+
+이 smoke가 통과하기 전에는 crop512 본학습 설정을 확정하지 않습니다. 평가 우선순위인
+pixel accuracy와 DeepLab teacher 및 세 guidance 방법은 Segmenter 원 논문 밖의 연구 조건입니다.
+
+## 이전 작업: 공개 소스 L/16 본학습 v1
 
 H200 `bapedragon_771`에서 공식 소스·공개 가중치 L/16 smoke **4/4 통과**를
 사용자 제공 로그로 확인했습니다. 본학습은 seed1의 Vanilla/LG/ALG/iBKD를

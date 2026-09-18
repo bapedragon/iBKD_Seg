@@ -45,21 +45,24 @@ def bootstrap(root: Path):
         importlib.import_module("mmseg." + name)
 
 
-def recipe(root):
+def recipe(root, *, image_size=None, decoder_layers=None):
     import yaml
     original = yaml.safe_load((root / "segmenter/segm/config.yml").read_text())
     net = dict(original["model"]["vit_large_patch16_384"])
     data = original["dataset"]["cityscapes"]
-    net.update(image_size=(data["crop_size"],) * 2, backbone="vit_large_patch16_384",
+    net.update(image_size=((data["crop_size"] if image_size is None else image_size),) * 2,
+               backbone="vit_large_patch16_384",
                n_cls=19, dropout=0.0, drop_path_rate=0.1,
                decoder=dict(original["decoder"]["mask_transformer"], name="mask_transformer"))
+    if decoder_layers is not None:
+        net["decoder"]["n_layers"] = decoder_layers
     return net, data
 
 
-def student(root, *, recompute=True):
+def student(root, *, recompute=True, image_size=None, decoder_layers=None):
     from segm.model import factory
     from .official_assets import WEIGHTS
-    net, _ = recipe(root)
+    net, _ = recipe(root, image_size=image_size, decoder_layers=decoder_layers)
     original_loader = factory.load_custom_pretrained
 
     def verified_loader(model, default_cfg):
@@ -76,6 +79,8 @@ def student(root, *, recompute=True):
         factory.load_custom_pretrained = original_loader
     if model.encoder.n_layers != 24 or model.encoder.d_model != 1024:
         raise RuntimeError("Expected original L/16")
+    if decoder_layers is not None and len(model.decoder.blocks) != decoder_layers:
+        raise RuntimeError("Unexpected mask-transformer decoder depth")
     if recompute:
         enable_recomputation(model)
     return model
@@ -159,16 +164,17 @@ def guidance(method, config):
     return module
 
 
-def optimizer_scheduler(model, guidance_module, root):
+def optimizer_scheduler(model, guidance_module, root, *, total_steps=None):
     from types import SimpleNamespace
     import torch
     import math
     from segm.optim.factory import create_optimizer, create_scheduler
     _, data = recipe(root)
+    iter_max = math.ceil(2975 / data["batch_size"]) * data["epochs"] if total_steps is None else total_steps
     args = SimpleNamespace(opt="sgd", lr=data["learning_rate"], weight_decay=0.0,
                            momentum=0.9, clip_grad=None, sched="polynomial",
                            epochs=data["epochs"], min_lr=1e-5, poly_power=0.9,
-                           poly_step_size=1, iter_max=math.ceil(2975 / data["batch_size"]) * data["epochs"],
+                           poly_step_size=1, iter_max=iter_max,
                            iter_warmup=0)
     bundle = torch.nn.ModuleList([model] + ([] if guidance_module is None else [guidance_module]))
     optimizer = create_optimizer(args, bundle)

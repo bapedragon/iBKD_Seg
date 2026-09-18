@@ -47,8 +47,8 @@ def batches(root, manifest_path, config, *, cpu_small=False):
     for split, rows in chosen.items():
         # CPU test only reduces spatial dimensions and batch, retaining the
         # full L/16 model, decoder, official weights and all transform classes.
-        dataset = CityscapesDataset(image_size=64 if cpu_small else 1024,
-                                    crop_size=32 if cpu_small else 768,
+        dataset = CityscapesDataset(image_size=64 if cpu_small else config.get("image_size", 1024),
+                                    crop_size=32 if cpu_small else config["crop_size"],
                                     split=split, normalization="vit")
         datasets[split] = dataset
         by_id = {Path(row["filename"]).name.removesuffix("_leftImg8bit.png"): index

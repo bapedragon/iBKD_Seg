@@ -39,7 +39,8 @@ def measure(args, config, output):
     data, identity = batches(args.data_dir, args.manifest, config, cpu_small=args.cpu_small)
     save_json(output / "data_identity.json", identity)
     seed_all(config["seed"])
-    model = api.student(args.cache_root).to(device).train()
+    model = api.student(args.cache_root, image_size=config["crop_size"],
+                        decoder_layers=config.get("decoder_layers")).to(device).train()
     initial = state_hash(model)
     seed_all(config["seed"] + 1000)
     guide = api.guidance(args.method, config)
@@ -50,7 +51,8 @@ def measure(args, config, output):
         teacher = api.teacher(args.cache_root).to(device)
         teacher_hash = state_hash(teacher)
     capture = api.FeatureCapture(model)
-    optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root)
+    optimizer, scheduler = api.optimizer_scheduler(
+        model, guide, args.cache_root, total_steps=config.get("total_steps"))
     modules = {"encoder": model.encoder, "decoder": model.decoder}
     if guide is not None:
         modules["guidance"] = guide
@@ -184,6 +186,7 @@ def measure(args, config, output):
                   source_sha256=source, student_initial_state_sha256=initial,
                   teacher_state_sha256=teacher_hash, teacher_frozen_verified=teacher is not None,
                   teacher_diagnostic=teacher_diagnostic, student_parameters=sum(p.numel() for p in model.parameters()),
+                  decoder_layers=len(model.decoder.blocks), schedule_total_steps=scheduler.iter_max,
                   losses=rows, checkpoint=checkpoint_record, resume_tolerance=tolerance,
                   controller_diagnostics=verify_controller_paths(config),
                   diagnostic_pixel_accuracy=scores["pixel_accuracy"], diagnostic_miou=scores["miou"],
@@ -204,17 +207,22 @@ def main():
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--cpu-small", action="store_true")
     parser.add_argument("--method", choices=("vanilla", "lg", "alg", "ibkd"), help=argparse.SUPPRESS)
+    parser.add_argument("--config", type=Path,
+                        help="Checked smoke configuration; defaults to the historical crop768 smoke")
     args = parser.parse_args()
     if (args.device == "cpu") != args.cpu_small:
         parser.error("CPU requires --cpu-small; CUDA runs may not shrink the recipe")
-    for key in ("cache_root", "data_dir", "manifest", "output_dir"):
+    for key in ("cache_root", "data_dir", "manifest", "output_dir", "config"):
+        if getattr(args, key) is None:
+            continue
         setattr(args, key, getattr(args, key).resolve())
     bootstrap(args.cache_root)
     from .runtime import REPO
     from .data import save_json, verify_manifest, json_hash
     from .official_assets import verify
     from .official_api import recipe
-    config = json.loads((REPO / "phase4/phase4_cityscapes/configs/official_l16_smoke_v2.json").read_text())
+    config_path = args.config or REPO / "phase4/phase4_cityscapes/configs/official_l16_smoke_v2.json"
+    config = json.loads(config_path.read_text())
     if args.cpu_small:
         config.update(protocol_id=config["protocol_id"] + "_cpu_small", batch_size=2,
                       crop_size=32, window_size=32, window_stride=24, attention_query_chunk=7)
@@ -228,7 +236,8 @@ def main():
         provenance = verify(args.cache_root)
         save_json(output / "provenance.json", provenance)
         save_json(output / "config.json", config)
-        net, upstream = recipe(args.cache_root)
+        net, upstream = recipe(args.cache_root, image_size=config["crop_size"],
+                               decoder_layers=config.get("decoder_layers"))
         save_json(output / "upstream_recipe.json", {"net": net, "dataset": upstream})
         if args.method:
             measure(args, config, output)
@@ -239,7 +248,7 @@ def main():
             command = [sys.executable, "-m", "ibkd_seg.cityscapes.official_smoke",
                        "--cache-root", str(args.cache_root), "--data-dir", str(args.data_dir),
                        "--manifest", str(args.manifest), "--output-dir", str(output / method),
-                       "--device", args.device, "--method", method]
+                       "--device", args.device, "--method", method, "--config", str(config_path)]
             if args.cpu_small:
                 command.append("--cpu-small")
             subprocess.run(command, check=True)
