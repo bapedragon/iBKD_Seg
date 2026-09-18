@@ -1,8 +1,11 @@
 import math
+import json
 import unittest
+from pathlib import Path
 
 from ibkd_seg.cityscapes.official_stability import (
     stability_decision,
+    guidance_beta_for,
     terminal_result,
     validate_config,
 )
@@ -48,6 +51,7 @@ class CityscapesStabilityTests(unittest.TestCase):
 
     def test_locked_protocol_rejects_silent_crop_change(self):
         config = {
+            "protocol_id": "cityscapes_segmenter_l16_crop512_stability_v1",
             "methods": ["vanilla", "lg", "alg", "ibkd"],
             "stability_steps": 500,
             "train_samples": 2975,
@@ -63,6 +67,8 @@ class CityscapesStabilityTests(unittest.TestCase):
             "gradient_clipping": False,
             "automatic_hyperparameter_changes": False,
             "test_used": False,
+            "guidance_beta": 2.5,
+            "guidance_beta_by_method": None,
             "reference_steps": 1,
             "tail_steps": 50,
             "max_peak_ratio": 100.0,
@@ -72,6 +78,16 @@ class CityscapesStabilityTests(unittest.TestCase):
         config["crop_size"] = 768
         with self.assertRaises(ValueError):
             validate_config(config)
+
+    def test_beta_screen_locks_method_specific_values(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_beta_screen100_v2.json"
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(guidance_beta_for("lg", config), 0.05)
+        self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
+        with self.assertRaises(ValueError):
+            guidance_beta_for("alg", config)
 
     def test_terminal_result_contains_every_method_result(self):
         runs = []
@@ -86,6 +102,7 @@ class CityscapesStabilityTests(unittest.TestCase):
                 "decision": {"diagnostics": {"loss": {}}, "reasons": []},
                 "diagnostic_validation": {"pixel_accuracy": 0.5, "miou": 0.2},
                 "validation_samples": 20,
+                "effective_guidance_beta": 0.0 if method == "vanilla" else 2.5,
                 "decoder_layers": 1,
                 "schedule_total_steps": 80_000,
                 "train_seconds": 10.0,
@@ -102,6 +119,8 @@ class CityscapesStabilityTests(unittest.TestCase):
             "crop_size": 512,
             "batch_size": 8,
             "total_steps": 80_000,
+            "guidance_beta": 2.5,
+            "guidance_beta_by_method": None,
         }
         result = terminal_result(runs, config, [])
         self.assertTrue(result["all_methods_stable"])

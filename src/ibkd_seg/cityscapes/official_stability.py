@@ -1,4 +1,4 @@
-"""Bounded 500-step stability diagnostic for the crop512 L/16 protocol."""
+"""Bounded stability diagnostics for the crop512 L/16 protocol."""
 from __future__ import annotations
 
 import argparse
@@ -67,8 +67,6 @@ def stability_decision(rows, config, *, expected_steps, runtime_error=None):
 
 def validate_config(config):
     locked = {
-        "methods": ["vanilla", "lg", "alg", "ibkd"],
-        "stability_steps": 500,
         "train_samples": 2975,
         "val_samples": 20,
         "batch_size": 8,
@@ -87,10 +85,40 @@ def validate_config(config):
                   if config.get(key) != value}
     if mismatches:
         raise ValueError(f"Stability protocol mismatch: {mismatches}")
+    profiles = {
+        "cityscapes_segmenter_l16_crop512_stability_v1": {
+            "methods": ["vanilla", "lg", "alg", "ibkd"],
+            "stability_steps": 500,
+            "guidance_beta": 2.5,
+            "guidance_beta_by_method": None,
+        },
+        "cityscapes_segmenter_l16_crop512_beta_screen100_v2": {
+            "methods": ["lg", "ibkd"],
+            "stability_steps": 100,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": {"lg": 0.05, "ibkd": 0.5},
+        },
+    }
+    profile = profiles.get(config.get("protocol_id"))
+    if profile is None:
+        raise ValueError(f"Unknown stability protocol: {config.get('protocol_id')!r}")
+    profile_mismatches = {key: (config.get(key), value) for key, value in profile.items()
+                          if config.get(key) != value}
+    if profile_mismatches:
+        raise ValueError(f"Stability profile mismatch: {profile_mismatches}")
     if not 0 < config["reference_steps"] <= config["tail_steps"] <= config["stability_steps"]:
         raise ValueError("Invalid stability windows")
     if min(config["max_peak_ratio"], config["max_tail_ratio"]) <= 1:
         raise ValueError("Stability ratios must exceed one")
+
+
+def guidance_beta_for(method, config):
+    mapping = config.get("guidance_beta_by_method")
+    if mapping is not None:
+        if method not in mapping:
+            raise ValueError(f"No locked guidance beta for {method}")
+        return float(mapping[method])
+    return float(config["guidance_beta"])
 
 
 def terminal_result(runs, config, consistency_errors):
@@ -113,6 +141,7 @@ def terminal_result(runs, config, consistency_errors):
             "diagnostic_miou": None if scores is None else scores["miou"],
             "diagnostic_validation": scores,
             "validation_samples": row["validation_samples"],
+            "guidance_beta": row["effective_guidance_beta"],
             "decoder_layers": row["decoder_layers"],
             "schedule_total_steps": row["schedule_total_steps"],
             "train_seconds": row["train_seconds"],
@@ -130,6 +159,10 @@ def terminal_result(runs, config, consistency_errors):
         "crop_size": config["crop_size"],
         "batch_size": config["batch_size"],
         "schedule_total_steps": config["total_steps"],
+        "guidance_beta_by_method": {
+            method: guidance_beta_for(method, config)
+            for method in config["methods"] if method != "vanilla"
+        },
         "all_methods_stable": stable_count == len(config["methods"]) and not consistency_errors,
         "stable_methods": stable_count,
         "total_methods": len(config["methods"]),
@@ -179,7 +212,9 @@ def run_method(args, config, output):
                         decoder_layers=config["decoder_layers"]).to(device).train()
     initial_student = state_hash(model)
     seed_all(config["seed"] + 1000)
-    guide = api.guidance(args.method, config)
+    effective_config = dict(config)
+    effective_config["guidance_beta"] = guidance_beta_for(args.method, config)
+    guide = api.guidance(args.method, effective_config)
     teacher = None
     teacher_hash = None
     if guide is not None:
@@ -192,7 +227,7 @@ def run_method(args, config, output):
     if scheduler.iter_max != config["total_steps"] or not optimizer.defaults["nesterov"]:
         raise RuntimeError("Unexpected optimizer or scheduler")
     parameters = [p for group in optimizer.param_groups for p in group["params"]]
-    controller = controller_for(args.method, config)
+    controller = controller_for(args.method, effective_config)
     seed_all(config["seed"] + 2000)
     torch.cuda.reset_peak_memory_stats()
 
@@ -327,6 +362,7 @@ def run_method(args, config, output):
         "full_training_authorized": False,
         "completed_steps": len(rows),
         "expected_steps": config["stability_steps"],
+        "effective_guidance_beta": 0.0 if guide is None else effective_config["guidance_beta"],
         "first_step": rows[0] if rows else None,
         "final_step": rows[-1] if rows else None,
         "decision": decision,

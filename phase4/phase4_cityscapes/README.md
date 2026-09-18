@@ -1,6 +1,18 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: L/16 crop512 500-step 안정성 검사 v1
+## 현재 작업: L/16 crop512 beta 100-step 선별 v2
+
+500-step 안정성 검사에서 Vanilla는 통과했지만 LG/ALG는 4 step 뒤, iBKD는 33 step 뒤
+발산했습니다. 다른 조건은 고정하고 LG beta를 0.05, iBKD beta를 0.5로 낮춰 각각
+100 step을 검사합니다. ALG는 이 구간에서 LG와 동일하므로 빠른 선별에서는 생략합니다.
+
+- [고정 설정](configs/paper_l16_crop512_beta_screen100_v2.json)
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_beta_screen100.sh`
+
+두 방법이 모두 안정적이면 같은 beta로 LG·ALG·iBKD 500-step 확인을 다시 수행합니다.
+이 선별만으로 본학습을 승인하지 않습니다.
+
+## 이전 작업: L/16 crop512 500-step 안정성 검사 v1
 
 H200 3-step smoke에서 네 방법의 실행 경로는 모두 통과했지만, LG와 ALG의 guidance
 loss가 `4.61 → 43.57 → 527.91`로 증가했습니다. 80,000-step 본학습 전에 현재 설정을
