@@ -1,6 +1,19 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: 논문 정렬 L/16 crop512 smoke v3
+## 현재 작업: L/16 crop512 500-step 안정성 검사 v1
+
+H200 3-step smoke에서 네 방법의 실행 경로는 모두 통과했지만, LG와 ALG의 guidance
+loss가 `4.61 → 43.57 → 527.91`로 증가했습니다. 80,000-step 본학습 전에 현재 설정을
+바꾸지 않고 방법별 최대 500 step을 실행하여 loss와 gradient 안정성을 판정합니다.
+
+- [H200 이슈 입력안](H200_L16_CROP512_STABILITY_ISSUE.md)
+- [고정 설정](configs/paper_l16_crop512_stability_v1.json)
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_stability.sh`
+
+모든 방법이 `stable`이고 종합 결과가 `all_methods_stable=true`일 때만 crop512 본학습으로
+진행합니다. 이 검사의 val 20장 pixel accuracy와 mIoU는 연결 진단값입니다.
+
+## 이전 작업: 논문 정렬 L/16 crop512 smoke v3
 
 학습 시간을 줄이는 공통 비교 설정을 준비하기 위해 Segmenter 논문의 Cityscapes
 L/16에서 crop과 대응 inference window만 768에서 512로 줄인 smoke를 추가했습니다.
