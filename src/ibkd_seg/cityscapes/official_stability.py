@@ -66,6 +66,21 @@ def stability_decision(rows, config, *, expected_steps, runtime_error=None):
     return {"stable": not reasons, "reasons": reasons, "diagnostics": diagnostics}
 
 
+def online_divergence_reason(rows, config):
+    """Return a locked hard-failure reason without waiting for all 500 steps."""
+    if len(rows) < 2:
+        return None
+    for key in ("loss", "guidance", "grad_norm_unclipped"):
+        reference = abs(float(rows[0][key]))
+        current = abs(float(rows[-1][key]))
+        if reference == 0:
+            continue
+        ratio = current / reference
+        if not math.isfinite(ratio) or ratio > config["max_peak_ratio"]:
+            return f"{key}:step={rows[-1]['step']}:ratio={ratio}"
+    return None
+
+
 def validate_config(config):
     locked = {
         "train_samples": 2975,
@@ -112,6 +127,17 @@ def validate_config(config):
             "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05},
             "strict_determinism": True,
         },
+        "cityscapes_segmenter_l16_crop512_beta_grid500_v5": {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 500,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "lg": [0.02, 0.05, 0.1, 0.2],
+                "alg": [0.02, 0.05, 0.1, 0.2],
+                "ibkd": [0.1, 0.25, 0.5, 1.0],
+            },
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
@@ -126,7 +152,20 @@ def validate_config(config):
         raise ValueError("Stability ratios must exceed one")
 
 
-def guidance_beta_for(method, config):
+def guidance_beta_for(method, config, override=None):
+    candidates = config.get("guidance_beta_candidates_by_method")
+    if candidates is not None:
+        if method not in candidates:
+            raise ValueError(f"No locked guidance beta candidates for {method}")
+        if override is None:
+            raise ValueError(f"The beta-grid protocol requires an explicit beta for {method}")
+        beta = float(override)
+        if not any(math.isclose(beta, float(value), rel_tol=0.0, abs_tol=1e-12)
+                   for value in candidates[method]):
+            raise ValueError(f"Beta {beta} is outside the locked grid for {method}")
+        return beta
+    if override is not None:
+        raise ValueError("A beta override is allowed only for the locked beta-grid protocol")
     mapping = config.get("guidance_beta_by_method")
     if mapping is not None:
         if method not in mapping:
@@ -135,15 +174,22 @@ def guidance_beta_for(method, config):
     return float(config["guidance_beta"])
 
 
+def beta_run_id(method, beta):
+    value = format(float(beta), "g").replace("-", "m").replace(".", "p")
+    return f"{method}_beta_{value}"
+
+
 def terminal_result(runs, config, consistency_errors):
     methods = {}
     for row in runs:
         method = row["method"]
+        run_id = row.get("run_id", method)
         if "decision" not in row:
-            methods[method] = row
+            methods[run_id] = row
             continue
         scores = row.get("diagnostic_validation")
-        methods[method] = {
+        methods[run_id] = {
+            "method": method,
             "status": row["status"],
             "completed_steps": row["completed_steps"],
             "expected_steps": row["expected_steps"],
@@ -156,6 +202,8 @@ def terminal_result(runs, config, consistency_errors):
             "diagnostic_validation": scores,
             "validation_samples": row["validation_samples"],
             "guidance_beta": row["effective_guidance_beta"],
+            "guidance_active_steps": row.get("guidance_active_steps"),
+            "guidance_stop_epoch": row.get("guidance_stop_epoch"),
             "decoder_layers": row["decoder_layers"],
             "schedule_total_steps": row["schedule_total_steps"],
             "train_seconds": row["train_seconds"],
@@ -167,19 +215,50 @@ def terminal_result(runs, config, consistency_errors):
             "runtime_error": row["runtime_error"],
         }
     stable_count = sum(row.get("status") == "stable" for row in runs)
+    beta_candidates = config.get("guidance_beta_candidates_by_method")
+    if beta_candidates is None:
+        beta_by_method = {
+            method: guidance_beta_for(method, config)
+            for method in config["methods"] if method != "vanilla"
+        }
+    else:
+        beta_by_method = None
+    stable_candidates = None
+    unstable_candidates = None
+    if beta_candidates is not None:
+        stable_candidates = {
+            method: [
+                row.get("effective_guidance_beta")
+                for row in runs
+                if row.get("method") == method and row.get("status") == "stable"
+            ]
+            for method in config["methods"]
+        }
+        unstable_candidates = {
+            method: [
+                row.get("effective_guidance_beta")
+                for row in runs
+                if row.get("method") == method and row.get("status") != "stable"
+            ]
+            for method in config["methods"]
+        }
     return {
         "status": "completed",
         "protocol_id": config["protocol_id"],
         "crop_size": config["crop_size"],
         "batch_size": config["batch_size"],
         "schedule_total_steps": config["total_steps"],
-        "guidance_beta_by_method": {
-            method: guidance_beta_for(method, config)
-            for method in config["methods"] if method != "vanilla"
+        "guidance_beta_by_method": beta_by_method,
+        "guidance_beta_candidates_by_method": beta_candidates,
+        "guidance_beta_by_run": {
+            row.get("run_id", row["method"]): row.get("effective_guidance_beta")
+            for row in runs
         },
-        "all_methods_stable": stable_count == len(config["methods"]) and not consistency_errors,
+        "stable_beta_candidates_by_method": stable_candidates,
+        "unstable_beta_candidates_by_method": unstable_candidates,
+        "all_methods_stable": stable_count == len(runs) and not consistency_errors,
         "stable_methods": stable_count,
-        "total_methods": len(config["methods"]),
+        "total_methods": len(runs),
         "consistency_errors": consistency_errors,
         "scientific_result": False,
         "full_training_authorized": False,
@@ -234,7 +313,7 @@ def run_method(args, config, output):
     initial_student = state_hash(model)
     seed_all(config["seed"] + 1000, strict_determinism=strict_determinism)
     effective_config = dict(config)
-    effective_config["guidance_beta"] = guidance_beta_for(args.method, config)
+    effective_config["guidance_beta"] = guidance_beta_for(args.method, config, args.beta)
     guide = api.guidance(args.method, effective_config)
     teacher = None
     teacher_hash = None
@@ -317,6 +396,9 @@ def run_method(args, config, output):
                         "ce": float(ce.detach()),
                         "guidance": float(guided.detach()),
                         "beta": beta,
+                        "weighted_guidance_to_ce_ratio": (
+                            float((beta * guided / ce).detach()) if float(ce.detach()) != 0 else None
+                        ),
                         "lr": lr,
                         "grad_norm_unclipped": float(norm),
                         "seconds": time.perf_counter() - started,
@@ -332,9 +414,13 @@ def run_method(args, config, output):
                         print(
                             f"[L16_STABILITY_STEP] method={args.method} step={step_number}/{config['stability_steps']} "
                             f"loss={row['loss']:.6g} ce={row['ce']:.6g} guidance={row['guidance']:.6g} "
+                            f"weighted_guidance_to_ce={row['weighted_guidance_to_ce_ratio']:.6g} "
                             f"grad_norm={row['grad_norm_unclipped']:.6g} seconds={row['seconds']:.2f}",
                             flush=True,
                         )
+                    divergence = online_divergence_reason(rows, config)
+                    if divergence is not None:
+                        raise FloatingPointError(f"online_divergence:{divergence}")
                     if len(rows) == config["stability_steps"]:
                         break
                 if len(rows) < config["stability_steps"]:
@@ -376,14 +462,25 @@ def run_method(args, config, output):
     if not teacher_frozen:
         decision["stable"] = False
         decision["reasons"].append("teacher_state_changed")
+    positive_beta_seen = False
+    guidance_stop_epoch = None
+    for row in rows:
+        if row["beta"] > 0:
+            positive_beta_seen = True
+        elif positive_beta_seen:
+            guidance_stop_epoch = row["epoch"]
+            break
     result = {
         "status": "stable" if decision["stable"] else "unstable",
         "method": args.method,
+        "run_id": args.run_id or args.method,
         "scientific_result": False,
         "full_training_authorized": False,
         "completed_steps": len(rows),
         "expected_steps": config["stability_steps"],
         "effective_guidance_beta": 0.0 if guide is None else effective_config["guidance_beta"],
+        "guidance_active_steps": sum(row["beta"] > 0 for row in rows),
+        "guidance_stop_epoch": guidance_stop_epoch,
         "first_step": rows[0] if rows else None,
         "final_step": rows[-1] if rows else None,
         "decision": decision,
@@ -432,7 +529,8 @@ def run_method(args, config, output):
     }
     save_json(output / "summary.json", result)
     print(
-        f"[L16_STABILITY_METHOD_DONE] method={args.method} status={result['status']} "
+        f"[L16_STABILITY_METHOD_DONE] run={result['run_id']} method={args.method} "
+        f"beta={result['effective_guidance_beta']} status={result['status']} "
         f"steps={len(rows)}/{config['stability_steps']} reasons={json.dumps(decision['reasons'])}",
         flush=True,
     )
@@ -456,22 +554,35 @@ def run_suite(args, config, output, config_path):
     )
     save_json(output / "config.json", config)
     save_json(output / "provenance.json", provenance)
+    candidates = config.get("guidance_beta_candidates_by_method")
+    if candidates is None:
+        plans = [(method, None, method) for method in config["methods"]]
+    else:
+        plans = [
+            (method, float(beta), beta_run_id(method, beta))
+            for method in config["methods"]
+            for beta in candidates[method]
+        ]
     runs = []
-    for method in config["methods"]:
-        print(f"[L16_STABILITY_START] method={method}", flush=True)
+    for method, beta, run_id in plans:
+        beta_text = "locked" if beta is None else format(beta, "g")
+        print(f"[L16_STABILITY_START] run={run_id} method={method} beta={beta_text}", flush=True)
         command = [
             sys.executable, "-u", "-m", "ibkd_seg.cityscapes.official_stability",
             "--cache-root", str(args.cache_root), "--data-dir", str(args.data_dir),
             "--manifest", str(args.manifest), "--labels-report", str(output / "labels.json"),
-            "--output-dir", str(output / method), "--config", str(config_path),
-            "--device", args.device, "--method", method,
+            "--output-dir", str(output / run_id), "--config", str(config_path),
+            "--device", args.device, "--method", method, "--run-id", run_id,
         ]
+        if beta is not None:
+            command.extend(("--beta", str(beta)))
         completed = subprocess.run(command, check=False)
-        summary_path = output / method / "summary.json"
+        summary_path = output / run_id / "summary.json"
         if summary_path.exists():
             row = json.loads(summary_path.read_text())
         else:
             row = {"status": "infrastructure_error", "method": method,
+                   "run_id": run_id, "effective_guidance_beta": beta,
                    "returncode": completed.returncode}
         runs.append(row)
         save_json(output / "stability_summary.json", {"status": "running", "runs": runs})
@@ -489,7 +600,7 @@ def run_suite(args, config, output, config_path):
         "status": "completed",
         "all_methods_stable": terminal["all_methods_stable"],
         "stable_methods": terminal["stable_methods"],
-        "total_methods": len(config["methods"]),
+        "total_methods": len(plans),
         "consistency_errors": consistency_errors,
         "scientific_result": False,
         "full_training_authorized": False,
@@ -498,7 +609,11 @@ def run_suite(args, config, output, config_path):
         "runs": runs,
     }
     save_json(output / "stability_summary.json", final)
-    print("[CITYSCAPES_L16_STABILITY_DONE] "
+    if candidates is not None:
+        save_json(output / "beta_grid_summary.json", final)
+    marker = ("[CITYSCAPES_L16_BETA_GRID_DONE] " if candidates is not None
+              else "[CITYSCAPES_L16_STABILITY_DONE] ")
+    print(marker
           + json.dumps(terminal, sort_keys=True, allow_nan=False), flush=True)
     return 0
 
@@ -509,6 +624,8 @@ def main():
         parser.add_argument("--" + flag, required=True, type=Path)
     parser.add_argument("--labels-report", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--method", choices=("vanilla", "lg", "alg", "ibkd"), help=argparse.SUPPRESS)
+    parser.add_argument("--beta", type=float, help=argparse.SUPPRESS)
+    parser.add_argument("--run-id", help=argparse.SUPPRESS)
     parser.add_argument("--device", choices=("cuda",), default="cuda")
     args = parser.parse_args()
     for key in ("cache_root", "data_dir", "manifest", "output_dir", "config", "labels_report"):
