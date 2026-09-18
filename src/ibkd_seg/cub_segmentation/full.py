@@ -696,6 +696,12 @@ def final_results(report):
     return {
         "protocol_id": report["config"]["protocol_id"],
         "scientific_result": False,
+        "controller_configuration": {
+            "alg_window": report["config"]["alg_window"],
+            "alg_threshold": report["config"]["alg_threshold"],
+            "alg_warmup_epochs": report["config"]["alg_warmup_epochs"],
+            "ibkd_warmup_epochs": report["config"]["ibkd_warmup_epochs"],
+        },
         "teacher": view(report["teacher"]),
         "methods": {row["method"]: view(row) for row in report["runs"]},
     }

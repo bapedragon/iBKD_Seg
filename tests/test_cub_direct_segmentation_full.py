@@ -35,6 +35,37 @@ class CubDirectSegmentationFullContract(unittest.TestCase):
         self.assertTrue(bool(script.stat().st_mode & stat.S_IXUSR))
         self.assertIn(str(CONFIG.relative_to(repository)), script.read_text())
 
+    def test_window30_full_changes_only_controller_window(self):
+        repository = Path(__file__).resolve().parents[1]
+        candidate_path = (
+            repository
+            / "phase1/phase1_cub_Seg/configs/direct_segmentation_window30_full_v1.json"
+        )
+        script = (
+            repository
+            / "phase1/phase1_cub_Seg/scripts/run_direct_segmentation_window30_full.sh"
+        )
+        baseline = load_config(CONFIG)
+        candidate = load_config(candidate_path)
+        differences = {
+            key: (baseline[key], candidate[key])
+            for key in baseline
+            if baseline[key] != candidate[key]
+        }
+        self.assertEqual(
+            differences,
+            {
+                "protocol_id": (
+                    "cub200_direct_binary_segmentation_exploratory_full_v1",
+                    "cub200_direct_binary_segmentation_window30_exploratory_full_v1",
+                ),
+                "alg_window": (50, 30),
+            },
+        )
+        self.assertTrue(script.is_file())
+        self.assertTrue(bool(script.stat().st_mode & stat.S_IXUSR))
+        self.assertIn(str(candidate_path.relative_to(repository)), script.read_text())
+
     def test_warmup_then_cosine_schedule_hits_contract_points(self):
         role = {
             "epochs": 4,
@@ -71,11 +102,26 @@ class CubDirectSegmentationFullContract(unittest.TestCase):
             }
 
         report = {
-            "config": {"protocol_id": "test"},
+            "config": {
+                "protocol_id": "test",
+                "alg_window": 30,
+                "alg_threshold": -0.02,
+                "alg_warmup_epochs": 0,
+                "ibkd_warmup_epochs": 20,
+            },
             "teacher": summary(None),
             "runs": [summary(method) for method in ("vanilla", "lg", "alg", "ibkd")],
         }
         result = final_results(report)
+        self.assertEqual(
+            result["controller_configuration"],
+            {
+                "alg_window": 30,
+                "alg_threshold": -0.02,
+                "alg_warmup_epochs": 0,
+                "ibkd_warmup_epochs": 20,
+            },
+        )
         self.assertEqual(set(result["methods"]), {"vanilla", "lg", "alg", "ibkd"})
         for row in [result["teacher"], *result["methods"].values()]:
             self.assertEqual(set(row["validation"]), set(metrics))
