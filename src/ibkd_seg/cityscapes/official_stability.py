@@ -128,6 +128,15 @@ def validate_config(config):
             "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05},
             "strict_determinism": True,
         },
+        "cityscapes_segmenter_l16_crop512_repro_smoke25_v7": {
+            "methods": ["lg", "alg"],
+            "stability_steps": 25,
+            "guidance_beta": 0.02,
+            "guidance_beta_by_method": {"lg": 0.02, "alg": 0.02},
+            "strict_determinism": False,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": True,
+        },
         "cityscapes_segmenter_l16_crop512_beta_grid500_v5": {
             "methods": ["lg", "alg", "ibkd"],
             "stability_steps": 500,
@@ -288,6 +297,21 @@ def _module_norm(module):
     return float(total.sqrt())
 
 
+def _gradient_hash(parameters):
+    digest = hashlib.sha256()
+    for index, parameter in enumerate(parameters):
+        digest.update(str(index).encode())
+        gradient = parameter.grad
+        if gradient is None:
+            digest.update(b"none")
+            continue
+        value = gradient.detach().cpu().contiguous()
+        digest.update(str(value.dtype).encode())
+        digest.update(str(tuple(value.shape)).encode())
+        digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
 def run_method(args, config, output):
     import torch
     import torchvision
@@ -395,6 +419,11 @@ def run_method(args, config, output):
                             f"nonfinite_loss step={step_number} ce={float(ce.detach())} guidance={float(guided.detach())}")
                     loss.backward()
                     norm = torch.nn.utils.clip_grad_norm_(parameters, float("inf"), error_if_nonfinite=True)
+                    gradient_digest = (
+                        _gradient_hash(parameters)
+                        if config.get("record_gradient_hash_each_step", False)
+                        else None
+                    )
                     if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
                         raise RuntimeError("Frozen teacher received gradients")
                     lr = optimizer.param_groups[0]["lr"]
@@ -415,6 +444,10 @@ def run_method(args, config, output):
                         "grad_norm_unclipped": float(norm),
                         "seconds": time.perf_counter() - started,
                     }
+                    if config.get("record_input_hash_each_step", False):
+                        row["input_sha256"] = digest
+                    if gradient_digest is not None:
+                        row["gradient_sha256"] = gradient_digest
                     if step_number in milestones:
                         row["guidance_parameter_norm"] = _module_norm(guide)
                     rows.append(row)
