@@ -85,10 +85,17 @@ def online_divergence_reason(rows, config):
 
 def validate_config(config):
     beta_grid_2000 = "cityscapes_segmenter_l16_crop512_beta_grid2000_v6"
+    final_beta_grid_2000 = (
+        "cityscapes_segmenter_l16_crop512_final_beta_grid2000_v13"
+    )
     ibkd_repro_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
     )
-    full_validation_protocols = {beta_grid_2000, ibkd_repro_2000}
+    full_validation_protocols = {
+        beta_grid_2000,
+        final_beta_grid_2000,
+        ibkd_repro_2000,
+    }
     locked = {
         "train_samples": 2975,
         "val_samples": 500 if config.get("protocol_id") in full_validation_protocols else 20,
@@ -201,6 +208,30 @@ def validate_config(config):
                 "ibkd": [0.1, 0.25, 0.5, 1.0],
             },
         },
+        final_beta_grid_2000: {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 2000,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "lg": [0.02, 0.05, 0.1, 0.2],
+                "alg": [0.02, 0.05, 0.1, 0.2],
+                "ibkd": [0.1, 0.25, 1.0],
+            },
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": False,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "reused_beta_candidates_by_method": {"ibkd": [0.5]},
+            "reused_beta_source_protocol": (
+                "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
+            ),
+            "primary_metric": "pixel_accuracy",
+            "secondary_metric": "miou",
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
@@ -242,6 +273,12 @@ def beta_run_id(method, beta):
     return f"{method}_beta_{value}"
 
 
+def deterministic_candidate_requested(method, config):
+    if method not in {"vanilla", "lg", "alg", "ibkd"}:
+        raise ValueError(f"Unknown method {method!r}")
+    return method == "ibkd" and bool(config.get("ibkd_deterministic_candidate", False))
+
+
 def terminal_result(runs, config, consistency_errors):
     methods = {}
     for row in runs:
@@ -276,6 +313,15 @@ def terminal_result(runs, config, consistency_errors):
             "parameters_finite": row["parameters_finite"],
             "optimizer_state_finite": row["optimizer_state_finite"],
             "runtime_error": row["runtime_error"],
+            "input_stream_sha256": row.get("input_stream_sha256"),
+            "student_initial_state_sha256": row.get("student_initial_state_sha256"),
+            "student_final_state_sha256": row.get("student_final_state_sha256"),
+            "guidance_final_state_sha256": row.get("guidance_final_state_sha256"),
+            "optimizer_final_state_sha256": row.get("optimizer_final_state_sha256"),
+            "teacher_state_sha256": row.get("teacher_state_sha256"),
+            "nondeterministic_operators": row.get("nondeterministic_operators", []),
+            "ibkd_deterministic_candidate": row.get("ibkd_deterministic_candidate"),
+            "environment": row.get("environment"),
         }
     stable_count = sum(row.get("status") == "stable" for row in runs)
     beta_candidates = config.get("guidance_beta_candidates_by_method")
@@ -305,6 +351,41 @@ def terminal_result(runs, config, consistency_errors):
             ]
             for method in config["methods"]
         }
+    rankings = None
+    ranking_metric_order = None
+    if beta_candidates is not None:
+        rankings = {}
+        primary = config["primary_metric"]
+        secondary = config["secondary_metric"]
+        ranking_metric_order = [primary, secondary]
+        score_keys = {
+            "pixel_accuracy": "pixel_accuracy",
+            "miou": "miou",
+        }
+        for method in config["methods"]:
+            eligible = [
+                row for row in runs
+                if row.get("method") == method
+                and row.get("status") == "stable"
+                and row.get("diagnostic_validation") is not None
+            ]
+            eligible.sort(
+                key=lambda row: (
+                    -float(row["diagnostic_validation"][score_keys[primary]]),
+                    -float(row["diagnostic_validation"][score_keys[secondary]]),
+                    float(row["effective_guidance_beta"]),
+                )
+            )
+            rankings[method] = [
+                {
+                    "rank": rank,
+                    "beta": row["effective_guidance_beta"],
+                    "pixel_accuracy": row["diagnostic_validation"]["pixel_accuracy"],
+                    "miou": row["diagnostic_validation"]["miou"],
+                    "run_id": row.get("run_id", row["method"]),
+                }
+                for rank, row in enumerate(eligible, start=1)
+            ]
     return {
         "status": "completed",
         "protocol_id": config["protocol_id"],
@@ -319,6 +400,12 @@ def terminal_result(runs, config, consistency_errors):
         },
         "stable_beta_candidates_by_method": stable_candidates,
         "unstable_beta_candidates_by_method": unstable_candidates,
+        "ranking_metric_order": ranking_metric_order,
+        "candidate_rankings_by_method": rankings,
+        "reused_beta_candidates_by_method": config.get(
+            "reused_beta_candidates_by_method", {}
+        ),
+        "reused_beta_source_protocol": config.get("reused_beta_source_protocol"),
         "all_methods_stable": stable_count == len(runs) and not consistency_errors,
         "stable_methods": stable_count,
         "total_methods": len(runs),
@@ -409,10 +496,10 @@ def run_method(args, config, output):
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     ptu.device = device
-    candidate_requested = bool(config.get("ibkd_deterministic_candidate", False))
-    if candidate_requested and args.method != "ibkd":
-        raise ValueError("The deterministic iBKD candidate can only be used with iBKD")
-    torch.set_num_threads(int(config.get("ibkd_cpu_threads", 4)))
+    candidate_requested = deterministic_candidate_requested(args.method, config)
+    torch.set_num_threads(
+        int(config.get("ibkd_cpu_threads", 1)) if candidate_requested else 4
+    )
 
     manifest = json.loads(args.manifest.read_text())
     labels = json.loads(args.labels_report.read_text())

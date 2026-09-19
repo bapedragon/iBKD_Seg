@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ibkd_seg.cityscapes.official_stability import (
     beta_run_id,
+    deterministic_candidate_requested,
     stability_decision,
     guidance_beta_for,
     online_divergence_reason,
@@ -205,6 +206,30 @@ class CityscapesStabilityTests(unittest.TestCase):
             "ibkd": [0.1, 0.25, 0.5, 1.0],
         })
 
+    def test_final_beta_grid_uses_controlled_eleven_run_screen(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_final_beta_grid2000_v13.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["stability_steps"], 2000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(config["alg_warmup_epochs"], 0)
+        self.assertEqual(config["guidance_beta_candidates_by_method"], {
+            "lg": [0.02, 0.05, 0.1, 0.2],
+            "alg": [0.02, 0.05, 0.1, 0.2],
+            "ibkd": [0.1, 0.25, 1.0],
+        })
+        self.assertEqual(config["reused_beta_candidates_by_method"], {"ibkd": [0.5]})
+        self.assertTrue(config["determinism_warn_only"])
+        self.assertTrue(config["record_input_hash_each_step"])
+        self.assertFalse(config["record_gradient_hash_each_step"])
+        self.assertFalse(deterministic_candidate_requested("lg", config))
+        self.assertFalse(deterministic_candidate_requested("alg", config))
+        self.assertTrue(deterministic_candidate_requested("ibkd", config))
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):
@@ -285,6 +310,15 @@ class CityscapesStabilityTests(unittest.TestCase):
         self.assertEqual(result["stable_beta_candidates_by_method"]["lg"],
                          [0.02, 0.05, 0.1, 0.2])
         self.assertEqual(result["unstable_beta_candidates_by_method"]["ibkd"], [1.0])
+        self.assertEqual(result["ranking_metric_order"], ["pixel_accuracy", "miou"])
+        self.assertEqual(
+            result["candidate_rankings_by_method"]["lg"][0]["beta"],
+            0.02,
+        )
+        self.assertEqual(
+            result["candidate_rankings_by_method"]["ibkd"][-1]["beta"],
+            0.5,
+        )
 
 
 if __name__ == "__main__":
