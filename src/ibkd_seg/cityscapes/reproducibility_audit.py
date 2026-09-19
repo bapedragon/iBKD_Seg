@@ -32,6 +32,8 @@ NUMERICAL_STEP_FIELDS = (
     "guidance_parameter_norm",
 )
 
+UPDATE_CONTROL_FIELDS = ("step", "epoch", "beta", "lr")
+
 
 def _json_hash(value) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -140,6 +142,10 @@ def compare_runs(
             left.get("guidance_final_state_sha256")
             == right.get("guidance_final_state_sha256")
         ),
+        "optimizer_final_state_exact": (
+            left.get("optimizer_final_state_sha256")
+            == right.get("optimizer_final_state_sha256")
+        ),
         "validation_exact": left.get("diagnostic_validation") == right.get("diagnostic_validation"),
     }
     if require_step_input_hashes:
@@ -184,6 +190,99 @@ def compare_runs(
         "trajectory_mismatched_step_count": len(mismatched_steps),
         "max_abs_difference_by_field": max_abs_difference_by_field,
         "mismatched_steps": mismatched_steps[:25],
+    }
+
+
+def compare_update_paths(
+    left: dict,
+    right: dict,
+    left_steps: list[dict],
+    right_steps: list[dict],
+    *,
+    expected_steps: int,
+) -> dict:
+    """Compare optimizer updates while reporting harmless scalar reduction drift separately."""
+    exact = compare_runs(
+        left,
+        right,
+        left_steps,
+        right_steps,
+        expected_steps=expected_steps,
+        require_step_input_hashes=True,
+        require_step_gradient_hashes=True,
+    )
+    left_controls = [
+        {key: row.get(key) for key in UPDATE_CONTROL_FIELDS}
+        for row in left_steps
+    ]
+    right_controls = [
+        {key: row.get(key) for key in UPDATE_CONTROL_FIELDS}
+        for row in right_steps
+    ]
+    optimizer_hashes_present = all(
+        summary.get("optimizer_final_state_sha256") is not None
+        for summary in (left, right)
+    )
+    checks = {
+        key: exact["checks"][key]
+        for key in (
+            "nonempty_trajectories",
+            "completed_steps_equal",
+            "input_stream_exact",
+            "student_initial_state_exact",
+            "teacher_state_exact",
+            "student_final_state_exact",
+            "guidance_final_state_exact",
+            "validation_exact",
+            "per_step_input_hashes_present",
+            "per_step_input_hashes_exact",
+            "per_step_gradient_hashes_present",
+            "per_step_gradient_hashes_exact",
+            "expected_steps_completed",
+        )
+    }
+    checks.update({
+        "optimizer_controls_exact": left_controls == right_controls,
+        "optimizer_final_state_hashes_present": optimizer_hashes_present,
+        "optimizer_final_state_exact": (
+            optimizer_hashes_present
+            and exact["checks"]["optimizer_final_state_exact"]
+        ),
+    })
+    scalar_fields = {}
+    for field in NUMERICAL_STEP_FIELDS:
+        mismatches = []
+        differences = []
+        for index, (left_row, right_row) in enumerate(
+            zip(left_steps, right_steps, strict=False), start=1
+        ):
+            left_value, right_value = left_row.get(field), right_row.get(field)
+            if left_value != right_value:
+                mismatches.append(index)
+            if left_value is not None and right_value is not None:
+                differences.append(abs(float(left_value) - float(right_value)))
+        scalar_fields[field] = {
+            "exact": not mismatches and len(left_steps) == len(right_steps),
+            "first_mismatch_step": mismatches[0] if mismatches else None,
+            "mismatched_step_count": len(mismatches),
+            "max_abs_difference": max(differences, default=None),
+        }
+    return {
+        "passed": all(checks.values()),
+        "checks": checks,
+        "scalar_values_exact": all(item["exact"] for item in scalar_fields.values()),
+        "scalar_fields": scalar_fields,
+        "exact_all_fields_passed": exact["passed"],
+        "first_input_mismatch_step": exact["first_input_mismatch_step"],
+        "first_gradient_mismatch_step": exact["first_gradient_mismatch_step"],
+        "first_trajectory_mismatch_step": exact["first_trajectory_mismatch_step"],
+        "input_mismatched_step_count": exact["input_mismatched_step_count"],
+        "gradient_mismatched_step_count": exact["gradient_mismatched_step_count"],
+        "trajectory_mismatched_step_count": exact["trajectory_mismatched_step_count"],
+        "left_input_hash_sequence_sha256": exact["left_input_hash_sequence_sha256"],
+        "right_input_hash_sequence_sha256": exact["right_input_hash_sequence_sha256"],
+        "left_gradient_hash_sequence_sha256": exact["left_gradient_hash_sequence_sha256"],
+        "right_gradient_hash_sequence_sha256": exact["right_gradient_hash_sequence_sha256"],
     }
 
 

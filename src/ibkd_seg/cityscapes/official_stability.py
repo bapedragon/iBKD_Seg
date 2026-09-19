@@ -7,10 +7,12 @@ import json
 import math
 import os
 import platform
+import re
 import statistics
 import subprocess
 import sys
 import time
+import warnings
 from pathlib import Path
 
 from .official_api import bootstrap
@@ -134,6 +136,16 @@ def validate_config(config):
             "guidance_beta": 0.02,
             "guidance_beta_by_method": {"lg": 0.02, "alg": 0.02},
             "strict_determinism": False,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": True,
+        },
+        "cityscapes_segmenter_l16_crop512_warn25_repro_v9": {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 25,
+            "guidance_beta": 0.02,
+            "guidance_beta_by_method": {"lg": 0.02, "alg": 0.02, "ibkd": 0.5},
+            "strict_determinism": False,
+            "determinism_warn_only": True,
             "record_input_hash_each_step": True,
             "record_gradient_hash_each_step": True,
         },
@@ -312,6 +324,42 @@ def _gradient_hash(parameters):
     return digest.hexdigest()
 
 
+def _optimizer_state_hash(optimizer):
+    digest = hashlib.sha256()
+    for group_index, group in enumerate(optimizer.param_groups):
+        digest.update(f"group:{group_index}".encode())
+        metadata = {key: value for key, value in group.items() if key != "params"}
+        digest.update(
+            json.dumps(metadata, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        )
+        for parameter_index, parameter in enumerate(group["params"]):
+            digest.update(f"parameter:{parameter_index}".encode())
+            state = optimizer.state.get(parameter, {})
+            for key in sorted(state, key=str):
+                digest.update(str(key).encode())
+                value = state[key]
+                if hasattr(value, "detach"):
+                    tensor = value.detach().cpu().contiguous()
+                    digest.update(str(tensor.dtype).encode())
+                    digest.update(str(tuple(tensor.shape)).encode())
+                    digest.update(tensor.numpy().tobytes())
+                else:
+                    digest.update(
+                        json.dumps(value, sort_keys=True, allow_nan=False, default=str).encode()
+                    )
+    return digest.hexdigest()
+
+
+def _deterministic_operator_names(messages):
+    names = set()
+    pattern = re.compile(r"([A-Za-z0-9_:.]+) does not have a deterministic implementation")
+    for message in messages:
+        match = pattern.search(message)
+        if match:
+            names.add(match.group(1))
+    return sorted(names)
+
+
 def run_method(args, config, output):
     import torch
     import torchvision
@@ -337,13 +385,20 @@ def run_method(args, config, output):
     labels = json.loads(args.labels_report.read_text())
     datasets = {split: FullDataset(args.data_dir, manifest, config, split) for split in ("train", "val")}
     strict_determinism = bool(config.get("strict_determinism", False))
-    if strict_determinism and os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {
+    determinism_warn_only = bool(config.get("determinism_warn_only", False))
+    if strict_determinism and determinism_warn_only:
+        raise ValueError("Strict and warn-only determinism cannot both be requested")
+    if (strict_determinism or determinism_warn_only) and os.environ.get(
+        "CUBLAS_WORKSPACE_CONFIG"
+    ) not in {
         ":4096:8", ":16:8"
     }:
         raise RuntimeError(
-            "Strict determinism requires CUBLAS_WORKSPACE_CONFIG=:4096:8 or :16:8"
+            "Determinism requires CUBLAS_WORKSPACE_CONFIG=:4096:8 or :16:8"
         )
     seed_all(config["seed"], strict_determinism=strict_determinism)
+    if determinism_warn_only:
+        torch.use_deterministic_algorithms(True, warn_only=True)
     model = api.student(args.cache_root, image_size=config["crop_size"],
                         decoder_layers=config["decoder_layers"]).to(device).train()
     initial_student = state_hash(model)
@@ -379,6 +434,14 @@ def run_method(args, config, output):
     log_path = output / "steps.jsonl"
     output.mkdir(parents=True, exist_ok=True)
 
+    warning_messages = []
+    original_showwarning = warnings.showwarning
+
+    def record_warning(message, category, filename, lineno, file=None, line=None):
+        warning_messages.append(str(message))
+        original_showwarning(message, category, filename, lineno, file=file, line=line)
+
+    warnings.showwarning = record_warning
     try:
         with log_path.open("w") as log:
             epoch = 1
@@ -474,6 +537,11 @@ def run_method(args, config, output):
                     epoch += 1
     except BaseException as error:
         runtime_error = repr(error)
+    finally:
+        warnings.showwarning = original_showwarning
+
+    warning_messages = sorted(set(warning_messages))
+    nondeterministic_operators = _deterministic_operator_names(warning_messages)
 
     decision = stability_decision(
         rows, config, expected_steps=config["stability_steps"], runtime_error=runtime_error)
@@ -536,6 +604,7 @@ def run_method(args, config, output):
         "student_initial_state_sha256": initial_student,
         "student_final_state_sha256": state_hash(model),
         "guidance_final_state_sha256": None if guide is None else state_hash(guide),
+        "optimizer_final_state_sha256": _optimizer_state_hash(optimizer),
         "teacher_state_sha256": teacher_hash,
         "teacher_frozen_verified": teacher_frozen,
         "parameters_finite": parameters_finite,
@@ -546,6 +615,8 @@ def run_method(args, config, output):
         "invocation_seconds": time.perf_counter() - began_run,
         "peak_cuda_allocated_bytes": torch.cuda.max_memory_allocated(),
         "runtime_error": runtime_error,
+        "warning_messages": warning_messages,
+        "nondeterministic_operators": nondeterministic_operators,
         "config": config,
         "identity": {
             "manifest_sha256": sha256(args.manifest),
@@ -561,6 +632,7 @@ def run_method(args, config, output):
             "cuda": torch.version.cuda,
             "gpu": torch.cuda.get_device_name(),
             "strict_determinism_requested": strict_determinism,
+            "determinism_warn_only_requested": determinism_warn_only,
             "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
             "torch_deterministic_warn_only": (
                 torch.is_deterministic_algorithms_warn_only_enabled()

@@ -3,6 +3,7 @@ import unittest
 from ibkd_seg.cityscapes.reproducibility_audit import (
     canonical_trajectory,
     compare_runs,
+    compare_update_paths,
     diagnose_observational_probe,
 )
 
@@ -17,6 +18,7 @@ class CityscapesReproducibilityTests(unittest.TestCase):
             "teacher_state_sha256": "teacher",
             "student_final_state_sha256": final,
             "guidance_final_state_sha256": guide,
+            "optimizer_final_state_sha256": "optimizer",
             "diagnostic_validation": {"miou": 0.1},
         }
 
@@ -134,6 +136,33 @@ class CityscapesReproducibilityTests(unittest.TestCase):
         self.assertFalse(result["passed"])
         self.assertEqual(result["first_gradient_mismatch_step"], 2)
         self.assertEqual(result["gradient_mismatched_step_count"], 1)
+
+    def test_update_path_allows_logged_scalar_drift_when_updates_are_exact(self):
+        result = compare_update_paths(
+            self.summary(),
+            self.summary(),
+            self.steps(),
+            self.steps(second_loss=2.000000476837158),
+            expected_steps=2,
+        )
+        self.assertTrue(result["passed"])
+        self.assertFalse(result["scalar_values_exact"])
+        self.assertFalse(result["exact_all_fields_passed"])
+        self.assertEqual(result["scalar_fields"]["loss"]["first_mismatch_step"], 2)
+
+    def test_update_path_requires_gradient_and_optimizer_state_hashes(self):
+        right_summary = self.summary()
+        right_summary["optimizer_final_state_sha256"] = "different"
+        result = compare_update_paths(
+            self.summary(),
+            right_summary,
+            self.steps(),
+            self.steps(second_gradient="different"),
+            expected_steps=2,
+        )
+        self.assertFalse(result["passed"])
+        self.assertFalse(result["checks"]["per_step_gradient_hashes_exact"])
+        self.assertFalse(result["checks"]["optimizer_final_state_exact"])
 
 
 if __name__ == "__main__":
