@@ -1,0 +1,23 @@
+{
+  "protocol_id": "cityscapes_segmenter_l16_crop512_repro_forensics1_v8",
+  "run_kind": "engineering_reproducibility_forensics",
+  "scientific_result": false,
+  "full_training_authorized": false,
+  "seed": 1,
+  "train_samples": 2975,
+  "val_samples": 1,
+  "batch_size": 8,
+  "image_size": 1024,
+  "crop_size": 512,
+  "decoder_layers": 1,
+  "data_workers": 4,
+  "gradient_checkpointing": true,
+  "attention_query_chunk": 256,
+  "guidance_beta": 0.02,
+  "ibkd_fusion_ratio": 0.25,
+  "lg_blocks_zero_based": [0, 12, 23],
+  "ibkd_aggregation_blocks": 24,
+  "warn_only_determinism": true,
+  "test_used": false,
+  "automatic_hyperparameter_changes": false
+}
