@@ -1,4 +1,4 @@
-"""25-step optimizer reproducibility gate for the deterministic iBKD candidate."""
+"""Optimizer reproducibility gates for the deterministic iBKD candidate."""
 from __future__ import annotations
 
 import argparse
@@ -15,7 +15,25 @@ from .warn_only_reproducibility import compact_run_status, warn_only_controls_ok
 
 
 PROTOCOL_ID = "cityscapes_segmenter_l16_crop512_ibkd_candidate_warn25_v11"
-PLANS = (("ibkd_candidate_a", "ibkd"), ("ibkd_candidate_b", "ibkd"))
+REPRO2000_PROTOCOL_ID = (
+    "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
+)
+PROFILES = {
+    PROTOCOL_ID: {
+        "plans": (("ibkd_candidate_a", "ibkd"), ("ibkd_candidate_b", "ibkd")),
+        "start_tag": "IBKD_CANDIDATE_WARN25_START",
+        "done_tag": "CITYSCAPES_IBKD_CANDIDATE_WARN25_DONE",
+        "summary_name": "ibkd_candidate_warn25_summary.json",
+        "long_gate": False,
+    },
+    REPRO2000_PROTOCOL_ID: {
+        "plans": (("ibkd_beta_0p5_a", "ibkd"), ("ibkd_beta_0p5_b", "ibkd")),
+        "start_tag": "IBKD_CANDIDATE_REPRO2000_START",
+        "done_tag": "CITYSCAPES_IBKD_CANDIDATE_REPRO2000_DONE",
+        "summary_name": "ibkd_candidate_repro2000_summary.json",
+        "long_gate": True,
+    },
+}
 ALLOWED_NONDETERMINISTIC_OPERATORS = {"nll_loss2d_forward_out_cuda_template"}
 
 
@@ -68,6 +86,42 @@ def diagnose(comparison: dict | None, all_completed: bool, controls_verified: bo
     }
 
 
+def diagnose_repro2000(
+    comparison: dict | None,
+    all_completed: bool,
+    controls_verified: bool,
+) -> dict:
+    if not all_completed:
+        code = "incomplete_ibkd_candidate_repro2000_runs"
+        conclusion = "iBKD beta=0.5 A/B 중 하나 이상이 2,000 step과 전체 검증을 완료하지 못했습니다."
+        next_step = "각 실행의 runtime_error와 stability_reasons를 확인합니다."
+    elif not controls_verified:
+        code = "ibkd_candidate_repro2000_controls_not_verified"
+        conclusion = "2,000-step 실행에서 결정적 iBKD 후보 또는 warn-only 환경이 확인되지 않았습니다."
+        next_step = "후보 적용 상태, CPU thread 수, 남은 비결정성 연산을 확인합니다."
+    elif comparison is None:
+        code = "missing_ibkd_candidate_repro2000_comparison"
+        conclusion = "2,000-step A/B의 steps.jsonl 비교 결과가 만들어지지 않았습니다."
+        next_step = "두 실행의 steps.jsonl 생성 여부를 확인합니다."
+    elif not comparison.get("passed", False):
+        code = "ibkd_candidate_repro2000_update_path_not_reproducible"
+        conclusion = "2,000-step A/B에서 gradient 또는 최종 학습 상태가 일치하지 않았습니다."
+        next_step = "최초 gradient 불일치 step과 최종 state hash를 확인합니다."
+    else:
+        code = "ibkd_candidate_repro2000_reproducible"
+        conclusion = (
+            "결정적 iBKD beta=0.5의 2,000-step 입력·gradient·학생·guidance·optimizer "
+            "상태와 전체 validation 결과가 A/B에서 정확히 일치했습니다."
+        )
+        next_step = "A 실행을 beta=0.5 결과로 채택하고 나머지 beta=0.1, 0.25, 1.0을 실행합니다."
+    return {
+        "code": code,
+        "passed": code == "ibkd_candidate_repro2000_reproducible",
+        "conclusion_ko": conclusion,
+        "next_step_ko": next_step,
+    }
+
+
 def timing_summary(rows: list[dict]) -> dict:
     values = [float(row["seconds"]) for row in rows if math.isfinite(float(row["seconds"]))]
     return {
@@ -91,8 +145,11 @@ def run(args) -> int:
     output.mkdir(parents=True, exist_ok=True)
     config = json.loads(args.config.read_text())
     validate_config(config)
-    if config.get("protocol_id") != PROTOCOL_ID:
-        raise ValueError(f"Unexpected protocol: {config.get('protocol_id')!r}")
+    protocol_id = config.get("protocol_id")
+    profile = PROFILES.get(protocol_id)
+    if profile is None:
+        raise ValueError(f"Unexpected protocol: {protocol_id!r}")
+    plans = profile["plans"]
     manifest_data = json.loads(args.manifest.read_text())
     verify_manifest(args.data_dir, manifest_data)
     prepare_labels(
@@ -107,8 +164,8 @@ def run(args) -> int:
     environment["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     environment["PYTHONHASHSEED"] = str(config["seed"])
     runs, returncodes = {}, {}
-    for run_id, method in PLANS:
-        print(f"[IBKD_CANDIDATE_WARN25_START] run={run_id}", flush=True)
+    for run_id, method in plans:
+        print(f"[{profile['start_tag']}] run={run_id}", flush=True)
         run_output = output / run_id
         command = [
             sys.executable,
@@ -144,29 +201,34 @@ def run(args) -> int:
         )
 
     steps = {}
-    for run_id, _ in PLANS:
+    for run_id, _ in plans:
         path = output / run_id / "steps.jsonl"
         if path.exists():
             steps[run_id] = _read_steps(path)
     comparison = None
-    if all(run_id in steps for run_id, _ in PLANS):
+    left_id, right_id = plans[0][0], plans[1][0]
+    if all(run_id in steps for run_id, _ in plans):
         comparison = compare_update_paths(
-            runs["ibkd_candidate_a"],
-            runs["ibkd_candidate_b"],
-            steps["ibkd_candidate_a"],
-            steps["ibkd_candidate_b"],
+            runs[left_id],
+            runs[right_id],
+            steps[left_id],
+            steps[right_id],
             expected_steps=config["stability_steps"],
         )
 
     controls = {run_id: candidate_controls_ok(summary) for run_id, summary in runs.items()}
-    all_completed = len(runs) == len(PLANS) and all(
+    all_completed = len(runs) == len(plans) and all(
         returncodes.get(run_id) == 0
         and summary.get("status") == "stable"
         and summary.get("completed_steps") == config["stability_steps"]
         for run_id, summary in runs.items()
     )
-    controls_verified = len(controls) == len(PLANS) and all(controls.values())
-    diagnosis = diagnose(comparison, all_completed, controls_verified)
+    controls_verified = len(controls) == len(plans) and all(controls.values())
+    diagnosis = (
+        diagnose_repro2000(comparison, all_completed, controls_verified)
+        if profile["long_gate"]
+        else diagnose(comparison, all_completed, controls_verified)
+    )
     gate_passed = diagnosis["passed"]
     run_status = {}
     for run_id, summary in runs.items():
@@ -188,12 +250,12 @@ def run(args) -> int:
     })
     terminal = {
         "status": "passed" if gate_passed else "failed",
-        "protocol_id": PROTOCOL_ID,
+        "protocol_id": protocol_id,
         "all_runs_completed": all_completed,
         "candidate_controls_verified": controls_verified,
         "update_path_reproducible": gate_passed,
         "steps_per_run": config["stability_steps"],
-        "run_count": len(PLANS),
+        "run_count": len(plans),
         "seed": config["seed"],
         "guidance_beta": config["guidance_beta_by_method"]["ibkd"],
         "candidate_id": config["ibkd_deterministic_candidate_id"],
@@ -210,14 +272,23 @@ def run(args) -> int:
         "scientific_result": False,
         "beta_grid_2000_authorized": gate_passed,
         "full_2000_reproducibility_audit_authorized": gate_passed,
+        "full_2000_reproducibility_audit_passed": (
+            gate_passed if profile["long_gate"] else False
+        ),
+        "beta_0p5_a_reusable_as_grid_result": (
+            gate_passed if profile["long_gate"] else False
+        ),
+        "remaining_ibkd_beta_grid_authorized": (
+            gate_passed if profile["long_gate"] else False
+        ),
         "full_training_authorized": False,
     }
     save_json(
-        output / "ibkd_candidate_warn25_summary.json",
+        output / profile["summary_name"],
         {"terminal_result": terminal, "runs": runs},
     )
     print(
-        "[CITYSCAPES_IBKD_CANDIDATE_WARN25_DONE] "
+        f"[{profile['done_tag']}] "
         + json.dumps(terminal, sort_keys=True, allow_nan=False, ensure_ascii=False),
         flush=True,
     )

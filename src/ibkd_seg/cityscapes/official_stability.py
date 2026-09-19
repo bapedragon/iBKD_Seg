@@ -85,9 +85,13 @@ def online_divergence_reason(rows, config):
 
 def validate_config(config):
     beta_grid_2000 = "cityscapes_segmenter_l16_crop512_beta_grid2000_v6"
+    ibkd_repro_2000 = (
+        "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
+    )
+    full_validation_protocols = {beta_grid_2000, ibkd_repro_2000}
     locked = {
         "train_samples": 2975,
-        "val_samples": 500 if config.get("protocol_id") == beta_grid_2000 else 20,
+        "val_samples": 500 if config.get("protocol_id") in full_validation_protocols else 20,
         "batch_size": 8,
         "image_size": 1024,
         "crop_size": 512,
@@ -152,6 +156,19 @@ def validate_config(config):
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_warn25_v11": {
             "methods": ["ibkd"],
             "stability_steps": 25,
+            "guidance_beta": 0.5,
+            "guidance_beta_by_method": {"ibkd": 0.5},
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": True,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+        },
+        ibkd_repro_2000: {
+            "methods": ["ibkd"],
+            "stability_steps": 2000,
             "guidance_beta": 0.5,
             "guidance_beta_by_method": {"ibkd": 0.5},
             "strict_determinism": False,

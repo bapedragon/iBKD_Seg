@@ -4,6 +4,7 @@ import unittest
 from ibkd_seg.cityscapes.ibkd_candidate_reproducibility import (
     candidate_controls_ok,
     diagnose,
+    diagnose_repro2000,
     timing_summary,
 )
 
@@ -65,6 +66,23 @@ class CityscapesIBKDCandidateReproducibilityTests(unittest.TestCase):
         result = diagnose({"passed": False}, all_completed=True, controls_verified=True)
         self.assertFalse(result["passed"])
         self.assertEqual(result["code"], "ibkd_candidate_update_path_not_reproducible")
+
+    def test_exact_2000_step_update_path_authorizes_remaining_grid(self):
+        result = diagnose_repro2000(
+            {"passed": True}, all_completed=True, controls_verified=True
+        )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["code"], "ibkd_candidate_repro2000_reproducible")
+
+    def test_2000_step_gradient_mismatch_blocks_remaining_grid(self):
+        result = diagnose_repro2000(
+            {"passed": False}, all_completed=True, controls_verified=True
+        )
+        self.assertFalse(result["passed"])
+        self.assertEqual(
+            result["code"],
+            "ibkd_candidate_repro2000_update_path_not_reproducible",
+        )
 
     def test_timing_summary_keeps_step_distribution(self):
         result = timing_summary([

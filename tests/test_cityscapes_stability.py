@@ -156,6 +156,22 @@ class CityscapesStabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_config(config)
 
+    def test_ibkd_candidate_2000_profile_uses_full_validation(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_ibkd_candidate_repro2000_v12.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["methods"], ["ibkd"])
+        self.assertEqual(config["stability_steps"], 2000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
+        self.assertEqual(config["ibkd_warmup_epochs"], 20)
+        self.assertTrue(config["ibkd_deterministic_candidate"])
+        self.assertEqual(config["ibkd_cpu_threads"], 1)
+
     def test_beta_grid_locks_all_twelve_runs(self):
         root = Path(__file__).resolve().parents[1]
         path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_beta_grid500_v5.json"
