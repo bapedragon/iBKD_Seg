@@ -5,8 +5,12 @@ from pathlib import Path
 
 import torch
 
-from ibkd_seg.cityscapes.ibkd_reproducibility_forensics import (
+from ibkd_seg.cityscapes.ibkd_deterministic import (
     DiagnosticCBAM,
+    apply_deterministic_candidate,
+    deterministic_candidate_contract,
+)
+from ibkd_seg.cityscapes.ibkd_reproducibility_forensics import (
     _operator_names,
     _validate_config,
     compare_pair,
@@ -14,6 +18,7 @@ from ibkd_seg.cityscapes.ibkd_reproducibility_forensics import (
     gradient_report,
 )
 from ibkd_seg.phase1.models import DeformableCBAM
+from ibkd_seg.phase1.models import IBKD
 
 
 class CityscapesIBKDReproducibilityForensicsTests(unittest.TestCase):
@@ -167,6 +172,14 @@ class CityscapesIBKDReproducibilityForensicsTests(unittest.TestCase):
             gradient_report(named, first)["sha256"],
             gradient_report(named, second)["sha256"],
         )
+
+    def test_candidate_is_applied_to_all_three_ibkd_stages(self):
+        guide = IBKD((8, 12, 16), student_channels=8, student_blocks=3)
+        result = apply_deterministic_candidate(guide)
+        self.assertTrue(result["applied"])
+        self.assertEqual(result["candidate_id"], "flatmax_cpu_deform_v1")
+        self.assertEqual(len(result["stages"]), 3)
+        self.assertTrue(deterministic_candidate_contract(guide)["applied"])
 
     def test_deterministic_warning_operator_is_extracted(self):
         messages = [

@@ -149,6 +149,19 @@ def validate_config(config):
             "record_input_hash_each_step": True,
             "record_gradient_hash_each_step": True,
         },
+        "cityscapes_segmenter_l16_crop512_ibkd_candidate_warn25_v11": {
+            "methods": ["ibkd"],
+            "stability_steps": 25,
+            "guidance_beta": 0.5,
+            "guidance_beta_by_method": {"ibkd": 0.5},
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": True,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+        },
         "cityscapes_segmenter_l16_crop512_beta_grid500_v5": {
             "methods": ["lg", "alg", "ibkd"],
             "stability_steps": 500,
@@ -379,7 +392,10 @@ def run_method(args, config, output):
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     ptu.device = device
-    torch.set_num_threads(4)
+    candidate_requested = bool(config.get("ibkd_deterministic_candidate", False))
+    if candidate_requested and args.method != "ibkd":
+        raise ValueError("The deterministic iBKD candidate can only be used with iBKD")
+    torch.set_num_threads(int(config.get("ibkd_cpu_threads", 4)))
 
     manifest = json.loads(args.manifest.read_text())
     labels = json.loads(args.labels_report.read_text())
@@ -406,6 +422,19 @@ def run_method(args, config, output):
     effective_config = dict(config)
     effective_config["guidance_beta"] = guidance_beta_for(args.method, config, args.beta)
     guide = api.guidance(args.method, effective_config)
+    candidate_contract = None
+    if candidate_requested:
+        from .ibkd_deterministic import (
+            apply_deterministic_candidate,
+            deterministic_candidate_contract,
+        )
+
+        apply_deterministic_candidate(guide)
+        candidate_contract = deterministic_candidate_contract(guide)
+        if not candidate_contract["applied"]:
+            raise RuntimeError("The deterministic iBKD candidate was not applied to all stages")
+        if candidate_contract["candidate_id"] != config["ibkd_deterministic_candidate_id"]:
+            raise RuntimeError("Unexpected deterministic iBKD candidate identity")
     teacher = None
     teacher_hash = None
     if guide is not None:
@@ -617,6 +646,7 @@ def run_method(args, config, output):
         "runtime_error": runtime_error,
         "warning_messages": warning_messages,
         "nondeterministic_operators": nondeterministic_operators,
+        "ibkd_deterministic_candidate": candidate_contract,
         "config": config,
         "identity": {
             "manifest_sha256": sha256(args.manifest),
@@ -642,6 +672,7 @@ def run_method(args, config, output):
             "cudnn_deterministic": torch.backends.cudnn.deterministic,
             "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
             "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+            "cpu_threads": torch.get_num_threads(),
         },
     }
     save_json(output / "summary.json", result)

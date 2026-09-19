@@ -139,6 +139,23 @@ class CityscapesStabilityTests(unittest.TestCase):
         self.assertEqual(guidance_beta_for("alg", config), 0.02)
         self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
 
+    def test_ibkd_candidate_profile_locks_deterministic_execution(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_ibkd_candidate_warn25_v11.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["methods"], ["ibkd"])
+        self.assertEqual(config["stability_steps"], 25)
+        self.assertEqual(guidance_beta_for("ibkd", config), 0.5)
+        self.assertTrue(config["ibkd_deterministic_candidate"])
+        self.assertEqual(config["ibkd_cpu_threads"], 1)
+        config["ibkd_cpu_threads"] = 4
+        with self.assertRaises(ValueError):
+            validate_config(config)
+
     def test_beta_grid_locks_all_twelve_runs(self):
         root = Path(__file__).resolve().parents[1]
         path = root / "phase4/phase4_cityscapes/configs/paper_l16_crop512_beta_grid500_v5.json"
