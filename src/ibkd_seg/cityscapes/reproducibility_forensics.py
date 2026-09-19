@@ -203,6 +203,19 @@ def diagnose(runs: dict, comparisons: dict) -> dict:
         code = "total_backward_composition_nondeterminism"
         conclusion = "개별 gradient는 같지만 합산한 total loss backward가 달라집니다."
         next_step = "CE와 β·guidance gradient 합산 및 backward 호출 방식을 점검합니다."
+    elif not (
+        comparisons["vanilla_repeat_ce_scalar"]["passed"]
+        and comparisons["lg_repeat_ce_scalar"]["passed"]
+    ):
+        code = "ce_forward_scalar_reduction_nondeterminism"
+        conclusion = (
+            "logits와 모든 gradient는 같지만 CUDA CE의 scalar reduction 값만 "
+            "실행마다 마지막 비트에서 달라집니다."
+        )
+        next_step = (
+            "warn_only 결정론을 유지한 25-step 반복에서 매 step gradient와 "
+            "최종 모델 상태가 일치하는지 확인합니다."
+        )
     else:
         code = "one_batch_components_exact"
         conclusion = "한 배치의 forward와 component별 backward가 모두 정확히 일치했습니다."
@@ -500,23 +513,25 @@ def run_suite(args, config: dict) -> int:
                 "runtime_error": "summary.json missing",
             }
 
-    forward_fields = [
+    student_forward_fields = [
         "input_sha256",
         "student_initial_state_sha256",
         "rng.before_forward",
         "forward.logits_sha256",
         "forward.student_feature_sha256",
         "forward.student_feature_sequence_sha256",
-        "forward.ce_sha256",
     ]
     comparisons = {
         "vanilla_repeat_forward": compare_cases(
-            runs["vanilla_a"], runs["vanilla_b"], forward_fields
+            runs["vanilla_a"], runs["vanilla_b"], student_forward_fields
+        ),
+        "vanilla_repeat_ce_scalar": compare_cases(
+            runs["vanilla_a"], runs["vanilla_b"], ["forward.ce_sha256"]
         ),
         "vanilla_repeat_ce_backward": compare_cases(
             runs["vanilla_a"],
             runs["vanilla_b"],
-            forward_fields
+            student_forward_fields
             + [
                 "gradients.ce_a.student.sha256",
                 "gradients.ce_b.student.sha256",
@@ -524,25 +539,27 @@ def run_suite(args, config: dict) -> int:
             ],
         ),
         "vanilla_vs_lg_student_forward": compare_cases(
-            runs["vanilla_a"], runs["lg_a"], forward_fields
+            runs["vanilla_a"], runs["lg_a"], student_forward_fields
         ),
         "lg_repeat_forward": compare_cases(
             runs["lg_a"],
             runs["lg_b"],
-            forward_fields
+            student_forward_fields
             + [
                 "guidance_initial_state_sha256",
                 "teacher_state_sha256",
                 "forward.teacher_feature_sha256",
                 "forward.teacher_feature_sequence_sha256",
                 "forward.guidance_sha256",
-                "forward.total_sha256",
             ],
+        ),
+        "lg_repeat_ce_scalar": compare_cases(
+            runs["lg_a"], runs["lg_b"], ["forward.ce_sha256"]
         ),
         "lg_repeat_ce_backward": compare_cases(
             runs["lg_a"],
             runs["lg_b"],
-            forward_fields
+            student_forward_fields
             + [
                 "gradients.ce_a.student.sha256",
                 "gradients.ce_b.student.sha256",
@@ -587,6 +604,11 @@ def run_suite(args, config: dict) -> int:
         "full_training_authorized": False,
         "next_optimizer_step_forensics_authorized": (
             all_completed and diagnosis["code"] == "one_batch_components_exact"
+        ),
+        "next_warn_only_25_step_repro_authorized": (
+            all_completed
+            and diagnosis["code"]
+            in {"one_batch_components_exact", "ce_forward_scalar_reduction_nondeterminism"}
         ),
         "full_2000_reproducibility_audit_authorized": False,
         "runs": {

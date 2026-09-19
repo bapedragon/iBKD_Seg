@@ -42,9 +42,11 @@ class CityscapesReproducibilityForensicsTests(unittest.TestCase):
             name: {"passed": True, "checks": {}, "mismatched_fields": []}
             for name in (
                 "vanilla_repeat_forward",
+                "vanilla_repeat_ce_scalar",
                 "vanilla_repeat_ce_backward",
                 "vanilla_vs_lg_student_forward",
                 "lg_repeat_forward",
+                "lg_repeat_ce_scalar",
                 "lg_repeat_ce_backward",
                 "lg_repeat_guidance_backward",
                 "lg_repeat_total_backward",
@@ -79,6 +81,13 @@ class CityscapesReproducibilityForensicsTests(unittest.TestCase):
         runs["lg_b"]["within_run"]["guidance_student_backward_repeat_exact"] = False
         result = diagnose(runs, self.comparisons())
         self.assertEqual(result["code"], "lg_guidance_backward_nondeterminism")
+
+    def test_ce_scalar_only_difference_is_not_called_student_forward(self):
+        comparisons = self.comparisons()
+        comparisons["vanilla_repeat_ce_scalar"]["passed"] = False
+        comparisons["lg_repeat_ce_scalar"]["passed"] = False
+        result = diagnose(self.runs(), comparisons)
+        self.assertEqual(result["code"], "ce_forward_scalar_reduction_nondeterminism")
 
     def test_deterministic_warning_operator_is_extracted(self):
         messages = [
