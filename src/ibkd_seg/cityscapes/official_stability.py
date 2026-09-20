@@ -88,6 +88,9 @@ def validate_config(config):
     final_beta_grid_2000 = (
         "cityscapes_segmenter_l16_crop512_final_beta_grid2000_v13"
     )
+    ibkd_beta_0p1_monitor_2000 = (
+        "cityscapes_segmenter_l16_crop512_ibkd_beta0p1_monitor2000_v14"
+    )
     ibkd_repro_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
     )
@@ -95,6 +98,7 @@ def validate_config(config):
         beta_grid_2000,
         final_beta_grid_2000,
         ibkd_repro_2000,
+        ibkd_beta_0p1_monitor_2000,
     }
     locked = {
         "train_samples": 2975,
@@ -232,10 +236,31 @@ def validate_config(config):
             "primary_metric": "pixel_accuracy",
             "secondary_metric": "miou",
         },
+        ibkd_beta_0p1_monitor_2000: {
+            "methods": ["ibkd"],
+            "stability_steps": 2000,
+            "guidance_beta": 0.1,
+            "guidance_beta_by_method": {"ibkd": 0.1},
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": False,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "online_divergence_action": "record",
+            "primary_metric": "pixel_accuracy",
+            "secondary_metric": "miou",
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
         raise ValueError(f"Unknown stability protocol: {config.get('protocol_id')!r}")
+    online_action = config.get("online_divergence_action", "stop")
+    if online_action not in {"stop", "record"}:
+        raise ValueError(f"Unknown online divergence action: {online_action!r}")
+    if online_action == "record" and config.get("protocol_id") != ibkd_beta_0p1_monitor_2000:
+        raise ValueError("Monitor-only continuation is restricted to the beta=0.1 diagnostic")
     profile_mismatches = {key: (config.get(key), value) for key, value in profile.items()
                           if config.get(key) != value}
     if profile_mismatches:
@@ -556,6 +581,7 @@ def run_method(args, config, output):
     torch.cuda.reset_peak_memory_stats()
 
     rows = []
+    online_divergence_monitor = {"count": 0, "first": None, "last": None}
     input_checks = {}
     stream = hashlib.sha256()
     steps_per_epoch = math.ceil(len(datasets["train"]) / config["batch_size"])
@@ -661,7 +687,19 @@ def run_method(args, config, output):
                         )
                     divergence = online_divergence_reason(rows, config)
                     if divergence is not None:
-                        raise FloatingPointError(f"online_divergence:{divergence}")
+                        event = {"step": step_number, "reason": divergence}
+                        online_divergence_monitor["count"] += 1
+                        if online_divergence_monitor["first"] is None:
+                            online_divergence_monitor["first"] = event
+                        online_divergence_monitor["last"] = event
+                        if config.get("online_divergence_action", "stop") == "stop":
+                            raise FloatingPointError(f"online_divergence:{divergence}")
+                        if online_divergence_monitor["count"] == 1 or step_number % 25 == 0:
+                            print(
+                                f"[L16_STABILITY_DIVERGENCE_RECORDED] method={args.method} "
+                                f"step={step_number} reason={divergence}",
+                                flush=True,
+                            )
                     if len(rows) == config["stability_steps"]:
                         break
                 if len(rows) < config["stability_steps"]:
@@ -748,6 +786,8 @@ def run_method(args, config, output):
         "invocation_seconds": time.perf_counter() - began_run,
         "peak_cuda_allocated_bytes": torch.cuda.max_memory_allocated(),
         "runtime_error": runtime_error,
+        "online_divergence_action": config.get("online_divergence_action", "stop"),
+        "online_divergence_monitor": online_divergence_monitor,
         "warning_messages": warning_messages,
         "nondeterministic_operators": nondeterministic_operators,
         "ibkd_deterministic_candidate": candidate_contract,

@@ -230,6 +230,30 @@ class CityscapesStabilityTests(unittest.TestCase):
         self.assertFalse(deterministic_candidate_requested("alg", config))
         self.assertTrue(deterministic_candidate_requested("ibkd", config))
 
+    def test_ibkd_beta_0p1_monitor_continues_after_recorded_divergence(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_ibkd_beta0p1_monitor2000_v14.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["methods"], ["ibkd"])
+        self.assertEqual(config["stability_steps"], 2000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(guidance_beta_for("ibkd", config), 0.1)
+        self.assertEqual(config["online_divergence_action"], "record")
+        self.assertTrue(config["ibkd_deterministic_candidate"])
+
+        final_grid = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_final_beta_grid2000_v13.json"
+        )
+        ordinary_config = json.loads(final_grid.read_text())
+        ordinary_config["online_divergence_action"] = "record"
+        with self.assertRaises(ValueError):
+            validate_config(ordinary_config)
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):
