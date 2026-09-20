@@ -20,8 +20,10 @@ iBKD `beta=0.1`의 2,000-step 평가값을 추가로 확인하기 위한 monitor
 준비했습니다. v13의 불안정 제외 판정은 유지하면서 100배 안전선 초과를 기록하고
 학습을 계속합니다. 끝까지 유한값이면 val 500장의 pixel accuracy와 mIoU를 출력합니다.
 
+- 권장 500-step 회복 진단: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_beta0p1_monitor500.sh`
+- [500-step monitor 설정](configs/paper_l16_crop512_ibkd_beta0p1_monitor500_v15.json)
 - [monitor-only 설정](configs/paper_l16_crop512_ibkd_beta0p1_monitor2000_v14.json)
-- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_beta0p1_monitor2000.sh`
+- 2,000-step 확장 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_beta0p1_monitor2000.sh`
 
 ## 이전 작업: L/16 crop512 beta 500-step 확인 v3
 

@@ -254,6 +254,17 @@ class CityscapesStabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_config(ordinary_config)
 
+        monitor_500 = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_ibkd_beta0p1_monitor500_v15.json"
+        )
+        short_config = json.loads(monitor_500.read_text())
+        validate_config(short_config)
+        self.assertEqual(short_config["stability_steps"], 500)
+        self.assertEqual(short_config["val_samples"], 500)
+        self.assertEqual(guidance_beta_for("ibkd", short_config), 0.1)
+        self.assertEqual(short_config["online_divergence_action"], "record")
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):
