@@ -23,6 +23,9 @@ CUB_R50_GUIDED_SEED1_ASSET_TYPE = (
 CUB_R50_GUIDED_SEED23_ASSET_TYPE = (
     "phase1_cub_resnet50_224_guided_seeds2_3_v5"
 )
+CUB_SEG_WINDOW30_SEED1_ASSET_TYPE = (
+    "phase1_cub_direct_segmentation_window30_seed1_v1"
+)
 CUB_R50_GUIDED_SEED1_AUDIT_SHA256 = (
     "82264ed949643c55124981fc8008f8dc368ad257673781d2510d01ccf1cc0516"
 )
@@ -159,6 +162,8 @@ def _asset_kind(manifest: dict[str, Any]) -> str:
         return "cub_r50_guided_seed1_v4"
     if asset_type == CUB_R50_GUIDED_SEED23_ASSET_TYPE:
         return "cub_r50_guided_seed23_v5"
+    if asset_type == CUB_SEG_WINDOW30_SEED1_ASSET_TYPE:
+        return "cub_seg_window30_seed1_v1"
     if asset_type is None and "classification_batch_size" in manifest["source"]:
         return "pet_classification"
     raise RuntimeError(f"unsupported checkpoint release asset type: {asset_type!r}")
@@ -474,6 +479,132 @@ def _validate_cub_r50_guided_seed23(root: Path, manifest: dict[str, Any]) -> int
     return 48
 
 
+def _validate_cub_seg_window30_seed1(
+    root: Path, manifest: dict[str, Any]
+) -> int:
+    """Audit and strict-load the five exploratory issue-783 segmenters."""
+
+    import torch
+
+    from ibkd_seg.cityscapes.models import Segmenter
+    from ibkd_seg.cityscapes.runtime import state_hash
+
+    source = manifest.get("source", {})
+    contents = manifest.get("contents", {})
+    checkpoints = manifest.get("checkpoints", {})
+    if (
+        source.get("h200_job_id") != 783
+        or source.get("protocol_id")
+        != "cub200_direct_binary_segmentation_window30_exploratory_full_v1"
+        or source.get("protocol_config_sha256")
+        != "be94f411f97ff162e1adacac4951cf7185b18d00bb8d09486b068105a38f8d93"
+        or source.get("source_sha256")
+        != "a26615f53074ff4c849a58ec2a1d9e81e33ecd49da941c92d0e1f85f6c2cd422"
+        or source.get("data_identity_sha256")
+        != "0b1e4676ce62f4e1aaa0aa7690ae11054634eafe07338d4c6d699e8bf41f4092"
+        or source.get("scientific_result") is not False
+        or contents
+        != {
+            "teacher_checkpoints": 1,
+            "student_checkpoints": 4,
+            "total_checkpoints": 5,
+            "latest_checkpoints_included": 0,
+        }
+        or manifest.get("remote_asset_digest_verified") is not True
+    ):
+        raise RuntimeError("CUB segmentation issue-783 release source contract mismatch")
+
+    summary_path = root / "full_summary.json"
+    config_path = root / "config.json"
+    if not summary_path.is_file() or not config_path.is_file():
+        raise RuntimeError("CUB segmentation release is missing completion evidence")
+    if _file_sha256(summary_path) != source.get("full_summary_sha256"):
+        raise RuntimeError("CUB segmentation full-summary byte contract mismatch")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    run_rows = {row.get("method"): row for row in summary.get("runs", [])}
+    if (
+        summary.get("status") != "complete"
+        or summary.get("scientific_result") is not False
+        or summary.get("config_sha256") != source["protocol_config_sha256"]
+        or summary.get("source_sha256") != source["source_sha256"]
+        or summary.get("config") != config
+        or set(run_rows) != {"vanilla", "lg", "alg", "ibkd"}
+        or summary.get("teacher", {}).get("status") != "complete"
+        or any(row.get("status") != "complete" for row in run_rows.values())
+    ):
+        raise RuntimeError("CUB segmentation issue-783 completion contract failed")
+
+    expected_roles = ("teacher", "vanilla", "lg", "alg", "ibkd")
+    if tuple(checkpoints) != expected_roles:
+        raise RuntimeError("CUB segmentation checkpoint manifest order or roles changed")
+    expected_paths: set[Path] = set()
+    for name in expected_roles:
+        contract = checkpoints[name]
+        relative = Path(str(contract.get("relative_path", "")))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise RuntimeError(f"unsafe CUB segmentation checkpoint path: {relative}")
+        checkpoint_path = root / relative
+        expected_paths.add(checkpoint_path.resolve())
+        if (
+            not checkpoint_path.is_file()
+            or checkpoint_path.stat().st_size != contract.get("bytes")
+            or _file_sha256(checkpoint_path) != contract.get("checkpoint_sha256")
+        ):
+            raise RuntimeError(
+                f"CUB segmentation checkpoint byte contract mismatch: {name}"
+            )
+
+        payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        expected_role = "teacher" if name == "teacher" else "student"
+        expected_method = None if name == "teacher" else name
+        result_row = summary["teacher"] if name == "teacher" else run_rows[name]
+        if (
+            contract.get("role") != expected_role
+            or contract.get("method") != expected_method
+            or payload.get("artifact")
+            != "cub_direct_segmentation_validation_selected"
+            or payload.get("scientific_result") is not False
+            or payload.get("epoch") != contract.get("selected_epoch")
+            or result_row.get("selected_epoch") != contract.get("selected_epoch")
+            or result_row.get("best_checkpoint_sha256")
+            != contract.get("checkpoint_sha256")
+            or result_row.get("best_checkpoint_bytes") != contract.get("bytes")
+            or payload.get("config") != config
+        ):
+            raise RuntimeError(
+                f"CUB segmentation checkpoint metadata contract mismatch: {name}"
+            )
+
+        model = Segmenter(expected_role, config)
+        incompatible = model.load_state_dict(payload["model"], strict=True)
+        loaded_state_hash = state_hash(model)
+        floating_finite = all(
+            bool(torch.isfinite(tensor).all())
+            for tensor in payload["model"].values()
+            if tensor.is_floating_point()
+        )
+        if (
+            incompatible.missing_keys
+            or incompatible.unexpected_keys
+            or loaded_state_hash != contract.get("model_state_sha256")
+            or loaded_state_hash != payload.get("model_state_sha256")
+            or not floating_finite
+        ):
+            raise RuntimeError(
+                f"CUB segmentation checkpoint strict-load contract failed: {name}"
+            )
+        del model, payload
+
+    actual_paths = {path.resolve() for path in root.rglob("*.pt") if path.is_file()}
+    if actual_paths != expected_paths:
+        raise RuntimeError(
+            "CUB segmentation release checkpoint inventory mismatch: "
+            f"expected={len(expected_paths)} actual={len(actual_paths)}"
+        )
+    return 5
+
+
 def _validate_extracted(root: Path, manifest: dict[str, Any]) -> int:
     kind = _asset_kind(manifest)
     if kind == "cub_r50_teacher_v3":
@@ -482,6 +613,8 @@ def _validate_extracted(root: Path, manifest: dict[str, Any]) -> int:
         return _validate_cub_r50_guided_seed1(root, manifest)
     if kind == "cub_r50_guided_seed23_v5":
         return _validate_cub_r50_guided_seed23(root, manifest)
+    if kind == "cub_seg_window30_seed1_v1":
+        return _validate_cub_seg_window30_seed1(root, manifest)
     return _validate_pet_classification(root, manifest)
 
 
@@ -492,6 +625,8 @@ def _existing_marker(destination: Path, kind: str) -> Path:
         return destination / "combined_full_summary.json"
     if kind == "cub_r50_guided_seed23_v5":
         return destination / "combined_full_summary.json"
+    if kind == "cub_seg_window30_seed1_v1":
+        return destination / "full_summary.json"
     return destination / "classification_summary.json"
 
 
@@ -551,6 +686,8 @@ def download_and_extract(
         prefix = "phase1_cub_r50_guided_seed1_v4_"
     elif kind == "cub_r50_guided_seed23_v5":
         prefix = "phase1_cub_r50_guided_seed23_v5_"
+    elif kind == "cub_seg_window30_seed1_v1":
+        prefix = "phase1_cub_seg_window30_seed1_v1_"
     else:
         prefix = f"phase1_pet_b{int(batch_size)}_"
     with tempfile.NamedTemporaryFile(

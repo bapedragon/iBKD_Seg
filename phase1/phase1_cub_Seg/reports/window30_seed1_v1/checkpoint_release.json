@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "asset_type": "phase1_cub_direct_segmentation_window30_seed1_v1",
+  "release_tag": "phase1-cub-segmentation-window30-seed1-v1-issue783",
+  "release_url": "https://github.com/bapedragon/iBKD_Seg/releases/tag/phase1-cub-segmentation-window30-seed1-v1-issue783",
+  "asset_name": "phase1_cub_segmentation_window30_seed1_v1_issue783.tar.gz",
+  "download_url": "https://github.com/bapedragon/iBKD_Seg/releases/download/phase1-cub-segmentation-window30-seed1-v1-issue783/phase1_cub_segmentation_window30_seed1_v1_issue783.tar.gz",
+  "size_bytes": 184017704,
+  "sha256": "1de19cd4adbd5ed6937b9b56eb43305df04da67f5f1ba933406c1f19f2ed4748",
+  "remote_asset_digest_verified": true,
+  "source": {
+    "h200_job_id": 783,
+    "protocol_id": "cub200_direct_binary_segmentation_window30_exploratory_full_v1",
+    "protocol_config_sha256": "be94f411f97ff162e1adacac4951cf7185b18d00bb8d09486b068105a38f8d93",
+    "source_sha256": "a26615f53074ff4c849a58ec2a1d9e81e33ecd49da941c92d0e1f85f6c2cd422",
+    "data_identity_sha256": "0b1e4676ce62f4e1aaa0aa7690ae11054634eafe07338d4c6d699e8bf41f4092",
+    "full_summary_sha256": "525fb99ddeff9aa22b5da641e5588bd163412c3c6f95214c4d4cd14465e34286",
+    "scientific_result": false
+  },
+  "contents": {
+    "teacher_checkpoints": 1,
+    "student_checkpoints": 4,
+    "total_checkpoints": 5,
+    "latest_checkpoints_included": 0
+  },
+  "checkpoints": {
+    "teacher": {
+      "relative_path": "teacher/best.pt",
+      "role": "teacher",
+      "method": null,
+      "selected_epoch": 56,
+      "bytes": 98694177,
+      "checkpoint_sha256": "84892fc8b8403512b91ad5a1ed1fb57e6db2416cf76958bbfb9d9b2f3e09bcfb",
+      "model_state_sha256": "e32886a12934c0d5e790c18a2c03d3fb09e3417434eecbb07cac6dbaa8f769c4"
+    },
+    "vanilla": {
+      "relative_path": "vanilla/best.pt",
+      "role": "student",
+      "method": "vanilla",
+      "selected_epoch": 68,
+      "bytes": 24925045,
+      "checkpoint_sha256": "bb6837b4e414482295565af65bd409c5d2ceef8d3ab01bd424e4659a3059a3f3",
+      "model_state_sha256": "e7d091e8130d0fe5eb74fbf00d6ee5811789d2c03b9125ec8b851acb48ef9145"
+    },
+    "lg": {
+      "relative_path": "lg/best.pt",
+      "role": "student",
+      "method": "lg",
+      "selected_epoch": 74,
+      "bytes": 24925173,
+      "checkpoint_sha256": "c1110d807332d965b8630c7d3f35739c53ef5dc983e9ea50f40fedb0832bcc19",
+      "model_state_sha256": "1e0c62c844c421b9f70598cd02a872833a04a12af18bea2ce18e81e22d7ee574"
+    },
+    "alg": {
+      "relative_path": "alg/best.pt",
+      "role": "student",
+      "method": "alg",
+      "selected_epoch": 86,
+      "bytes": 24925173,
+      "checkpoint_sha256": "72077b5c12ad30158ff68278ed99ca160fc28b39511affc848241c6b0a6b4a51",
+      "model_state_sha256": "5dd9720afb02205b463805c873a4f7fb8832ef84cd148acb0c568add58b33739"
+    },
+    "ibkd": {
+      "relative_path": "ibkd/best.pt",
+      "role": "student",
+      "method": "ibkd",
+      "selected_epoch": 91,
+      "bytes": 24925173,
+      "checkpoint_sha256": "f72590f157deaf79b9caa74a29e021a6ffd12a2c6fcc43b1a9d84851219fb9a4",
+      "model_state_sha256": "ce194f803fcd6df7518a37b83dbab1af845b903abe19cf110a6f668da9d7d141"
+    }
+  }
+}

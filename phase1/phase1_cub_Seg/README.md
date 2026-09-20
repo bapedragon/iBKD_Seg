@@ -16,9 +16,26 @@ smoke와 window-30 seed-1 탐색 본학습까지 완료했습니다. 탐색 실�
 - window 30 본학습 설정: [configs/direct_segmentation_window30_full_v1.json](configs/direct_segmentation_window30_full_v1.json)
 - window 30 본학습 실행: [scripts/run_direct_segmentation_window30_full.sh](scripts/run_direct_segmentation_window30_full.sh)
 - window 30 seed-1 결과: [reports/window30_seed1_v1/RESULTS.md](reports/window30_seed1_v1/RESULTS.md)
+- window 30 seed-1 checkpoint release 계약: [reports/window30_seed1_v1/checkpoint_release.json](reports/window30_seed1_v1/checkpoint_release.json)
+- seed-1 공간진단 smoke 설정: [configs/spatial_diagnostics_seed1_smoke_v1.json](configs/spatial_diagnostics_seed1_smoke_v1.json)
+- seed-1 공간진단 smoke 실행: [scripts/run_spatial_diagnostics_seed1_smoke.sh](scripts/run_spatial_diagnostics_seed1_smoke.sh)
 
 대표 metric은 2-class mIoU이고, foreground IoU·background IoU·foreground Dice·pixel
 accuracy를 함께 저장합니다. 3step/validation 8장의 값은 연결 진단에만 사용합니다.
+
+seed-1 공간진단 smoke는 작업 783에서 validation으로 선택된 Vanilla/LG/ALG/iBKD
+checkpoint를 고정한 뒤 validation 고정 200장에서 다음 연결만 검사합니다.
+
+- student block11의 선형 `1x1 Conv` part probe
+- 같은 block11의 작은 `3x3 Conv + GELU + 1x1 Conv` 비선형 part probe
+- teacher layer3와 student block 0~11의 spatial linear CKA
+- student attention rollout의 AP, Pointing, foreground mass
+- 작업 783에서 이미 감사한 official-test mIoU 참조값
+
+비선형 probe는 선형 probe 용량 부족 여부를 확인하는 보조 진단입니다. 두 probe 모두 smoke에서는
+2 epoch만 학습하므로 성능 결론에 사용하지 않습니다. 이번 실행은 official-test 이미지를 다시 열지
+않으며, Test mIoU는 기존 `full_summary.json`의 값만 복사합니다. 모든 방법의 전체 수치와 완료
+상태는 로그 마지막 줄의 `[CUB_SEG_SPATIAL_SMOKE_FINAL_RESULTS]` JSON에 출력됩니다.
 
 로컬에서 실제 CUB 데이터 연결을 축소 확인할 때만 아래 명령을 사용할 수 있습니다.
 해상도와 표본 수를 명시적으로 줄이므로 H200 smoke 통과를 대신하지 않습니다.
