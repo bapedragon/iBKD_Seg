@@ -2,29 +2,23 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "usage: $0 {lg|alg|ibkd_l025_b025|ibkd_l025_b05|ibkd_l05_b01|ibkd_l05_b025}" >&2
+  echo "usage: $0 {pack1|pack2|pack3|pack4}" >&2
   exit 2
 fi
 
 group="$1"
 case "${group}" in
-  lg)
-    run_ids=(lg_beta_0p05 lg_beta_0p02)
+  pack1)
+    run_ids=(lg_beta_0p05 ibkd_lambda_0p25_beta_0p25)
     ;;
-  alg)
-    run_ids=(alg_beta_0p05 alg_beta_0p02)
+  pack2)
+    run_ids=(lg_beta_0p02 ibkd_lambda_0p25_beta_0p5)
     ;;
-  ibkd_l025_b025)
-    run_ids=(ibkd_lambda_0p25_beta_0p25)
+  pack3)
+    run_ids=(alg_beta_0p05 ibkd_lambda_0p5_beta_0p1)
     ;;
-  ibkd_l025_b05)
-    run_ids=(ibkd_lambda_0p25_beta_0p5)
-    ;;
-  ibkd_l05_b01)
-    run_ids=(ibkd_lambda_0p5_beta_0p1)
-    ;;
-  ibkd_l05_b025)
-    run_ids=(ibkd_lambda_0p5_beta_0p25)
+  pack4)
+    run_ids=(alg_beta_0p02 ibkd_lambda_0p5_beta_0p25)
     ;;
   *)
     echo "unknown group: ${group}" >&2
