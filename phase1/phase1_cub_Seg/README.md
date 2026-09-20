@@ -1,8 +1,9 @@
 # Phase 1 CUB 직접 segmentation 탐색
 
 이 폴더는 기존 CUB classification/frozen-probe 실험과 분리해, CUB mask를 직접 정답으로
-사용하는 segmentation 확장 가능성을 먼저 확인합니다. 현재 추가된 것은
-Vanilla/LG/ALG/iBKD **real-data smoke**뿐이며 Phase gate 통과나 본실험 시작을 뜻하지 않습니다.
+사용하는 segmentation 확장 가능성을 먼저 확인합니다. Vanilla/LG/ALG/iBKD real-data
+smoke와 window-30 seed-1 탐색 본학습까지 완료했습니다. 탐색 실행은
+`scientific_result=false`이며 Phase gate 통과나 논문용 확정 결과를 뜻하지 않습니다.
 
 - H200 제출 입력안: [H200_SMOKE_ISSUE.md](H200_SMOKE_ISSUE.md)
 - 고정 smoke 설정: [configs/direct_segmentation_smoke_v1.json](configs/direct_segmentation_smoke_v1.json)
@@ -14,6 +15,7 @@ Vanilla/LG/ALG/iBKD **real-data smoke**뿐이며 Phase gate 통과나 본실험 
 - 본학습 실행: [scripts/run_direct_segmentation_full.sh](scripts/run_direct_segmentation_full.sh)
 - window 30 본학습 설정: [configs/direct_segmentation_window30_full_v1.json](configs/direct_segmentation_window30_full_v1.json)
 - window 30 본학습 실행: [scripts/run_direct_segmentation_window30_full.sh](scripts/run_direct_segmentation_window30_full.sh)
+- window 30 seed-1 결과: [reports/window30_seed1_v1/RESULTS.md](reports/window30_seed1_v1/RESULTS.md)
 
 대표 metric은 2-class mIoU이고, foreground IoU·background IoU·foreground Dice·pixel
 accuracy를 함께 저장합니다. 3step/validation 8장의 값은 연결 진단에만 사용합니다.
