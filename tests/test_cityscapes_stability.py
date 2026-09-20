@@ -8,6 +8,7 @@ from ibkd_seg.cityscapes.official_stability import (
     deterministic_candidate_requested,
     stability_decision,
     guidance_beta_for,
+    ibkd_fusion_ratio_for,
     online_divergence_reason,
     terminal_result,
     validate_config,
@@ -308,6 +309,44 @@ class CityscapesStabilityTests(unittest.TestCase):
         config["ibkd_fusion_ratio"] = 0.25
         with self.assertRaises(ValueError):
             validate_config(config)
+
+    def test_top2_per_method_10000_joint_ibkd_plan_is_locked(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_candidate_top2_grid10000_v18.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["stability_steps"], 10000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(len(config["candidate_plans"]), 8)
+        self.assertEqual(
+            [(plan["method"], plan["beta"], plan.get("ibkd_fusion_ratio"))
+             for plan in config["candidate_plans"]],
+            [
+                ("lg", 0.05, None), ("lg", 0.02, None),
+                ("alg", 0.05, None), ("alg", 0.02, None),
+                ("ibkd", 0.25, 0.25), ("ibkd", 0.5, 0.25),
+                ("ibkd", 0.1, 0.5), ("ibkd", 0.25, 0.5),
+            ],
+        )
+        config["candidate_plans"][4]["ibkd_fusion_ratio"] = 0.5
+        with self.assertRaises(ValueError):
+            validate_config(config)
+
+        self.assertEqual(
+            ibkd_fusion_ratio_for(
+                "ibkd", config, beta=0.25, override=0.5,
+                run_id="ibkd_lambda_0p5_beta_0p25",
+            ),
+            0.5,
+        )
+        with self.assertRaises(ValueError):
+            ibkd_fusion_ratio_for(
+                "ibkd", config, beta=0.25, override=0.25,
+                run_id="ibkd_lambda_0p5_beta_0p25",
+            )
 
     def test_terminal_result_contains_every_method_result(self):
         runs = []

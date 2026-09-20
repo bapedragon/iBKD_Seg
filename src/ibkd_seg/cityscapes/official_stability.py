@@ -100,6 +100,9 @@ def validate_config(config):
     ibkd_lambda_0p5_beta_grid_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17"
     )
+    candidate_top2_grid_10000 = (
+        "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18"
+    )
     ibkd_repro_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
     )
@@ -110,6 +113,7 @@ def validate_config(config):
         ibkd_beta_0p1_monitor_2000,
         ibkd_beta_0p1_monitor_500,
         ibkd_lambda_0p5_beta_grid_2000,
+        candidate_top2_grid_10000,
     }
     locked = {
         "train_samples": 2975,
@@ -317,6 +321,41 @@ def validate_config(config):
             "primary_metric": "pixel_accuracy",
             "secondary_metric": "miou",
         },
+        candidate_top2_grid_10000: {
+            "methods": ["lg", "alg", "ibkd"],
+            "stability_steps": 10000,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "lg": [0.05, 0.02],
+                "alg": [0.05, 0.02],
+                "ibkd": [0.25, 0.5, 0.1],
+            },
+            "candidate_plans": [
+                {"method": "lg", "beta": 0.05, "run_id": "lg_beta_0p05"},
+                {"method": "lg", "beta": 0.02, "run_id": "lg_beta_0p02"},
+                {"method": "alg", "beta": 0.05, "run_id": "alg_beta_0p05"},
+                {"method": "alg", "beta": 0.02, "run_id": "alg_beta_0p02"},
+                {"method": "ibkd", "beta": 0.25, "ibkd_fusion_ratio": 0.25,
+                 "run_id": "ibkd_lambda_0p25_beta_0p25"},
+                {"method": "ibkd", "beta": 0.5, "ibkd_fusion_ratio": 0.25,
+                 "run_id": "ibkd_lambda_0p25_beta_0p5"},
+                {"method": "ibkd", "beta": 0.1, "ibkd_fusion_ratio": 0.5,
+                 "run_id": "ibkd_lambda_0p5_beta_0p1"},
+                {"method": "ibkd", "beta": 0.25, "ibkd_fusion_ratio": 0.5,
+                 "run_id": "ibkd_lambda_0p5_beta_0p25"},
+            ],
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": False,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "ibkd_fusion_ratio": None,
+            "primary_metric": "pixel_accuracy",
+            "secondary_metric": "miou",
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
@@ -364,6 +403,31 @@ def beta_run_id(method, beta):
     return f"{method}_beta_{value}"
 
 
+def ibkd_fusion_ratio_for(method, config, *, beta=None, override=None, run_id=None):
+    if override is not None and method != "ibkd":
+        raise ValueError("An iBKD fusion-ratio override is valid only for iBKD")
+    if method != "ibkd":
+        return None
+    if override is None:
+        if config.get("candidate_plans") is not None:
+            raise ValueError("The locked joint beta/lambda plan requires --ibkd-fusion-ratio")
+        return float(config["ibkd_fusion_ratio"])
+    allowed = config.get("candidate_plans", [])
+    matched = any(
+        plan.get("method") == method
+        and plan.get("run_id") == run_id
+        and math.isclose(float(plan["beta"]), float(beta), rel_tol=0.0, abs_tol=1e-12)
+        and math.isclose(
+            float(plan["ibkd_fusion_ratio"]), float(override),
+            rel_tol=0.0, abs_tol=1e-12,
+        )
+        for plan in allowed
+    )
+    if not matched:
+        raise ValueError("The requested iBKD beta/lambda pair is outside the locked plan")
+    return float(override)
+
+
 def deterministic_candidate_requested(method, config):
     if method not in {"vanilla", "lg", "alg", "ibkd"}:
         raise ValueError(f"Unknown method {method!r}")
@@ -393,6 +457,7 @@ def terminal_result(runs, config, consistency_errors):
             "diagnostic_validation": scores,
             "validation_samples": row["validation_samples"],
             "guidance_beta": row["effective_guidance_beta"],
+            "ibkd_fusion_ratio": row.get("effective_ibkd_fusion_ratio"),
             "guidance_active_steps": row.get("guidance_active_steps"),
             "guidance_stop_epoch": row.get("guidance_stop_epoch"),
             "decoder_layers": row["decoder_layers"],
@@ -473,6 +538,7 @@ def terminal_result(runs, config, consistency_errors):
                 {
                     "rank": rank,
                     "beta": row["effective_guidance_beta"],
+                    "ibkd_fusion_ratio": row.get("effective_ibkd_fusion_ratio"),
                     "pixel_accuracy": row["diagnostic_validation"]["pixel_accuracy"],
                     "miou": row["diagnostic_validation"]["miou"],
                     "run_id": row.get("run_id", row["method"]),
@@ -486,6 +552,11 @@ def terminal_result(runs, config, consistency_errors):
         "batch_size": config["batch_size"],
         "schedule_total_steps": config["total_steps"],
         "ibkd_fusion_ratio": config.get("ibkd_fusion_ratio"),
+        "ibkd_fusion_ratio_by_run": {
+            row.get("run_id", row["method"]): row.get("effective_ibkd_fusion_ratio")
+            for row in runs
+        },
+        "candidate_plans": config.get("candidate_plans"),
         "guidance_beta_by_method": beta_by_method,
         "guidance_beta_candidates_by_method": beta_candidates,
         "guidance_beta_by_run": {
@@ -619,6 +690,12 @@ def run_method(args, config, output):
     seed_all(config["seed"] + 1000, strict_determinism=strict_determinism)
     effective_config = dict(config)
     effective_config["guidance_beta"] = guidance_beta_for(args.method, config, args.beta)
+    effective_ratio = ibkd_fusion_ratio_for(
+        args.method, config, beta=args.beta,
+        override=args.ibkd_fusion_ratio, run_id=args.run_id,
+    )
+    if effective_ratio is not None:
+        effective_config["ibkd_fusion_ratio"] = effective_ratio
     guide = api.guidance(args.method, effective_config)
     candidate_contract = None
     if candidate_requested:
@@ -700,7 +777,7 @@ def run_method(args, config, output):
                             teacher_features = teacher.extract_feat(api.teacher_input(image))[1:]
                         if args.method == "ibkd":
                             alignment, fusion = guide(features, teacher_features)
-                            ratio = config["ibkd_fusion_ratio"]
+                            ratio = effective_config["ibkd_fusion_ratio"]
                             guided = (1 - ratio) * alignment + ratio * fusion
                         else:
                             guided = guide(features, teacher_features)
@@ -832,6 +909,9 @@ def run_method(args, config, output):
         "completed_steps": len(rows),
         "expected_steps": config["stability_steps"],
         "effective_guidance_beta": 0.0 if guide is None else effective_config["guidance_beta"],
+        "effective_ibkd_fusion_ratio": (
+            effective_config.get("ibkd_fusion_ratio") if args.method == "ibkd" else None
+        ),
         "guidance_active_steps": sum(row["beta"] > 0 for row in rows),
         "guidance_stop_epoch": guidance_stop_epoch,
         "first_step": rows[0] if rows else None,
@@ -916,18 +996,32 @@ def run_suite(args, config, output, config_path):
     save_json(output / "config.json", config)
     save_json(output / "provenance.json", provenance)
     candidates = config.get("guidance_beta_candidates_by_method")
-    if candidates is None:
-        plans = [(method, None, method) for method in config["methods"]]
+    configured_plans = config.get("candidate_plans")
+    if configured_plans is not None:
+        plans = [dict(plan) for plan in configured_plans]
+    elif candidates is None:
+        plans = [
+            {"method": method, "beta": None, "run_id": method}
+            for method in config["methods"]
+        ]
     else:
         plans = [
-            (method, float(beta), beta_run_id(method, beta))
+            {"method": method, "beta": float(beta), "run_id": beta_run_id(method, beta)}
             for method in config["methods"]
             for beta in candidates[method]
         ]
     runs = []
-    for method, beta, run_id in plans:
+    for plan in plans:
+        method = plan["method"]
+        beta = plan.get("beta")
+        run_id = plan["run_id"]
+        fusion_ratio = plan.get("ibkd_fusion_ratio")
         beta_text = "locked" if beta is None else format(beta, "g")
-        print(f"[L16_STABILITY_START] run={run_id} method={method} beta={beta_text}", flush=True)
+        lambda_text = "n/a" if fusion_ratio is None else format(fusion_ratio, "g")
+        print(
+            f"[L16_STABILITY_START] run={run_id} method={method} "
+            f"beta={beta_text} lambda={lambda_text}", flush=True,
+        )
         command = [
             sys.executable, "-u", "-m", "ibkd_seg.cityscapes.official_stability",
             "--cache-root", str(args.cache_root), "--data-dir", str(args.data_dir),
@@ -937,6 +1031,8 @@ def run_suite(args, config, output, config_path):
         ]
         if beta is not None:
             command.extend(("--beta", str(beta)))
+        if fusion_ratio is not None:
+            command.extend(("--ibkd-fusion-ratio", str(fusion_ratio)))
         completed = subprocess.run(command, check=False)
         summary_path = output / run_id / "summary.json"
         if summary_path.exists():
@@ -944,6 +1040,7 @@ def run_suite(args, config, output, config_path):
         else:
             row = {"status": "infrastructure_error", "method": method,
                    "run_id": run_id, "effective_guidance_beta": beta,
+                   "effective_ibkd_fusion_ratio": fusion_ratio,
                    "returncode": completed.returncode}
         runs.append(row)
         save_json(output / "stability_summary.json", {"status": "running", "runs": runs})
@@ -986,6 +1083,7 @@ def main():
     parser.add_argument("--labels-report", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--method", choices=("vanilla", "lg", "alg", "ibkd"), help=argparse.SUPPRESS)
     parser.add_argument("--beta", type=float, help=argparse.SUPPRESS)
+    parser.add_argument("--ibkd-fusion-ratio", type=float, help=argparse.SUPPRESS)
     parser.add_argument("--run-id", help=argparse.SUPPRESS)
     parser.add_argument("--device", choices=("cuda",), default="cuda")
     args = parser.parse_args()

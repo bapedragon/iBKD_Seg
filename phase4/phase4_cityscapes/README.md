@@ -1,5 +1,17 @@
 # Cityscapes 직접 segmentation 실험
 
+## 현재 실행: 방법별 상위 후보 10,000-step 선별 v18
+
+2,000-step 결과에서 LG와 ALG는 각각 beta `0.05`, `0.02`를 유지하고,
+iBKD는 lambda별 상위 두 조합을 유지합니다. iBKD 후보는
+`(lambda=0.25, beta=0.25)`, `(lambda=0.25, beta=0.5)`,
+`(lambda=0.5, beta=0.1)`, `(lambda=0.5, beta=0.25)`입니다.
+총 8개를 seed 1에서 각각 10,000 step 학습하고 val 500장으로 평가합니다.
+
+- [10,000-step 고정 설정](configs/paper_l16_crop512_candidate_top2_grid10000_v18.json)
+- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000.sh`
+- 이 단계는 후보 선별이며 최종 80,000-step 과학 결과가 아닙니다.
+
 ## 현재 결과: L/16 crop512 beta 2,000-step 선별 v13
 
 H200 issue 804에서 LG·ALG·iBKD beta 후보 11개를 seed 1, 2,000 step으로
