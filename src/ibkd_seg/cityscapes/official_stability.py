@@ -94,6 +94,9 @@ def validate_config(config):
     ibkd_beta_0p1_monitor_500 = (
         "cityscapes_segmenter_l16_crop512_ibkd_beta0p1_monitor500_v15"
     )
+    ibkd_lambda_0p5_beta_grid_smoke_25 = (
+        "cityscapes_segmenter_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25_v16"
+    )
     ibkd_repro_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
     )
@@ -272,6 +275,25 @@ def validate_config(config):
             "primary_metric": "pixel_accuracy",
             "secondary_metric": "miou",
         },
+        ibkd_lambda_0p5_beta_grid_smoke_25: {
+            "methods": ["ibkd"],
+            "stability_steps": 25,
+            "guidance_beta": 0.1,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "ibkd": [0.1, 0.25, 0.5, 1.0],
+            },
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": False,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "ibkd_fusion_ratio": 0.5,
+            "primary_metric": "pixel_accuracy",
+            "secondary_metric": "miou",
+        },
     }
     profile = profiles.get(config.get("protocol_id"))
     if profile is None:
@@ -359,6 +381,8 @@ def terminal_result(runs, config, consistency_errors):
             "parameters_finite": row["parameters_finite"],
             "optimizer_state_finite": row["optimizer_state_finite"],
             "runtime_error": row["runtime_error"],
+            "online_divergence_action": row.get("online_divergence_action", "stop"),
+            "online_divergence_monitor": row.get("online_divergence_monitor"),
             "input_stream_sha256": row.get("input_stream_sha256"),
             "student_initial_state_sha256": row.get("student_initial_state_sha256"),
             "student_final_state_sha256": row.get("student_final_state_sha256"),
@@ -438,6 +462,7 @@ def terminal_result(runs, config, consistency_errors):
         "crop_size": config["crop_size"],
         "batch_size": config["batch_size"],
         "schedule_total_steps": config["total_steps"],
+        "ibkd_fusion_ratio": config.get("ibkd_fusion_ratio"),
         "guidance_beta_by_method": beta_by_method,
         "guidance_beta_candidates_by_method": beta_candidates,
         "guidance_beta_by_run": {
