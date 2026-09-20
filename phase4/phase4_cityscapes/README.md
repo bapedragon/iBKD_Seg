@@ -9,7 +9,13 @@ iBKD는 lambda별 상위 두 조합을 유지합니다. iBKD 후보는
 총 8개를 seed 1에서 각각 10,000 step 학습하고 val 500장으로 평가합니다.
 
 - [10,000-step 고정 설정](configs/paper_l16_crop512_candidate_top2_grid10000_v18.json)
-- 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000.sh`
+- 10시간 제한 환경에서는 아래처럼 6개 작업으로 나눠 실행합니다.
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh lg`
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh alg`
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh ibkd_l025_b025`
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh ibkd_l025_b05`
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh ibkd_l05_b01`
+  - `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh ibkd_l05_b025`
 - 이 단계는 후보 선별이며 최종 80,000-step 과학 결과가 아닙니다.
 
 ## 현재 결과: L/16 crop512 beta 2,000-step 선별 v13

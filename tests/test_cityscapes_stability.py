@@ -5,7 +5,9 @@ from pathlib import Path
 
 from ibkd_seg.cityscapes.official_stability import (
     beta_run_id,
+    candidate_plans_for,
     deterministic_candidate_requested,
+    execution_report_config,
     stability_decision,
     guidance_beta_for,
     ibkd_fusion_ratio_for,
@@ -347,6 +349,18 @@ class CityscapesStabilityTests(unittest.TestCase):
                 "ibkd", config, beta=0.25, override=0.25,
                 run_id="ibkd_lambda_0p5_beta_0p25",
             )
+
+        lg_plans = candidate_plans_for(config, ["lg_beta_0p05", "lg_beta_0p02"])
+        self.assertEqual([plan["run_id"] for plan in lg_plans], [
+            "lg_beta_0p05", "lg_beta_0p02",
+        ])
+        report = execution_report_config(config, lg_plans)
+        self.assertEqual(report["methods"], ["lg"])
+        self.assertEqual(report["guidance_beta_candidates_by_method"], {
+            "lg": [0.05, 0.02],
+        })
+        with self.assertRaises(ValueError):
+            candidate_plans_for(config, ["not_a_run"])
 
     def test_terminal_result_contains_every_method_result(self):
         runs = []

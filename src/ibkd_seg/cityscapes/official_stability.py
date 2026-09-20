@@ -403,6 +403,48 @@ def beta_run_id(method, beta):
     return f"{method}_beta_{value}"
 
 
+def candidate_plans_for(config, selected_run_ids=None):
+    candidates = config.get("guidance_beta_candidates_by_method")
+    configured_plans = config.get("candidate_plans")
+    if configured_plans is not None:
+        plans = [dict(plan) for plan in configured_plans]
+    elif candidates is None:
+        plans = [
+            {"method": method, "beta": None, "run_id": method}
+            for method in config["methods"]
+        ]
+    else:
+        plans = [
+            {"method": method, "beta": float(beta), "run_id": beta_run_id(method, beta)}
+            for method in config["methods"]
+            for beta in candidates[method]
+        ]
+    if not selected_run_ids:
+        return plans
+    if len(selected_run_ids) != len(set(selected_run_ids)):
+        raise ValueError("Duplicate --suite-run-id values are not allowed")
+    known = {plan["run_id"] for plan in plans}
+    unknown = set(selected_run_ids) - known
+    if unknown:
+        raise ValueError(f"Unknown suite run IDs: {sorted(unknown)}")
+    selected = set(selected_run_ids)
+    return [plan for plan in plans if plan["run_id"] in selected]
+
+
+def execution_report_config(config, plans):
+    report = dict(config)
+    report["methods"] = list(dict.fromkeys(plan["method"] for plan in plans))
+    report["candidate_plans"] = [dict(plan) for plan in plans]
+    if config.get("guidance_beta_candidates_by_method") is not None:
+        report["guidance_beta_candidates_by_method"] = {
+            method: list(dict.fromkeys(
+                float(plan["beta"]) for plan in plans if plan["method"] == method
+            ))
+            for method in report["methods"]
+        }
+    return report
+
+
 def ibkd_fusion_ratio_for(method, config, *, beta=None, override=None, run_id=None):
     if override is not None and method != "ibkd":
         raise ValueError("An iBKD fusion-ratio override is valid only for iBKD")
@@ -996,20 +1038,12 @@ def run_suite(args, config, output, config_path):
     save_json(output / "config.json", config)
     save_json(output / "provenance.json", provenance)
     candidates = config.get("guidance_beta_candidates_by_method")
-    configured_plans = config.get("candidate_plans")
-    if configured_plans is not None:
-        plans = [dict(plan) for plan in configured_plans]
-    elif candidates is None:
-        plans = [
-            {"method": method, "beta": None, "run_id": method}
-            for method in config["methods"]
-        ]
-    else:
-        plans = [
-            {"method": method, "beta": float(beta), "run_id": beta_run_id(method, beta)}
-            for method in config["methods"]
-            for beta in candidates[method]
-        ]
+    plans = candidate_plans_for(config, args.suite_run_id)
+    report_config = execution_report_config(config, plans)
+    save_json(output / "execution_plan.json", {
+        "selected_run_ids": [plan["run_id"] for plan in plans],
+        "plans": plans,
+    })
     runs = []
     for plan in plans:
         method = plan["method"]
@@ -1053,7 +1087,7 @@ def run_suite(args, config, output, config_path):
     if step_one and (any(value is None for value in step_one)
                      or len({json_hash(value) for value in step_one}) > 1):
         consistency_errors.append("first_batch_mismatch")
-    terminal = terminal_result(runs, config, consistency_errors)
+    terminal = terminal_result(runs, report_config, consistency_errors)
     final = {
         "status": "completed",
         "all_methods_stable": terminal["all_methods_stable"],
@@ -1063,6 +1097,7 @@ def run_suite(args, config, output, config_path):
         "scientific_result": False,
         "full_training_authorized": False,
         "config_sha256": json_hash(config),
+        "selected_run_ids": [plan["run_id"] for plan in plans],
         "terminal_result": terminal,
         "runs": runs,
     }
@@ -1085,6 +1120,7 @@ def main():
     parser.add_argument("--beta", type=float, help=argparse.SUPPRESS)
     parser.add_argument("--ibkd-fusion-ratio", type=float, help=argparse.SUPPRESS)
     parser.add_argument("--run-id", help=argparse.SUPPRESS)
+    parser.add_argument("--suite-run-id", action="append")
     parser.add_argument("--device", choices=("cuda",), default="cuda")
     args = parser.parse_args()
     for key in ("cache_root", "data_dir", "manifest", "output_dir", "config", "labels_report"):
