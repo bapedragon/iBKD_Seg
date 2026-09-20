@@ -1,6 +1,22 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 작업: L/16 crop512 beta 500-step 확인 v3
+## 현재 결과: L/16 crop512 beta 2,000-step 선별 v13
+
+H200 issue 804에서 LG·ALG·iBKD beta 후보 11개를 seed 1, 2,000 step으로
+검사했습니다. 10개가 안정 완료됐고 iBKD `beta=0.1`은 step 108에서 불안정해
+조기 중단됐습니다. 이전 v12에서 재현성을 통과한 iBKD `beta=0.5` 결과까지 합쳐
+다음 10,000-step 후보를 방법별 2개로 줄였습니다.
+
+- LG: `0.05`, `0.02`
+- ALG: `0.05`, `0.02`
+- iBKD: `0.25`, `0.5`
+- [상세 결과·감사·해석](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/RESULTS.md)
+- [핵심 CSV](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_results.csv)
+- [machine-readable 요약](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_summary.json)
+
+이 결과는 beta 선별용이며 80,000-step 최종 과학 결과가 아닙니다.
+
+## 이전 작업: L/16 crop512 beta 500-step 확인 v3
 
 LG beta 0.05와 iBKD beta 0.5가 100-step 선별을 통과했습니다. 같은 값을 고정하여
 LG·ALG·iBKD를 각각 500 step 실행하고 전체 train 순회와 두 번째 epoch 진입 이후에도

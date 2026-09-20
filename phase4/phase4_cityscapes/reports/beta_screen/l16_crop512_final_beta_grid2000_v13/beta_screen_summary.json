@@ -1,0 +1,370 @@
+{
+  "job": {
+    "issue_id": 804,
+    "title": "[Request]: Cityscapes L16 final controlled beta grid 2000-step (11 runs)"
+  },
+  "protocol_id": "cityscapes_segmenter_l16_crop512_final_beta_grid2000_v13",
+  "status": "completed",
+  "scientific_result": false,
+  "purpose": "10000-step 후보 선별 전 2000-step 안정성·성능 screen",
+  "audit": {
+    "json_files_parsed": 19,
+    "json_parse_errors": [],
+    "issue804_runs": 11,
+    "stable_issue804_runs": 10,
+    "unstable_issue804_runs": [
+      "ibkd_beta_0p1"
+    ],
+    "consistency_errors": [],
+    "checkpoints_present": false
+  },
+  "ranking_metric_order": [
+    "pixel_accuracy",
+    "miou"
+  ],
+  "rankings_with_reused_ibkd_beta_0p5": {
+    "lg": [
+      {
+        "rank": 1,
+        "beta": 0.05,
+        "pixel_accuracy": 0.9233097316536221,
+        "miou": 0.5840923427847753,
+        "source": "issue804_v13",
+        "run_id": "lg_beta_0p05"
+      },
+      {
+        "rank": 2,
+        "beta": 0.02,
+        "pixel_accuracy": 0.9183603352625532,
+        "miou": 0.5360788140098185,
+        "source": "issue804_v13",
+        "run_id": "lg_beta_0p02"
+      },
+      {
+        "rank": 3,
+        "beta": 0.2,
+        "pixel_accuracy": 0.8875958290520356,
+        "miou": 0.428360493899087,
+        "source": "issue804_v13",
+        "run_id": "lg_beta_0p2"
+      },
+      {
+        "rank": 4,
+        "beta": 0.1,
+        "pixel_accuracy": 0.7858553362275774,
+        "miou": 0.20252850916909262,
+        "source": "issue804_v13",
+        "run_id": "lg_beta_0p1"
+      }
+    ],
+    "alg": [
+      {
+        "rank": 1,
+        "beta": 0.05,
+        "pixel_accuracy": 0.9233097316536221,
+        "miou": 0.5840923427847753,
+        "source": "issue804_v13",
+        "run_id": "alg_beta_0p05"
+      },
+      {
+        "rank": 2,
+        "beta": 0.02,
+        "pixel_accuracy": 0.9183603352625532,
+        "miou": 0.5360788140098185,
+        "source": "issue804_v13",
+        "run_id": "alg_beta_0p02"
+      },
+      {
+        "rank": 3,
+        "beta": 0.2,
+        "pixel_accuracy": 0.8875958290520356,
+        "miou": 0.428360493899087,
+        "source": "issue804_v13",
+        "run_id": "alg_beta_0p2"
+      },
+      {
+        "rank": 4,
+        "beta": 0.1,
+        "pixel_accuracy": 0.768491686321932,
+        "miou": 0.19875949841009447,
+        "source": "issue804_v13",
+        "run_id": "alg_beta_0p1"
+      }
+    ],
+    "ibkd": [
+      {
+        "rank": 1,
+        "beta": 0.25,
+        "pixel_accuracy": 0.9140382566484981,
+        "miou": 0.5358197586215142,
+        "source": "issue804_v13",
+        "run_id": "ibkd_beta_0p25"
+      },
+      {
+        "rank": 2,
+        "beta": 0.5,
+        "pixel_accuracy": 0.909563377407541,
+        "miou": 0.4398844488107541,
+        "source": "reused_v12_repro_a",
+        "run_id": "ibkd_beta_0p5_a"
+      },
+      {
+        "rank": 3,
+        "beta": 1.0,
+        "pixel_accuracy": 0.7767758562608437,
+        "miou": 0.21403728700176403,
+        "source": "issue804_v13",
+        "run_id": "ibkd_beta_1"
+      }
+    ]
+  },
+  "selected_for_10000": {
+    "lg": [
+      0.05,
+      0.02
+    ],
+    "alg": [
+      0.05,
+      0.02
+    ],
+    "ibkd": [
+      0.25,
+      0.5
+    ]
+  },
+  "runs": [
+    {
+      "method": "lg",
+      "beta": 0.02,
+      "source": "issue804_v13",
+      "run_id": "lg_beta_0p02",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.9183603352625532,
+      "miou": 0.5360788140098185,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.36052101850509644,
+      "final_ce": 0.3406026065349579,
+      "final_guidance": 0.9959205985069275,
+      "train_seconds": 1880.117522138171,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "lg",
+      "beta": 0.05,
+      "source": "issue804_v13",
+      "run_id": "lg_beta_0p05",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.9233097316536221,
+      "miou": 0.5840923427847753,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.3490247130393982,
+      "final_ce": 0.3199828863143921,
+      "final_guidance": 0.5808365345001221,
+      "train_seconds": 1881.291105426848,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "lg",
+      "beta": 0.1,
+      "source": "issue804_v13",
+      "run_id": "lg_beta_0p1",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.7858553362275774,
+      "miou": 0.20252850916909262,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.6973216533660889,
+      "final_ce": 0.6639672517776489,
+      "final_guidance": 0.3335438072681427,
+      "train_seconds": 1879.9897686960176,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": false
+    },
+    {
+      "method": "lg",
+      "beta": 0.2,
+      "source": "issue804_v13",
+      "run_id": "lg_beta_0p2",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.8875958290520356,
+      "miou": 0.428360493899087,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.3851633667945862,
+      "final_ce": 0.33114513754844666,
+      "final_guidance": 0.27009111642837524,
+      "train_seconds": 1880.4497468611225,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": false
+    },
+    {
+      "method": "alg",
+      "beta": 0.02,
+      "source": "issue804_v13",
+      "run_id": "alg_beta_0p02",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.9183603352625532,
+      "miou": 0.5360788140098185,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.36052101850509644,
+      "final_ce": 0.3406026065349579,
+      "final_guidance": 0.9959205985069275,
+      "train_seconds": 1878.053605319932,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "alg",
+      "beta": 0.05,
+      "source": "issue804_v13",
+      "run_id": "alg_beta_0p05",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.9233097316536221,
+      "miou": 0.5840923427847753,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.3490247428417206,
+      "final_ce": 0.3199829161167145,
+      "final_guidance": 0.5808365345001221,
+      "train_seconds": 1879.171428019181,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "alg",
+      "beta": 0.1,
+      "source": "issue804_v13",
+      "run_id": "alg_beta_0p1",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.768491686321932,
+      "miou": 0.19875949841009447,
+      "guidance_stop_epoch": 3,
+      "final_loss": 0.5488267540931702,
+      "final_ce": 0.5488267540931702,
+      "final_guidance": 5.854379177093506,
+      "train_seconds": 1879.806218335405,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": false
+    },
+    {
+      "method": "alg",
+      "beta": 0.2,
+      "source": "issue804_v13",
+      "run_id": "alg_beta_0p2",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.8875958290520356,
+      "miou": 0.428360493899087,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.3851633667945862,
+      "final_ce": 0.33114513754844666,
+      "final_guidance": 0.27009111642837524,
+      "train_seconds": 1878.1348893735558,
+      "peak_cuda_allocated_bytes": 8123988480,
+      "runtime_error": null,
+      "selected_for_10000": false
+    },
+    {
+      "method": "ibkd",
+      "beta": 0.1,
+      "source": "issue804_v13",
+      "run_id": "ibkd_beta_0p1",
+      "status": "unstable",
+      "completed_steps": 108,
+      "expected_steps": 2000,
+      "pixel_accuracy": null,
+      "miou": null,
+      "guidance_stop_epoch": null,
+      "final_loss": 12.133584976196289,
+      "final_ce": 2.0598297119140625,
+      "final_guidance": 100.737548828125,
+      "train_seconds": 201.93431136664003,
+      "peak_cuda_allocated_bytes": 11400923648,
+      "runtime_error": "FloatingPointError('online_divergence:guidance:step=108:ratio=102.50290758217812')",
+      "selected_for_10000": false
+    },
+    {
+      "method": "ibkd",
+      "beta": 0.25,
+      "source": "issue804_v13",
+      "run_id": "ibkd_beta_0p25",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.9140382566484981,
+      "miou": 0.5358197586215142,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.3469623625278473,
+      "final_ce": 0.30748265981674194,
+      "final_guidance": 0.1579188108444214,
+      "train_seconds": 3713.6546373264864,
+      "peak_cuda_allocated_bytes": 11401873920,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "ibkd",
+      "beta": 0.5,
+      "source": "reused_v12_repro_a",
+      "run_id": "ibkd_beta_0p5_a",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.909563377407541,
+      "miou": 0.4398844488107541,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.39362987875938416,
+      "final_ce": 0.33684131503105164,
+      "final_guidance": 0.11357713490724564,
+      "train_seconds": 5843.057258849032,
+      "peak_cuda_allocated_bytes": 11401873920,
+      "runtime_error": null,
+      "selected_for_10000": true
+    },
+    {
+      "method": "ibkd",
+      "beta": 1.0,
+      "source": "issue804_v13",
+      "run_id": "ibkd_beta_1",
+      "status": "stable",
+      "completed_steps": 2000,
+      "expected_steps": 2000,
+      "pixel_accuracy": 0.7767758562608437,
+      "miou": 0.21403728700176403,
+      "guidance_stop_epoch": null,
+      "final_loss": 0.6949083805084229,
+      "final_ce": 0.6183562278747559,
+      "final_guidance": 0.07655216753482819,
+      "train_seconds": 3708.025866220705,
+      "peak_cuda_allocated_bytes": 11401939456,
+      "runtime_error": null,
+      "selected_for_10000": false
+    }
+  ],
+  "notes": [
+    "iBKD beta=0.5는 v12 결정성 재현성 검사 A 실행을 재사용했다.",
+    "iBKD beta=0.1은 step 108에서 online guidance divergence로 조기 중단되어 validation 값이 없다.",
+    "이 결과는 beta screen이며 80000-step 최종 과학 결과가 아니다."
+  ]
+}
