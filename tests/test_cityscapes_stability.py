@@ -287,6 +287,28 @@ class CityscapesStabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_config(config)
 
+    def test_ibkd_lambda_0p5_four_beta_2000_is_locked(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17.json"
+        )
+        config = json.loads(path.read_text())
+        validate_config(config)
+        self.assertEqual(config["methods"], ["ibkd"])
+        self.assertEqual(config["stability_steps"], 2000)
+        self.assertEqual(config["val_samples"], 500)
+        self.assertEqual(config["ibkd_fusion_ratio"], 0.5)
+        self.assertEqual(config["guidance_beta_candidates_by_method"], {
+            "ibkd": [0.1, 0.25, 0.5, 1.0],
+        })
+        for beta in (0.1, 0.25, 0.5, 1.0):
+            self.assertEqual(guidance_beta_for("ibkd", config, beta), beta)
+        self.assertTrue(config["ibkd_deterministic_candidate"])
+        config["ibkd_fusion_ratio"] = 0.25
+        with self.assertRaises(ValueError):
+            validate_config(config)
+
     def test_terminal_result_contains_every_method_result(self):
         runs = []
         for method in ("vanilla", "lg", "alg", "ibkd"):

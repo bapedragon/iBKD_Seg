@@ -17,11 +17,13 @@ H200 issue 804에서 LG·ALG·iBKD beta 후보 11개를 seed 1, 2,000 step으로
 이 결과는 beta 선별용이며 80,000-step 최종 과학 결과가 아닙니다.
 
 iBKD의 별도 내부 혼합값 `lambda=0.5`에서는 beta `0.1, 0.25, 0.5, 1.0`의
-25-step 실행 smoke를 먼저 수행합니다. 네 실행이 모두 통과하면 같은 네 조합을
-2,000 step과 val 500장으로 평가합니다.
+25-step 실행 smoke가 모두 안정적으로 통과했습니다. 같은 네 조합을 2,000 step과
+val 500장으로 평가합니다.
 
 - [lambda=0.5 smoke 설정](configs/paper_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25_v16.json)
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25.sh`
+- [lambda=0.5 2,000-step 설정](configs/paper_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17.json)
+- 2,000-step 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_lambda0p5_beta_grid2000.sh`
 
 iBKD `beta=0.1`의 2,000-step 평가값을 추가로 확인하기 위한 monitor-only 진단도
 준비했습니다. v13의 불안정 제외 판정은 유지하면서 100배 안전선 초과를 기록하고

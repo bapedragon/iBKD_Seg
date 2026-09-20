@@ -97,6 +97,9 @@ def validate_config(config):
     ibkd_lambda_0p5_beta_grid_smoke_25 = (
         "cityscapes_segmenter_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25_v16"
     )
+    ibkd_lambda_0p5_beta_grid_2000 = (
+        "cityscapes_segmenter_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17"
+    )
     ibkd_repro_2000 = (
         "cityscapes_segmenter_l16_crop512_ibkd_candidate_repro2000_v12"
     )
@@ -106,6 +109,7 @@ def validate_config(config):
         ibkd_repro_2000,
         ibkd_beta_0p1_monitor_2000,
         ibkd_beta_0p1_monitor_500,
+        ibkd_lambda_0p5_beta_grid_2000,
     }
     locked = {
         "train_samples": 2975,
@@ -278,6 +282,25 @@ def validate_config(config):
         ibkd_lambda_0p5_beta_grid_smoke_25: {
             "methods": ["ibkd"],
             "stability_steps": 25,
+            "guidance_beta": 0.1,
+            "guidance_beta_by_method": None,
+            "guidance_beta_candidates_by_method": {
+                "ibkd": [0.1, 0.25, 0.5, 1.0],
+            },
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "record_input_hash_each_step": True,
+            "record_gradient_hash_each_step": False,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "ibkd_fusion_ratio": 0.5,
+            "primary_metric": "pixel_accuracy",
+            "secondary_metric": "miou",
+        },
+        ibkd_lambda_0p5_beta_grid_2000: {
+            "methods": ["ibkd"],
+            "stability_steps": 2000,
             "guidance_beta": 0.1,
             "guidance_beta_by_method": None,
             "guidance_beta_candidates_by_method": {
