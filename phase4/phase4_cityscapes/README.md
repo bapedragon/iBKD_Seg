@@ -1,6 +1,86 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 결과: 방법별 상위 후보 10,000-step 선별 v18
+## 먼저 읽을 내용: 현재 위치와 다음 실행
+
+현재 Segmenter-L/16·crop512 실험은 **후보 선별까지 완료**됐고,
+최종 80,000-step 결과는 아직 실행하지 않았습니다.
+
+| 단계 | 상태 | 용도 |
+|---|---|---|
+| 연결·안정성·재현성 검사 | 완료 | 데이터·GPU·teacher/student·재개·입력 동일성 확인 |
+| CE 대비 beta 1차 후보 구성 | 완료 | guidance 크기가 지나치지 않은 탐색 범위 설정 |
+| 2,000-step beta 선별 | 완료 | 발산 후보 제거 및 방법별 상위 후보 유지 |
+| 10,000-step 후보 선별 v18 | **8/8 완료** | 방법별 최종 80k 설정 선택 |
+| 80,000-step seed1 | **미실행** | Vanilla/LG/ALG/iBKD 최종 비교 |
+| 추가 seed·외부 KD baseline | 미실행 | seed1 결과 확인 후 결정 |
+
+10,000-step 실행은 후보 선택용이며 최종 논문 수치가 아닙니다. 해당 실행의 student
+가중치를 80,000 step까지 이어 붙이지 않습니다. 최종 네 방법은 같은 ImageNet 초기화와
+seed1에서 각각 새로 시작하고, 전용 runner의 checkpoint로만 중단·재개합니다.
+
+현재 실험에서 사용할 파일은 다음 세 곳입니다.
+
+- 완료 결과: [10,000-step 결과표와 감사 기록](reports/candidate_selection/l16_crop512_candidate_top2_grid10000_v18/RESULTS.md)
+- 최종 고정 설정: [crop512 80,000-step 설정](configs/paper_l16_crop512_final80000_v19.json)
+- 최종 실행 진입점: `phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_final80000.sh`
+
+아래의 `official_l16_full_v1.json`과 `run_cityscapes_official_l16_full.sh`는 과거
+**crop768·beta2.5** 계획을 보존한 이력입니다. 현재 crop512 후보 선별의 후속 실행에
+사용하면 안 됩니다.
+
+## 다음 단계: crop512 최종 80,000-step v19
+
+비교 방법과 고정값은 다음과 같습니다.
+
+| 방법 | 최종 설정 | Teacher 사용 |
+|---|---|---|
+| Vanilla | CE only | 사용하지 않음 |
+| LG | beta 0.05 | DeepLabV3-R101 고정 |
+| ALG | beta 0.05, warmup 0, window 50, threshold -0.02 | DeepLabV3-R101 고정 |
+| iBKD | lambda 0.25, beta 0.5, warmup 20 | DeepLabV3-R101 고정 |
+
+공통 조건은 Cityscapes fine train 2,975장·val 500장, Segmenter-L/16,
+mask-transformer decoder 1블록, crop/window/stride 512, batch8, FP32, seed1,
+SGD Nesterov, 80,000-step polynomial LR schedule입니다. Test는 사용하지 않습니다.
+checkpoint 선택은 기존 사용자 결정대로 val pixel accuracy를 1순위로 하고, 선택된
+같은 checkpoint의 mIoU와 클래스별 IoU도 함께 기록합니다.
+
+저장소 루트에서 방법별로 별도 H200 작업을 실행합니다. 한 작업의 10시간 제한에는
+설치·검증·저장 시간을 남기기 위해 `--max-hours 9`를 권장합니다.
+
+```bash
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_final80000.sh vanilla --max-hours 9
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_final80000.sh lg --max-hours 9
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_final80000.sh alg --max-hours 9
+bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_final80000.sh ibkd --max-hours 9
+```
+
+같은 명령을 다시 제출하면 해당 방법의 `resume.json`을 자동으로 찾아 다음 미처리
+batch부터 재개합니다. 출력 루트를 바꾸거나 다른 방법의 checkpoint를 섞으면 안 됩니다.
+방법별 기본 출력은 다음과 같습니다.
+
+```text
+/app/output/cityscapes_l16_crop512_final80000_v19/<method>_seed1/
+├── setup/                  # ZIP·manifest·공개 asset 검사
+├── artifacts/
+│   ├── resume.json         # 다음 작업의 자동 재개 포인터
+│   ├── progress.json       # 현재 step/epoch/최고 checkpoint
+│   ├── history.json        # 완료된 epoch와 val 이력
+│   ├── summary.json        # 현재 paused 또는 최종 complete 요약
+│   └── checkpoints/        # 최근 두 resume 세대와 선택된 best student
+└── run_<UTC시각>.log       # 작업별 console 로그
+```
+
+각 작업의 마지막 줄은 JSON이며 `status`, `global_step/expected_steps`, 최종 loss·CE·guidance,
+controller 종료 epoch, 선택 checkpoint의 pixel accuracy·mIoU·클래스별 IoU,
+`test_used=false`, summary/resume 경로를 포함합니다.
+
+완료 판정은 방법별 마지막 JSON의 `status="complete"`와
+`global_step=expected_steps=80000`이 모두 맞을 때입니다. 네 방법이 끝나면
+`summary.json`의 선택 checkpoint 지표를 한 표로 합칩니다. seed1 결과를 확인한 다음
+동일 설정의 seed2·3 또는 표준 logit KD 같은 추가 비교군을 별도 프로토콜로 진행합니다.
+
+## 완료된 결과: 방법별 상위 후보 10,000-step 선별 v18
 
 2,000-step 결과에서 LG와 ALG는 각각 beta `0.05`, `0.02`를 유지하고,
 iBKD는 lambda별 상위 두 조합을 유지합니다. iBKD 후보는

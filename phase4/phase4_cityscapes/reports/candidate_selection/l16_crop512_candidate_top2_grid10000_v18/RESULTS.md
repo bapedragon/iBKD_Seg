@@ -54,6 +54,13 @@ iBKD `lambda=0.25, beta=0.5`는 pixel accuracy와 mIoU 모두 전체 1위였습�
 이 선택은 guided 세 방법 안에서의 80,000-step 진입값입니다. 최종 비교표에는 같은
 조건의 CE-only student baseline과 표준 logit KD를 별도 실행해 포함해야 합니다.
 
+현재 우선 실행 범위는 CE-only Vanilla와 위에서 선택한 LG·ALG·iBKD 네 방법입니다.
+고정된 80,000-step 설정과 재개 가능한 실행 명령은
+[`../../../README.md`](../../../README.md)의 「다음 단계: crop512 최종 80,000-step v19」에
+정리했습니다. 이 10,000-step 실행의 가중치를 이어 쓰지 않고 네 방법 모두 동일한
+ImageNet 초기 state에서 새로 시작합니다. 표준 logit KD는 네 방법의 seed1 결과를 확인한
+뒤 별도 비교 프로토콜로 추가합니다.
+
 ## 보존 파일
 
 - `candidate_results.csv`: 여덟 후보의 핵심 수치와 선택 여부

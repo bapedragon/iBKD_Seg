@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 from ibkd_seg.cityscapes.full_checkpoint import save_checkpoint, load_checkpoint, save_best, verify_artifact
 from ibkd_seg.cityscapes.full_data import epoch_order, sample_seed, train_loader
-from ibkd_seg.cityscapes.official_full import validation_due, improves
+from ibkd_seg.cityscapes.official_full import validation_due, improves, validate_full_config
 
 
 class IndexedData(Dataset):
@@ -47,6 +47,38 @@ class FullTrainingContracts(unittest.TestCase):
         self.assertFalse(improves(dict(pixel_accuracy=0.8, miou=0.7), best))
         self.assertFalse(improves(dict(pixel_accuracy=0.7, miou=0.9), best))
         self.assertTrue(improves(dict(pixel_accuracy=0.81, miou=0.3), best))
+
+    def test_crop512_final_80000_protocol_is_locked(self):
+        root = Path(__file__).resolve().parents[1]
+        path = root / (
+            "phase4/phase4_cityscapes/configs/"
+            "paper_l16_crop512_final80000_v19.json"
+        )
+        config = json.loads(path.read_text())
+        validate_full_config(config)
+        self.assertEqual(config["total_steps"], 80000)
+        self.assertEqual(config["crop_size"], 512)
+        self.assertEqual(config["decoder_layers"], 1)
+        self.assertEqual(config["guidance_beta_by_method"], {
+            "lg": 0.05,
+            "alg": 0.05,
+            "ibkd": 0.5,
+        })
+        self.assertEqual(config["ibkd_fusion_ratio"], 0.25)
+        self.assertTrue(config["ibkd_deterministic_candidate"])
+        self.assertTrue(validation_due(216, config, final=True))
+
+        changed = copy.deepcopy(config)
+        changed["guidance_beta_by_method"]["ibkd"] = 0.25
+        with self.assertRaisesRegex(ValueError, "protocol mismatch"):
+            validate_full_config(changed)
+
+    def test_existing_crop768_full_protocol_remains_accepted(self):
+        root = Path(__file__).resolve().parents[1]
+        config = json.loads((
+            root / "phase4/phase4_cityscapes/configs/official_l16_full_v1.json"
+        ).read_text())
+        validate_full_config(config)
 
     def test_atomic_generations_fallback_portable_best_and_identity(self):
         with tempfile.TemporaryDirectory() as folder:

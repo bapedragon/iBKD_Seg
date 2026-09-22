@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import platform
 import signal
 import time
@@ -12,8 +13,8 @@ from pathlib import Path
 from .official_api import bootstrap
 
 
-def validation_due(epoch, config):
-    return (epoch - 1) % config["validation_every"] == 0 or epoch == config["epochs"]
+def validation_due(epoch, config, *, final=False):
+    return (epoch - 1) % config["validation_every"] == 0 or final or epoch == config["epochs"]
 
 
 def improves(scores, best):
@@ -25,6 +26,84 @@ def initial_progress():
                 sums=dict(loss=0.0, ce=0.0, guidance=0.0), samples=0,
                 best=None, history=[], first_batch_hashes={}, train_seconds=0.0,
                 validation_seconds=0.0)
+
+
+def validate_full_config(config):
+    """Reject drift in either committed L/16 full-training protocol."""
+    common = {
+        "methods": ["vanilla", "lg", "alg", "ibkd"],
+        "seed": 1,
+        "train_samples": 2975,
+        "val_samples": 500,
+        "batch_size": 8,
+        "drop_last": False,
+        "image_size": 1024,
+        "precision": "fp32",
+        "optimizer": "upstream_timm_sgd_nesterov",
+        "learning_rate": 0.01,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "poly_power": 0.9,
+        "min_lr": 0.00001,
+        "validation_every": 4,
+        "selection_metric": "pixel_accuracy",
+        "secondary_metric": "miou_at_same_checkpoint",
+        "gradient_checkpointing": True,
+        "gradient_clipping": False,
+        "attention_query_chunk": 256,
+        "alg_window": 50,
+        "alg_threshold": -0.02,
+        "alg_warmup_epochs": 0,
+        "ibkd_warmup_epochs": 20,
+        "ibkd_fusion_ratio": 0.25,
+        "data_workers": 4,
+        "test_used": False,
+        "automatic_hyperparameter_changes": False,
+    }
+    profiles = {
+        "cityscapes_official_source_l16_full_v1": {
+            "crop_size": 768,
+            "window_size": 768,
+            "window_stride": 512,
+            "epochs": 216,
+            "total_steps": 80352,
+            "guidance_beta": 2.5,
+            "checkpoint_every_steps": 100,
+        },
+        "cityscapes_segmenter_l16_crop512_final80000_v19": {
+            "crop_size": 512,
+            "window_size": 512,
+            "window_stride": 512,
+            "decoder_layers": 1,
+            "epochs": 216,
+            "total_steps": 80000,
+            "guidance_beta": 0.05,
+            "guidance_beta_by_method": {"lg": 0.05, "alg": 0.05, "ibkd": 0.5},
+            "checkpoint_every_steps": 500,
+            "strict_determinism": False,
+            "determinism_warn_only": True,
+            "ibkd_deterministic_candidate": True,
+            "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+            "ibkd_cpu_threads": 1,
+            "candidate_source_protocol": (
+                "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18"
+            ),
+        },
+    }
+    protocol = config.get("protocol_id")
+    if protocol not in profiles:
+        raise ValueError(f"Unapproved full-training protocol: {protocol!r}")
+    expected = {**common, **profiles[protocol]}
+    mismatches = {
+        key: (config.get(key), value)
+        for key, value in expected.items()
+        if config.get(key) != value
+    }
+    if mismatches:
+        raise ValueError(f"Full-training protocol mismatch: {mismatches}")
+    if config["epochs"] != math.ceil(config["total_steps"] / math.ceil(2975 / 8)):
+        raise ValueError("epochs must cover total_steps exactly once")
+    return config
 
 
 def run(args, config, output, stop):
@@ -55,48 +134,88 @@ def run(args, config, output, stop):
         torch.backends.cuda.matmul.allow_tf32 = False
         torch.backends.cudnn.allow_tf32 = False
     ptu.device = device
-    torch.set_num_threads(4)
+    strict_determinism = bool(config.get("strict_determinism", False))
+    determinism_warn_only = bool(config.get("determinism_warn_only", False))
+    if strict_determinism and determinism_warn_only:
+        raise ValueError("Strict and warn-only determinism cannot both be requested")
+    if (strict_determinism or determinism_warn_only) and device.type == "cuda":
+        if os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {":4096:8", ":16:8"}:
+            raise RuntimeError("Determinism requires CUBLAS_WORKSPACE_CONFIG=:4096:8 or :16:8")
+    deterministic_ibkd = args.method == "ibkd" and bool(
+        config.get("ibkd_deterministic_candidate", False)
+    )
+    torch.set_num_threads(int(config.get("ibkd_cpu_threads", 1)) if deterministic_ibkd else 4)
     cv2.setNumThreads(0)
     provenance = verify(args.cache_root)
     save_json(output / "provenance.json", provenance)
     net, upstream = api.recipe(args.cache_root)
     save_json(output / "upstream_recipe.json", dict(net=net, dataset=upstream))
-    # The optimizer factory uses the original config; never let local metadata
-    # pretend to override its actual learning-rate schedule.
-    for key in ("learning_rate", "epochs", "batch_size", "crop_size"):
-        if not args.cpu_small and config[key] != upstream[key]:
-            raise ValueError(f"Upstream recipe mismatch: {key}")
     manifest, data_hash = prepare_labels(args.data_dir, args.manifest,
                                          {s: config[s + "_samples"] for s in ("train", "val")}, output)
     datasets = {s: FullDataset(args.data_dir, manifest, config, s) for s in ("train", "val")}
     save_json(output / "train_pipeline.json", datasets["train"].base.config.data.train.pipeline)
-    seed_all(config["seed"])
-    model = api.student(args.cache_root).to(device)
+    seed_all(config["seed"], strict_determinism=strict_determinism)
+    if determinism_warn_only:
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    model = api.student(
+        args.cache_root,
+        image_size=config["crop_size"],
+        decoder_layers=config.get("decoder_layers"),
+    ).to(device)
     initial_hash = state_hash(model)
-    seed_all(config["seed"] + 1000)
-    guide = api.guidance(args.method, config)
+    seed_all(config["seed"] + 1000, strict_determinism=strict_determinism)
+    effective_config = dict(config)
+    beta_by_method = config.get("guidance_beta_by_method")
+    if args.method != "vanilla" and beta_by_method is not None:
+        effective_config["guidance_beta"] = float(beta_by_method[args.method])
+    guide = api.guidance(args.method, effective_config)
+    deterministic_candidate = None
+    if deterministic_ibkd:
+        from .ibkd_deterministic import (
+            apply_deterministic_candidate,
+            deterministic_candidate_contract,
+        )
+        apply_deterministic_candidate(guide)
+        deterministic_candidate = deterministic_candidate_contract(guide)
+        if not deterministic_candidate["applied"]:
+            raise RuntimeError("The deterministic iBKD candidate was not applied to all stages")
+        if deterministic_candidate["candidate_id"] != config["ibkd_deterministic_candidate_id"]:
+            raise RuntimeError("Unexpected deterministic iBKD candidate identity")
     teacher, teacher_hash = None, None
     if guide is not None:
         guide = guide.to(device)
         teacher = api.teacher(args.cache_root).to(device)
         teacher_hash = state_hash(teacher)
     capture = api.FeatureCapture(model)
-    optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root)
+    optimizer, scheduler = api.optimizer_scheduler(
+        model, guide, args.cache_root, total_steps=config["total_steps"]
+    )
     if scheduler.iter_max != config["total_steps"] or not optimizer.defaults["nesterov"]:
         raise ValueError("Unexpected upstream optimizer/scheduler")
     parameters = [p for group in optimizer.param_groups for p in group["params"]]
-    controller = controller_for(args.method, config)
+    controller = controller_for(args.method, effective_config)
     environment = {"python": platform.python_version(), "torch": str(torch.__version__),
                    "torchvision": str(torchvision.__version__), "timm": timm.__version__,
                    "mmcv": mmcv.__version__, "mmseg": mmseg.__version__,
                    "numpy": np.__version__, "pillow": PIL.__version__, "opencv": cv2.__version__,
                    "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version(),
-                   "device": device.type, "gpu": torch.cuda.get_device_name() if device.type == "cuda" else None}
+                   "device": device.type, "gpu": torch.cuda.get_device_name() if device.type == "cuda" else None,
+                   "torch_deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+                   "torch_deterministic_warn_only": (
+                       torch.is_deterministic_algorithms_warn_only_enabled()
+                   ),
+                   "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+                   "cpu_threads": torch.get_num_threads()}
     signature = dict(config_sha256=json_hash(config), source_sha256=source_hash(),
                      data_sha256=data_hash, upstream_sha256=json_hash(provenance),
                      initial_student_sha256=initial_hash, teacher_sha256=teacher_hash,
-                     method=args.method, environment=environment)
-    seed_all(config["seed"] + 2000)
+                     method=args.method,
+                     effective_guidance_beta=(
+                         0.0 if guide is None else effective_config["guidance_beta"]
+                     ),
+                     deterministic_candidate=deterministic_candidate,
+                     environment=environment)
+    seed_all(config["seed"] + 2000, strict_determinism=strict_determinism)
     progress = initial_progress()
     resume_info = None
     if args.resume:
@@ -121,9 +240,11 @@ def run(args, config, output, stop):
     save_json(output / "config.json", config)
     started_step = progress["global_step"]
     steps_per_epoch = math.ceil(len(datasets["train"]) / config["batch_size"])
-    expected_steps = steps_per_epoch * config["epochs"]
-    if not args.cpu_small and expected_steps != config["total_steps"]:
-        raise ValueError("Full data/epoch count does not match upstream schedule")
+    expected_steps = (
+        steps_per_epoch * config["epochs"] if args.cpu_small else config["total_steps"]
+    )
+    if not args.cpu_small and math.ceil(expected_steps / steps_per_epoch) != config["epochs"]:
+        raise ValueError("Configured epochs do not cover the exact update budget")
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats()
 
@@ -265,11 +386,29 @@ def run(args, config, output, stop):
                         if pause_reason():
                             break
                     del loader
+                    if progress["global_step"] == expected_steps:
+                        final_partial = progress["next_batch"] < steps_per_epoch
+                        if not final_partial:
+                            if progress["samples"] != len(datasets["train"]):
+                                raise RuntimeError("Epoch omitted or duplicated samples")
+                            if controller:
+                                controller.observe(
+                                    epoch,
+                                    progress["sums"]["guidance"] / progress["samples"],
+                                    beta_used=progress["beta"],
+                                )
+                            if teacher is not None and state_hash(teacher) != teacher_hash:
+                                raise RuntimeError("Teacher weights or BN statistics changed")
+                        progress["phase"] = "evaluate"
+                        progress["final_partial_epoch"] = final_partial
+                        checkpoint()
                     continue
                 began = time.perf_counter()
-                scores = evaluate() if validation_due(epoch, config) else None
+                final_training = progress["global_step"] == expected_steps
+                should_validate = validation_due(epoch, config, final=final_training)
+                scores = evaluate() if should_validate else None
                 progress["validation_seconds"] += time.perf_counter() - began
-                if validation_due(epoch, config) and scores is None:
+                if should_validate and scores is None:
                     pause = pause_reason()
                     break
                 if scores is not None and improves(scores, progress["best"]):
@@ -277,13 +416,15 @@ def run(args, config, output, stop):
                 row = dict(epoch=epoch, beta=progress["beta"],
                            **{k: v / progress["samples"] for k, v in progress["sums"].items()},
                            validation=scores, guidance_stop_epoch=None if controller is None else controller.stop_epoch)
+                row["partial_epoch"] = bool(progress.get("final_partial_epoch", False))
                 progress["history"].append(row)
                 val_text = "" if scores is None else f" pixel_acc={scores['pixel_accuracy']:.6f} miou={scores['miou']:.6f}"
                 print(f"[L16_EPOCH] method={args.method} epoch={epoch}/{config['epochs']} step={progress['global_step']} "
                       f"loss={row['loss']:.6g} guidance={row['guidance']:.6g} beta={row['beta']}{val_text}", flush=True)
                 progress.update(epoch=epoch + 1, next_batch=0, beta=None,
                                 sums=dict(loss=0.0, ce=0.0, guidance=0.0), samples=0,
-                                phase="complete" if epoch == config["epochs"] else "train")
+                                phase="complete" if final_training else "train")
+                progress.pop("final_partial_epoch", None)
                 checkpoint()
             checkpoint()
     except BaseException as error:
@@ -296,25 +437,57 @@ def run(args, config, output, stop):
     if progress["phase"] == "complete" and progress["global_step"] != expected_steps:
         raise RuntimeError("Completed run has wrong update count")
     best = progress["best"]
+    final_history = progress["history"][-1] if progress["history"] else None
     result = dict(status="complete" if progress["phase"] == "complete" else "paused", pause_reason=pause,
                   method=args.method, seed=config["seed"], run_kind=config["run_kind"],
                   global_step=progress["global_step"], expected_steps=expected_steps,
-                  completed_epochs=len(progress["history"]), selected=best,
+                  completed_epochs=sum(not row.get("partial_epoch", False) for row in progress["history"]),
+                  completed_validation_records=len(progress["history"]),
+                  final_epoch_partial=(None if final_history is None else final_history.get("partial_epoch", False)),
+                  final_epoch_record=final_history, selected=best,
                   selection_metric="pixel_accuracy", secondary_metric="miou_at_same_checkpoint",
+                  effective_guidance_beta=(0.0 if guide is None else effective_config["guidance_beta"]),
+                  effective_ibkd_fusion_ratio=(
+                      config["ibkd_fusion_ratio"] if args.method == "ibkd" else None
+                  ),
                   full_validation=not args.cpu_small and best is not None,
                   model_zoo_result_reproduced=False, test_used=False,
                   controller=controller_state(), resume=resume_info,
+                  deterministic_candidate=deterministic_candidate,
                   first_batch_hashes=progress["first_batch_hashes"],
                   train_seconds=progress["train_seconds"], validation_seconds=progress["validation_seconds"],
                   invocation_seconds=time.monotonic() - args.started,
                   final_student_sha256=state_hash(model),
                   final_guide_sha256=None if guide is None else state_hash(guide),
                   final_optimizer_sha256=tree_hash(optimizer.state_dict()),
-                  final_scheduler=scheduler.state_dict(), teacher_frozen_verified=teacher is not None,
+                  final_scheduler=scheduler.state_dict(),
+                  teacher_frozen_verified=(
+                      teacher is None or state_hash(teacher) == teacher_hash
+                  ),
                   peak_cuda_allocated_bytes=torch.cuda.max_memory_allocated() if device.type == "cuda" else None)
     save_json(output / "summary.json", result)
-    print(f"[CITYSCAPES_L16_FULL_DONE] status={result['status']} method={args.method} "
-          f"epochs={result['completed_epochs']}/{config['epochs']} step={progress['global_step']} summary={output / 'summary.json'}", flush=True)
+    terminal = {
+        "event": "CITYSCAPES_L16_FULL_RESULT",
+        "status": result["status"],
+        "pause_reason": result["pause_reason"],
+        "protocol_id": config["protocol_id"],
+        "method": args.method,
+        "seed": config["seed"],
+        "global_step": result["global_step"],
+        "expected_steps": result["expected_steps"],
+        "effective_guidance_beta": result["effective_guidance_beta"],
+        "effective_ibkd_fusion_ratio": result["effective_ibkd_fusion_ratio"],
+        "guidance_stop_epoch": (
+            None if result["controller"] is None else result["controller"]["stop_epoch"]
+        ),
+        "final_epoch_record": result["final_epoch_record"],
+        "selected": result["selected"],
+        "test_used": result["test_used"],
+        "teacher_frozen_verified": result["teacher_frozen_verified"],
+        "summary": str(output / "summary.json"),
+        "resume": str(output / "resume.json") if result["status"] == "paused" else None,
+    }
+    print(json.dumps(terminal, sort_keys=True, allow_nan=False), flush=True)
     return result
 
 
@@ -323,6 +496,7 @@ def main():
     for flag in ("cache-root", "data-dir", "manifest", "output-dir"):
         parser.add_argument("--" + flag, required=True, type=Path)
     parser.add_argument("--method", required=True, choices=("vanilla", "lg", "alg", "ibkd"))
+    parser.add_argument("--config", type=Path, help="Committed full-training config; defaults to crop768 v1")
     parser.add_argument("--resume", type=Path, help="Path to the saved bundle's resume.json")
     parser.add_argument("--max-hours", type=float, default=0, help="Soft pause limit including runner setup; 0 disables")
     parser.add_argument("--max-steps", type=int, default=0, help="Pause after this invocation's updates; 0 disables")
@@ -333,7 +507,7 @@ def main():
         parser.error("CPU requires --cpu-small; CUDA may not reduce the recipe")
     if not math.isfinite(args.max_hours) or min(args.max_hours, args.max_steps) < 0:
         parser.error("Pause limits must be finite and nonnegative")
-    for key in ("cache_root", "data_dir", "manifest", "output_dir", "resume"):
+    for key in ("cache_root", "data_dir", "manifest", "output_dir", "resume", "config"):
         if getattr(args, key) is not None:
             setattr(args, key, getattr(args, key).resolve())
     if args.output_dir.exists() and any(args.output_dir.iterdir()):
@@ -346,7 +520,11 @@ def main():
         signal.signal(signum, lambda number, frame: stop.update(signal=signal.Signals(number).name))
     bootstrap(args.cache_root)
     from .runtime import REPO
-    config = json.loads((REPO / "phase4/phase4_cityscapes/configs/official_l16_full_v1.json").read_text())
+    config_path = args.config or (
+        REPO / "phase4/phase4_cityscapes/configs/official_l16_full_v1.json"
+    )
+    config = json.loads(config_path.read_text())
+    validate_full_config(config)
     if args.cpu_small:
         config.update(protocol_id=config["protocol_id"] + "_cpu_small", run_kind="cpu_verification_only",
                       epochs=2, train_samples=4, val_samples=2, batch_size=2, image_size=64,
