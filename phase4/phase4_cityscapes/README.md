@@ -25,25 +25,31 @@ iBKD 선택값은 pixel accuracy `94.445%`, mIoU `69.736%`로 전체 후보 중 
 - [machine-readable 요약](reports/candidate_selection/l16_crop512_candidate_top2_grid10000_v18/candidate_summary.json)
 - 이 단계는 후보 선별이며 최종 80,000-step 과학 결과가 아닙니다.
 
-## 현재 결과: L/16 crop512 beta 2,000-step 선별 v13
+## 현재 결과: L/16 crop512 통합 beta 2,000-step 선별
 
 H200 issue 804에서 LG·ALG·iBKD beta 후보 11개를 seed 1, 2,000 step으로
-검사했습니다. 10개가 안정 완료됐고 iBKD `beta=0.1`은 step 108에서 불안정해
+검사했습니다. 10개가 안정 완료됐고 iBKD `lambda=0.25, beta=0.1`은 step 108에서 불안정해
 조기 중단됐습니다. 이전 v12에서 재현성을 통과한 iBKD `beta=0.5` 결과까지 합쳐
-다음 10,000-step 후보를 방법별 2개로 줄였습니다.
+`lambda=0.25` iBKD 네 후보를 완성했습니다. 후속 실행에서는 `lambda=0.5` iBKD
+네 후보도 모두 2,000 step까지 안정적으로 완료했습니다. 두 실행을 통합한 16개
+후보 중 15개가 안정 완료됐고 1개가 불안정 중단됐습니다.
 
 - LG: `0.05`, `0.02`
 - ALG: `0.05`, `0.02`
-- iBKD: `0.25`, `0.5`
+- iBKD `lambda=0.25`: beta `0.25`, `0.5`
+- iBKD `lambda=0.5`: beta `0.1`, `0.25`
 - [상세 결과·감사·해석](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/RESULTS.md)
-- [핵심 CSV](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_results.csv)
-- [machine-readable 요약](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_summary.json)
+- [issue 804와 v12 재사용 핵심 CSV](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_results.csv)
+- [issue 804와 v12 재사용 machine-readable 요약](reports/beta_screen/l16_crop512_final_beta_grid2000_v13/beta_screen_summary.json)
+- [lambda=0.5 핵심 CSV](reports/beta_screen/l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/beta_screen_results.csv)
+- [lambda=0.5 machine-readable 요약](reports/beta_screen/l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/beta_screen_summary.json)
 
 이 결과는 beta 선별용이며 80,000-step 최종 과학 결과가 아닙니다.
 
 iBKD의 별도 내부 혼합값 `lambda=0.5`에서는 beta `0.1, 0.25, 0.5, 1.0`의
 25-step smoke와 2,000-step 실행이 모두 안정적으로 통과했습니다. 2,000-step
-val 500장 결과에 따라 `beta=0.1`, `0.25`를 10,000-step 후보로 선택했습니다.
+val 500장 결과에 따라 `beta=0.1`, `0.25`를 10,000-step 후보로 선택했으며,
+위 통합 결과표에도 네 후보의 수치를 모두 반영했습니다.
 
 - [lambda=0.5 smoke 설정](configs/paper_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25_v16.json)
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25.sh`
