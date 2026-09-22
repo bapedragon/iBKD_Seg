@@ -1,0 +1,20 @@
+{
+  "imported_date": "2026-09-22",
+  "sources": [
+    {
+      "source_id": "lambda0p5_2k",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/33e1bb64-d4fc-4308-b27d-c52faedcc018/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "9184f2e77dbeba6d18a79ac7142552079242c8857d2f13e9eaa858b420055825",
+      "terminal_json_sha256": "45b2b1758ebbe84586d05cdc752f8050aedf5898456d1503f8305d4662734846",
+      "terminal_json_marker": "[CITYSCAPES_L16_BETA_GRID_DONE]",
+      "protocol_id": "cityscapes_segmenter_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false
+    }
+  ],
+  "stored_result": "beta_screen_summary.json",
+  "raw_log_stored_in_git": false,
+  "note": "Git stores the parsed terminal JSON metrics and source hashes; raw execution output remains excluded by repository policy."
+}

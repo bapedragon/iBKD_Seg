@@ -2,6 +2,10 @@
 
 상태: **H200 issue 804 완료 · 원시 결과 감사 통과 · 10,000-step 후보 선별 완료**
 
+후속 iBKD `lambda=0.5` 2,000-step 선별과 전체 10,000-step 결과는 각각
+[`../l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/RESULTS.md`](../l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/RESULTS.md),
+[`../../candidate_selection/l16_crop512_candidate_top2_grid10000_v18/RESULTS.md`](../../candidate_selection/l16_crop512_candidate_top2_grid10000_v18/RESULTS.md)에 정리했습니다.
+
 이 실행은 Cityscapes train 2,975장과 val 500장을 사용해 LG, ALG, iBKD의 beta
 후보를 seed 1에서 2,000 step까지 검사했습니다. 선택 기준은 val pixel accuracy를
 1순위, mIoU를 2순위로 고정했습니다. iBKD `beta=0.5`는 바로 앞선 v12 결정성

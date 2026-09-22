@@ -1,0 +1,74 @@
+{
+  "imported_date": "2026-09-22",
+  "sources": [
+    {
+      "source_id": "pack1",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/e0b73cf3-a673-4d68-aa75-8e1387ea9d10/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "5c891da27e2fd09175dd93fcc5bde5323dce459c2856059e6fbdd046cf64c996",
+      "terminal_json_sha256": "bc30b69be272ba79722360fa9eba549340bff8ed7ed1d7f1844d7541e8258a1c",
+      "terminal_json_marker": "[CITYSCAPES_L16_BETA_GRID_DONE]",
+      "protocol_id": "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false
+    },
+    {
+      "source_id": "pack2",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/71eaa358-71a6-4279-ad0a-382a1bffa4bb/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "029d1d570df91f2058733155bf644118e030660bae76887c556d7763009caef0",
+      "terminal_json_sha256": "1355be92e6aba97f8aeba4f03834ad6c7e4b5e436b95557a961f32452b4d6391",
+      "terminal_json_marker": "[CITYSCAPES_L16_BETA_GRID_DONE]",
+      "protocol_id": "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false
+    },
+    {
+      "source_id": "pack3",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/b039d7f1-ffbc-4026-8e69-3472cc24d85b/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "1a6f79e49e2d79722ddad81b8019e8d3e3e06372d5024eba75529012e940c5fb",
+      "terminal_json_sha256": "17161716d752a55d9aa8f159a8a2c1629020517a978522bfaf30d21c8cd5fe76",
+      "terminal_json_marker": "[CITYSCAPES_L16_BETA_GRID_DONE]",
+      "protocol_id": "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false
+    },
+    {
+      "source_id": "pack4",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/54a30395-d4dc-4350-9a7f-bb3d72b0e904/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "0fc39c00c0618f3247bcccf921c5c833b4af48e1b36869344326e96cdf8f2959",
+      "terminal_json_sha256": "2f944cda8edacf59596e28c80429d8a07d0a89f71cba9774e381063fb8b9cb61",
+      "terminal_json_marker": "[CITYSCAPES_L16_BETA_GRID_DONE]",
+      "protocol_id": "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false
+    }
+  ],
+  "pack_run_ids": {
+    "pack1": [
+      "ibkd_lambda_0p25_beta_0p25",
+      "lg_beta_0p05"
+    ],
+    "pack2": [
+      "ibkd_lambda_0p25_beta_0p5",
+      "lg_beta_0p02"
+    ],
+    "pack3": [
+      "alg_beta_0p05",
+      "ibkd_lambda_0p5_beta_0p1"
+    ],
+    "pack4": [
+      "alg_beta_0p02",
+      "ibkd_lambda_0p5_beta_0p25"
+    ]
+  },
+  "stored_result": "candidate_summary.json",
+  "raw_logs_stored_in_git": false,
+  "note": "Git stores parsed terminal JSON metrics, per-class IoU, state hashes and source hashes; raw execution output remains excluded by repository policy."
+}

@@ -1,12 +1,16 @@
 # Cityscapes 직접 segmentation 실험
 
-## 현재 실행: 방법별 상위 후보 10,000-step 선별 v18
+## 현재 결과: 방법별 상위 후보 10,000-step 선별 v18
 
 2,000-step 결과에서 LG와 ALG는 각각 beta `0.05`, `0.02`를 유지하고,
 iBKD는 lambda별 상위 두 조합을 유지합니다. iBKD 후보는
 `(lambda=0.25, beta=0.25)`, `(lambda=0.25, beta=0.5)`,
 `(lambda=0.5, beta=0.1)`, `(lambda=0.5, beta=0.25)`입니다.
-총 8개를 seed 1에서 각각 10,000 step 학습하고 val 500장으로 평가합니다.
+총 8개를 seed 1에서 각각 10,000 step 학습하고 val 500장으로 평가했습니다.
+네 H200 pack의 8개 실행이 모두 안정적으로 완료됐습니다. guided 방법별 선택값은
+LG `beta=0.05`, ALG `beta=0.05`, iBKD `lambda=0.25, beta=0.5`입니다.
+iBKD 선택값은 pixel accuracy `94.445%`, mIoU `69.736%`로 전체 후보 중 두 metric
+모두 가장 높았습니다.
 
 - [10,000-step 고정 설정](configs/paper_l16_crop512_candidate_top2_grid10000_v18.json)
 - 10시간 제한 환경에서는 실측 예상 약 7.9시간인 4개 묶음으로 실행합니다.
@@ -16,6 +20,9 @@ iBKD는 lambda별 상위 두 조합을 유지합니다. iBKD 후보는
   - `pack4`: ALG beta 0.02 + iBKD lambda 0.5 beta 0.25
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_candidate_top2_grid10000_group.sh pack1`
   (`pack1`을 `pack2`, `pack3`, `pack4`로 바꿔 각각 별도 작업으로 제출)
+- [전체 결과·감사·해석](reports/candidate_selection/l16_crop512_candidate_top2_grid10000_v18/RESULTS.md)
+- [핵심 CSV](reports/candidate_selection/l16_crop512_candidate_top2_grid10000_v18/candidate_results.csv)
+- [machine-readable 요약](reports/candidate_selection/l16_crop512_candidate_top2_grid10000_v18/candidate_summary.json)
 - 이 단계는 후보 선별이며 최종 80,000-step 과학 결과가 아닙니다.
 
 ## 현재 결과: L/16 crop512 beta 2,000-step 선별 v13
@@ -35,13 +42,15 @@ H200 issue 804에서 LG·ALG·iBKD beta 후보 11개를 seed 1, 2,000 step으로
 이 결과는 beta 선별용이며 80,000-step 최종 과학 결과가 아닙니다.
 
 iBKD의 별도 내부 혼합값 `lambda=0.5`에서는 beta `0.1, 0.25, 0.5, 1.0`의
-25-step 실행 smoke가 모두 안정적으로 통과했습니다. 같은 네 조합을 2,000 step과
-val 500장으로 평가합니다.
+25-step smoke와 2,000-step 실행이 모두 안정적으로 통과했습니다. 2,000-step
+val 500장 결과에 따라 `beta=0.1`, `0.25`를 10,000-step 후보로 선택했습니다.
 
 - [lambda=0.5 smoke 설정](configs/paper_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25_v16.json)
 - 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_lambda0p5_beta_grid_smoke25.sh`
 - [lambda=0.5 2,000-step 설정](configs/paper_l16_crop512_ibkd_lambda0p5_beta_grid2000_v17.json)
 - 2,000-step 실행: `bash phase4/phase4_cityscapes/scripts/run_cityscapes_l16_crop512_ibkd_lambda0p5_beta_grid2000.sh`
+- [lambda=0.5 2,000-step 결과](reports/beta_screen/l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/RESULTS.md)
+- [lambda=0.5 핵심 CSV](reports/beta_screen/l16_crop512_ibkd_lambda0p5_beta_grid2000_v17/beta_screen_results.csv)
 
 iBKD `beta=0.1`의 2,000-step 평가값을 추가로 확인하기 위한 monitor-only 진단도
 준비했습니다. v13의 불안정 제외 판정은 유지하면서 100배 안전선 초과를 기록하고
