@@ -1,0 +1,109 @@
+{
+  "id": "cityscapes_segformer_b0_smoke_v2",
+  "decision_date": "2026-09-23",
+  "purpose": "connection_gradient_resume_diagnostics_not_performance_selection",
+  "protocol_sha256": {
+    "segformer_b0_common_protocol_v1.json": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532",
+    "comparison_manifest_v1.json": "cbb7994f1e8d498bdb83c00518e6d2223bf6991adb806b2c2da17c6605e66581",
+    "fskd_method_protocol_v1.json": "b0aad91e8252667cc17d0ad3b9eeacad3caa26969aac645c83a4405723dbcc2b",
+    "c2vkd_method_protocol_v1.json": "531cae0701636af486bd78a6983461d67cdc66051211d9b43ff8cf1a3b0a1725",
+    "b0_asset_sources_v1.json": "654b86ee4a41c068032eadc4cdbf2746785f2b6d837cc8af57a61a87114bcfed"
+  },
+  "methods": [
+    "vanilla",
+    "lg",
+    "alg",
+    "ibkd_lambda025",
+    "ibkd_lambda050",
+    "fskd",
+    "c2vkd_clip_pool"
+  ],
+  "primary_method_count": 6,
+  "supplementary_methods": [
+    "c2vkd_clip_pool"
+  ],
+  "device": "cuda:0",
+  "visible_cuda_devices": 1,
+  "actual_batch": 16,
+  "crop_hw": [
+    512,
+    512
+  ],
+  "precision": "fp32",
+  "tf32": false,
+  "seed": 1,
+  "adapter_seed": 100001,
+  "training_rng_seed": 200001,
+  "optimizer_updates_per_method": 3,
+  "resume_save_after_update": 2,
+  "resume_replay_update": 3,
+  "resume_rtol": 2e-05,
+  "resume_atol": 2e-06,
+  "schedule_horizon_steps": 80000,
+  "calibration": {
+    "families": [
+      "lg",
+      "alg",
+      "ibkd_lambda025",
+      "ibkd_lambda050"
+    ],
+    "batches": 3,
+    "optimizer_updates": 0,
+    "target_ratio": 0.07,
+    "formula": "0.07*median_CE/median_raw_guidance",
+    "restore_student_buffers_and_rng": true,
+    "final_beta_candidate": false
+  },
+  "validation": {
+    "samples": 2,
+    "list_selection": "first_two_cirkd_val_list_entries",
+    "full_resolution": [
+      1024,
+      2048
+    ],
+    "splits": "left_and_right_1024_squares",
+    "concat_low_resolution_logits_before_final_resize": true,
+    "full_val_or_model_selection": false,
+    "test_used": false
+  },
+  "controller": {
+    "observation_interval_steps": 186,
+    "guidance_warmup_intervals": 0,
+    "observations_in_three_step_run": 0,
+    "boundary_checks": "separate_synthetic_sequence_through_373_and_partial_interval_restore"
+  },
+  "input_cache": {
+    "train_examples": 48,
+    "source": "first_48_positions_of_seed1_permutation_of_1280000_expanded_indices",
+    "workers": 0,
+    "shared_by_all_methods": true
+  },
+  "execution": {
+    "student_backbone_checkpointing": false,
+    "ibkd_fusion_query_chunk": 256,
+    "ibkd_fusion_recompute": true,
+    "exact_gram_row_chunk": 256,
+    "fskd_soft_rank": "torchsort_0.1.10_cuda_extension",
+    "failure_policy": "continue_remaining_methods_after_method_failure",
+    "maximum_wall_seconds": 32400,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "cublas_workspace_config": ":4096:8",
+    "sdpa_backend": "math",
+    "cpu_threads": 1,
+    "ibkd_deterministic_execution": "flatmax_cpu_deform_v1",
+    "ce_reduction": "flatten_valid_pixels_2d_mean",
+    "restore_comparison": "bitwise_all_state_and_rng_before_replay",
+    "evaluation_on_replay_mismatch": "original_continuous_update3_with_overall_failure"
+  },
+  "smoke_exceptions_ko": [
+    "최종 25-batch beta calibration/4개 후보 탐색 대신 3-batch r=0.07 임시 beta만 사용한다.",
+    "전체 val500/400-step 평가 대신 마지막 상태의 val2만 진단한다. checkpoint 선택은 하지 않는다.",
+    "증강 입력을 workers0으로 한 번 생성·공유한다. 전체 runner의 workers4 재개 구현을 검증한 것은 아니다.",
+    "NVlabs Drive 404로 NVIDIA 공식 HF ImageNet-only MiT-B0를 역변환한다. CIRKD Baidu 파일과의 동일성은 미확인이다.",
+    "FSKD는 미공개 segmentation 설정을 보완한 재구현이며 C2VKD는 추가 CLIP-pool 사전학습을 가진 별도 후보다.",
+    "v2는 동일 수식의 결정적 실행을 사용한다. iBKD spatial deformable convolution은 기존 L/16의 CPU 경로이며 CPU↔GPU gradient를 유지한다. v1 시간과 직접 비교하지 않는다."
+  ],
+  "parent_spec_sha256": "1cc78f3e05a7e94b6ccc2fe2d1e39336c9fc547b6411c47abdf4ba337a3fec66",
+  "revision_reason_ko": "H200 요청 819의 7개 방법 모두 3 update 후 재실행 가중치 비교 실패. 재현성 제어와 복원/재실행 분리 진단 및 실패 결과 보존 보완."
+}

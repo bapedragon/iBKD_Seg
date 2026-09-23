@@ -1,8 +1,10 @@
-# Cityscapes SegFormer-B0 · H200 smoke 요청
+# Cityscapes SegFormer-B0 · H200 smoke v2 요청
 
 2026-09-23. **7개 경로의 연결·손실·gradient·재개·평가를 확인하는 실행**입니다.
-β 선별이나 80k 본실험을 시작하지 않습니다. 로컬 CPU 연결 검사는 통과했으며,
-실제 Cityscapes와 H200 검증은 이 요청으로 처음 수행합니다.
+β 선별이나 80k 본실험을 시작하지 않습니다. v1에서는 실제 H200에서 7개 방법 모두
+3 update를 완료했지만 재실행 가중치 비교에 실패했습니다.
+[요청 819 점검 결과](reports/h200_smoke_v1_819/RESULTS.md)를 반영한 v2 재검사입니다.
+v2 로컬 CPU 연결·재실행 7/7과 단위 검사 14개가 통과했으며 GPU 결과는 아직 없습니다.
 
 ## 이슈 입력값
 
@@ -10,7 +12,7 @@
 
 | 항목 | 입력값 |
 |---|---|
-| 제목 | `[Request]: Cityscapes SegFormer-B0 7-method smoke v1` |
+| 제목 | `[Request]: Cityscapes SegFormer-B0 7-method smoke v2` |
 | 사용자 ID | `bapedragon` |
 | GitHub 링크 | `https://github.com/bapedragon/iBKD_Seg.git` |
 | 이미지 | `pytorch/pytorch:latest` |
@@ -49,8 +51,15 @@ bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_smoke.sh
 - 모든 손실 항이 student encoder에 유한한 0이 아닌 gradient를 전달하는지 확인.
   encoder·decoder·guidance parameter group의 gradient와 실제 update도 확인.
 - frozen CIRKD teacher·BN 및 C2VKD pool이 변하지 않는지 검사.
+- strict deterministic algorithms와 cuBLAS 재현성 설정, math SDPA 사용.
+  CE는 같은 유효 픽셀 평균을 2D logits로 계산합니다.
+- iBKD는 기존 L/16의 결정적 CBAM 경로를 사용합니다. flat max와 작은 spatial deformable
+  convolution의 CPU 계산이며 GPU↔CPU autograd를 유지합니다. 수식·계수는 유지합니다.
 - 2번째 update 뒤 모델·adapter·optimizer·RNG·controller·입력 위치 저장.
+  재실행 직전의 모델·guide·optimizer·controller·RNG는 저장값과 bitwise 비교합니다.
   3번째 update를 재개 후 재실행해 loss와 전체 상태 비교(`rtol=2e-5, atol=2e-6`).
+  수치 비교 실패도 파라미터 이름·손실 이력과 함께 남깁니다. 그 경우 원래 연속 학습의
+  3번째 상태로 val2를 진단하고 전체 판정은 실패로 유지합니다.
 - ALG·iBKD의 186·372-step 관측 및 373-step off 경계는 **별도 합성 loss 검사**로 확인.
   3-update 학습에 관측 주기를 축소 적용하지 않습니다. 두 방법 warm-up은 0입니다.
 - val 첫 2장을 원본 1024×2048에서 좌우 1024 crop으로 평가.
@@ -86,13 +95,13 @@ CIRKD Baidu의 `mit_b0.pth`와 파일/텐서 동일성은 아직 검증하지 �
 본실험으로 이어갈 때에는 초기화 출처 확인 또는 protocol revision이 필요합니다.
 
 공통 JSON은 변경하지 않았습니다. 이번 실행의 짧은 β 측정, val2, 입력 cache 생성의
-workers0 등 차이는 [smoke 명세](configs/b0_smoke_v1.json)에 별도로 고정했습니다.
+workers0 등 차이는 [smoke v2 명세](configs/b0_smoke_v2.json)에 별도로 고정했습니다.
 방법 수식은 유지하면서 iBKD fusion과 Gram loss를 정확한 chunk 계산으로 처리합니다.
 student backbone의 gradient checkpointing은 사용하지 않습니다.
 
 ## 결과 확인
 
-기본 출력: `/app/output/cityscapes_b0_smoke_v1/`
+기본 출력: `/app/output/cityscapes_b0_smoke_v2/` (v1 결과 보존)
 
 - `run.log`: 전체 설치·검증·학습 로그. **마지막 줄은 전체 결과 JSON**입니다.
 - `smoke_summary.json`: 방법별 loss·진단 metric·gradient·재개 상태·실패 이유.
@@ -102,7 +111,8 @@ student backbone의 gradient checkpointing은 사용하지 않습니다.
 판정은 `status=passed`, `passed_methods=7`, `primary_status=passed`,
 `c2vkd_supplementary_status=passed`인지 확인합니다. 주 비교 6개가 통과하고 C2VKD만
 실패하면 그 상태를 구분해 표시하며, 전체 성공으로 처리하지 않습니다.
-요약에는 선택 epoch가 `null`로 남습니다. val2 수치를 논문 성능이나 방법 순위로 사용하지 않습니다.
+`completed_training_methods`, `resume_passed_methods`, `evaluated_methods`로 학습·재개·평가의
+진행 범위를 따로 확인합니다. 요약에는 선택 epoch가 `null`로 남습니다. val2 수치를 논문 성능이나 방법 순위로 사용하지 않습니다.
 
 기본 cache는 `/app/scratch/cityscapes_b0_smoke_v1/`입니다. 필요하면
 `CITYSCAPES_ZIP_DIR`, `B0_SMOKE_DATA`, `B0_SMOKE_CACHE`, `B0_SMOKE_OUTPUT`으로 경로를

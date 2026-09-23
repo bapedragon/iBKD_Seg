@@ -3,9 +3,11 @@
 import argparse
 import gc
 import json
+import os
 import sys
 from pathlib import Path
 
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 import torch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[3]/"src"))
@@ -17,10 +19,11 @@ from ibkd_seg.cityscapes.b0.smoke import (
     METHODS,compute,cpu_tree,assert_tree,rng_state,restore_rng,parameter_groups,gradient_norm,
 )
 from ibkd_seg.cityscapes.runtime import seed_all,state_hash
+from ibkd_seg.cityscapes.b0.reproducibility import configure_runtime
 
 
 def check(cache,output):
-    torch.set_num_threads(4)
+    execution=configure_runtime()
     upstream,teacher_source,dataset_source=modules(cache)
     teacher=Teacher(teacher_source,cache/"weights/cirkd_teacher.pth")
     teacher_hash=state_hash(teacher)
@@ -29,7 +32,7 @@ def check(cache,output):
     for _,y in batches:y[:,:3,:]=-1
     report={"status":"running","scientific_result":False,"device":"cpu","input":"synthetic",
             "batch":2,"crop_hw":[64,64],"selected_epoch":None,"metrics":None,
-            "metrics_reason":"No Cityscapes data used","methods":[],"gpu_validated":False}
+            "metrics_reason":"No Cityscapes data used","methods":[],"gpu_validated":False,"execution":execution}
     for method in METHODS:
         seed_all(1)
         student=Student(upstream,cache/"weights/nvidia_mit_b0.bin").train()
@@ -37,7 +40,7 @@ def check(cache,output):
         seed_all(100001)
         guide=None
         if method in ("lg","alg"):guide=Locality()
-        elif method.startswith("ibkd"):guide=AllBlockIBKD()
+        elif method.startswith("ibkd"):guide=AllBlockIBKD(deterministic=True)
         elif method=="fskd":guide=FSKD(crop=64)
         elif method=="c2vkd_clip_pool":guide=C2VKD(cache/"weights/clip_rn101.pt")
         groups=parameter_groups(student,guide)

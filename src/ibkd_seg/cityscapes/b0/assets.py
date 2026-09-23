@@ -48,7 +48,7 @@ def prepare(cache):
 
 
 def verify_protocols():
-    lock=json.loads((SPEC/"b0_smoke_v1.json").read_text())
+    lock=json.loads((SPEC/"b0_smoke_v2.json").read_text())
     for name,expected in lock["protocol_sha256"].items():
         if sha256(SPEC/name)!=expected:
             raise ValueError(f"Protocol changed after smoke specification was frozen: {name}")

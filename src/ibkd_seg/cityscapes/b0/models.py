@@ -91,7 +91,7 @@ class Locality(nn.Module):
 
 
 class AllBlockIBKD(nn.Module):
-    def __init__(self):
+    def __init__(self, *, deterministic=False):
         super().__init__()
         self.adapters = nn.ModuleList(nn.Identity() if c==256 else nn.Conv2d(c,256,1)
                                      for c in (32,32,64,64,160,160,256,256))
@@ -100,6 +100,12 @@ class AllBlockIBKD(nn.Module):
             replacement = ChunkedCrossAttention((512,1024,2048)[i], chunk_size=256, recompute=True)
             replacement.load_state_dict(original.state_dict(), strict=True)
             self.core.fusion[i] = replacement
+        self.deterministic_contract = None
+        if deterministic:
+            from ..ibkd_deterministic import apply_deterministic_candidate
+            self.deterministic_contract = apply_deterministic_candidate(self.core)
+            if not self.deterministic_contract["applied"]:
+                raise ValueError("Deterministic iBKD execution was not applied to every stage")
 
     def forward(self, raw, teacher):
         aligned = [F.interpolate(a(x),size=(16,16),mode="bilinear",align_corners=False)

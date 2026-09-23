@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
-output="${B0_SMOKE_OUTPUT:-/app/output/cityscapes_b0_smoke_v1}"
+output="${B0_SMOKE_OUTPUT:-/app/output/cityscapes_b0_smoke_v2}"
 mkdir -p "${output}"
 if [[ -e "${output}/run.log" ]]; then
   echo "Existing run.log: choose a fresh B0_SMOKE_OUTPUT" >&2

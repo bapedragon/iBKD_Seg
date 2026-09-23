@@ -1,0 +1,123 @@
+{
+  "kind": "derived_log_audit_not_new_experiment",
+  "source_log_sha256": "493bb5706acf025be69df1c622a7b20743f938654f373f61c1a2fa59f9698ee6",
+  "source_log_bytes": 65088,
+  "source_commit": "d585015d844bc88388f402fd01f911cede266a07",
+  "request_id_in_log": 819,
+  "status": "failed",
+  "elapsed_seconds": 483.98859420605004,
+  "completed_training_methods": 7,
+  "resume_passed_methods": 0,
+  "evaluated_methods": 0,
+  "selected_epoch": null,
+  "diagnostic_metrics": null,
+  "gpu_memory_peak": "not_recorded_in_v1_failure_summary",
+  "exact_failing_parameter": "not_recorded_in_v1_assertion",
+  "methods": [
+    {
+      "method": "vanilla",
+      "completed_updates": 3,
+      "first_total_loss": 6.607753753662109,
+      "last_total_loss": 5.821393013000488,
+      "last_loss_components": {
+        "ce": 5.821393013000488
+      },
+      "smoke_beta": 0.0,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 8.702278137207031e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "lg",
+      "completed_updates": 3,
+      "first_total_loss": 7.062894344329834,
+      "last_total_loss": 6.270871639251709,
+      "last_loss_components": {
+        "ce": 5.81320858001709,
+        "locality": 0.96125727891922
+      },
+      "smoke_beta": 0.47610877715491606,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 5.971640348434448e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "alg",
+      "completed_updates": 3,
+      "first_total_loss": 7.062893867492676,
+      "last_total_loss": 6.270870208740234,
+      "last_loss_components": {
+        "ce": 5.813207149505615,
+        "locality": 0.9612571001052856
+      },
+      "smoke_beta": 0.4761087424051621,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 7.18235969543457e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "ibkd_lambda025",
+      "completed_updates": 3,
+      "first_total_loss": 7.03509521484375,
+      "last_total_loss": 6.254459381103516,
+      "last_loss_components": {
+        "ce": 5.810736656188965,
+        "alignment": 0.5337965488433838,
+        "fusion": 0.2974621653556824
+      },
+      "smoke_beta": 0.9347179383815255,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 5.796551704406738e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "ibkd_lambda050",
+      "completed_updates": 3,
+      "first_total_loss": 7.033696174621582,
+      "last_total_loss": 6.252599239349365,
+      "last_loss_components": {
+        "ce": 5.814289569854736,
+        "alignment": 0.5410882234573364,
+        "fusion": 0.297440767288208
+      },
+      "smoke_beta": 1.0454253998930676,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 6.0908496379852295e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "fskd",
+      "completed_updates": 3,
+      "first_total_loss": 13.301565170288086,
+      "last_total_loss": 11.67294692993164,
+      "last_loss_components": {
+        "ce": 5.822242736816406,
+        "global": 0.018173258751630783,
+        "patch": 0.12222452461719513,
+        "attention": 2.0092848274089192e-08,
+        "logit_kd": 5.709502220153809
+      },
+      "smoke_beta": 0.0,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 3.0882656574249268e-06,
+      "validation_status": "not_run"
+    },
+    {
+      "method": "c2vkd_clip_pool",
+      "completed_updates": 3,
+      "first_total_loss": 3.6310722827911377,
+      "last_total_loss": 3.1880812644958496,
+      "last_loss_components": {
+        "ce": 6.206485271453857,
+        "pdd": 3.187835216522217,
+        "global": 0.00028661105898208916,
+        "patch": 2.756037353890406e-08,
+        "linguistic": 0.0004347757494542748
+      },
+      "smoke_beta": 0.0,
+      "resume_status": "failed",
+      "first_reported_tensor_max_abs_diff": 3.1106173992156982e-06,
+      "validation_status": "not_run"
+    }
+  ]
+}

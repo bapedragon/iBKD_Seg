@@ -92,6 +92,8 @@ def test_metrics_average_all_19_classes_and_resume_tree():
     matrix=torch.zeros(19,19,dtype=torch.int64);matrix[0,0]=10
     assert scores(matrix)["miou"]==pytest.approx(1/19)
     with pytest.raises(AssertionError):assert_tree({"step":3},{"step":2},rtol=0,atol=0)
+
+
 def test_cirkd_train_and_validation_record_contract():
     import numpy as np
     from ibkd_seg.cityscapes.b0.data import sample_tensors
@@ -101,3 +103,91 @@ def test_cirkd_train_and_validation_record_contract():
     _,b,val_name=sample_tensors((x,y,(2,2,3),("image_path","val_name")))
     assert a.tolist()==[[0,18],[-1,-1]] and torch.equal(a,b)
     assert name=="train_name" and val_name==("image_path","val_name")
+
+
+def test_flat_pixel_ce_preserves_loss_gradient_and_ignore():
+    from ibkd_seg.cityscapes.b0.reproducibility import pixel_cross_entropy
+    torch.manual_seed(37)
+    x=torch.randn(2,19,3,4,dtype=torch.double,requires_grad=True)
+    y=torch.randint(0,19,(2,6,8));y[:,0,:]=-1
+    reference=F.cross_entropy(F.interpolate(x,size=(6,8),mode="bilinear",align_corners=True),y,ignore_index=-1)
+    actual=pixel_cross_entropy(x,y)
+    torch.testing.assert_close(actual,reference,rtol=1e-12,atol=1e-12)
+    ga=torch.autograd.grad(actual,x,retain_graph=True)[0]
+    gb=torch.autograd.grad(reference,x)[0]
+    torch.testing.assert_close(ga,gb,rtol=1e-12,atol=1e-12)
+
+
+def test_resume_comparison_names_parameters_and_checks_numpy_rng():
+    import numpy as np
+    from ibkd_seg.cityscapes.b0.smoke import compare_components
+    expected={"student":{"net.block2.0.attn.kv.bias":torch.zeros(128)},"rng":{"numpy":np.array([1,2])}}
+    actual={"student":{"net.block2.0.attn.kv.bias":torch.full((128,),9e-6)},"rng":{"numpy":np.array([1,3])}}
+    result=compare_components(actual,expected,rtol=2e-5,atol=2e-6)
+    assert result["status"]=="failed"
+    assert "student.net.block2.0.attn.kv.bias" in result["checks"]["student"]["error"]
+    assert result["checks"]["rng"]["status"]=="failed"
+
+
+def test_failure_summary_preserves_completed_updates(tmp_path,capsys):
+    import json
+    from types import SimpleNamespace
+    from ibkd_seg.cityscapes.b0.smoke import run_and_report
+    args=SimpleNamespace(method="vanilla",output=tmp_path)
+    def fail_after_updates(_args,progress):
+        progress.update(stage="resume_restore",completed_steps=3,
+                        losses=[{"step":i,"loss":6-i} for i in (1,2,3)],
+                        last_loss={"step":3,"loss":3},smoke_beta=0.)
+        raise ValueError("injected restore failure")
+    assert run_and_report(args,fail_after_updates)==1
+    saved=json.loads((tmp_path/"summary.json").read_text())
+    printed=json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert printed==saved and saved["status"]=="failed"
+    assert saved["completed_steps"]==3 and len(saved["losses"])==3
+    assert saved["last_loss"]["loss"]==3 and saved["failed_stage"]=="resume_restore"
+    assert saved["diagnostic_metrics"] is None and saved["selected_epoch"] is None
+
+
+def test_ibkd_deterministic_cbam_preserves_equation_and_gradients():
+    import copy
+    from ibkd_seg.phase1.models import DeformableCBAM
+    from ibkd_seg.cityscapes.ibkd_deterministic import DiagnosticCBAM
+    torch.manual_seed(72)
+    reference=DeformableCBAM(8).double()
+    with torch.no_grad():
+        reference.spatial.offset.weight.uniform_(-.02,.02)
+        reference.spatial.offset.bias.uniform_(-.02,.02)
+    candidate=DiagnosticCBAM(copy.deepcopy(reference),channel_mode="flatmax",spatial_mode="cpu_deform")
+    x=torch.randn(2,8,4,4,dtype=torch.double,requires_grad=True)
+    y=x.detach().clone().requires_grad_(True)
+    a=reference(x);b=candidate(y)
+    torch.testing.assert_close(a,b,rtol=1e-12,atol=1e-12)
+    a.square().sum().backward();b.square().sum().backward()
+    torch.testing.assert_close(x.grad,y.grad,rtol=1e-10,atol=1e-12)
+    for name,p in reference.named_parameters():
+        torch.testing.assert_close(p.grad,dict(candidate.original.named_parameters())[name].grad,rtol=1e-10,atol=1e-12)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(),reason="CUDA runtime required")
+def test_cuda_deterministic_interpolation_ce_update_replay():
+    from ibkd_seg.cityscapes.b0.reproducibility import configure_runtime,pixel_cross_entropy
+    from ibkd_seg.cityscapes.b0.smoke import cpu_tree,rng_state,restore_rng
+    configure_runtime()
+    torch.manual_seed(14)
+    model=torch.nn.Sequential(torch.nn.Conv2d(3,19,1),torch.nn.Dropout2d(.1)).cuda()
+    optimizer=torch.optim.AdamW(model.parameters(),lr=6e-5,fused=False)
+    image=torch.randn(2,3,16,16,device="cuda")
+    labels=torch.randint(0,19,(2,64,64),device="cuda");labels[:,0,:]=-1
+    def update():
+        optimizer.zero_grad(set_to_none=True)
+        logits=F.interpolate(model(image),size=(32,32),mode="bilinear",align_corners=False)
+        loss=pixel_cross_entropy(logits,labels)
+        loss.backward();optimizer.step()
+        return loss.detach()
+    update()
+    before=cpu_tree({"model":model.state_dict(),"optimizer":optimizer.state_dict(),"rng":rng_state()})
+    loss=update();expected=cpu_tree({"model":model.state_dict(),"optimizer":optimizer.state_dict()})
+    model.load_state_dict(before["model"]);optimizer.load_state_dict(before["optimizer"]);restore_rng(before["rng"])
+    replay=update()
+    torch.testing.assert_close(replay,loss,rtol=0,atol=0)
+    assert_tree({"model":model.state_dict(),"optimizer":optimizer.state_dict()},expected,rtol=0,atol=0)

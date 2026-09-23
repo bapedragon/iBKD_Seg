@@ -1,6 +1,9 @@
 # B0 smoke 구현 검사 기록
 
-2026-09-23. 실제 Cityscapes/H200 결과가 아니라 **실행 준비의 로컬 확인 기록**입니다.
+2026-09-23. 아래는 최초 v1 준비의 로컬 확인 기록입니다. 실제 H200 v1 로그는
+[요청 819 점검](reports/h200_smoke_v1_819/RESULTS.md)에 별도로 기록했습니다.
+v2 수정 후에는 단위 검사 **14개 통과·CUDA 전용 1개 skip**, 실제 가중치 CPU 연결·재실행
+**7/7 통과**를 확인했습니다. v2 H200 재검사는 아직 수행하지 않았습니다.
 
 ## 확인한 내용
 
@@ -40,7 +43,8 @@ H200 명령은 [이슈 입력안](H200_SMOKE_ISSUE.md)을 사용합니다. H200�
 
 ## 남아 있는 검증
 
-실제 Cityscapes 증강·CUDA 손실/gradient·torchsort CUDA 확장·GPU 메모리·val2 평가와
-GPU checkpoint 재실행은 아직 실행하지 않았습니다. 이번 H200 smoke가 이를 검사합니다.
+H200 v1에서 실제 Cityscapes 증강·CUDA 손실/gradient·torchsort CUDA 연결은 3 update까지
+확인했습니다. 재실행 비교에서 실패해 val2와 frozen 상태·peak memory 최종 요약은 남지 않았습니다.
+v2의 결정적 GPU 실행·bitwise 복원·재실행 비교·val2 평가·메모리 확인이 남았습니다.
 3개 update의 유한한 loss는 장기 학습 안정성이나 논문 재현 성능을 보장하지 않습니다.
 전체 val500, 25-batch β 후보 측정, 2k/10k 선별 및 80k 장기 runner는 다음 단계입니다.

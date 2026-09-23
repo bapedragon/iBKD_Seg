@@ -15,7 +15,7 @@ METHODS=("vanilla","lg","alg","ibkd_lambda025","ibkd_lambda050","fskd","c2vkd_cl
 
 def main():
     os.chdir(REPO)
-    output=Path(os.environ.get("B0_SMOKE_OUTPUT","/app/output/cityscapes_b0_smoke_v1")).resolve()
+    output=Path(os.environ.get("B0_SMOKE_OUTPUT","/app/output/cityscapes_b0_smoke_v2")).resolve()
     cache=Path(os.environ.get("B0_SMOKE_CACHE","/app/scratch/cityscapes_b0_smoke_v1/assets")).resolve()
     data=Path(os.environ.get("B0_SMOKE_DATA","/app/scratch/cityscapes_b0_smoke_v1/cityscapes")).resolve()
     zip_root=Path(os.environ.get("CITYSCAPES_ZIP_DIR","/app/data/chaoyang")).resolve()
@@ -23,11 +23,13 @@ def main():
         raise FileExistsError(f"새 출력 경로가 필요합니다: {output}")
     output.mkdir(parents=True,exist_ok=True)
     start=time.monotonic()
-    report={"status":"running","scientific_result":False,"methods":[],"expected_methods":list(METHODS),
+    report={"status":"running","smoke_spec_id":"cityscapes_segformer_b0_smoke_v2",
+            "scientific_result":False,"methods":[],"expected_methods":list(METHODS),
             "primary_methods":6,"supplementary_methods":1,"selected_epoch":None,"test_used":False,
             "full_validation":False,"output":str(output)}
     env=os.environ.copy()
-    env.update(PYTHONPATH=str(REPO/"src"),MAX_JOBS="2",TORCH_CUDA_ARCH_LIST="9.0",PYTHONUNBUFFERED="1")
+    env.update(PYTHONPATH=str(REPO/"src"),MAX_JOBS="2",TORCH_CUDA_ARCH_LIST="9.0",PYTHONUNBUFFERED="1",
+               CUBLAS_WORKSPACE_CONFIG=":4096:8")
     stage="initialization"
     def run(command,*,check=True):
         remaining=9*3600-(time.monotonic()-start)
@@ -87,11 +89,15 @@ def main():
             if code!=0:row["status"]="failed"
             report["methods"].append(row);save()
         stage="cross_method_checks"
+        checked=[r for r in report["methods"] if "student_initial_state_sha256" in r]
         passed=[r for r in report["methods"] if r["status"]=="passed"]
-        if len({r["student_initial_state_sha256"] for r in passed})>1:raise ValueError("Student initialization differs")
-        if len({r["teacher_state_sha256"] for r in passed if r["teacher_state_sha256"] is not None})>1:
+        if len({r["student_initial_state_sha256"] for r in checked})>1:raise ValueError("Student initialization differs")
+        if len({r["teacher_state_sha256"] for r in checked if r["teacher_state_sha256"] is not None})>1:
             raise ValueError("Teacher state differs")
-        if len({r["input_sha256"] for r in passed})>1:raise ValueError("Inputs differ")
+        if len({r["input_sha256"] for r in checked if "input_sha256" in r})>1:raise ValueError("Inputs differ")
+        report["completed_training_methods"]=sum(r.get("completed_steps")==3 for r in report["methods"])
+        report["evaluated_methods"]=sum(r.get("diagnostic_metrics") is not None for r in report["methods"])
+        report["resume_passed_methods"]=sum(r.get("resume",{}).get("status")=="passed" for r in report["methods"])
         by_method={r["method"]:r for r in passed}
         if "lg" in by_method and "alg" in by_method:
             a,b=by_method["lg"],by_method["alg"]
