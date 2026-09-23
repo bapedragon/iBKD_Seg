@@ -3,11 +3,12 @@
 2026-09-23 **H200 smoke v2에서 7개 방법 모두 학습·checkpoint 재개·val2 평가를 통과**했습니다.
 [최신 결과](reports/h200_smoke_v2/RESULTS.md)에 방법별 검사·메모리와 확인 범위를 기록했습니다.
 v1의 재실행 불일치는 v2의 고정 기준에서 해소됐습니다.
-β 선별·전체 val500·80k 본실험 runner는 다음 단계이며 아직 실행하지 않았습니다.
-다음 실행 입력값은 [H200 25-batch β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md)에 있습니다.
-후보 생성 runner를 준비했으며, 학습 update 없이 손실만 측정합니다.
-이번 smoke는 NVIDIA ImageNet MiT-B0 배포본을 역변환해 사용하며,
-CIRKD Baidu 파일과의 동일성은 미확인입니다. 이 출처 예외는 본실험과 구분합니다.
+이어 [H200 25-batch calibration](reports/h200_beta_calibration_v1/RESULTS.md)도 통과해 β 후보를 고정했습니다.
+다음 실행 입력값은 [2,000-step 선별 이슈 3개](H200_SCREEN2000_ISSUES.md)에 있습니다.
+전체 val500·재개·후보 순위가 포함된 2k runner를 준비했고 로컬 검사를 통과했습니다.
+실제 H200 2k 선별과 10k·80k 실행은 아직 수행하지 않았습니다.
+이번 선별도 NVIDIA ImageNet MiT-B0 배포본 역변환을 사용합니다.
+CIRKD Baidu 파일과의 동일성은 미확인이며, 새 실행 명세에 이 출처를 명시했습니다.
 
 목적은 같은 **DeepLabV3-R101 teacher → SegFormer MiT-B0 student**에서
 FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
@@ -17,6 +18,7 @@ FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
 
 | 파일 | 내용 |
 |---|---|
+| [H200 2k 이슈 3개](H200_SCREEN2000_ISSUES.md) | 사용자 지정 6개·8개·4개 실행, 내장 재개 검사와 전체 val500 |
 | [H200 β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md) | 25-batch 초기 손실 측정·β 4개씩 생성, 학습·평가 없음 |
 | [H200 smoke 이슈](H200_SMOKE_ISSUE.md) | 7개 방법의 실행 명령·검사 항목·성공 판정 |
 | [로컬 검사 기록](SMOKE_PREPARATION.md) | 실제 가중치 CPU 연결·재개 검사와 남은 GPU 검증 |
@@ -57,7 +59,7 @@ PDD가 CE를 대신하는 방법별 예외도 명시했습니다.
 FSKD의 손실별 λ1·λ2·λ3도 iBKD의 λ와 서로 다른 파라미터입니다.
 
 2026-09-23 후속 논의에서 iBKD의 가중합 직전 목표를 **256채널·16×16**으로
-선택했습니다. 이는 첫 실험에 사용할 설정이며 최적성이나 GPU 검증이 확인된 값은 아닙니다.
+선택했습니다. GPU 연결 smoke는 통과했으며 최적성이나 장기 학습 성능을 확인한 값은 아닙니다.
 기존 분류의 전체 block adapter를 기준으로 B0의 8개 block 전체를 연결합니다.
 이 규격을 LG/ALG/FSKD에 일괄 적용하거나 fusion 전체의 계산 해상도로 해석하지 않습니다.
 이어 사용자 결정으로 LG/ALG는 **1·5·8번째 block**(코드 인덱스 `[0,4,7]`),
@@ -72,14 +74,15 @@ Controller 관측과 별개로 val 평가는 공통 조건인 400 step마다 수
 공통 조건과 비교 범위의 고정 결과는 위 두 JSON을 한 쌍으로 관리합니다.
 비교 범위 JSON은 공통 JSON의 SHA-256을 참조하며, 실제 구현·검증이 남은 항목을
 `null`과 상태값으로 구분합니다. FSKD의 **저자 Cityscapes 확인값**은 미확인으로 남기되,
-이번에 선정한 **우리의 재구현값**은 별도 방법 JSON에 기록했습니다. 수치 β는 아직 미측정입니다.
+이번에 선정한 **우리의 재구현값**은 별도 방법 JSON에 기록했습니다.
+수치 β 후보는 [25-batch 실측 grid](configs/b0_beta_grid_frozen_v1.json)에 고정했고 최적 β는 선별 전입니다.
 
 ## 실행 순서
 
 1. H200 smoke v2에서 실제 입력의 손실·gradient·재개·val2·메모리 확인을 완료했습니다.
-2. 준비된 calibration runner로 계획의 25-batch 측정을 수행해 β 후보 범위를 정합니다.
+2. H200 25-batch 측정으로 β 후보 범위를 고정했습니다.
    smoke의 3-batch 임시 β는 최종 선별 후보가 아닙니다.
-3. 전체 학습 runner를 완성한 뒤 LG, ALG, iBKD 두 λ 조건을 각각 β 4개로 2,000 step까지 선별합니다.
+3. 준비된 세 이슈로 LG, ALG, iBKD 두 λ 조건을 각각 β 4개로 2,000 step까지 선별합니다.
    첫 500 step은 같은 실행 안에서 안정성을 확인하는 구간입니다.
 4. β를 탐색하는 네 조건의 상위 2개를 10,000 step까지 비교합니다.
    FSKD는 위 명세의 재구현 고정값으로 smoke·중간 점검을 진행하며,

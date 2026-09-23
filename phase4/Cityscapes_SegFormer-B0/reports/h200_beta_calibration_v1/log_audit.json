@@ -1,0 +1,115 @@
+{
+  "status": "passed",
+  "checks": {
+    "overall": true,
+    "no_training_evaluation": true,
+    "spec_matches": true,
+    "spec_hash": true,
+    "code_hashes": true,
+    "shared_code_hash": true,
+    "asset_records": true,
+    "parents": true,
+    "input_shape": true,
+    "sampler_positions": true,
+    "train_names_match_sampler": true,
+    "two_families": true,
+    "same_ce_all_batches": true,
+    "completed_and_restored": true,
+    "same_initial_and_input": true,
+    "input_identity_hash": true,
+    "guidance_calculation": true,
+    "candidate_artifact_hash_reconstructed": true
+  },
+  "methods": [
+    {
+      "method": "lg",
+      "median_ce": 6.3463945388793945,
+      "median_raw_guidance": 0.9641128778457642,
+      "betas": [
+        0.197479,
+        0.460784,
+        0.987394,
+        1.97479
+      ],
+      "actual_ratio_medians_percent": [
+        3.0069653243320196,
+        7.016247347854736,
+        15.034811394900169,
+        30.0696532433202
+      ]
+    },
+    {
+      "method": "alg",
+      "median_ce": 6.3463945388793945,
+      "median_raw_guidance": 0.9641128778457642,
+      "betas": [
+        0.197479,
+        0.460784,
+        0.987394,
+        1.97479
+      ],
+      "actual_ratio_medians_percent": [
+        3.0069653243320196,
+        7.016247347854736,
+        15.034811394900169,
+        30.0696532433202
+      ]
+    },
+    {
+      "method": "ibkd_lambda025",
+      "median_ce": 6.3463945388793945,
+      "median_raw_guidance": 0.4919423535466194,
+      "betas": [
+        0.387021,
+        0.903048,
+        1.9351,
+        3.87021
+      ],
+      "actual_ratio_medians_percent": [
+        3.0564082173723093,
+        7.131611276601604,
+        15.282001600525957,
+        30.564082173723094
+      ]
+    },
+    {
+      "method": "ibkd_lambda050",
+      "median_ce": 6.3463945388793945,
+      "median_raw_guidance": 0.44246311485767365,
+      "betas": [
+        0.4303,
+        1.00403,
+        2.1515,
+        4.303
+      ],
+      "actual_ratio_medians_percent": [
+        3.007229789232309,
+        7.016846212602639,
+        15.036148946161546,
+        30.072297892323093
+      ]
+    }
+  ],
+  "timing": {
+    "lg_alg": {
+      "batch_count": 25,
+      "measurement_seconds": 11.31061808206141,
+      "median_batch_seconds": 0.41935385949909687,
+      "worker_seconds": 15.673005909658968,
+      "peak_allocated_gib": 10.473928451538086
+    },
+    "ibkd": {
+      "batch_count": 25,
+      "measurement_seconds": 20.569803069345653,
+      "median_batch_seconds": 0.7903751283884048,
+      "worker_seconds": 24.99690035637468,
+      "peak_allocated_gib": 10.560248374938965
+    }
+  },
+  "total_seconds": 486.83928062207997,
+  "prepared_data_cache_reused": false,
+  "train_presentations": 400,
+  "unique_train_images": 372,
+  "candidate_artifact_sha256": "70b37112dcbd0874ce12b85debf97a1113c070717c9ec89258e582a207000559",
+  "limitation": "User-pasted log audit; original remote tensors and state files not independently downloaded."
+}

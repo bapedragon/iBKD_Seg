@@ -6,9 +6,10 @@
 [비교 명세](configs/comparison_manifest_v1.json)에 기록했습니다.
 이 문서는 실행 순서와 선별 방식의 계획이며 GPU 결과가 아닙니다.
 후속 작업으로 7개 방법이 [H200 smoke v2](reports/h200_smoke_v2/RESULTS.md)를 통과했습니다.
-다음 단계의 [25-batch β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md)와
-[사전 명세](configs/b0_beta_calibration_v1.json)를 준비했습니다. 실제 calibration과
-β 선별은 아직 실행하지 않았으며 80k 본실험 runner는 아직 없습니다.
+[25-batch calibration](reports/h200_beta_calibration_v1/RESULTS.md)도 통과해 β 후보를 고정했습니다.
+다음 단계의 [2k 이슈 3개](H200_SCREEN2000_ISSUES.md)와
+[실행 명세](configs/b0_screen2000_v1.json)를 준비했습니다. 새 학습 루프는 로컬 검사를
+통과했으며, 실제 H200 2k 선별과 10k·80k 실행은 아직 수행하지 않았습니다.
 
 후속 요청에 따라 [FSKD·C2VKD 방법 명세](BASELINE_METHOD_PROTOCOLS.md)와 각각의 JSON을
 작성했습니다. FSKD는 공개 PiT 조합을 이식한 고정값 1개로 아래 흐름에 연결합니다.
@@ -85,13 +86,13 @@ bilinear resize(`align_corners=False`)를 사용합니다. 실제 feature 추출
 |---|---|
 | Teacher·student·공통 학습/평가·6개 비교 조건 | 기존 확정값 유지 |
 | iBKD 가중합 전 채널·공간 크기 | 첫 실험값 256채널·16×16 선택 완료 |
-| iBKD 전체 block 연결 | 전체 8개 block을 256채널·16×16로 변환 후 학습 가능한 가중합; CPU 연결·재개 통과, GPU 전 |
+| iBKD 전체 block 연결 | 전체 8개 block을 256채널·16×16로 변환 후 학습 가능한 가중합; H200 smoke v2 통과 |
 | LG/ALG block 대응 | 사용자 결정으로 처음·중간·끝인 1·5·8번째, 코드 인덱스 0·4·7 확정 |
 | ALG/iBKD controller | 1 epoch 분량(186 step)마다 관측; window 50, threshold -0.02 유지; ALG·iBKD 모두 warm-up 0 |
 | iBKD λ와 β | 비교 λ=0.25·0.5 유지. 수치 β는 연결 후 측정·짧은 학습으로 선별 |
 | FSKD 고유 설정 | 첫 재구현값 선정 완료; 저자 Cityscapes 값과의 동일성은 미확인 |
 | C2VKD 고유 설정 | PDD 보완·공개 loss 연결·CLIP pool 대체안 작성; 기존 6개 밖의 별도 후보 |
-| 실제 실행 준비 | 가중치 실물·CPU 연결/재개 통과; 실제 Cityscapes H200 smoke·메모리 확인 전 |
+| 실제 실행 준비 | 가중치 실물·CPU 연결/재개 통과; 실제 Cityscapes H200 smoke·메모리·calibration 통과; 2k 선별 전 |
 
 LG/ALG는 후속 사용자 지시 "이번에도 처음 중간 끝"에 따라 기존 L/16의
 `0, depth//2, depth-1`을 적용해 코드 인덱스 **0·4·7**을 사용합니다.
@@ -196,8 +197,8 @@ LG/ALG는 controller가 켜져 있는 동안 같은 β·초기화·입력에서 
 
 ## 3. 초기 손실 측정과 후보 구성
 
-먼저 B0의 공통 초기 상태와 seed1 입력을 고정합니다. 아래 수치는 **실행 계획**이며
-이미 수행한 측정값이 아닙니다.
+먼저 B0의 공통 초기 상태와 seed1 입력을 고정합니다. 아래 측정 절차는 실행을 완료했고
+[결과와 파생 grid](reports/h200_beta_calibration_v1/RESULTS.md)를 보존했습니다.
 
 - 공통 초기 student를 복원한 상태에서 같은 25개 학습 batch를 이용해 CE와 방법별 raw
   guidance를 측정합니다. 이 단계에서는 optimizer update를 하지 않으며, 측정 중 변한
@@ -298,8 +299,8 @@ FSKD와 Vanilla에는 후보 순위 선별을 적용하지 않습니다. 초기 
 후보를 선별한 뒤 β·loss를 바꾸거나 optimizer를 초기화하면 새로운 실험입니다.
 
 기존 L/16의 2k·10k checkpoint는 이 B0 재개 규칙의 대상이 아닙니다.
-FSKD/B0의 실제 속도는 측정 전입니다. Smoke에서 각 방법의 정상 step 시간·평가 시간·
-저장 시간을 따로 측정하고, 전체 시간은 학습과 매 400-step 평가 비용을 합산해 추정합니다.
+FSKD/B0의 짧은 H200 smoke 학습 속도는 측정했습니다. 전체 val500과 저장 비용은 새
+2k runner에서 따로 측정하고, 전체 시간은 학습과 매 400-step 평가 비용을 합산해 갱신합니다.
 작업당 10시간 제한에는 설치·검증·저장 여유를 두며 최대 9시간 실행 후 전체 상태를 저장합니다.
 1회 validation과 저장에 필요한 시간을 실측해 종료 전에 충분한 여유를 남깁니다.
 
@@ -320,6 +321,8 @@ FSKD/B0의 실제 속도는 측정 전입니다. Smoke에서 각 방법의 정�
 현재 완료된 것은 **공통 조건 고정, 비교 범위와 위 흐름 정리, iBKD 전체 8개 block의
 256채널·16×16 가중합 규격, LG/ALG의 1·5·8번째 block 선택, 186-step controller 관측과
 기존 window/threshold 유지, ALG·iBKD guidance warm-up 0**입니다.
-FSKD·C2VKD 방법별 재구현 초안도 작성했습니다. 실제 가중치 식별, 확정한 연결·controller의
-B0 runner 구현과 검증이 다음 작업입니다. C2VKD는 CLIP 대체 pool을 가진 별도 후보입니다.
-그 준비를 마친 뒤 새 B0 측정값으로 β 후보를 고정하고 순서대로 실행합니다.
+FSKD·C2VKD 방법별 재구현, 실제 가중치 식별, 7개 방법 H200 smoke와 25-batch β 측정을
+완료했습니다. 2k runner의 전체 상태 재개·전체 val·후보 선택 구현 및 로컬 검사도 완료했습니다.
+사용자 지정 묶음은 Vanilla·FSKD·LG / ALG·iBKD λ=0.25 / iBKD λ=0.5입니다.
+C2VKD는 CLIP 대체 pool을 가진 별도 후보로, 이 세 이슈에는 포함하지 않습니다.
+NVIDIA HF B0 초기화 출처는 2k 실행 명세에 명시적으로 승계하며 원래 공통 JSON은 보존합니다.
