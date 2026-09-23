@@ -4,7 +4,8 @@
 [최신 결과](reports/h200_smoke_v2/RESULTS.md)에 방법별 검사·메모리와 확인 범위를 기록했습니다.
 v1의 재실행 불일치는 v2의 고정 기준에서 해소됐습니다.
 β 선별·전체 val500·80k 본실험 runner는 다음 단계이며 아직 실행하지 않았습니다.
-바로 실행할 입력값은 [H200 smoke 이슈](H200_SMOKE_ISSUE.md)에 있습니다.
+다음 실행 입력값은 [H200 25-batch β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md)에 있습니다.
+후보 생성 runner를 준비했으며, 학습 update 없이 손실만 측정합니다.
 이번 smoke는 NVIDIA ImageNet MiT-B0 배포본을 역변환해 사용하며,
 CIRKD Baidu 파일과의 동일성은 미확인입니다. 이 출처 예외는 본실험과 구분합니다.
 
@@ -16,6 +17,7 @@ FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
 
 | 파일 | 내용 |
 |---|---|
+| [H200 β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md) | 25-batch 초기 손실 측정·β 4개씩 생성, 학습·평가 없음 |
 | [H200 smoke 이슈](H200_SMOKE_ISSUE.md) | 7개 방법의 실행 명령·검사 항목·성공 판정 |
 | [로컬 검사 기록](SMOKE_PREPARATION.md) | 실제 가중치 CPU 연결·재개 검사와 남은 GPU 검증 |
 | [PROTOCOL.md](PROTOCOL.md) | 공통 학습·평가 조건, 각 값의 출처와 선택 이유 |
@@ -75,9 +77,9 @@ Controller 관측과 별개로 val 평가는 공통 조건인 400 step마다 수
 ## 실행 순서
 
 1. H200 smoke v2에서 실제 입력의 손실·gradient·재개·val2·메모리 확인을 완료했습니다.
-2. smoke 통과 후 전체 runner를 완성하고 계획의 25-batch 측정으로 β 후보 범위를 정합니다.
+2. 준비된 calibration runner로 계획의 25-batch 측정을 수행해 β 후보 범위를 정합니다.
    smoke의 3-batch 임시 β는 최종 선별 후보가 아닙니다.
-3. LG, ALG, iBKD 두 λ 조건은 각각 β 4개를 구성해 2,000 step까지 선별합니다.
+3. 전체 학습 runner를 완성한 뒤 LG, ALG, iBKD 두 λ 조건을 각각 β 4개로 2,000 step까지 선별합니다.
    첫 500 step은 같은 실행 안에서 안정성을 확인하는 구간입니다.
 4. β를 탐색하는 네 조건의 상위 2개를 10,000 step까지 비교합니다.
    FSKD는 위 명세의 재구현 고정값으로 smoke·중간 점검을 진행하며,

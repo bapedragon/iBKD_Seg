@@ -5,9 +5,10 @@
 [JSON 명세](configs/segformer_b0_common_protocol_v1.json)입니다. 비교 범위와 현재 확정 상태는
 [비교 명세](configs/comparison_manifest_v1.json)에 기록했습니다.
 이 문서는 실행 순서와 선별 방식의 계획이며 GPU 결과가 아닙니다.
-후속 작업으로 7개 방법의 smoke runner와 CPU 연결·재개 검사를 완료했습니다.
-실행 명령은 [H200 smoke 이슈](H200_SMOKE_ISSUE.md), 현재 검사 범위는
-[구현 검사 기록](SMOKE_PREPARATION.md)에 있습니다. 80k 본실험 runner는 아직 없습니다.
+후속 작업으로 7개 방법이 [H200 smoke v2](reports/h200_smoke_v2/RESULTS.md)를 통과했습니다.
+다음 단계의 [25-batch β 후보 생성 이슈](H200_BETA_CALIBRATION_ISSUE.md)와
+[사전 명세](configs/b0_beta_calibration_v1.json)를 준비했습니다. 실제 calibration과
+β 선별은 아직 실행하지 않았으며 80k 본실험 runner는 아직 없습니다.
 
 후속 요청에 따라 [FSKD·C2VKD 방법 명세](BASELINE_METHOD_PROTOCOLS.md)와 각각의 JSON을
 작성했습니다. FSKD는 공개 PiT 조합을 이식한 고정값 1개로 아래 흐름에 연결합니다.
@@ -200,7 +201,7 @@ LG/ALG는 controller가 켜져 있는 동안 같은 β·초기화·입력에서 
 
 - 공통 초기 student를 복원한 상태에서 같은 25개 학습 batch를 이용해 CE와 방법별 raw
   guidance를 측정합니다. 이 단계에서는 optimizer update를 하지 않으며, 측정 중 변한
-  BN/RNG 상태까지 복원한 뒤 별도의 연결 smoke와 후보 학습을 시작합니다.
+  BN/RNG 상태까지 복원합니다. 연결 smoke는 v2에서 완료했으며 후보 학습은 별도 실행합니다.
 - LG/ALG는 동일한 guidance와 공통 β grid를 사용합니다.
 - iBKD는 alignment와 fusion을 각각 기록하고 λ별 합성 guidance를 계산합니다.
 - 모든 항이 유한한지, mask/축/정규화가 올바른지, student와 adapter에 필요한 gradient가
@@ -218,11 +219,12 @@ r = [0.03, 0.07, 0.15, 0.30]
 이는 guidance가 초기 CE의 대략 3%, 7%, 15%, 30%가 되는 범위를 잡는
 **탐색용 경험 규칙**입니다. 논문이 지정한 β나 최적성 보장이 아닙니다.
 중앙값의 비로 계산하므로 실제 batch별 `βG/CE`의 중앙값·범위도 다시 기록합니다.
-숫자는 측정 후 읽기 좋은 값으로 정리하되 네 후보가 겹치지 않도록 하고,
+숫자는 사전 명세대로 유효숫자 6자리로 반올림하되 네 후보가 겹치지 않도록 하고,
 수치·계산 근거·실측 비율을 validation 성능을 보기 전에 고정합니다.
 
 CE와 guidance의 숫자 비율이 같아도 gradient의 크기·방향이 같지는 않습니다.
-고정한 일부 batch에서 student에 대한 CE/guidance gradient norm도 함께 확인합니다.
+고정한 일부 batch의 student CE/guidance gradient norm은 H200 smoke v2에서 확인했습니다.
+이번 25-batch calibration은 `torch.no_grad()`만 사용하며 backward를 수행하지 않습니다.
 학습 중에는 CE, raw guidance, weighted guidance, 실제 β, gradient norm을 기록합니다.
 전 step 전체 gradient 해시는 본학습의 필수 조건이 아닙니다.
 

@@ -1,0 +1,102 @@
+{
+  "id": "cityscapes_segformer_b0_beta_calibration_v1",
+  "decision_date": "2026-09-23",
+  "purpose": "freeze_beta_candidates_before_validation_without_training_updates",
+  "protocol_sha256": {
+    "segformer_b0_common_protocol_v1.json": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532",
+    "comparison_manifest_v1.json": "cbb7994f1e8d498bdb83c00518e6d2223bf6991adb806b2c2da17c6605e66581",
+    "fskd_method_protocol_v1.json": "b0aad91e8252667cc17d0ad3b9eeacad3caa26969aac645c83a4405723dbcc2b",
+    "c2vkd_method_protocol_v1.json": "531cae0701636af486bd78a6983461d67cdc66051211d9b43ff8cf1a3b0a1725",
+    "b0_asset_sources_v1.json": "654b86ee4a41c068032eadc4cdbf2746785f2b6d837cc8af57a61a87114bcfed",
+    "b0_smoke_v2.json": "f5efa04afd498b82d9b25e23b099b415ed4f667ec9b96b71fdb69789657beed0"
+  },
+  "methods": [
+    "lg",
+    "alg",
+    "ibkd_lambda025",
+    "ibkd_lambda050"
+  ],
+  "forward_families": {
+    "lg_alg": [
+      "lg",
+      "alg"
+    ],
+    "ibkd": [
+      "ibkd_lambda025",
+      "ibkd_lambda050"
+    ]
+  },
+  "batches": 25,
+  "actual_batch": 16,
+  "crop_hw": [
+    512,
+    512
+  ],
+  "precision": "fp32",
+  "tf32": false,
+  "seed": 1,
+  "adapter_seed": 100001,
+  "training_rng_seed": 200001,
+  "student_mode": "train",
+  "guide_mode": "train",
+  "teacher_mode": "frozen_eval",
+  "no_grad": true,
+  "backward_calls": 0,
+  "optimizer_updates": 0,
+  "controller_observations": 0,
+  "target_ratios": [
+    0.03,
+    0.07,
+    0.15,
+    0.3
+  ],
+  "beta_formula": "r * median(CE) / median(raw_guidance)",
+  "ibkd_guidance": "compute (1-lambda)*alignment + lambda*fusion separately per batch before median",
+  "beta_rounding_significant_digits": 6,
+  "minimum_median_raw_guidance_exclusive": 1e-12,
+  "weighted_guidance_to_ce_record": [
+    "min",
+    "median",
+    "max"
+  ],
+  "selected_beta": null,
+  "student_guide_buffers_and_rng_restore": "bitwise",
+  "trainable_parameters_unchanged": "bitwise",
+  "cross_family_ce_equality": "bitwise",
+  "validation_samples": 0,
+  "test_used": false,
+  "input_cache": {
+    "train_presentations": 400,
+    "workers": 0,
+    "source": "first_400_positions_of_seed1_permutation_of_1280000_expanded_indices",
+    "augmentation_seed": 1,
+    "shared_by_all_methods": true
+  },
+  "execution": {
+    "visible_cuda_devices": 1,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "cublas_workspace_config": ":4096:8",
+    "sdpa_backend": "math",
+    "cpu_threads": 1,
+    "ibkd_deterministic_execution": "flatmax_cpu_deform_v1",
+    "maximum_subprocess_wall_budget_seconds": 10800
+  },
+  "expected_archives": {
+    "leftImg8bit_trainvaltest.zip": {
+      "bytes": 11598567370,
+      "sha256": "1927eb6450e29ebde0d611d30b874abe96747f5d092f6ec0cbbb6a3e1f6ce09d"
+    },
+    "gtFine_trainvaltest.zip": {
+      "bytes": 263041307,
+      "sha256": "dbacde05ea136f3036aa24bfc87b5272f0d999e34380e10cbb919f7368448332"
+    }
+  },
+  "gradient_diagnostics": "reuse_passed_h200_smoke_v2_no_backward_in_this_job",
+  "notes_ko": [
+    "LG/ALG는 동일 locality를 사용하므로 한 번 측정한다. iBKD 두 lambda도 동일 alignment/fusion으로 계산한다.",
+    "이번 실행은 후보를 생성하며 선택하거나 학습하지 않는다. FSKD·C2VKD·Vanilla는 beta 탐색 대상이 아니다.",
+    "기존 준비 데이터는 provenance와 실제 파일 전체 해시를 확인해 재사용한다. 없으면 ZIP 감사·train/val 준비를 수행한다.",
+    "NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 유지한다. CIRKD Baidu 가중치와의 동일성은 미확인이며 후속 본학습에서도 출처를 명시해야 한다."
+  ]
+}

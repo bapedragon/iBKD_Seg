@@ -35,15 +35,19 @@ def download(record, path):
     return {"path": str(path), "bytes": path.stat().st_size, "sha256": sha256(path), "url": record["url"]}
 
 
-def prepare(cache):
+def prepare(cache, *, weight_names=None, manifest_name="asset_manifest.json"):
     verify_protocols()
     spec = json.loads((SPEC / "b0_asset_sources_v1.json").read_text())
     result = {"sources": {}, "weights": {}}
     for relative, record in spec["sources"].items():
         result["sources"][relative] = download(record, cache / "cirkd" / relative)
-    for name, record in spec["weights"].items():
+    names=list(spec["weights"]) if weight_names is None else list(weight_names)
+    if not set(names)<=set(spec["weights"]):
+        raise ValueError("Unknown requested asset")
+    for name in names:
+        record=spec["weights"][name]
         result["weights"][name] = download(record, cache / "weights" / name)
-    save_json(cache / "asset_manifest.json", result)
+    save_json(cache / manifest_name, result)
     return result
 
 
