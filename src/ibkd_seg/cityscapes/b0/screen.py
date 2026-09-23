@@ -22,9 +22,9 @@ from .training_data import PlannedDataset,batches,plan_hash
 from ..data import sha256,save_json
 from ..runtime import seed_all,state_hash,source_hash
 
-CONFIG=SPEC/'b0_screen2000_v1.json'
+CONFIG=SPEC/'b0_screen2000_v2.json'
 GRID=SPEC/'b0_beta_grid_frozen_v1.json'
-SCREEN_SHA256='7da71a6980ade830ab7c70324b1a5da0387e8ee5528d02e08d53fc1251bbe2e0'
+SCREEN_SHA256='1bdfa6c19fcda642cd69e91c21871a4aaa20d8ee911ae19352c86aa2feabe08c'
 
 
 def specification():
@@ -95,6 +95,8 @@ def run(args,candidate,report,stop):
         raise ValueError('Augmentation plan differs')
     if preflight['status']!='passed' or preflight['calibration_tensor_sha256']!=grid['calibration_tensor_sha256']:
         raise ValueError('Calibration input preflight missing')
+    if preflight.get('checked_batches')!=config['input']['preflight_batches'] or preflight.get('samples')!=32*16:
+        raise ValueError('Extended input preflight missing')
     manifest=sha256(args.data/'manifest.json')
     if manifest!=grid['manifest_sha256'] or manifest!=preflight['manifest_sha256']:raise ValueError('Dataset differs from calibration')
     lists=args.cache/'cirkd/dataset/list/cityscapes'

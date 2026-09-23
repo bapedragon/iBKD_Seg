@@ -5,8 +5,10 @@
 v1의 재실행 불일치는 v2의 고정 기준에서 해소됐습니다.
 이어 [H200 25-batch calibration](reports/h200_beta_calibration_v1/RESULTS.md)도 통과해 β 후보를 고정했습니다.
 다음 실행 입력값은 [2,000-step 선별 이슈 3개](H200_SCREEN2000_ISSUES.md)에 있습니다.
-전체 val500·재개·후보 순위가 포함된 2k runner를 준비했고 로컬 검사를 통과했습니다.
-실제 H200 2k 선별과 10k·80k 실행은 아직 수행하지 않았습니다.
+첫 H200 2k pack1은 6개 실행 모두 25 update 후 공통 데이터 로더 오류로 실패했습니다.
+[실패 점검](reports/h200_screen2000_v1_pack1_failure/RESULTS.md)에 원인과 마지막 손실을 기록했습니다.
+개별 ignore-only crop을 잘못 거부한 검사를 수정한 **2k v2**로 모든 후보를 처음부터 실행합니다.
+2k 완료·전체 val500·β 선택과 10k·80k 결과는 아직 없습니다.
 이번 선별도 NVIDIA ImageNet MiT-B0 배포본 역변환을 사용합니다.
 CIRKD Baidu 파일과의 동일성은 미확인이며, 새 실행 명세에 이 출처를 명시했습니다.
 
@@ -94,8 +96,8 @@ Controller 관측과 별개로 val 평가는 공통 조건인 400 step마다 수
 보존했다면 선별 checkpoint에서 이어갈 수 있고, 모델·loss·β·schedule을 바꾸었다면
 초기화부터 다시 시작해야 합니다. 구체적인 기준은 [실험 흐름](EXPERIMENT_PLAN.md)에 있습니다.
 
-본실험 β 후보는 **미선별**입니다. [H200 smoke v2 결과](reports/h200_smoke_v2/RESULTS.md)는 통과이며,
-다음 작업은 전체 runner 준비와 계획된 25-batch beta 후보 측정입니다.
+본실험 β 후보는 **미선별**입니다. H200 smoke v2와 25-batch 측정은 통과했으며,
+다음 작업은 데이터 로더를 수정한 [2k v2 이슈](H200_SCREEN2000_ISSUES.md)의 실행입니다.
 FSKD의 저자 비공개 설정을 확인한 것은 아니며, C2VKD 대체안은 별도 후보로 기록합니다.
 
 ## 기존 실험과의 관계

@@ -8,8 +8,11 @@
 후속 작업으로 7개 방법이 [H200 smoke v2](reports/h200_smoke_v2/RESULTS.md)를 통과했습니다.
 [25-batch calibration](reports/h200_beta_calibration_v1/RESULTS.md)도 통과해 β 후보를 고정했습니다.
 다음 단계의 [2k 이슈 3개](H200_SCREEN2000_ISSUES.md)와
-[실행 명세](configs/b0_screen2000_v1.json)를 준비했습니다. 새 학습 루프는 로컬 검사를
-통과했으며, 실제 H200 2k 선별과 10k·80k 실행은 아직 수행하지 않았습니다.
+[실행 명세 v2](configs/b0_screen2000_v2.json)를 준비했습니다.
+첫 H200 2k v1 pack1의 6개 실행은 모두 25 update 후 개별 ignore-only crop 거부로 실패했습니다.
+[실패 기록](reports/h200_screen2000_v1_pack1_failure/RESULTS.md)을 보존하며, 데이터 로더를 수정한
+v2에서 모든 후보를 seed1부터 실행합니다. β·입력 순서·LR·평가·선별 규칙은 유지합니다.
+2k 완료·전체 val500 결과·β 선택과 10k·80k 실행은 아직 없습니다.
 
 후속 요청에 따라 [FSKD·C2VKD 방법 명세](BASELINE_METHOD_PROTOCOLS.md)와 각각의 JSON을
 작성했습니다. FSKD는 공개 PiT 조합을 이식한 고정값 1개로 아래 흐름에 연결합니다.

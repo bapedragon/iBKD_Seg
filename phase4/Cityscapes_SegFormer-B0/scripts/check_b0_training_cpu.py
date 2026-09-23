@@ -29,8 +29,11 @@ def main():
     seed_all(99)
     data=[(torch.randn(2,3,64,64)*40,torch.randint(0,19,(2,64,64)),['synthetic_a','synthetic_b']) for _ in range(6)]
     val=[(torch.randn(1,3,64,128)*40,torch.randint(0,19,(1,64,128)),['synthetic_val']) for _ in range(2)]
+    data[2][1][0].fill_(-1)  # Replay must also work with an all-ignore sample.
+    val[0][1].fill_(-1)  # This image contributes zero confusion-matrix counts.
     report=dict(status='running',scientific_result=False,input='synthetic',batch=2,crop_hw=[64,64],
-                selected_epoch=None,metrics=None,methods=[],h200_verified=False)
+                selected_epoch=None,metrics=None,methods=[],h200_verified=False,
+                ignore_only_train_samples=1,ignore_only_val_samples=1)
     started=time.perf_counter()
     try:
         for method in ('vanilla','fskd','lg','alg','ibkd_lambda025','ibkd_lambda050'):

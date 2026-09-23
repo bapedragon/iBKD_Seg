@@ -24,7 +24,7 @@ def terminal_summary(report):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('pack',choices=('pack1','pack2','pack3'))
     args=parser.parse_args();os.chdir(REPO)
-    output=Path(os.environ.get('B0_SCREEN_OUTPUT_BASE','/app/output/cityscapes_b0_screen2000_v1'))/args.pack
+    output=Path(os.environ.get('B0_SCREEN_OUTPUT_BASE','/app/output/cityscapes_b0_screen2000_v2'))/args.pack
     output=output.resolve();output.mkdir(parents=True,exist_ok=True)
     resume_value=os.environ.get('B0_SCREEN_RESUME_FROM');resume=None if not resume_value else Path(resume_value).resolve()
     if any(p.name!='run.log' for p in output.iterdir()) and resume!=output:raise ValueError('Nonempty output requires B0_SCREEN_RESUME_FROM pointing to that pack directory')
@@ -98,14 +98,23 @@ def main():
         with plan_path.with_suffix('.tmp').open('wb') as f:np.save(f,plan,allow_pickle=False)
         plan_path.with_suffix('.tmp').replace(plan_path)
         dataset=PlannedDataset(data,cache/'cirkd/dataset/list/cityscapes/train.lst',plan)
-        digest=hashlib.sha256()
-        for index,(x,y,names) in enumerate(batches(dataset,0,400,16,workers=4),1):
-            calibration_digest_update(digest,x,y,names)
-            if index%5==0:print(f'[B0_INPUT_CHECK] {index}/25',flush=True)
+        digest=hashlib.sha256();checked_digest=hashlib.sha256();ignored=[];valid_counts=[]
+        checked_batches=config['input']['preflight_batches']
+        for index,(x,y,names) in enumerate(batches(dataset,0,checked_batches*16,16,workers=4),1):
+            if index<=25:calibration_digest_update(digest,x,y,names)
+            calibration_digest_update(checked_digest,x,y,names)
+            valid=y!=-1;valid_counts.append(int(valid.sum()))
+            if not valid.any():raise ValueError(f'No valid labels in preflight batch {index}: {names}')
+            for sample in (~valid.flatten(1).any(1)).nonzero().flatten().tolist():
+                ignored.append(dict(batch=index,sample_in_batch=sample+1,name=names[sample]))
+            if index%5==0 or index==checked_batches:print(f'[B0_INPUT_CHECK] {index}/{checked_batches}',flush=True)
         if digest.hexdigest()!=grid['calibration_tensor_sha256']:raise ValueError('Training transforms differ from measured calibration inputs')
         preflight=dict(status='passed',plan_sha256=plan_hash(plan),calibration_tensor_sha256=digest.hexdigest(),
-                       manifest_sha256=grid['manifest_sha256'],samples=400,optimizer_updates=0)
+                       manifest_sha256=grid['manifest_sha256'],samples=checked_batches*16,optimizer_updates=0,
+                       calibration_samples=400,checked_batches=checked_batches,checked_tensor_sha256=checked_digest.hexdigest(),
+                       valid_pixels_per_batch=valid_counts,ignore_only_samples=ignored)
         save_json(output/'input_preflight.json',preflight);report['input_preflight']=preflight
+        print('[B0_INPUT_PREFLIGHT] '+json.dumps(preflight),flush=True)
         del plan,dataset,x,y
         for candidate in inventory:
             run_id=candidate['run_id'];target=output/'runs'/run_id

@@ -6,7 +6,7 @@ if [[ $# -ne 1 ]]; then
 fi
 case "$1" in pack1|pack2|pack3) ;; *) echo "Unknown pack: $1" >&2; exit 2 ;; esac
 cd "$(dirname "$0")/../../.."
-output="${B0_SCREEN_OUTPUT_BASE:-/app/output/cityscapes_b0_screen2000_v1}/$1"
+output="${B0_SCREEN_OUTPUT_BASE:-/app/output/cityscapes_b0_screen2000_v2}/$1"
 mkdir -p "${output}"
 if [[ -e "${output}/run.log" && -z "${B0_SCREEN_RESUME_FROM:-}" ]]; then
   echo "Existing run.log: choose a new output or explicitly set B0_SCREEN_RESUME_FROM" >&2

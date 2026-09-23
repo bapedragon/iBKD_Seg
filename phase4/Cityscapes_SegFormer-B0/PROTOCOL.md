@@ -7,7 +7,7 @@
 - [값·출처·예외 판단을 담은 프로토콜 명세](configs/segformer_b0_common_protocol_v1.json)
 - [비교 조건·확정 범위 명세](configs/comparison_manifest_v1.json): 공통 JSON의 SHA-256,
   비교할 여섯 조건, β 선별 규칙과 방법별 미확정 항목을 연결합니다.
-- 상태: **공통 조건 고정 / H200 smoke·25-batch β 측정 통과 / 2k runner 로컬 검사 완료, GPU 선별 전**
+- 상태: **공통 조건 고정 / H200 smoke·25-batch β 측정 통과 / 2k v1 pack1 입력 오류, v2 수정·재실행 준비**
 - 이 JSON은 실행용 config가 아닙니다. 기존 L/16 runner의 config로 넣지 않습니다.
 - 완료된 L/16 2k·10k 결과는 [기존 실험 폴더](../phase4_cityscapes/README.md)에 보존합니다.
   B0의 성능이나 최적 beta로 해석하거나 B0 학습의 초기 가중치로 사용하지 않습니다.
@@ -15,11 +15,16 @@
 여기서 채택한 것은 공개 근거를 우선순위대로 조합한 **우리의 공통 비교 조건**입니다.
 FSKD의 누락값까지 저자 설정으로 확인했다는 뜻은 아닙니다.
 
-현재 실행 revision은 [2k 명세](configs/b0_screen2000_v1.json)입니다.
+현재 실행 revision은 [2k v2 명세](configs/b0_screen2000_v2.json)입니다.
 Smoke/calibration에서 검증한 NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 모든 비교
 조건에 동일하게 사용하도록 출처 예외를 명시했습니다. CIRKD Baidu 원본과의 동일성은
 미확인입니다. 아래 원래 v1의 출처·JSON 해시는 보존하며 이 예외를 숨기지 않습니다.
 실행 명령과 내장 검사는 [세 H200 이슈](H200_SCREEN2000_ISSUES.md)에 있습니다.
+v1 pack1은 모두 25 update 후 개별 ignore-only crop 거부 조건에서 실패했습니다.
+v2에서는 CIRKD처럼 crop을 유지하고 기존 CE·logit KD가 배치 전체 유효 픽셀을 계산합니다.
+재표집·배치 축소는 없고 feature guidance도 원래 배치에 적용합니다.
+배치 전체에 유효 라벨이 없으면 명시적으로 실패합니다. β·LR·입력 난수 계획은 유지하며,
+v1 checkpoint와 섞지 않고 모든 후보를 seed1부터 실행합니다.
 
 ## 이번에 확정한 비교 범위
 
@@ -39,7 +44,7 @@ CIRKD는 이번에는 공통 설정과 구현의 출처이며, CIRKD 증류 loss
 후속 요청에 따라 FSKD와 C2VKD의 [재구현 프로토콜](BASELINE_METHOD_PROTOCOLS.md)을 작성했습니다.
 FSKD의 첫 연결·계수는 선정했고, 저자 Cityscapes 값의 미확인 여부는 별도로 표시했습니다.
 수치 β 후보는 25-batch 측정으로 고정했고 H200 smoke도 통과했습니다.
-전체 val500·재개를 포함한 2k runner의 로컬 검사를 완료했으며 실제 GPU 선별은 남아 있습니다.
+2k v1의 데이터 로더 오류를 수정했으며 실제 GPU 2k 완료·전체 val500·후보 선별은 남아 있습니다.
 따라서 **공통 프로토콜 확정**과 **모든 방법의 실행 준비 완료**를 구분합니다.
 
 C2VKD 대체안은 기존 6개 비교 밖의 추가 후보입니다. 원본 pooling 가중치가 없어
@@ -132,7 +137,7 @@ CIRKD의 train list를 80,000×16 길이로 반복·잘라 만든 후 shuffle하
 가중치 실물의 byte size/SHA-256과 strict 적재는 [asset 명세](configs/b0_asset_sources_v1.json)에
 기록했습니다. NVlabs Drive 404로 smoke student는 NVIDIA 공식 HF의 ImageNet-only MiT-B0를
 역변환합니다. CIRKD Baidu 원본과의 동일성은 미확인입니다. 공통 JSON의 원래 해시는
-유지하며, 초기 smoke 예외를 [2k 실행 명세](configs/b0_screen2000_v1.json)에 명시적으로 승계했습니다.
+유지하며, 초기 smoke 예외를 [2k 실행 명세](configs/b0_screen2000_v2.json)에 명시적으로 승계했습니다.
 3 update·val2·checkpoint 재실행과 실제 batch·메모리·입력 동일성은 H200 smoke v2에서
 통과했습니다. 새 [2k 이슈](H200_SCREEN2000_ISSUES.md)에는 전체 val500과 내장 재개 검사가 있습니다.
 10시간 작업 제한은 9시간 실행 후 상태 저장·동일 schedule 재개로 처리합니다.

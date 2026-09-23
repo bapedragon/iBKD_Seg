@@ -62,7 +62,9 @@ class PlannedDataset:
             label=label[top:top+self.crop,left:left+self.crop][:,::flip]
         image=torch.from_numpy(image.transpose(2,0,1).astype(np.float32).copy())
         label=torch.from_numpy(label.astype(np.int64).copy())
-        if not torch.isfinite(image).all() or not (label!=-1).any():raise ValueError("Invalid transformed sample")
+        if not torch.isfinite(image).all():raise ValueError(f"Non-finite transformed image: index={index}, row={row}")
+        # CIRKD may crop only ignored pixels. Keep the sample and its RNG/order;
+        # CE/logit KD select valid pixels across the complete batch.
         return image,label,row[1].rsplit('/',1)[-1].removesuffix('.png')
 
 

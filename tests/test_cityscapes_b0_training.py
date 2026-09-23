@@ -189,3 +189,60 @@ def test_planned_transforms_equal_actual_pinned_cirkd(tmp_path):
     for i in range(25):
         expected=sample_tensors(original[0]);actual=planned[i]
         assert_tree(actual,expected,rtol=0,atol=0)
+
+
+@pytest.mark.parametrize('workers',[0,2])
+def test_ignore_only_crop_in_batch26_keeps_stream_and_training(tmp_path,monkeypatch,workers):
+    # One image has an ignored left half and a valid right half. Batch 26 is
+    # the first mixed batch, matching the boundary missed by 25-batch preflight.
+    image=np.full((8,16,3),128,dtype=np.uint8)
+    raw=np.zeros((8,16),dtype=np.uint8);raw[:,8:]=7
+    cv2.imwrite(str(tmp_path/'image.png'),image);cv2.imwrite(str(tmp_path/'label.png'),raw)
+    listing=tmp_path/'train.lst';listing.write_text('image.png label.png\n')
+    valid=[0,5,0,8,1];ignored=[0,5,0,0,1]
+    plan=np.asarray([valid]*50+[ignored,valid]+[valid]*2,dtype=np.int32)
+    dataset=PlannedDataset(tmp_path,listing,plan,crop=8)
+    stream=list(batches(dataset,0,len(plan),2,workers=workers))
+    assert len(stream)==27
+    assert all((y!=-1).all() for _,y,_ in stream[:25])
+    assert (stream[25][1][0]==-1).all() and (stream[25][1][1]==0).all()
+    resumed=list(batches(dataset,50,len(plan),2,workers=workers))
+    assert [batch_digest(*b) for b in resumed]==[batch_digest(*b) for b in stream[25:]]
+    model=engine(tmp_path/'training',monkeypatch)
+    assert tr.fit(model,iter(stream),lambda:dict(miou=.2,pixel_accuracy=.5),target=27,
+                  validation_every=27,checkpoint_every=100)=='completed'
+    assert model.progress['global_step']==27 and model.progress['inline_replay']['status']=='passed'
+    assert np.isfinite(model.progress['last_loss']['loss'])
+
+
+def test_ignore_only_samples_use_batch_valid_pixels_for_ce_and_kd():
+    from ibkd_seg.cityscapes.b0.losses import logit_kd
+    generator=torch.Generator().manual_seed(8)
+    student=torch.randn(2,19,4,4,generator=generator,requires_grad=True)
+    teacher=torch.randn(2,19,4,4,generator=generator)
+    labels=torch.randint(0,19,(2,4,4),generator=generator);labels[0]=-1
+    ce=tr.pixel_cross_entropy(student,labels);kd=logit_kd(student,teacher,labels)
+    torch.testing.assert_close(ce,tr.pixel_cross_entropy(student[1:],labels[1:]),rtol=0,atol=0)
+    torch.testing.assert_close(kd,logit_kd(student[1:],teacher[1:],labels[1:]),rtol=0,atol=0)
+    (ce+kd).backward()
+    assert torch.isfinite(student.grad).all() and student.grad[0].count_nonzero()==0
+    assert student.grad[1].count_nonzero()>0
+    # A whole batch without labels still has no supervised mean; fail explicitly.
+    with pytest.raises(ValueError,match='No valid labels'):tr.pixel_cross_entropy(student,torch.full_like(labels,-1))
+    with pytest.raises(ValueError,match='No valid labels'):logit_kd(student,teacher,torch.full_like(labels,-1))
+
+
+def test_ignore_only_samples_match_pinned_cirkd_and_validation(tmp_path):
+    cache=Path(os.environ.get('B0_SCREEN_CACHE','/private/tmp/b0_smoke_assets'))
+    if not (cache/'cirkd/dataset/cityscapes.py').exists():pytest.skip('Pinned upstream cache unavailable')
+    from ibkd_seg.cityscapes.b0.assets import modules
+    _,_,upstream=modules(cache)
+    cv2.imwrite(str(tmp_path/'image.png'),np.full((16,32,3),128,dtype=np.uint8))
+    cv2.imwrite(str(tmp_path/'label.png'),np.zeros((16,32),dtype=np.uint8))
+    listing=tmp_path/'train.lst';listing.write_text('image.png label.png\n')
+    original=upstream.CSTrainValSet(str(tmp_path),str(listing),crop_size=(8,8))
+    planned=PlannedDataset(tmp_path,listing,make_plan(1,crop=8,shape=(16,32)),crop=8)
+    seed_all(1);expected=sample_tensors(original[0])
+    assert_tree(planned[0],expected,rtol=0,atol=0)
+    assert (planned[0][1]==-1).all()
+    assert (PlannedDataset(tmp_path,listing)[0][1]==-1).all()

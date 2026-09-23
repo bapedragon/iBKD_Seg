@@ -20,8 +20,9 @@ def sample_tensors(sample):
     image,label,name = sample[0],sample[1],sample[-1]
     x,y = torch.from_numpy(image).float(),torch.from_numpy(label).long()
     y[(y<0)|(y>=19)] = -1
-    if not torch.isfinite(x).all() or not (y!=-1).any():
-        raise ValueError("Invalid input/label")
+    if not torch.isfinite(x).all():
+        raise ValueError(f"Non-finite input image: {name}")
+    # An individual all-ignore crop is valid; the loss checks the full batch.
     return x,y,name
 
 

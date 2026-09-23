@@ -1,0 +1,529 @@
+{
+  "source": {
+    "bytes": 65008,
+    "sha256": "394751cdc9482d1302026266a8550735f2a12b17fcb7b79e44f0ece42e2c6793",
+    "terminal_group_line": 138,
+    "git_commit": "cd9c8b8c1af9e2d8774c6b0dc876478a27191116"
+  },
+  "status": "failed",
+  "pack": "pack1",
+  "protocol_id": "cityscapes_b0_screen2000_v1",
+  "completed_runs": 0,
+  "target_steps_per_run": 2000,
+  "elapsed_seconds": 717.2392184734344,
+  "data_verification": {
+    "status": "passed",
+    "manifest_sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6",
+    "preparation_sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c",
+    "all_prepared_file_hashes_verified": true
+  },
+  "input_preflight": {
+    "status": "passed",
+    "plan_sha256": "351584fb15a248e8cd10e8a8ce0df24afb95a6bf07bf7076c60d935bd7c772ba",
+    "calibration_tensor_sha256": "0f6005b5501b6493e7fc8d2efd6687f84138ccf73d3307d8a190a086cde60a91",
+    "manifest_sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6",
+    "samples": 400,
+    "optimizer_updates": 0
+  },
+  "selection": {
+    "vanilla": {
+      "status": "fixed_baseline",
+      "selected_run_ids": [],
+      "continue_without_beta_selection": true
+    },
+    "fskd": {
+      "status": "fixed_baseline",
+      "selected_run_ids": [],
+      "continue_without_beta_selection": true
+    },
+    "lg": {
+      "status": "pending",
+      "selected_run_ids": [],
+      "reason": "All four complete candidates are required"
+    }
+  },
+  "runs": [
+    {
+      "run_id": "vanilla_fixed",
+      "method": "vanilla",
+      "candidate_id": "fixed",
+      "beta": 0.0,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 1.8370063304901123,
+        "loss_components": {
+          "ce": 1.8370063304901123
+        },
+        "raw_guidance": null,
+        "weighted_guidance": 0.0,
+        "beta": 0.0,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": false,
+        "gradient_norms": {
+          "encoder": 29.28876630517981,
+          "decoder": 7.85873772673531
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 10.76586177572608,
+      "input_wait_seconds": 5.146607238799334,
+      "peak_allocated_cuda_bytes": 7764411904
+    },
+    {
+      "run_id": "fskd_fixed",
+      "method": "fskd",
+      "candidate_id": "fixed",
+      "beta": 0.0,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 3.530360221862793,
+        "loss_components": {
+          "ce": 1.7811915874481201,
+          "global": 0.014284007251262665,
+          "patch": 0.07459192723035812,
+          "attention": 2.648206276489873e-08,
+          "logit_kd": 1.6592334508895874
+        },
+        "raw_guidance": 1.7491686344146729,
+        "weighted_guidance": 1.7491686344146729,
+        "beta": 0.0,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": true,
+        "gradient_norms": {
+          "encoder": 55.94579007053013,
+          "decoder": 15.836398423118284,
+          "guidance.align": 0.003401046623720255
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 25.679747723974288,
+      "input_wait_seconds": 1.1936860885471106,
+      "peak_allocated_cuda_bytes": 79283931136
+    },
+    {
+      "run_id": "lg_beta_r003",
+      "method": "lg",
+      "candidate_id": "beta_r003",
+      "beta": 0.197479,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 1.9438830614089966,
+        "loss_components": {
+          "ce": 1.8125696182250977,
+          "locality": 0.6649488210678101
+        },
+        "raw_guidance": 0.6649488210678101,
+        "weighted_guidance": 0.13131342823565006,
+        "beta": 0.197479,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": true,
+        "gradient_norms": {
+          "encoder": 30.257984923659276,
+          "decoder": 7.534109075454884,
+          "guidance.projections": 0.07934709655845716
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 27.9829244883731,
+      "input_wait_seconds": 1.407350311987102,
+      "peak_allocated_cuda_bytes": 16813874176
+    },
+    {
+      "run_id": "lg_beta_r007",
+      "method": "lg",
+      "candidate_id": "beta_r007",
+      "beta": 0.460784,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 2.053071975708008,
+        "loss_components": {
+          "ce": 1.7967978715896606,
+          "locality": 0.5561699867248535
+        },
+        "raw_guidance": 0.5561699867248535,
+        "weighted_guidance": 0.2562742311630249,
+        "beta": 0.460784,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": true,
+        "gradient_norms": {
+          "encoder": 36.371141419239564,
+          "decoder": 7.692881627546023,
+          "guidance.projections": 0.12081193571020966
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 27.786063881590962,
+      "input_wait_seconds": 1.2351525062695146,
+      "peak_allocated_cuda_bytes": 16813874176
+    },
+    {
+      "run_id": "lg_beta_r015",
+      "method": "lg",
+      "candidate_id": "beta_r015",
+      "beta": 0.987394,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 2.203021764755249,
+        "loss_components": {
+          "ce": 1.74430513381958,
+          "locality": 0.46457308530807495
+        },
+        "raw_guidance": 0.46457308530807495,
+        "weighted_guidance": 0.4587166769946814,
+        "beta": 0.987394,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": true,
+        "gradient_norms": {
+          "encoder": 32.641619705577824,
+          "decoder": 7.937292199909799,
+          "guidance.projections": 0.14419364251720915
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 28.385458174161613,
+      "input_wait_seconds": 1.2108625182881951,
+      "peak_allocated_cuda_bytes": 16813874176
+    },
+    {
+      "run_id": "lg_beta_r030",
+      "method": "lg",
+      "candidate_id": "beta_r030",
+      "beta": 1.97479,
+      "completed_steps": 25,
+      "status": "failed",
+      "last_loss": {
+        "step": 25,
+        "loss": 2.5814852714538574,
+        "loss_components": {
+          "ce": 1.7529786825180054,
+          "locality": 0.419541597366333
+        },
+        "raw_guidance": 0.419541597366333,
+        "weighted_guidance": 0.8285065510630608,
+        "beta": 1.97479,
+        "lr": 5.998379975697327e-05,
+        "guidance_on": true,
+        "gradient_norms": {
+          "encoder": 56.381871545030336,
+          "decoder": 9.191754019179623,
+          "guidance.projections": 0.1771739940910529
+        }
+      },
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "calibration_input_verified": true,
+      "stability_500_passed": false,
+      "last_eval_step": 0,
+      "metrics": null,
+      "selected_step": null,
+      "error": "ValueError('Invalid transformed sample')",
+      "training_seconds": 28.313187524676323,
+      "input_wait_seconds": 1.7273716228082776,
+      "peak_allocated_cuda_bytes": 16813874176
+    }
+  ],
+  "diagnosis": {
+    "exception": "ValueError: Invalid transformed sample",
+    "location": "src/ibkd_seg/cityscapes/b0/training_data.py:65",
+    "first_failing_batch": 26,
+    "root_cause": "per_sample_ignore_only_rejection",
+    "evidence": "All six runs completed 25 updates and failed while loading batch 26 at the same guard. uint8 decoding and finite transforms cannot normally produce nonfinite images. Synthetic all-ignore crops reproduce the error; pinned CIRKD returns them.",
+    "actual_failing_crop_inspected": false,
+    "performance_selection_available": false
+  },
+  "fix_verification": {
+    "unit_tests": {
+      "passed": 53,
+      "skipped_cuda_only": 1
+    },
+    "cpu_source": {
+      "bytes": 46553,
+      "sha256": "0c9764e295442733fabe56c01237b15719c836c055ee6646f5f13cfee37f267c"
+    },
+    "cpu_status": "passed",
+    "scientific_result": false,
+    "h200_v2_verified": false,
+    "ignore_only_train_samples": 1,
+    "ignore_only_val_samples": 1,
+    "methods": [
+      {
+        "method": "vanilla",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 5.6864142417907715,
+          "loss_components": {
+            "ce": 5.6864142417907715
+          },
+          "raw_guidance": null,
+          "weighted_guidance": 0.0,
+          "beta": 0.0,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": false,
+          "gradient_norms": {
+            "encoder": 54.76206505083409,
+            "decoder": 29.200224460906362
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      },
+      {
+        "method": "fskd",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 23.778499603271484,
+          "loss_components": {
+            "ce": 5.654452800750732,
+            "global": 0.4122385084629059,
+            "patch": 0.015527218580245972,
+            "attention": 0.00025784532772377133,
+            "logit_kd": 7.3824663162231445
+          },
+          "raw_guidance": 18.124046325683594,
+          "weighted_guidance": 18.124046325683594,
+          "beta": 0.0,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": true,
+          "gradient_norms": {
+            "encoder": 1373.6846527929692,
+            "decoder": 51.24116079511841,
+            "guidance.align": 0.010819774346722684
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      },
+      {
+        "method": "lg",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 5.816298961639404,
+          "loss_components": {
+            "ce": 5.666709899902344,
+            "locality": 1.4958895444869995
+          },
+          "raw_guidance": 1.4958895444869995,
+          "weighted_guidance": 0.14958895444869996,
+          "beta": 0.1,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": true,
+          "gradient_norms": {
+            "encoder": 52.655548621491846,
+            "decoder": 28.74575382796249,
+            "guidance.projections": 0.08936802557031041
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      },
+      {
+        "method": "alg",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 5.816298961639404,
+          "loss_components": {
+            "ce": 5.666709899902344,
+            "locality": 1.4958895444869995
+          },
+          "raw_guidance": 1.4958895444869995,
+          "weighted_guidance": 0.14958895444869996,
+          "beta": 0.1,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": true,
+          "gradient_norms": {
+            "encoder": 52.655548621491846,
+            "decoder": 28.74575382796249,
+            "guidance.projections": 0.08936802557031041
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      },
+      {
+        "method": "ibkd_lambda025",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 5.795577526092529,
+          "loss_components": {
+            "ce": 5.691699981689453,
+            "alignment": 1.1885955333709717,
+            "fusion": 0.5893213748931885
+          },
+          "raw_guidance": 1.0387769937515259,
+          "weighted_guidance": 0.1038776993751526,
+          "beta": 0.1,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": true,
+          "gradient_norms": {
+            "encoder": 54.73916740444122,
+            "decoder": 29.446350959407333,
+            "guidance.adapters": 0.06296168560641875,
+            "guidance.core": 0.05075663132224861
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      },
+      {
+        "method": "ibkd_lambda050",
+        "status": "completed",
+        "completed_steps": 6,
+        "last_loss": {
+          "step": 6,
+          "loss": 5.777319431304932,
+          "loss_components": {
+            "ce": 5.688371181488037,
+            "alignment": 1.1898475885391235,
+            "fusion": 0.5891145467758179
+          },
+          "raw_guidance": 0.8894810676574707,
+          "weighted_guidance": 0.08894810676574708,
+          "beta": 0.1,
+          "lr": 5.9996624989452884e-05,
+          "guidance_on": true,
+          "gradient_norms": {
+            "encoder": 54.41445016704642,
+            "decoder": 29.371820871536208,
+            "guidance.adapters": 0.042171067270480124,
+            "guidance.core": 0.05592664131409397
+          }
+        },
+        "inline_replay": {
+          "status": "passed",
+          "checkpoint_step": 2,
+          "replay_step": 3,
+          "restore": "bitwise",
+          "rtol": 2e-05,
+          "atol": 2e-06
+        },
+        "valid_validation_pixels": 8192
+      }
+    ]
+  }
+}

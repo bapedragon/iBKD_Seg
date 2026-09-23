@@ -4,6 +4,20 @@
 checkpoint 복원·재실행 검사를 포함**합니다. 통과하면 동일한 학습 상태에서 2,000 step까지
 진행합니다. 이 문서는 제출할 입력값이며 외부 이슈나 GPU 작업을 자동 생성한 것이 아닙니다.
 
+## 2026-09-23 v2 수정
+
+첫 v1 pack1은 6개 실행 모두 25 update 후 `Invalid transformed sample`로 실패했습니다.
+개별 crop에 유효 라벨이 없으면 로딩을 거부했던 버그를 수정했습니다.
+CIRKD처럼 해당 crop을 유지하며 CE·logit KD는 배치의 유효 픽셀만 계산합니다.
+Feature guidance는 기존 배치 그대로 계산합니다. 배치 전체가 ignore이면 명시적으로 실패합니다.
+β grid·초기화·증강 순서·손실 계수·학습 및 평가 조건은 유지합니다.
+
+**아래 명령은 최신 저장소의 v2를 실행합니다. v1 체크포인트를 재개하지 않고 처음부터 실행합니다.**
+세 묶음에 같은 수정본을 적용하며 출력도 `cityscapes_b0_screen2000_v2`로 분리합니다.
+별도 smoke 이슈는 추가하지 않습니다. 입력 사전 검사는 32 batch로 늘렸고 학습의 내장 재개 검사는 유지합니다.
+이미 시작한 v1 작업에는 이 변경이 자동 반영되지 않습니다.
+[실패 분석과 검사 결과](reports/h200_screen2000_v1_pack1_failure/RESULTS.md)를 참고합니다.
+
 ## 세 이슈의 공통 입력값
 
 [H200 요청 양식](https://github.com/Aerodrone-H200/gpu-request/issues/new?template=request-container.yml)
@@ -21,7 +35,7 @@ checkpoint 복원·재실행 검사를 포함**합니다. 통과하면 동일한
 제목:
 
 ```text
-[Request]: Cityscapes B0 2k pack1 - Vanilla FSKD LG
+[Request]: Cityscapes B0 2k v2 pack1 - Vanilla FSKD LG
 ```
 
 코드 실행 명령어:
@@ -40,7 +54,7 @@ FSKD에 필요한 torchsort CUDA 확장은 이 묶음에서만 설치합니다.
 제목:
 
 ```text
-[Request]: Cityscapes B0 2k pack2 - ALG iBKD lambda025
+[Request]: Cityscapes B0 2k v2 pack2 - ALG iBKD lambda025
 ```
 
 코드 실행 명령어:
@@ -60,7 +74,7 @@ ALG/iBKD가 자연스럽게 guidance를 종료하면 이후 teacher·guide 계�
 제목:
 
 ```text
-[Request]: Cityscapes B0 2k pack3 - iBKD lambda050
+[Request]: Cityscapes B0 2k v2 pack3 - iBKD lambda050
 ```
 
 코드 실행 명령어:
@@ -83,7 +97,7 @@ Guidance를 계속 계산할 때 순수 학습 환산값은 약 **5시간 42분*
 
 이 값은 통과한 [25-batch calibration 결과](reports/h200_beta_calibration_v1/RESULTS.md)에서
 계산했습니다. [고정 grid](configs/b0_beta_grid_frozen_v1.json)와
-[실행 명세](configs/b0_screen2000_v1.json)에 해시를 연결했습니다. 각 후보는 seed1의 같은
+[실행 명세](configs/b0_screen2000_v2.json)에 해시를 연결했습니다. 각 후보는 seed1의 같은
 student·guide 초기 상태에서 시작합니다. 이전 후보의 학습 가중치를 다음 후보에 넘기지 않습니다.
 
 - 실제 batch16, crop512, FP32, TF32 off, AdamW LR6e-5·WD1e-4, clipping 없음.
@@ -108,6 +122,8 @@ student·guide 초기 상태에서 시작합니다. 이전 후보의 학습 가�
 2. CIRKD의 serial seed1 난수 선택을 명시적 증강 계획으로 만들고 CPU thread4로 로딩합니다.
    순서와 증강은 prefetch·재개 위치·방법에 영향을 받지 않습니다.
    **첫 25 batch의 전체 tensor hash가 완료한 calibration과 정확히 같은지** 학습 전에 검사합니다.
+   v2는 입력만 32 batch까지 읽고 배치별 유효 픽셀 수와 ignore-only crop의 배치·이름을 기록합니다.
+   optimizer update 없이 수행하며 학습은 원래 첫 배치부터 시작합니다.
 3. 각 후보에서 step2의 모델·guide·optimizer·BN·RNG·controller·sampler 위치를 실제 파일에 저장합니다.
    이를 복원해 step3을 두 번 계산하고 원래 연속 경로를 보존합니다. 복원은 bitwise,
    재실행은 smoke v2와 같은 `rtol=2e-5, atol=2e-6`으로 비교합니다.
@@ -120,7 +136,7 @@ student·guide 초기 상태에서 시작합니다. 이전 후보의 학습 가�
 
 ## 출력과 재개
 
-결과는 `/app/output/cityscapes_b0_screen2000_v1/pack1/`처럼 묶음별로 저장됩니다.
+결과는 `/app/output/cityscapes_b0_screen2000_v2/pack1/`처럼 묶음별로 저장됩니다.
 
 | 파일/폴더 | 내용 |
 |---|---|
@@ -139,12 +155,12 @@ student·guide 초기 상태에서 시작합니다. 이전 후보의 학습 가�
 설치·준비를 포함한 9시간 예산에 저장 여유를 두고 중단합니다. `paused`/`pending`은 완료가 아닙니다.
 **출력 묶음 전체를 보존**해야 합니다. `best` 가중치만으로 2k/10k 학습을 이어가지 않습니다.
 
-다른 작업에서 이어갈 때는 이전 출력 묶음을 서버에 풀어 놓고, 예를 들어 실제 경로가
+**아래 재개 명령은 v2끼리만 사용합니다.** 다른 작업에서 이어갈 때는 이전 v2 출력 묶음을 서버에 풀어 놓고, 예를 들어 실제 경로가
 `/app/data/previous_screen/pack2`라면 아래처럼 실행합니다. 경로는 실제 복원 위치에 맞춥니다.
 
 ```bash
 B0_SCREEN_RESUME_FROM=/app/data/previous_screen/pack2 \
-B0_SCREEN_OUTPUT_BASE=/app/output/cityscapes_b0_screen2000_v1_resume1 \
+B0_SCREEN_OUTPUT_BASE=/app/output/cityscapes_b0_screen2000_v2_resume1 \
 bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_screen2000.sh pack2
 ```
 
@@ -154,9 +170,15 @@ bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_screen2000.sh pack2
 
 ## 준비 검사 결과
 
-로컬 단위 검사 **49 passed, 1 CUDA-only skipped**입니다. 공식 CIRKD 변환과 새 증강 계획의
-25개 합성 입력이 bitwise 일치했고, worker/prefetch 재개, 중단된 평가 재시도, 80k LR,
-guide off, 동점 처리·후보 완결성도 검사했습니다.
-실제 CIRKD/NVIDIA 가중치와 합성 batch2·crop64로 **6개 방법 모두 새 공통 학습 루프의
-6 update·3회 평가·step2→3 파일 재개 검사를 통과**했습니다.
-이것은 실제 Cityscapes 2k 결과가 아닙니다. 새 runner의 H200 검사는 위 내장 검사에서 수행합니다.
+v2 로컬 단위 검사는 **53 passed, 1 CUDA-only skipped**입니다.
+25개 CIRKD 합성 변환의 bitwise 일치, worker/prefetch 재개, 평가 중단·재개, 80k LR,
+guide off, 동점 처리·후보 완결성 검사에 더해 아래 회귀 검사를 통과했습니다.
+
+- 26번째 batch에 ignore-only crop을 넣은 직렬·thread 로더에서 27 update 완료.
+- CE·logit KD가 배치 유효 픽셀로 정규화되고 ignore-only sample의 logit gradient가 0임을 확인.
+- CIRKD 원본과 ignore-only crop 출력이 일치하며, validation 입력에서도 해당 이미지를 허용.
+- 실제 CIRKD/NVIDIA 가중치와 합성 batch2·crop64로 **6개 방법 모두 6 update·3회 평가·step2→3 파일 재개 통과**.
+  이 검사에서는 replay batch와 validation에 ignore-only sample을 각각 1개 넣었습니다.
+
+CPU 검사에는 실제 실패 이미지가 포함되지 않았으며 H200 2k 완료를 의미하지 않습니다.
+v2의 실제 32-batch 입력 확인, 전체 val500, 2k 선별은 재실행 로그로 확인해야 합니다.
