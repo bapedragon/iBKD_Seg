@@ -9,7 +9,7 @@ import json
 import math
 import time
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import torch
 from torch import nn
@@ -53,6 +53,25 @@ PROBE_KINDS = ("linear", "nonlinear")
 
 def log(message: str = "") -> None:
     print(message, flush=True)
+
+
+class ProbeCandidateDiverged(RuntimeError):
+    """One LR candidate diverged and may be isolated by a full-run caller."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        epoch: int,
+        batch_start: int,
+        observed_loss: float,
+        history: Sequence[dict[str, Any]],
+    ) -> None:
+        super().__init__(message)
+        self.epoch = epoch
+        self.batch_start = batch_start
+        self.observed_loss = observed_loss
+        self.history = list(history)
 
 
 def _repository_path(value: str) -> Path:
@@ -237,9 +256,13 @@ def train_probe_candidate(
     seed: int,
     batch_size: int,
     device: torch.device,
+    divergence_loss_ceiling: float | None = None,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     if learning_rate <= 0.0 or epochs <= 0 or batch_size <= 0:
         raise ValueError("part probe LR, epochs, and batch size must be positive")
+    if divergence_loss_ceiling is not None and divergence_loss_ceiling <= 0.0:
+        raise ValueError("probe divergence loss ceiling must be positive")
     probe = build_probe(kind, seed).to(device)
     initial_hash = state_hash(probe)
     optimizer = torch.optim.SGD(
@@ -264,12 +287,22 @@ def train_probe_candidate(
             optimizer.zero_grad(set_to_none=True)
             prediction = probe(feature)
             loss = masked_heatmap_mse(prediction, target, visible)
-            if not torch.isfinite(loss):
-                raise RuntimeError(f"non-finite {kind} probe loss")
+            loss_value = float(loss.detach().item())
+            if not math.isfinite(loss_value) or (
+                divergence_loss_ceiling is not None
+                and loss_value > divergence_loss_ceiling
+            ):
+                raise ProbeCandidateDiverged(
+                    f"{kind} probe candidate diverged at epoch {epoch}",
+                    epoch=epoch,
+                    batch_start=start,
+                    observed_loss=loss_value,
+                    history=history,
+                )
             loss.backward()
             optimizer.step()
             count = int(visible.sum().item())
-            running_loss += float(loss.detach().item()) * count
+            running_loss += loss_value * count
             visible_total += count
         metrics = evaluate_part_probe(
             probe,
@@ -287,6 +320,8 @@ def train_probe_candidate(
             "validation": metrics,
         }
         history.append(row)
+        if progress_callback is not None:
+            progress_callback(row)
         score = metrics["micro_pck_at_0.1"]
         if best is None or score > best["validation"]["micro_pck_at_0.1"]:
             best = {

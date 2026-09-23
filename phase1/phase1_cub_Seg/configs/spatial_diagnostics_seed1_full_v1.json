@@ -1,0 +1,113 @@
+{
+  "protocol_id": "cub200_direct_segmentation_seed1_spatial_diagnostics_full_v1",
+  "status": "locked_after_smoke_pass_before_full_results_2026-09-23",
+  "scientific_result": false,
+  "result_scope": "exploratory_encoder_seed1_only",
+  "full_training_authorized": true,
+  "scope": {
+    "encoder_seed": 1,
+    "probe_seeds": [1],
+    "methods": ["vanilla", "lg", "alg", "ibkd"],
+    "checkpoint_selection": "job783_validation_selected_best",
+    "method_or_protocol_selection_from_full_results": false
+  },
+  "checkpoint_source": {
+    "manifest_path": "phase1/phase1_cub_Seg/reports/window30_seed1_v1/checkpoint_release.json",
+    "manifest_sha256": "c8b25d301c6c8099f72ed1ecb2fa69b7002aebc9d47544d2ab7f4fe0659e6cb5",
+    "h200_job_id": 783,
+    "training_protocol_id": "cub200_direct_binary_segmentation_window30_exploratory_full_v1",
+    "training_config_sha256": "be94f411f97ff162e1adacac4951cf7185b18d00bb8d09486b068105a38f8d93"
+  },
+  "smoke_source": {
+    "config_path": "phase1/phase1_cub_Seg/configs/spatial_diagnostics_seed1_smoke_v1.json",
+    "config_sha256": "d1632a1c3272847bb8ebb0d855e0f9fc4eeda760066649e369aae24010997671",
+    "status": "passed",
+    "elapsed_seconds": 123.04131173714995,
+    "detected_issue": "vanilla_linear_lr_0.1_loss_divergence",
+    "full_protocol_response": "isolate_diverged_candidate_and_continue_prespecified_lr_grid"
+  },
+  "dataset": {
+    "name": "CUB-200-2011 official RGB and segmentation masks",
+    "split": {
+      "train": 5394,
+      "validation": 600,
+      "official_test": 5794,
+      "validation_per_class": 3,
+      "split_seed": 2027
+    },
+    "part_probe_train_images": 5394,
+    "part_probe_validation_images": 600,
+    "input_size": 224,
+    "part_count": 15,
+    "part_validity": "official_visible_and_in_image_bounds_without_coordinate_clipping",
+    "official_test_images_accessed": false
+  },
+  "part_probe": {
+    "student_feature": "pre_final_norm_block11_192x14x14",
+    "target": "visible_part_gaussian_heatmap_sigma_1_grid_pixel",
+    "loss": "visible_part_masked_mean_squared_error",
+    "probe_seeds": [1],
+    "learning_rates": [0.01, 0.03, 0.1],
+    "epochs": 100,
+    "batch_size": 64,
+    "optimizer": "sgd_momentum_0.9_weight_decay_0",
+    "scheduler": "cosine_to_zero",
+    "selection": "highest_validation_micro_PCK_at_0.1_then_lower_lr_then_earlier_epoch",
+    "candidate_eligibility": "completed_all_epochs_with_finite_batch_loss_at_most_10.0",
+    "divergence_loss_ceiling": 10.0,
+    "divergence_action": "record_failed_candidate_exclude_from_selection_and_continue",
+    "minimum_valid_candidates_per_method_and_probe_kind": 1,
+    "linear": {
+      "architecture": "Conv2d(192,15,1,bias=True)",
+      "parameter_count": 2895
+    },
+    "nonlinear": {
+      "architecture": "Conv2d(192,64,3,padding=1,bias=False)+GroupNorm(8,64)+GELU+Conv2d(64,15,1,bias=True)",
+      "parameter_count": 111695,
+      "purpose": "probe_capacity_robustness_check"
+    }
+  },
+  "spatial_cka": {
+    "split": "fixed_validation_600",
+    "student_blocks": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "teacher_feature": "resnet50_layer3_1024x14x14",
+    "observation_unit": "aligned_image_and_14x14_spatial_position",
+    "metric": "centered_linear_CKA",
+    "accumulator_dtype": "float64",
+    "reported_primary": "student_block11"
+  },
+  "attention_gt": {
+    "split": "fixed_validation_600",
+    "rollout_layers": 12,
+    "head_fusion": "arithmetic_mean",
+    "residual_identity": true,
+    "reported_metrics": [
+      "global_micro_patch_average_precision",
+      "pointing_game_peak_inside_mask",
+      "foreground_attention_mass_mean"
+    ]
+  },
+  "test_miou_reference": {
+    "source": "audited_job783_full_summary_only",
+    "metric": "two_class_miou",
+    "official_test_images_reevaluated": false
+  },
+  "execution": {
+    "requested_mig_slices": 1,
+    "feature_batch_size": 16,
+    "cka_batch_size": 8,
+    "attention_batch_size": 16,
+    "num_workers": 4,
+    "precision": "fp32"
+  },
+  "completion_gate": {
+    "checkpoint_strict_loads": 5,
+    "linear_probe_candidate_attempts": 12,
+    "nonlinear_probe_candidate_attempts": 12,
+    "probe_validation_selections": 8,
+    "spatial_cka_values": 48,
+    "attention_metric_rows": 4,
+    "test_miou_references": 4,
+    "official_test_image_evaluations": 0
+  }
+}
