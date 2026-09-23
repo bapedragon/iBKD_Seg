@@ -1,0 +1,59 @@
+{
+  "cirkd_commit": "48eb81b7a0ed7c59f9e347e97feb95a23e943d12",
+  "sources": {
+    "models/segformer.py": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/segformer.py",
+      "sha256": "8d795dfea5380ccf6dd09a9723d51f1bbec3ade44277e8af3f171add6ae2758a",
+      "bytes": 21576
+    },
+    "models/deeplabv3.py": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/deeplabv3.py",
+      "sha256": "9950f8c5a643e8cdf76e0b26297b7fca577639a66c059ddab007d1eae46db681",
+      "bytes": 6336
+    },
+    "models/segbase.py": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/segbase.py",
+      "sha256": "91d5bef4ae7612f3d8bb7f16b36a146b19456912728997d1a93b2607ec593f6f",
+      "bytes": 2846
+    },
+    "models/base_models/resnet.py": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/base_models/resnet.py",
+      "sha256": "a6feb1c5f4b037531afc5c2ccc20dce3432704bd1865ea3fc7d993cf17cd7938",
+      "bytes": 10914
+    },
+    "dataset/cityscapes.py": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/cityscapes.py",
+      "sha256": "8488e487bf2b901b0bd8808f100607d274b766bcc5d2b412a02ae75302dd3cbc",
+      "bytes": 8047
+    },
+    "dataset/list/cityscapes/train.lst": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/list/cityscapes/train.lst",
+      "sha256": "b71541a4f809364bdfcd18aa9d319521a5a4d208d7e674041602612354bddd65",
+      "bytes": 383905
+    },
+    "dataset/list/cityscapes/val.lst": {
+      "url": "https://raw.githubusercontent.com/winycg/CIRKD/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/list/cityscapes/val.lst",
+      "sha256": "9f201d730966d5850cc10db842e1d1e0ada8b64a99f1b748fcd909fbc0911e9a",
+      "bytes": 63400
+    }
+  },
+  "weights": {
+    "cirkd_teacher.pth": {
+      "url": "https://drive.google.com/file/d/1zUdhYPYCDCclWU3Wo7GbbTlM8ibQ_UC1/view",
+      "sha256": "03c9bb78998f6d84ddb29de899814e6081a5f77cd4f7b56a02f8a8300ffc60ce",
+      "bytes": 245151519,
+      "gdrive_id": "1zUdhYPYCDCclWU3Wo7GbbTlM8ibQ_UC1"
+    },
+    "nvidia_mit_b0.bin": {
+      "url": "https://huggingface.co/nvidia/mit-b0/resolve/80983a413c30d36a39c20203974ae7807835e2b4/pytorch_model.bin",
+      "sha256": "4af8348c2a802bf76115d34797ff5ce1d9f110bb8593c22d9b66d8bd7fa227fc",
+      "bytes": 14380029
+    },
+    "clip_rn101.pt": {
+      "url": "https://openaipublic.azureedge.net/clip/models/8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599/RN101.pt",
+      "sha256": "8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599",
+      "bytes": 291791292
+    }
+  },
+  "student_source_note_ko": "공식 NVlabs Drive 폴더 404로 NVIDIA 계정의 ImageNet-only MiT-B0 배포본을 역변환한다. CIRKD Baidu 파일과의 바이트 동일성은 미검증이다. 공통 구조·전처리는 유지한다."
+}

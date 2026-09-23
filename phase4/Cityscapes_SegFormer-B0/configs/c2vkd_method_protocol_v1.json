@@ -1,0 +1,190 @@
+{
+  "method_id": "c2vkd_b0_clip_pool_reconstruction_v1",
+  "display_name": "C2VKD* (CLIP-pool)",
+  "decision_date": "2026-09-23",
+  "artifact_kind": "method_specification_not_runner_config",
+  "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+  "included_in_primary_six_method_comparison": false,
+  "author_cityscapes_recipe_verified": false,
+  "document": "../BASELINE_METHOD_PROTOCOLS.md",
+  "common_protocol": {
+    "path": "segformer_b0_common_protocol_v1.json",
+    "sha256": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532",
+    "overrides": {
+      "standalone_ce_weight": 0.0
+    },
+    "override_reason_ko": "논문 Eq.10 및 공개 loss_vit에서 PDD가 CE를 대신한다. CE는 진단용으로만 기록한다.",
+    "extra_pretraining_asset": "OpenAI CLIP RN101 visual.attnpool; not verified as author's source"
+  },
+  "sources": {
+    "repository": "https://github.com/zhengxuJosh/C2VKD",
+    "commit": "fe1ab3d6f815969058451c221229a744fe872a47",
+    "paper": "https://arxiv.org/html/2310.07265v1",
+    "paper_scope": "arxiv_v1_not_full_journal_final_verification",
+    "denseclip_commit": "5eda47f01a1011286c98425554cc96e7df6eb759",
+    "clip_commit": "d05afc436d78f1c48dc0dbf8e5980a9d471f35f6"
+  },
+  "visual": {
+    "student_feature": "mit_stage4_post_norm",
+    "student_chw": [
+      256,
+      16,
+      16
+    ],
+    "student_projection": {
+      "kernel": 1,
+      "in_channels": 256,
+      "out_channels": 2048,
+      "bias": false,
+      "initialization": "pytorch_conv2d_default"
+    },
+    "teacher_feature": "resnet_backbone.layer4_before_aspp",
+    "teacher_expected_chw": [
+      2048,
+      64,
+      64
+    ],
+    "aligned_hw": [
+      32,
+      32
+    ],
+    "interpolation": "bilinear",
+    "align_corners": false
+  },
+  "linguistic": {
+    "student_feature": "mit_stage4_post_norm",
+    "student_head": "GAP_then_conv1x1_256_to_512_bias_false",
+    "student_head_initialization": "pytorch_conv2d_default",
+    "teacher_feature": "resnet_backbone.layer4_before_aspp",
+    "teacher_resize_hw": [
+      16,
+      16
+    ],
+    "teacher_interpolation": "bilinear",
+    "teacher_align_corners": false,
+    "teacher_pool": {
+      "structure": "DenseCLIP_AttentionPool2d",
+      "spatial_size": 16,
+      "embed_dim": 2048,
+      "heads": 32,
+      "output_dim": 512,
+      "dropout": 0.0,
+      "output": "global_token_only",
+      "frozen": true,
+      "source": "OpenAI_CLIP_RN101_visual.attnpool_only",
+      "checkpoint_url": "https://openaipublic.azureedge.net/clip/models/8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599/RN101.pt",
+      "expected_source_sha256": "8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599",
+      "measured_source_sha256": null,
+      "measured_source_bytes": null,
+      "derived_pool_sha256": null,
+      "positional_embedding_conversion": "keep_global_token_resize_7x7_spatial_to_16x16_bilinear_align_corners_false",
+      "required_projection_shapes": {
+        "qkv_each_weight": [
+          2048,
+          2048
+        ],
+        "qkv_each_bias": [
+          2048
+        ],
+        "output_weight": [
+          512,
+          2048
+        ],
+        "output_bias": [
+          512
+        ]
+      },
+      "strict_key_and_shape_validation": true,
+      "author_checkpoint_equivalence_verified": false,
+      "feature_distribution_compatibility_verified": false,
+      "fallback_to_random_or_skip_loss_on_load_failure": false
+    },
+    "use_clip_backbone": false,
+    "use_text_encoder_or_prompts": false,
+    "temperature": 1.0,
+    "kl_direction": "teacher_to_student",
+    "softmax_axis": "embedding_512",
+    "reduction": "mean_all_batch_and_embedding_elements"
+  },
+  "global_loss": {
+    "kl_direction": "teacher_to_student",
+    "softmax_axis": "channels_2048",
+    "temperature": 1.0,
+    "reduction": "mean_all_batch_channel_and_spatial_elements"
+  },
+  "patch_loss": {
+    "flatten_shape": "[B*32*32,2048]",
+    "normalization_order": [
+      "l2_normalize_each_row_eps_1e-8",
+      "subtract_each_row_channel_mean"
+    ],
+    "affinity": "X_matmul_X_transpose_divided_by_2047",
+    "cross_image_pairs": true,
+    "reduction": "mean_all_affinity_entries_squared_error",
+    "exact_chunk_rows": 256,
+    "chunk_backward": "checkpoint_recompute_if_needed_preserving_exact_global_batch_pairs",
+    "gradient_accumulation_as_batch_substitute": false,
+    "mask_ignore_pixels": false
+  },
+  "pdd": {
+    "provenance": "local_reconstruction_from_paper_equations_8_and_9_missing_official_function",
+    "temperature": 1.0,
+    "alpha_target": 0.5,
+    "beta_nontarget": 0.5,
+    "student_binary_probabilities": "[pS_y,sum_c_not_y(pS_c)]",
+    "teacher_binary_probabilities": "[pT_y,sum_c_not_y(pT_c)]",
+    "target_distribution": "(teacher_binary_probabilities+[1,0])/2",
+    "direction": "student_to_mixed_teacher_and_ground_truth",
+    "reduction": "mean_valid_pixels_sum_two_weighted_binary_terms",
+    "normalization_equivalence": "at_alpha_equals_beta_0.5_normalized_loss_equals_literal_equation9_plus_0.5_log2_before_numerical_clamps",
+    "log_epsilon": 1e-08,
+    "renormalize_clamped_target": true,
+    "extra_conditional_nontarget_kl": false,
+    "logit_resize_hw": [
+      512,
+      512
+    ],
+    "logit_interpolation": "bilinear",
+    "logit_align_corners": true,
+    "ignore_index": -1,
+    "empty_valid_batch_policy": "error"
+  },
+  "objective": {
+    "standalone_ce_weight": 0.0,
+    "ce_logged_for_diagnostics": true,
+    "ordinary_logit_kd_weight": 0.0,
+    "pdd_weight": 1.0,
+    "global_weight": 0.1,
+    "patch_weight": 0.1,
+    "linguistic_weight": 0.5,
+    "warmup_steps": 0,
+    "active_steps_inclusive": [
+      1,
+      80000
+    ],
+    "automatic_guidance_stop": false
+  },
+  "optimization": {
+    "teacher_and_pool": "eval_frozen_no_grad",
+    "trainable": [
+      "student_encoder",
+      "student_decoder",
+      "visual_align_head",
+      "linguistic_align_head"
+    ],
+    "adapter_optimizer": "same_as_student_including_lr_and_weight_decay",
+    "adapter_rng_seed_formula": "100000 + run_seed",
+    "restore_common_student_and_training_rng_after_adapter_initialization": true,
+    "inference_modules": [
+      "student_encoder",
+      "student_decoder"
+    ]
+  },
+  "limitations_ko": [
+    "원본 pretrain_model0.pth와 그 사전학습 절차는 미확인이다. CLIP 가중치 사용은 이번 대체안이다.",
+    "추가 사전학습 가중치를 사용하므로 기존 6개 방법과 사전학습 조건이 같은 주 비교로 보고하지 않는다.",
+    "공개 feature KL 방향과 논문 수식 방향이 다르다. 공개된 항은 코드, 누락 PDD는 수식으로 정의했다.",
+    "저자의 DeepLabV3+·50k·batch24·poly1.0 등 원래 실험 조건을 공통 DeepLabV3·80k·batch16·poly0.9로 대체한 비교다."
+  ],
+  "implementation_status": "smoke_runner_implemented_full_training_runner_pending_gpu_unvalidated"
+}

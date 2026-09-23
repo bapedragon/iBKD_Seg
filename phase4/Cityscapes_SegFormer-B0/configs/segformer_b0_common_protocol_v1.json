@@ -1,0 +1,424 @@
+{
+  "protocol_id": "cityscapes_deeplabv3r101_segformerb0_common_v1",
+  "frozen_date": "2026-09-23",
+  "artifact_kind": "common_protocol_specification_not_runner_config",
+  "status": "common_protocol_frozen",
+  "implementation_status": "not_implemented_or_gpu_validated",
+  "description_ko": "FSKD의 segmentation 명시값 > CIRKD 2022 공개 SegFormer 구현 > NVlabs SegFormer 공식 Cityscapes B0 순서로 결정한 공통 비교 프로토콜. FSKD의 완전 재현을 주장하지 않는다.",
+  "source_priority": [
+    "fskd_segmentation",
+    "cirkd_2022",
+    "segformer_official_b0"
+  ],
+  "source_policy_ko": [
+    "상위 자료에서 이미 값이 결정된 항목은 하위 자료로 덮어쓰지 않는다. 코드에서 명확히 비활성화된 기능도 결정된 값으로 취급한다.",
+    "CIRKD 내 학생 학습·optimizer·전처리·모델 세부는 SegFormer 경로를 사용한다. Teacher 구현과 공개 Cityscapes 가중치는 DeepLabV3-R101 경로를 사용한다.",
+    "FSKD의 공통 알고리즘에 나오는 random student initialization은 Cityscapes encoder 초기화를 별도로 확정하지 못하므로 segmentation 미확정 항목으로 분류하고 CIRKD의 ImageNet pretrained MiT-B0를 채택한다.",
+    "CIRKD의 SegFormer 평가 경로가 내부 validation과 독립 eval 사이에서 다르므로, 모든 학생 모델의 checkpoint 선택·최종 평가를 독립 eval_segformer.py 방식으로 통일한다.",
+    "seed·H200 장수·RNG 분리·재개 상태 보존은 논문에서 확인한 값이 아니라 본 비교 실험의 운영 결정이다."
+  ],
+  "sources": {
+    "fskd_segmentation": {
+      "url": "https://ssrn.com/abstract=5385770",
+      "version": "2025 SSRN preprint; 로컬에서 확인한 PDF를 기준으로 고정",
+      "local_reference_filename": "ssrn-5385770.pdf",
+      "bytes": 2867689,
+      "sha256": "02667b51c9f1402dd29c01d07a1badd623a39ce0d6f50eafb80d1f8ae6852844",
+      "sections": [
+        "4.1 / PDF p.10: crop, batch, steps, LR, poly, teacher/student, mIoU",
+        "Table 1 / p.9: split, class count",
+        "Figure 7 / p.16: validation every 400 iterations"
+      ],
+      "caveat_ko": "현재 명세는 이 PDF에 대한 출처 고정이며 저널 최종판의 모든 조건을 재검증했다는 뜻이 아니다."
+    },
+    "cirkd_2022": {
+      "repository": "https://github.com/winycg/CIRKD",
+      "commit": "48eb81b7a0ed7c59f9e347e97feb95a23e943d12",
+      "commit_date": "2022-10-21",
+      "paper": "https://arxiv.org/abs/2204.06986v2",
+      "files": {
+        "segformer_launch": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/train_scripts/train_baseline/citys/segformer_mit_b0.sh",
+        "segformer_train": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/train_baseline_segformer.py",
+        "guided_train": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/train_cirkd_segformer.py",
+        "data": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/cityscapes.py",
+        "train_list": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/list/cityscapes/train.lst",
+        "val_list": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/dataset/list/cityscapes/val.lst",
+        "sampler": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/utils/distributed.py",
+        "task_loss": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/losses/task.py",
+        "student_model": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/segformer.py",
+        "student_evaluation": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/eval_segformer.py",
+        "teacher_model": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/models/deeplabv3.py",
+        "teacher_evaluation": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/eval.py",
+        "assets": "https://github.com/winycg/CIRKD/blob/48eb81b7a0ed7c59f9e347e97feb95a23e943d12/README.md"
+      },
+      "framework_defaults": "https://github.com/pytorch/pytorch/blob/v1.8.0/torch/optim/adamw.py"
+    },
+    "segformer_official_b0": {
+      "repository": "https://github.com/NVlabs/SegFormer",
+      "commit": "65fa8cfa9b52b6ee7e8897a98705abf8570f9e32",
+      "config": "https://github.com/NVlabs/SegFormer/blob/65fa8cfa9b52b6ee7e8897a98705abf8570f9e32/local_configs/segformer/B0/segformer.b0.640x1280.city.160k.py",
+      "role_ko": "하위 보완·대조 자료. 이번 주요 항목은 FSKD/CIRKD에서 결정되었고, AdamW betas 및 MiT-B0 구조·ImageNet 초기화가 공식 설정과 일치하는지 대조했다."
+    },
+    "local_decisions": {
+      "basis_ko": "사용자가 지정한 출처 우선순위, 기존 seed1/H200 환경, 저장소 AGENTS.md의 asset 식별·최종 로그 규칙",
+      "inherited_seed": 1,
+      "older_protocol": "cityscapes_segmenter_l16_crop512_final80000_v19"
+    }
+  },
+  "dataset": {
+    "name": "Cityscapes",
+    "annotation": "fine",
+    "train_split": "train",
+    "train_samples": 2975,
+    "validation_split": "val",
+    "validation_samples": 500,
+    "num_classes": 19,
+    "use_coarse": false,
+    "use_train_extra": false,
+    "use_test_for_training_or_selection": false,
+    "train_list_source": "cirkd_2022.files.train_list",
+    "validation_list_source": "cirkd_2022.files.val_list",
+    "label_input": "gtFine_labelIds",
+    "label_mapping": "CIRKD CSTrainValSet.id_to_trainid: 19 evaluated classes -> 0..18; all other IDs -> -1",
+    "ignore_index": -1,
+    "source": [
+      "fskd_segmentation",
+      "cirkd_2022.files.data"
+    ]
+  },
+  "teacher": {
+    "architecture": "DeepLabV3",
+    "backbone": "ResNet101",
+    "architecture_source": "fskd_segmentation",
+    "implementation_source": "cirkd_2022.files.teacher_model",
+    "initialization": "Cityscapes-trained teacher checkpoint",
+    "checkpoint_filename": "deeplabv3_resnet101_citys_best_model.pth",
+    "checkpoint_url": "https://drive.google.com/file/d/1zUdhYPYCDCclWU3Wo7GbbTlM8ibQ_UC1/view",
+    "checkpoint_source": "cirkd_2022.files.assets",
+    "reference_val_miou_percent": 78.07,
+    "reference_metric_status": "upstream_reported_not_locally_measured",
+    "fskd_identical_checkpoint_claim": false,
+    "frozen": true,
+    "eval_mode": true,
+    "train_batchnorm": false,
+    "source_for_freeze": "cirkd_2022.files.guided_train",
+    "vanilla_uses_teacher": false
+  },
+  "student": {
+    "architecture": "SegFormer",
+    "backbone": "MiT-B0",
+    "architecture_source": "fskd_segmentation",
+    "implementation_source": "cirkd_2022.files.student_model",
+    "initialization": "ImageNet-pretrained encoder; random segmentation head",
+    "initialization_source": "cirkd_2022.files.segformer_launch",
+    "initialization_checkpoint_filename": "mit_b0.pth",
+    "initialization_checkpoint_url": "https://pan.baidu.com/s/1Figp042rc9VNtPc_fkNW3g?pwd=swor",
+    "encoder": {
+      "embed_dims": [
+        32,
+        64,
+        160,
+        256
+      ],
+      "depths": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "num_heads": [
+        1,
+        2,
+        5,
+        8
+      ],
+      "mlp_ratios": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "spatial_reduction_ratios": [
+        8,
+        4,
+        2,
+        1
+      ],
+      "feature_strides": [
+        4,
+        8,
+        16,
+        32
+      ],
+      "layernorm_eps": 0.000001,
+      "qkv_bias": true,
+      "dropout": 0,
+      "attention_dropout": 0,
+      "drop_path_max": 0.1,
+      "drop_path_schedule": "linear across eight blocks"
+    },
+    "decoder": {
+      "type": "CIRKD SegFormer four-scale MLP fusion head",
+      "embedding_dim": 256,
+      "num_classes": 19,
+      "dropout": 0,
+      "fusion": "1x1 convolution + batch normalization + ReLU",
+      "internal_feature_resize": "bilinear, align_corners=false",
+      "auxiliary_head": false
+    },
+    "same_initial_state_across_methods": true,
+    "alternative_b1_in_this_version": false,
+    "source": [
+      "fskd_segmentation",
+      "cirkd_2022.files.student_model",
+      "cirkd_2022.files.segformer_launch"
+    ]
+  },
+  "preprocessing": {
+    "image_loader": "OpenCV IMREAD_COLOR",
+    "channel_order": "BGR",
+    "input_pixel_scale": "0..255",
+    "mean": [
+      104.00698793,
+      116.66876762,
+      122.67891434
+    ],
+    "std": [
+      1,
+      1,
+      1
+    ],
+    "divide_by_255": false,
+    "shared_between_teacher_and_student": true,
+    "source": "cirkd_2022.files.data"
+  },
+  "augmentation": {
+    "order": [
+      "random_scale",
+      "subtract_BGR_ordered_mean",
+      "pad_bottom_right_if_needed",
+      "random_crop",
+      "random_horizontal_flip"
+    ],
+    "random_scale_values": [
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.5,
+      1.6,
+      1.7,
+      1.8,
+      1.9,
+      2
+    ],
+    "scale_reference_hw": [
+      1024,
+      2048
+    ],
+    "scale_sampling": "uniform over 16 values",
+    "image_resize": "OpenCV INTER_LINEAR",
+    "label_resize": "OpenCV INTER_NEAREST",
+    "crop_hw": [
+      512,
+      512
+    ],
+    "crop_source": "fskd_segmentation",
+    "crop_position": "uniform integer offsets over valid positions",
+    "category_max_ratio": null,
+    "horizontal_flip_probability": 0.5,
+    "image_padding_after_mean_subtraction": 0,
+    "label_padding": -1,
+    "photometric_distortion": false,
+    "source": "cirkd_2022.files.data"
+  },
+  "sampling": {
+    "expanded_list_length": 1280000,
+    "expanded_list_rule": "repeat CIRKD train.lst in listed order and truncate to total_steps * global_batch_size",
+    "shuffle": true,
+    "drop_last": false,
+    "iteration_based": true,
+    "step_unit": "one optimizer update over 16 training images",
+    "source": [
+      "cirkd_2022.files.segformer_train",
+      "cirkd_2022.files.data",
+      "cirkd_2022.files.sampler"
+    ],
+    "comparison_rule_ko": "모든 방법에서 같은 seed의 expanded-list 순서·crop·flip을 재사용하고 방법 전용 난수 소비와 분리한다.",
+    "comparison_rule_source": "local_decisions"
+  },
+  "training": {
+    "total_optimizer_steps": 80000,
+    "global_batch_size": 16,
+    "total_training_image_presentations": 1280000,
+    "budget_source": "fskd_segmentation",
+    "optimizer": {
+      "type": "AdamW",
+      "learning_rate": 0.00006,
+      "learning_rate_source": "fskd_segmentation",
+      "weight_decay": 0.0001,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-8,
+      "amsgrad": false,
+      "student_parameter_groups": "one group; same LR/WD for backbone, decoder, norm and bias",
+      "head_lr_multiplier": 1,
+      "weight_decay_exemptions": [],
+      "source": [
+        "cirkd_2022.files.segformer_launch",
+        "cirkd_2022.files.segformer_train",
+        "cirkd_2022.framework_defaults"
+      ],
+      "betas_crosscheck": "segformer_official_b0"
+    },
+    "lr_schedule": {
+      "type": "poly",
+      "power": 0.9,
+      "warmup_steps": 0,
+      "lower_bound": 0,
+      "formula_before_update": "lr(k) = 0.00006 * (1 - k / 80000)^0.9, k = completed optimizer steps, k in 0..79999",
+      "restart_on_resume": false,
+      "source_for_power": "fskd_segmentation",
+      "source_for_no_warmup_and_step_index": "cirkd_2022.files.segformer_train"
+    },
+    "supervised_loss": {
+      "type": "pixelwise_cross_entropy",
+      "coefficient": 1,
+      "reduction": "mean over valid pixels",
+      "ignore_index": -1,
+      "class_weights": null,
+      "ohem": false,
+      "auxiliary_loss": false,
+      "logits_resize": "bilinear to label size, align_corners=true",
+      "source": "cirkd_2022.files.task_loss"
+    },
+    "mixed_precision": false,
+    "gradient_clipping": false,
+    "precision_and_clipping_source": "cirkd_2022.files.segformer_train"
+  },
+  "evaluation": {
+    "dataset": "Cityscapes val, all 500 images exactly once",
+    "interval_optimizer_steps": 400,
+    "interval_source": "fskd_segmentation",
+    "first_scheduled_step": 400,
+    "final_step": 80000,
+    "checkpoint_selection_metric": "miou",
+    "selection_tie_break": "earlier_step",
+    "selection_source": "cirkd_2022.files.segformer_train",
+    "reported_metrics": [
+      "miou_at_selected_checkpoint",
+      "pixel_accuracy_at_same_checkpoint",
+      "classwise_iou_at_same_checkpoint",
+      "last_step_miou",
+      "last_step_pixel_accuracy"
+    ],
+    "metric_source": [
+      "fskd_segmentation",
+      "cirkd_2022.files.student_evaluation"
+    ],
+    "student_inference": {
+      "scale": 1,
+      "horizontal_flip": false,
+      "original_image_hw": [
+        1024,
+        2048
+      ],
+      "mode": "two_nonoverlapping_vertical_halves",
+      "tile_hw": [
+        1024,
+        1024
+      ],
+      "x_offsets": [
+        0,
+        1024
+      ],
+      "aggregation": "concatenate left/right low-resolution logits along width, then bilinear resize once to original image size",
+      "output_align_corners": true,
+      "source": "cirkd_2022.files.student_evaluation"
+    },
+    "metric_aggregation": "accumulate per-class intersections/unions over the full val split, then average IoU across 19 classes",
+    "ignored_pixels_excluded": true,
+    "teacher_reference_check": "evaluate frozen teacher on full 1024x2048 images using CIRKD eval.py, single scale/no flip; report separately from the common student comparison",
+    "teacher_reference_check_source": "cirkd_2022.files.teacher_evaluation",
+    "final_test_submission": "outside this protocol version; no test-based tuning"
+  },
+  "execution": {
+    "seed": 1,
+    "device": "H200",
+    "num_gpus": 1,
+    "images_per_gpu_per_forward": 16,
+    "gradient_accumulation_steps": 1,
+    "student_batchnorm": "BatchNorm2d; for a declared multi-GPU protocol revision use SyncBatchNorm over the same global batch",
+    "precision": "FP32",
+    "allow_tf32": false,
+    "fused_optimizer": false,
+    "gradient_checkpointing": false,
+    "data_workers": 4,
+    "max_training_hours_per_job": 9,
+    "resume_required_state": [
+      "student",
+      "optimizer",
+      "completed_steps",
+      "best_checkpoint_metadata",
+      "RNG_states",
+      "sampler_position",
+      "method_specific_state_when_added"
+    ],
+    "cross_method_rng_rule": "independent model-initialization, input and method-specific RNG streams; shared input sequence and initial student state",
+    "automatic_hyperparameter_changes": false,
+    "source": "local_decisions",
+    "note_ko": "H200 1장·실제 batch16 기준의 운영 결정이다. OOM 시 batch·정밀도를 자동 변경하지 않고 새 버전으로 비교 조건을 다시 고정한다. 재현성·속도는 새 구현의 smoke에서 측정한다."
+  },
+  "method_specific_settings": {
+    "status": "intentionally_not_fixed_here",
+    "exclusions": [
+      "FSKD global/patch/attention weights",
+      "FSKD KD alpha/temperature and soft/hard distillation",
+      "FSKD feature-layer pairing and alignment modules",
+      "CIRKD relational losses and memory queues",
+      "LG/ALG/iBKD guidance beta",
+      "iBKD fusion lambda",
+      "ALG/iBKD controller rule, warm-up and guidance-off schedule"
+    ],
+    "comparison_scope_ko": "Vanilla는 공통 CE만 사용한다. 각 KD 방법의 추가 loss·adapter·controller는 별도 방법 명세로 결정한다. 기존 L/16에서 선별한 방법별 값을 B0에 자동 이전하지 않는다."
+  },
+  "asset_identity": {
+    "data_archive_reference": {
+      "source": "앞선 사용자 H200 업로드 검증 로그에서 byte size와 SHA-256 일치 확인",
+      "archives": [
+        {
+          "filename": "leftImg8bit_trainvaltest.zip",
+          "bytes": 11598567370,
+          "sha256": "1927eb6450e29ebde0d611d30b874abe96747f5d092f6ec0cbbb6a3e1f6ce09d"
+        },
+        {
+          "filename": "gtFine_trainvaltest.zip",
+          "bytes": 263041307,
+          "sha256": "dbacde05ea136f3036aa24bfc87b5272f0d999e34380e10cbb919f7368448332"
+        }
+      ]
+    },
+    "teacher_checkpoint_bytes": null,
+    "teacher_checkpoint_sha256": null,
+    "student_encoder_checkpoint_bytes": null,
+    "student_encoder_checkpoint_sha256": null,
+    "status_ko": "가중치 출처·파일 종류는 고정. 새 CIRKD teacher와 MiT-B0의 파일 자체는 아직 다운로드·검사하지 않았으므로 byte size/SHA-256은 미측정이다. 첫 GPU 실험 전에 asset manifest로 고정한다.",
+    "allow_silent_checkpoint_substitution": false
+  },
+  "implementation_notes_ko": [
+    "이 파일은 실행 설정이 아닌 프로토콜 명세다. 기존 Segmenter-L/16 runner에 입력하지 않는다.",
+    "원 CIRKD 독립 SegFormer 평가의 좌우 분할 방식을 모든 방법에 동일하게 적용한다. 내부 validation()과 혼용하지 않는다.",
+    "원 CIRKD utils/score.py의 pixel accuracy 경로는 logits를 long으로 바꾼 후 argmax한다. 새 구현은 float logits argmax로 정상적인 pixel accuracy를 계산하며, 이 수정은 모든 방법에 공통 적용한다.",
+    "CIRKD의 재개는 가중치 중심이므로 이 실험의 10시간 분할 실행에는 optimizer·RNG·sampler·controller 상태까지 저장하는 재개 구현이 필요하다.",
+    "첫 학습 전 encoder pretrained key/shape 적재와 teacher checkpoint strict 적재를 검사하고 설치 버전·GPU·실제 batch·asset 해시를 기록한다.",
+    "마지막 로그 JSON에는 프로토콜 ID, step, 선택 step, 최종 loss, val pixel accuracy/mIoU/클래스별 IoU, asset/입력 감사, 재개 상태를 기록한다."
+  ]
+}

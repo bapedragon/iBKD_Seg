@@ -1,0 +1,174 @@
+{
+  "method_id": "fskd_b0_reimplementation_v1",
+  "display_name": "FSKD*",
+  "decision_date": "2026-09-23",
+  "artifact_kind": "method_specification_not_runner_config",
+  "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+  "author_cityscapes_recipe_verified": false,
+  "document": "../BASELINE_METHOD_PROTOCOLS.md",
+  "common_protocol": {
+    "path": "segformer_b0_common_protocol_v1.json",
+    "sha256": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532",
+    "overrides": {}
+  },
+  "sources": {
+    "repository": "https://github.com/TouchNow/FSKD",
+    "commit": "969dddf278b2c9f2dadde504326fa9d704c5a5aa",
+    "paper": "https://ssrn.com/abstract=5385770",
+    "paper_sha256": "02667b51c9f1402dd29c01d07a1badd623a39ce0d6f50eafb80d1f8ae6852844",
+    "paper_bytes": 2867689,
+    "recipe_transfer": "README CIFAR100 PiT-Ti: stages 3,4; lg/cg; structural weights 1,1,40000",
+    "transfer_note_ko": "계층형 학생의 공개 조합을 첫 B0 이식값으로 선택한 것이며 공식 Cityscapes 설정이나 최적값은 아니다."
+  },
+  "feature_pairing": [
+    {
+      "student_stage_one_based": 3,
+      "student_location": "post_stage_norm",
+      "student_chw": [
+        160,
+        32,
+        32
+      ],
+      "teacher_location": "backbone.layer3",
+      "teacher_expected_chw": [
+        1024,
+        64,
+        64
+      ]
+    },
+    {
+      "student_stage_one_based": 4,
+      "student_location": "post_stage_norm",
+      "student_chw": [
+        256,
+        16,
+        16
+      ],
+      "teacher_location": "backbone.layer4",
+      "teacher_expected_chw": [
+        2048,
+        64,
+        64
+      ]
+    }
+  ],
+  "global_alignment": {
+    "order": [
+      "flatten_spatial",
+      "linear_student_tokens_to_teacher_tokens",
+      "gelu",
+      "reshape_teacher_hw",
+      "conv3x3_student_channels_to_teacher_channels",
+      "gelu"
+    ],
+    "linear_bias": true,
+    "conv_bias": true,
+    "conv_padding": 1,
+    "spatial_mode": "lg",
+    "channel_mode": "cg",
+    "initialization": {
+      "linear_weight": "trunc_normal_std_0.02",
+      "linear_bias": "zeros",
+      "conv_weight": "kaiming_normal_fan_out_relu",
+      "conv_bias": "pytorch_conv2d_constructor_default"
+    },
+    "reduction": "sum_stage(mean_all_elements_squared_error / global_batch_size)",
+    "extra_batch_divisor": 16
+  },
+  "patch": {
+    "student_feature": "unprojected_stage_output",
+    "teacher_resize": "student_native_spatial_grid",
+    "interpolation": "bilinear",
+    "align_corners": false,
+    "normalization": "per_position_channel_l2",
+    "norm_epsilon": 1e-08,
+    "relation": "per_image_cosine_gram",
+    "reduction": "sum_stage(mean_batch_and_all_position_pairs_squared_error)",
+    "cross_image_pairs": false,
+    "exact_chunk_rows": 256,
+    "mask_ignore_pixels": false
+  },
+  "attention": {
+    "provenance": "local_cls_free_mit_adaptation_of_official_loss",
+    "student_stage_one_based": 4,
+    "student_block_within_stage_one_based": 2,
+    "student_block_global_one_based": 8,
+    "tensor": "softmax_qk_before_attention_dropout",
+    "expected_bhqq_without_batch": [
+      8,
+      256,
+      256
+    ],
+    "student_importance": "mean_over_heads_and_queries_retaining_key_positions",
+    "teacher_location": "backbone.layer4",
+    "teacher_resize_hw": [
+      16,
+      16
+    ],
+    "teacher_importance": "spatial_softmax_of_channel_mean_squared_resized_features",
+    "interpolation": "bilinear",
+    "align_corners": false,
+    "rank_operator": "torchsort.soft_rank",
+    "regularization": "l2",
+    "regularization_strength": 1.0,
+    "reduction": "mean_batch(6*sum_positions((rS-rT)^2)/(N*(N^2-1)))",
+    "student_gradient_enabled": true
+  },
+  "objective": {
+    "ce_weight": 1.0,
+    "logit_kd_weight": 1.0,
+    "global_weight": 1.0,
+    "patch_weight": 1.0,
+    "attention_weight": 40000.0,
+    "kd_temperature": 1.0,
+    "logit_kd_direction": "teacher_to_student",
+    "logit_kd_reduction": "T_squared_times_mean_valid_pixels_sum_classes",
+    "logit_resize_hw": [
+      512,
+      512
+    ],
+    "logit_interpolation": "bilinear",
+    "logit_align_corners": true,
+    "ignore_index": -1,
+    "empty_valid_batch_policy": "error",
+    "additional_alpha_mixing": false,
+    "warmup_steps": 0,
+    "active_steps_inclusive": [
+      1,
+      80000
+    ],
+    "automatic_guidance_stop": false
+  },
+  "optimization": {
+    "teacher": "eval_frozen_no_grad",
+    "trainable": [
+      "student_encoder",
+      "student_decoder",
+      "global_alignment_modules"
+    ],
+    "adapter_optimizer": "same_as_student_including_lr_and_weight_decay",
+    "adapter_rng_seed_formula": "100000 + run_seed",
+    "restore_common_student_and_training_rng_after_adapter_initialization": true,
+    "inference_modules": [
+      "student_encoder",
+      "student_decoder"
+    ]
+  },
+  "selection": {
+    "fixed_candidates": 1,
+    "mandatory_weight_sweep": false,
+    "checkpoints_steps": [
+      500,
+      2000,
+      10000,
+      80000
+    ]
+  },
+  "unverified_author_details": [
+    "Cityscapes loss weights and temperature",
+    "Cityscapes stage pairing",
+    "CLS-free MiT attention implementation",
+    "exact author checkpoint bytes"
+  ],
+  "implementation_status": "smoke_runner_implemented_full_training_runner_pending_gpu_unvalidated"
+}

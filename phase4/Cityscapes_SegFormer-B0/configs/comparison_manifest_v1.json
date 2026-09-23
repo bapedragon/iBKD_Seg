@@ -1,0 +1,251 @@
+{
+  "comparison_id": "cityscapes_segformer_b0_fskd_lg_alg_ibkd_comparison_v1",
+  "decision_date": "2026-09-23",
+  "artifact_kind": "comparison_specification_not_runner_config",
+  "status": "smoke_implemented_cpu_connection_passed_gpu_and_beta_selection_pending",
+  "description_ko": "FSKD, LG, ALG, iBKD lambda 0.25와 0.5의 공통 조건 비교. 증류 효과를 판단하는 Vanilla를 함께 둔다.",
+  "common_protocol": {
+    "path": "segformer_b0_common_protocol_v1.json",
+    "protocol_id": "cityscapes_deeplabv3r101_segformerb0_common_v1",
+    "sha256": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532"
+  },
+  "methods": [
+    {
+      "id": "vanilla",
+      "uses_teacher": false,
+      "loss_ko": "공통 CE만 사용",
+      "beta_selection": null,
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending"
+    },
+    {
+      "id": "fskd",
+      "uses_teacher": true,
+      "loss_ko": "FSKD의 구조 손실과 logit KD. 원문의 CE/KD 계수와 공통 CE 계수의 대응까지 별도 명세에 기록한다.",
+      "setting_policy_ko": "2026-09-23 사용자 요청에 따라 공개 PiT 조합을 이식하고 논문 기반 B0 attention 보완을 명세했다. 저자 Cityscapes 확인값과 우리 재구현 선택을 구분한다.",
+      "mandatory_new_weight_sweep": false,
+      "cityscapes_loss_weights": null,
+      "cityscapes_kd_alpha_and_temperature": null,
+      "cityscapes_feature_pairing": null,
+      "mit_attention_definition": null,
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+      "display_name": "FSKD*",
+      "method_protocol_path": "fskd_method_protocol_v1.json",
+      "null_fields_meaning_ko": "아래 cityscapes_* 및 mit_attention_definition의 null은 저자의 미확인 설정을 뜻한다. 이번에 선택한 실행 정의는 method_protocol_path에 있다.",
+      "method_protocol_sha256": "b0aad91e8252667cc17d0ad3b9eeacad3caa26969aac645c83a4405723dbcc2b"
+    },
+    {
+      "id": "lg",
+      "uses_teacher": true,
+      "loss_ko": "CE + beta * locality guidance",
+      "beta_selection": "b0_calibration_then_2k_10k_selection",
+      "beta_candidates": null,
+      "feature_selection_spec": "lg_alg_feature_selection",
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending"
+    },
+    {
+      "id": "alg",
+      "uses_teacher": true,
+      "loss_ko": "LG와 동일한 feature guidance에 종료 controller 적용",
+      "beta_selection": "same_candidate_grid_as_lg",
+      "beta_candidates": null,
+      "guidance_warmup_intervals": 0,
+      "guidance_warmup_source_ko": "이전 사용자 결정: ALG는 w20 없이 LG와 같은 조건에서 시작",
+      "feature_selection_spec": "lg_alg_feature_selection",
+      "controller_spec": "guidance_controllers.alg",
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending"
+    },
+    {
+      "id": "ibkd_lambda025",
+      "uses_teacher": true,
+      "ibkd_lambda": 0.25,
+      "loss_ko": "CE + beta(t) * [(1-lambda) * alignment + lambda * fusion]",
+      "beta_selection": "independent_grid_for_this_lambda",
+      "beta_candidates": null,
+      "controller_spec": "guidance_controllers.ibkd",
+      "preaggregation_target_spec": "ibkd_preaggregation_target",
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending"
+    },
+    {
+      "id": "ibkd_lambda050",
+      "uses_teacher": true,
+      "ibkd_lambda": 0.5,
+      "loss_ko": "CE + beta(t) * [(1-lambda) * alignment + lambda * fusion]",
+      "beta_selection": "independent_grid_for_this_lambda",
+      "beta_candidates": null,
+      "controller_spec": "guidance_controllers.ibkd",
+      "preaggregation_target_spec": "ibkd_preaggregation_target",
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending"
+    }
+  ],
+  "lg_alg_feature_selection": {
+    "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+    "decision_date": "2026-09-23",
+    "source_ko": "사용자 결정: 이번에도 처음·중간·끝을 사용한다. 기존 L/16 코드의 선택 규칙을 B0에 적용한다.",
+    "student_block_count": 8,
+    "selection_formula_zero_based": "[0, student_blocks // 2, student_blocks - 1]",
+    "student_indices_zero_based": [
+      0,
+      4,
+      7
+    ],
+    "student_blocks_one_based": [
+      1,
+      5,
+      8
+    ],
+    "pairing_ko": "선택한 학생 출력 세 개를 기존 순서의 teacher 증류 feature 세 개에 대응한다. LG와 ALG는 같은 연결을 사용한다.",
+    "alignment_ko": "기존 LG 방식대로 선택한 각 출력의 채널을 teacher 채널로 1×1 투영하고, 둘 중 더 큰 격자에 bilinear align_corners=False로 맞춘 뒤 stage별 mean MSE를 합한다.",
+    "use_ibkd_preaggregation_target": false,
+    "official_mit_b0_setting_verified": false,
+    "validated_on_gpu": false
+  },
+  "controller_timebase": {
+    "status": "selected_implementation_pending",
+    "decision_date": "2026-09-23",
+    "source_ko": "사용자 결정: 1 epoch마다 측정. 앞선 설명대로 고정된 iteration loader에서 1 epoch 분량을 186 optimizer step으로 정의한다.",
+    "unit": "epoch_equivalent",
+    "train_samples": 2975,
+    "global_batch_size": 16,
+    "steps_per_observation_formula": "ceil(2975 / 16)",
+    "steps_per_observation": 186,
+    "sample_presentations_per_observation": 2976,
+    "guarantees_unique_dataset_pass": false,
+    "reset_or_reshuffle_sampler_at_boundary": false,
+    "observation_timing": "after_each_complete_186_optimizer_step_interval",
+    "observation_value": "sample_weighted_mean_of_raw_guidance_before_beta",
+    "off_effective_timing": "next_optimizer_step_after_stop_decision",
+    "partial_interval_policy": "no_extra_observation_at_checkpoint_or_final_partial_interval",
+    "resume_state": [
+      "completed_observation_intervals",
+      "steps_in_current_interval",
+      "guidance_loss_times_sample_count_sum",
+      "observed_sample_count",
+      "current_beta",
+      "controller_state_and_histories"
+    ],
+    "validation_interval_steps": 400,
+    "note_ko": "확장 목록의 표본 순서는 공통 프로토콜대로 유지한다. 186-step controller 관측과 400-step val 평가는 서로 다른 주기다."
+  },
+  "guidance_controllers": {
+    "source_ko": "기존 L/16 GuidanceController의 수식·초기 구간 처리·종료 경계를 유지하고 관측 단위를 위 epoch 분량으로 적용한다.",
+    "source_path": "../../../src/ibkd_seg/phase1/controllers.py",
+    "alg": {
+      "timebase_spec": "controller_timebase",
+      "kind": "alg",
+      "window_intervals": 50,
+      "threshold": -0.02,
+      "guidance_warmup_intervals": 0,
+      "stop_comparison": "greater_or_equal",
+      "fixed_stop_interval": null,
+      "raw_guidance": "locality_guidance"
+    },
+    "ibkd": {
+      "timebase_spec": "controller_timebase",
+      "kind": "ibkd",
+      "window_intervals": 50,
+      "threshold": -0.02,
+      "guidance_warmup_intervals": 0,
+      "guidance_warmup_source_ko": "2026-09-23 후속 사용자 결정: iBKD도 일단 warm-up epoch 없이 시작한다. 두 lambda 조건에 동일 적용한다.",
+      "first_stop_eligible_interval": 2,
+      "earliest_possible_stop_step": 372,
+      "earliest_possible_guidance_off_step": 373,
+      "first_observation_note_ko": "Warm-up은 0이지만 첫 관측에는 손실 변화량이 정의되지 않으므로 기존 controller 수식상 종료 판정은 두 번째 관측부터 가능하다.",
+      "stop_comparison": "strictly_greater",
+      "fixed_stop_interval": null,
+      "raw_guidance": "(1-lambda) * alignment + lambda * fusion"
+    },
+    "lg_note_ko": "LG는 epoch 분량마다 평균 guidance를 기록하되 beta를 자동으로 끄지 않는다."
+  },
+  "ibkd_preaggregation_target": {
+    "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+    "decision_date": "2026-09-23",
+    "source_ko": "사용자 결정: 채널은 256으로, 공간 크기는 16×16으로 먼저 실험한다.",
+    "output_channels": 256,
+    "output_spatial_size": [
+      16,
+      16
+    ],
+    "student_indices_zero_based": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "scope_ko": "iBKD 두 lambda 조건의 가중합 직전 학생 feature 규격. 16은 stride가 아니라 격자 한 변의 크기다.",
+    "backbone_or_decoder_change": false,
+    "apply_to_other_methods_automatically": false,
+    "connection_basis_ko": "기존 분류의 전체 block adapter를 이어 B0 8개 출력을 256채널·16×16로 맞춘 뒤 학습 가능한 가중치로 합한다. 실제 가중치+합성 입력 CPU 연결·재개 검사를 통과했으며 GPU 검증은 남았다.",
+    "fusion_note_ko": "기존 larger-grid alignment를 유지하면 가중합 후 teacher feature 크기로 다시 확대될 수 있다. fusion 전체를 16×16으로 고정한 결정이 아니다.",
+    "validated_on_gpu": false
+  },
+  "fair_comparison_rules_ko": [
+    "공통 프로토콜의 확정값은 모든 비교 조건에서 동일하게 사용한다.",
+    "모든 방법에서 같은 seed의 student 초기 상태, 입력 순서, crop과 flip을 공유한다.",
+    "모든 KD 방법에 동일한 CIRKD DeepLabV3-R101 가중치를 사용한다. FSKD 저자가 동일 파일을 썼다고 주장하지 않는다.",
+    "FSKD 고유 loss와 CIRKD의 relational loss를 LG/ALG/iBKD에 추가하지 않는다. CIRKD 자체는 이번 성능 비교 방법에 포함하지 않는다.",
+    "iBKD의 0.25와 0.5는 lambda이며 beta가 아니다. 두 조건을 각각 보고한다.",
+    "L/16 결과에서 고른 beta나 실행 시간을 B0의 검증값으로 사용하지 않는다."
+  ],
+  "selection_plan": {
+    "seed": 1,
+    "lr_schedule_horizon_steps": 80000,
+    "calibration_batches": 25,
+    "calibration_optimizer_updates": 0,
+    "calibration_target_weighted_guidance_to_ce_ratios": [
+      0.03,
+      0.07,
+      0.15,
+      0.3
+    ],
+    "beta_formula": "target_ratio * median_CE / median_raw_guidance",
+    "candidate_value_status": "pending_b0_measurement_and_freeze_before_validation_ranking",
+    "beta_search_families": [
+      "lg",
+      "alg",
+      "ibkd_lambda025",
+      "ibkd_lambda050"
+    ],
+    "stability_checkpoint_steps": 500,
+    "screening_steps": [
+      2000,
+      10000
+    ],
+    "candidates_per_family_at_2k": 4,
+    "candidates_per_family_at_10k": 2,
+    "candidates_per_family_at_80k": 1,
+    "fixed_reference_methods": [
+      "vanilla",
+      "fskd"
+    ],
+    "candidate_selection_metric": "best_val_miou_within_current_budget",
+    "tie_breaks": [
+      "earlier_best_step",
+      "predeclared_candidate_id"
+    ],
+    "continuation_ko": "동일한 80k schedule의 전체 상태 checkpoint를 보존한 실행만 2k→10k→80k로 이어간다.",
+    "fskd_prerequisite_ko": "FSKD 재구현 명세의 연결·손실·gradient·가중치 적재 smoke를 통과한 뒤 고정 reference를 실행한다."
+  },
+  "implementation_status": "smoke_runner_implemented_full_training_runner_pending_gpu_unvalidated",
+  "remaining_before_training_ko": [
+    "실제 Cityscapes batch16/crop512 H200 smoke에서 CUDA loss·gradient·메모리·재개·평가·동일 입력 확인",
+    "smoke에서 사용한 NVIDIA ImageNet MiT-B0 변환본과 CIRKD Baidu 원본의 동일성 확인 또는 본실험 초기화 출처 revision 고정",
+    "전체 train/val 공통 runner와 400-step 전체 평가·선별·장기 실행 재개 구현",
+    "기존 계획의 25-batch calibration으로 beta 후보를 측정·고정하고 2k·10k 선별"
+  ],
+  "supplementary_method_protocols": [
+    {
+      "id": "c2vkd_clip_pool_reconstruction",
+      "display_name": "C2VKD* (CLIP-pool)",
+      "method_protocol_path": "c2vkd_method_protocol_v1.json",
+      "included_in_primary_comparison": false,
+      "reason_ko": "원본 pooling 가중치 누락을 CLIP RN101 pool로 대체한 별도 후보. 추가 사전학습 조건과 CE 대신 PDD를 쓰는 목적함수 예외를 공개한다.",
+      "status": "smoke_implemented_cpu_connection_passed_gpu_validation_pending",
+      "method_protocol_sha256": "531cae0701636af486bd78a6983461d67cdc66051211d9b43ff8cf1a3b0a1725"
+    }
+  ],
+  "smoke_specification": "b0_smoke_v1.json"
+}
