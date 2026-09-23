@@ -12,7 +12,9 @@
 첫 H200 2k v1 pack1의 6개 실행은 모두 25 update 후 개별 ignore-only crop 거부로 실패했습니다.
 [실패 기록](reports/h200_screen2000_v1_pack1_failure/RESULTS.md)을 보존하며, 데이터 로더를 수정한
 v2에서 모든 후보를 seed1부터 실행합니다. β·입력 순서·LR·평가·선별 규칙은 유지합니다.
-2k 완료·전체 val500 결과·β 선택과 10k·80k 실행은 아직 없습니다.
+2026-09-24 [2k v2 pack1 결과](reports/h200_screen2000_v2_pack1/RESULTS.md)를 확인했습니다.
+6개 모두 완료했고 LG의 10k 후보는 β=0.197479·0.460784입니다.
+Vanilla·고정 FSKD도 기존 설정으로 계속합니다. Pack2·3 결과와 10k·80k 결과는 아직 없습니다.
 
 후속 요청에 따라 [FSKD·C2VKD 방법 명세](BASELINE_METHOD_PROTOCOLS.md)와 각각의 JSON을
 작성했습니다. FSKD는 공개 PiT 조합을 이식한 고정값 1개로 아래 흐름에 연결합니다.
@@ -95,7 +97,7 @@ bilinear resize(`align_corners=False`)를 사용합니다. 실제 feature 추출
 | iBKD λ와 β | 비교 λ=0.25·0.5 유지. 수치 β는 연결 후 측정·짧은 학습으로 선별 |
 | FSKD 고유 설정 | 첫 재구현값 선정 완료; 저자 Cityscapes 값과의 동일성은 미확인 |
 | C2VKD 고유 설정 | PDD 보완·공개 loss 연결·CLIP pool 대체안 작성; 기존 6개 밖의 별도 후보 |
-| 실제 실행 준비 | 가중치 실물·CPU 연결/재개 통과; 실제 Cityscapes H200 smoke·메모리·calibration 통과; 2k 선별 전 |
+| 실제 실행 준비 | 가중치 실물·CPU 연결/재개, H200 smoke·calibration 통과; 2k v2 pack1 완료·LG 상위 2개 선정; pack2·3 결과 미확인 |
 
 LG/ALG는 후속 사용자 지시 "이번에도 처음 중간 끝"에 따라 기존 L/16의
 `0, depth//2, depth-1`을 적용해 코드 인덱스 **0·4·7**을 사용합니다.

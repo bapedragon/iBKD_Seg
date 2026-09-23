@@ -7,7 +7,7 @@
 - [값·출처·예외 판단을 담은 프로토콜 명세](configs/segformer_b0_common_protocol_v1.json)
 - [비교 조건·확정 범위 명세](configs/comparison_manifest_v1.json): 공통 JSON의 SHA-256,
   비교할 여섯 조건, β 선별 규칙과 방법별 미확정 항목을 연결합니다.
-- 상태: **공통 조건 고정 / H200 smoke·25-batch β 측정 통과 / 2k v1 pack1 입력 오류, v2 수정·재실행 준비**
+- 상태: **공통 조건 고정 / H200 smoke·25-batch β 측정 통과 / 2k v2 pack1 완료·LG 10k 후보 2개 선정**
 - 이 JSON은 실행용 config가 아닙니다. 기존 L/16 runner의 config로 넣지 않습니다.
 - 완료된 L/16 2k·10k 결과는 [기존 실험 폴더](../phase4_cityscapes/README.md)에 보존합니다.
   B0의 성능이나 최적 beta로 해석하거나 B0 학습의 초기 가중치로 사용하지 않습니다.
@@ -44,7 +44,8 @@ CIRKD는 이번에는 공통 설정과 구현의 출처이며, CIRKD 증류 loss
 후속 요청에 따라 FSKD와 C2VKD의 [재구현 프로토콜](BASELINE_METHOD_PROTOCOLS.md)을 작성했습니다.
 FSKD의 첫 연결·계수는 선정했고, 저자 Cityscapes 값의 미확인 여부는 별도로 표시했습니다.
 수치 β 후보는 25-batch 측정으로 고정했고 H200 smoke도 통과했습니다.
-2k v1의 데이터 로더 오류를 수정했으며 실제 GPU 2k 완료·전체 val500·후보 선별은 남아 있습니다.
+2k v2 pack1은 GPU 2k·전체 val500을 완료했고 LG의 10k 후보 2개를 선정했습니다.
+Pack2·3 결과와 최종 β 선정은 아직 확인 전입니다.
 따라서 **공통 프로토콜 확정**과 **모든 방법의 실행 준비 완료**를 구분합니다.
 
 C2VKD 대체안은 기존 6개 비교 밖의 추가 후보입니다. 원본 pooling 가중치가 없어

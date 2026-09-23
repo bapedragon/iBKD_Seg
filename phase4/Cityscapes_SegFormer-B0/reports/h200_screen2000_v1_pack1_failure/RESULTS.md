@@ -1,5 +1,9 @@
 # H200 2k v1 pack1 실패 점검
 
+2026-09-24 후속 [v2 pack1 결과](../h200_screen2000_v2_pack1/RESULTS.md)에서 6개 모두 2k를 완료했습니다.
+새 입력 검사에 batch26 sample4 `jena_000087_000019_gtFine_labelIds`의 ignore-only crop이 기록돼
+아래 원인 진단이 확인됐습니다. 이 문서는 당시 v1 실패의 증거와 검사 범위를 그대로 보존합니다.
+
 2026-09-23 사용자 제출 로그의 최종 집계는 **failed, 0/6 완료**입니다.
 Vanilla·FSKD·LG 네 β 모두 25 update 후 26번째 batch 로딩에서 같은 예외로 멈췄습니다.
 전체 val500은 시작하지 않았고 mIoU·선택 step은 null, LG β 선택은 pending입니다.

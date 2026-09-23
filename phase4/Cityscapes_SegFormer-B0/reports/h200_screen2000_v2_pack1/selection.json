@@ -1,0 +1,45 @@
+{
+  "protocol_id": "cityscapes_b0_screen2000_v2",
+  "source_log_sha256": "97d31187078586f7a230aa5274dc1dc283ecbf870ba4d337692368b51a240148",
+  "selection": {
+    "vanilla": {
+      "status": "fixed_baseline",
+      "selected_run_ids": [],
+      "continue_without_beta_selection": true
+    },
+    "fskd": {
+      "status": "fixed_baseline",
+      "selected_run_ids": [],
+      "continue_without_beta_selection": true
+    },
+    "lg": {
+      "status": "selected",
+      "selected_run_ids": [
+        "lg_beta_r003",
+        "lg_beta_r007"
+      ],
+      "ranking": [
+        {
+          "run_id": "lg_beta_r003",
+          "best_step": 2000,
+          "best_miou": 0.4476108838390324
+        },
+        {
+          "run_id": "lg_beta_r007",
+          "best_step": 2000,
+          "best_miou": 0.4438472902406169
+        },
+        {
+          "run_id": "lg_beta_r015",
+          "best_step": 2000,
+          "best_miou": 0.43916378749464147
+        },
+        {
+          "run_id": "lg_beta_r030",
+          "best_step": 2000,
+          "best_miou": 0.43135686060009454
+        }
+      ]
+    }
+  }
+}
