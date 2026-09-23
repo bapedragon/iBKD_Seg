@@ -1,10 +1,9 @@
 # Cityscapes · SegFormer-B0 비교 실험
 
-2026-09-23 H200 v1에서 **7개 방법 모두 실제 입력의 3 update를 완료했으나 checkpoint 재실행 비교에 실패**했습니다.
-[로그 점검](reports/h200_smoke_v1_819/RESULTS.md)에 근거와 제한을 기록했습니다.
-결정적 연산 설정·복원 진단·실패 결과 보존을 보완한 **v2를 준비**했습니다.
-v2는 로컬 단위 검사 14개 및 CPU 연결·재실행 7/7을 통과했고 GPU 재검사가 남았습니다.
-β 선별·80k 본실험 runner도 아직 실행하지 않았습니다.
+2026-09-23 **H200 smoke v2에서 7개 방법 모두 학습·checkpoint 재개·val2 평가를 통과**했습니다.
+[최신 결과](reports/h200_smoke_v2/RESULTS.md)에 방법별 검사·메모리와 확인 범위를 기록했습니다.
+v1의 재실행 불일치는 v2의 고정 기준에서 해소됐습니다.
+β 선별·전체 val500·80k 본실험 runner는 다음 단계이며 아직 실행하지 않았습니다.
 바로 실행할 입력값은 [H200 smoke 이슈](H200_SMOKE_ISSUE.md)에 있습니다.
 이번 smoke는 NVIDIA ImageNet MiT-B0 배포본을 역변환해 사용하며,
 CIRKD Baidu 파일과의 동일성은 미확인입니다. 이 출처 예외는 본실험과 구분합니다.
@@ -38,12 +37,12 @@ AdamW, LR 6e-5, poly power 0.9, 80,000 step을 사용합니다.
 
 | 조건 | 고정하거나 선별할 내용 | 현재 상태 |
 |---|---|---|
-| Vanilla | 공통 CE만 사용, teacher 없음 | GPU 3 update 확인; 재개 v2 재검사 전 |
-| FSKD* | stage 3·4, global/patch/attention=1/1/40,000, KD T=1 | 재구현 GPU 3 update 확인; 재개 v2 재검사 전 |
-| LG | 처음·중간·끝인 1·5·8번째 block, β 후보 선별 | GPU 3 update 확인; 재개 v2·β 선별 전 |
-| ALG | LG와 같은 연결, 1 epoch 분량마다 종료 판단, guidance warm-up 0 | GPU 3 update 확인; 재개 v2·β 선별 전 |
-| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 1 epoch 분량마다 종료 판단, β 선별 | GPU 3 update 확인; 재개 v2·β 선별 전 |
-| iBKD λ=0.5 | 위와 동일한 연결·controller, 이 λ 조건에서 β 선별 | GPU 3 update 확인; 재개 v2·β 선별 전 |
+| Vanilla | 공통 CE만 사용, teacher 없음 | H200 smoke v2 통과 |
+| FSKD* | stage 3·4, global/patch/attention=1/1/40,000, KD T=1 | 재구현 H200 smoke v2 통과 |
+| LG | 처음·중간·끝인 1·5·8번째 block, β 후보 선별 | H200 smoke v2 통과; β 선별 전 |
+| ALG | LG와 같은 연결, 1 epoch 분량마다 종료 판단, guidance warm-up 0 | H200 smoke v2 통과; β 선별 전 |
+| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 1 epoch 분량마다 종료 판단, β 선별 | H200 smoke v2 통과; β 선별 전 |
+| iBKD λ=0.5 | 위와 동일한 연결·controller, 이 λ 조건에서 β 선별 | H200 smoke v2 통과; β 선별 전 |
 
 추가 요청에 따라 **C2VKD 방법 프로토콜도 작성**했습니다. 공개된 세 feature loss와
 논문 기반 PDD를 연결하며, 원본 attention-pooling 가중치가 없어 CLIP RN101 pool을
@@ -75,7 +74,7 @@ Controller 관측과 별개로 val 평가는 공통 조건인 400 step마다 수
 
 ## 실행 순서
 
-1. 구현된 B0 smoke를 H200에서 실행해 실제 입력의 손실·gradient·재개·메모리를 확인합니다.
+1. H200 smoke v2에서 실제 입력의 손실·gradient·재개·val2·메모리 확인을 완료했습니다.
 2. smoke 통과 후 전체 runner를 완성하고 계획의 25-batch 측정으로 β 후보 범위를 정합니다.
    smoke의 3-batch 임시 β는 최종 선별 후보가 아닙니다.
 3. LG, ALG, iBKD 두 λ 조건은 각각 β 4개를 구성해 2,000 step까지 선별합니다.
@@ -90,8 +89,8 @@ Controller 관측과 별개로 val 평가는 공통 조건인 400 step마다 수
 보존했다면 선별 checkpoint에서 이어갈 수 있고, 모델·loss·β·schedule을 바꾸었다면
 초기화부터 다시 시작해야 합니다. 구체적인 기준은 [실험 흐름](EXPERIMENT_PLAN.md)에 있습니다.
 
-본실험 β 후보는 **미선별**입니다. H200 v1의 3-update loss와 실패 원인 검토는 기록했으며,
-다음 작업은 [H200 smoke v2](H200_SMOKE_ISSUE.md)의 재개·평가 재검사입니다.
+본실험 β 후보는 **미선별**입니다. [H200 smoke v2 결과](reports/h200_smoke_v2/RESULTS.md)는 통과이며,
+다음 작업은 전체 runner 준비와 계획된 25-batch beta 후보 측정입니다.
 FSKD의 저자 비공개 설정을 확인한 것은 아니며, C2VKD 대체안은 별도 후보로 기록합니다.
 
 ## 기존 실험과의 관계
