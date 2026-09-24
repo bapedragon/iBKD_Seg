@@ -1,0 +1,82 @@
+{
+  "source_log_sha256": "5ff7cab0ed2d01ef3f332b082a0851b89b56b4679cb006ca246a153391d64b81",
+  "group_header_missing": true,
+  "selection": {
+    "alg": {
+      "status": "recomputed_from_candidate_records",
+      "group_selection_verified": false,
+      "selected_run_ids": [
+        "alg_beta_r003",
+        "alg_beta_r007"
+      ],
+      "ranking": [
+        {
+          "run_id": "alg_beta_r003",
+          "beta": 0.197479,
+          "best_step": 2000,
+          "best_miou": 0.4476108838390324,
+          "best_miou_source": "inferred_from_selected_step_2000_and_last_metrics"
+        },
+        {
+          "run_id": "alg_beta_r007",
+          "beta": 0.460784,
+          "best_step": 2000,
+          "best_miou": 0.44355007347779807,
+          "best_miou_source": "explicit_best_metrics"
+        },
+        {
+          "run_id": "alg_beta_r015",
+          "beta": 0.987394,
+          "best_step": 2000,
+          "best_miou": 0.44044946099700333,
+          "best_miou_source": "explicit_best_metrics"
+        },
+        {
+          "run_id": "alg_beta_r030",
+          "beta": 1.97479,
+          "best_step": 2000,
+          "best_miou": 0.4324845184579333,
+          "best_miou_source": "explicit_best_metrics"
+        }
+      ]
+    },
+    "ibkd_lambda025": {
+      "status": "recomputed_from_candidate_records",
+      "group_selection_verified": false,
+      "selected_run_ids": [
+        "ibkd_lambda025_beta_r007",
+        "ibkd_lambda025_beta_r030"
+      ],
+      "ranking": [
+        {
+          "run_id": "ibkd_lambda025_beta_r007",
+          "beta": 0.903048,
+          "best_step": 2000,
+          "best_miou": 0.45402448664333667,
+          "best_miou_source": "explicit_best_metrics"
+        },
+        {
+          "run_id": "ibkd_lambda025_beta_r030",
+          "beta": 3.87021,
+          "best_step": 2000,
+          "best_miou": 0.45401148880740594,
+          "best_miou_source": "explicit_best_metrics"
+        },
+        {
+          "run_id": "ibkd_lambda025_beta_r003",
+          "beta": 0.387021,
+          "best_step": 2000,
+          "best_miou": 0.4538537320677106,
+          "best_miou_source": "explicit_best_metrics"
+        },
+        {
+          "run_id": "ibkd_lambda025_beta_r015",
+          "beta": 1.9351,
+          "best_step": 2000,
+          "best_miou": 0.4512689946301598,
+          "best_miou_source": "explicit_best_metrics"
+        }
+      ]
+    }
+  }
+}
