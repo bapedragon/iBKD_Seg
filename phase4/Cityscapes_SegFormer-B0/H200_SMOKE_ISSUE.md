@@ -118,6 +118,6 @@ student backbone의 gradient checkpointing은 사용하지 않습니다.
 기본 cache는 `/app/scratch/cityscapes_b0_smoke_v1/`입니다. 필요하면
 `CITYSCAPES_ZIP_DIR`, `B0_SMOKE_DATA`, `B0_SMOKE_CACHE`, `B0_SMOKE_OUTPUT`으로 경로를
 지정할 수 있습니다. 재실행은 새로운 출력 경로를 사용하며 기존 결과를 덮어쓰지 않습니다.
-전체 작업 제한은 9시간이고, 본실험으로 자동 전환되지 않습니다.
+현재 코드의 전체 작업 예산은 [9시간 40분](JOB_RUNTIME.md)이며, 본실험으로 자동 전환되지 않습니다.
 
 로컬 검증 범위와 재실행 방법은 [구현 검사 기록](SMOKE_PREPARATION.md)에 있습니다.

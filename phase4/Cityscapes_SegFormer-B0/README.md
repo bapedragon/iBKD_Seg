@@ -4,6 +4,7 @@
 **현재 상태:** [λ=0.25의 β 4개 H200 smoke](reports/h200_warmup20_smoke32_lambda025/RESULTS.md)가
 32-step·재개·val2 검사를 모두 통과했습니다. 다음은 [같은 네 β의 2,000-step 재실험](H200_WARMUP20_CHECK2000_ISSUE.md)입니다.
 10k를 바로 실행하지 않습니다.
+새로 시작하거나 재개하는 B0 작업의 실행 예산은 사용자 지시에 따라 [9시간 40분](JOB_RUNTIME.md)입니다.
 [변경 프로토콜](WARMUP20_PROTOCOL.md)과 [H200 실행 이슈 2개](H200_WARMUP20_ISSUES.md)를 준비했습니다.
 첫 3720 step의 guidance를 보장하며, 각 λ의 기존 β 4개를 초기화부터 10k까지 비교합니다.
 새 iBKD의 2k는 경과 기록입니다. 아래 기존 warm-up 0 결과·선정 기록은 보존하며 새 실행에 재개하지 않습니다.

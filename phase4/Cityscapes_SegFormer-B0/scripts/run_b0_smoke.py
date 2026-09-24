@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 REPO=Path(__file__).resolve().parents[3]
+MAX_JOB_SECONDS=9*3600+40*60
 METHODS=("vanilla","lg","alg","ibkd_lambda025","ibkd_lambda050","fskd","c2vkd_clip_pool")
 
 
@@ -26,14 +27,16 @@ def main():
     report={"status":"running","smoke_spec_id":"cityscapes_segformer_b0_smoke_v2",
             "scientific_result":False,"methods":[],"expected_methods":list(METHODS),
             "primary_methods":6,"supplementary_methods":1,"selected_epoch":None,"test_used":False,
-            "full_validation":False,"output":str(output)}
+            "full_validation":False,"output":str(output),
+            "job_runtime":{"id":"b0_job_runtime_9h40_v1","maximum_job_seconds":MAX_JOB_SECONDS,
+                           "shutdown_reserve_seconds":0,"overrides_frozen_wall_time_only":True}}
     env=os.environ.copy()
     env.update(PYTHONPATH=str(REPO/"src"),MAX_JOBS="2",TORCH_CUDA_ARCH_LIST="9.0",PYTHONUNBUFFERED="1",
                CUBLAS_WORKSPACE_CONFIG=":4096:8")
     stage="initialization"
     def run(command,*,check=True):
-        remaining=9*3600-(time.monotonic()-start)
-        if remaining<=0:raise TimeoutError("9시간 smoke 작업 제한 도달")
+        remaining=MAX_JOB_SECONDS-(time.monotonic()-start)
+        if remaining<=0:raise TimeoutError("9시간 40분 smoke 작업 제한 도달")
         return subprocess.run(command,env=env,check=check,timeout=remaining).returncode
     def save():
         (output/"smoke_summary.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")

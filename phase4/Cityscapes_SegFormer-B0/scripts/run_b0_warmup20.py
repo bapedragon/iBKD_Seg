@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 REPO=Path(__file__).resolve().parents[3]
+MAX_JOB_SECONDS=9*3600+40*60
 
 
 def terminal_summary(report):
@@ -37,12 +38,14 @@ def main():
     cache=Path(os.environ.get('B0_W20_CACHE','/app/scratch/cityscapes_b0_smoke_v1/assets')).resolve()
     data=Path(os.environ.get('B0_W20_DATA','/app/scratch/cityscapes_b0_smoke_v1/cityscapes')).resolve()
     zip_root=Path(os.environ.get('CITYSCAPES_ZIP_DIR','/app/data/chaoyang')).resolve()
-    started=time.time();deadline=started+9*3600-180
+    started=time.time();deadline=started+MAX_JOB_SECONDS-180
     os.environ.update(PYTHONPATH=str(REPO/'src'),PYTHONUNBUFFERED='1',PYTHONHASHSEED='1',
                       CUBLAS_WORKSPACE_CONFIG=':4096:8',MAX_JOBS='2',TORCH_CUDA_ARCH_LIST='9.0')
     report=dict(status='running',pack=args.pack,runs=[],selection={},last_loss=None,selected_epoch=None,metrics=None,
                 test_used=False,target_steps_per_run=target_steps,diagnostic_smoke=args.smoke,guidance_warmup_epochs=20,
-                output=str(output),resume_from=None if resume is None else str(resume))
+                output=str(output),resume_from=None if resume is None else str(resume),
+                job_runtime=dict(id='b0_job_runtime_9h40_v1',maximum_job_seconds=MAX_JOB_SECONDS,
+                                 shutdown_reserve_seconds=180,overrides_frozen_wall_time_only=True))
     def save():
         (output/'group_summary.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     def stage(name):

@@ -149,7 +149,7 @@ CIRKD의 train list를 80,000×16 길이로 반복·잘라 만든 후 shuffle하
 유지하며, 초기 smoke 예외를 [2k 실행 명세](configs/b0_screen2000_v2.json)에 명시적으로 승계했습니다.
 3 update·val2·checkpoint 재실행과 실제 batch·메모리·입력 동일성은 H200 smoke v2에서
 통과했습니다. 새 [2k 이슈](H200_SCREEN2000_ISSUES.md)에는 전체 val500과 내장 재개 검사가 있습니다.
-10시간 작업 제한은 9시간 실행 후 상태 저장·동일 schedule 재개로 처리합니다.
+10시간 작업 제한에는 [9시간 40분 실행 예산](JOB_RUNTIME.md)을 적용하고 상태 저장·동일 schedule 재개로 처리합니다.
 
 **방법별 설정은 이번 공통 프로토콜에 넣지 않습니다.** FSKD의 loss 가중치·KD
 temperature/alpha·feature pairing, CIRKD의 memory/relational loss, LG/ALG/iBKD의
