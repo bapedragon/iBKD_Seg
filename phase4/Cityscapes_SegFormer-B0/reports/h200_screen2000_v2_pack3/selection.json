@@ -1,0 +1,35 @@
+{
+  "protocol_id": "cityscapes_b0_screen2000_v2",
+  "source_log_sha256": "d3d1a6b25e503afb396272540823ec78371a2698af23ff48d997537a68a26446",
+  "selection": {
+    "ibkd_lambda050": {
+      "status": "selected",
+      "selected_run_ids": [
+        "ibkd_lambda050_beta_r003",
+        "ibkd_lambda050_beta_r007"
+      ],
+      "ranking": [
+        {
+          "run_id": "ibkd_lambda050_beta_r003",
+          "best_step": 2000,
+          "best_miou": 0.45692598369807946
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r007",
+          "best_step": 2000,
+          "best_miou": 0.45370411561601687
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r030",
+          "best_step": 2000,
+          "best_miou": 0.4522370350172089
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r015",
+          "best_step": 2000,
+          "best_miou": 0.45144405169272367
+        }
+      ]
+    }
+  }
+}

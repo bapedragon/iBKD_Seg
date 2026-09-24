@@ -1,0 +1,982 @@
+{
+  "source": {
+    "bytes": 65004,
+    "sha256": "d3d1a6b25e503afb396272540823ec78371a2698af23ff48d997537a68a26446",
+    "group_line": 3,
+    "git_commit": "a51fe4c1c3ba03582d0a12d6fca2b478eb2f2dec",
+    "leading_worker_summary_truncated": true,
+    "final_group_complete": true
+  },
+  "protocol_id": "cityscapes_b0_screen2000_v2",
+  "pack": "pack3",
+  "status": "completed",
+  "completed_runs": 4,
+  "total_elapsed_seconds": 12380.855960130692,
+  "data_verification": {
+    "status": "passed",
+    "manifest_sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6",
+    "preparation_sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c",
+    "all_prepared_file_hashes_verified": true
+  },
+  "input_preflight": {
+    "status": "passed",
+    "plan_sha256": "351584fb15a248e8cd10e8a8ce0df24afb95a6bf07bf7076c60d935bd7c772ba",
+    "calibration_tensor_sha256": "0f6005b5501b6493e7fc8d2efd6687f84138ccf73d3307d8a190a086cde60a91",
+    "manifest_sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6",
+    "samples": 512,
+    "optimizer_updates": 0,
+    "calibration_samples": 400,
+    "checked_batches": 32,
+    "checked_tensor_sha256": "009d2c22d4b6fdbe992858fd8963eb546776badcf872b998ae0e7a1135505f85",
+    "valid_pixels_per_batch": [
+      3981909,
+      4031082,
+      3967833,
+      3837338,
+      4044992,
+      3971285,
+      4052664,
+      3925212,
+      3693924,
+      3941611,
+      3936082,
+      3939809,
+      3886285,
+      3916523,
+      3906487,
+      3851030,
+      3907799,
+      4053626,
+      3984435,
+      4013504,
+      3941825,
+      3780481,
+      3926300,
+      3967301,
+      4080822,
+      3429511,
+      4012898,
+      3853076,
+      4009545,
+      4029208,
+      4022709,
+      4110664
+    ],
+    "ignore_only_samples": [
+      {
+        "batch": 26,
+        "sample_in_batch": 4,
+        "name": "jena_000087_000019_gtFine_labelIds"
+      }
+    ]
+  },
+  "checks": {
+    "status": "passed",
+    "complete_group_summary": true,
+    "complete_candidate_records": 4,
+    "completed_2000_and_full_val500_all": true,
+    "data_preflight_identical_to_pack1": true,
+    "replay_stability_calibration_passed_all": true,
+    "confusion_matrices_recomputed": 13,
+    "max_metric_absolute_error": 1.1102230246251565e-16,
+    "ground_truth_class_totals_identical": true,
+    "controller_replays_matched": 4,
+    "controller_numeric_atol": 1e-14,
+    "controller_max_absolute_error": 0.0,
+    "all_guidance_stop_after_step": 558,
+    "final_loss_ce_only_all": true,
+    "last_batch_hash_matches_pack1": true,
+    "group_selection_recomputed_and_matched": true,
+    "r030_all_five_evaluations_available": true,
+    "r030_source_hashes_match_current": true,
+    "other_candidate_full_histories_available": false,
+    "checkpoint_files_inspected": false,
+    "test_used": false
+  },
+  "runs": [
+    {
+      "run_id": "ibkd_lambda050_beta_r003",
+      "method": "ibkd_lambda050",
+      "candidate_id": "beta_r003",
+      "beta": 0.4303,
+      "status": "completed",
+      "completed_steps": 2000,
+      "selected_step": 2000,
+      "last_eval_step": 2000,
+      "last_loss": {
+        "step": 2000,
+        "loss": 0.5434734225273132,
+        "loss_components": {
+          "ce": 0.5434734225273132
+        },
+        "raw_guidance": null,
+        "weighted_guidance": 0.0,
+        "beta": 0.0,
+        "lr": 5.8648973535704395e-05,
+        "guidance_on": false,
+        "gradient_norms": {
+          "encoder": 7.068729813205908,
+          "decoder": 2.715375678549837,
+          "guidance.adapters": 0.0,
+          "guidance.core": 0.0
+        }
+      },
+      "controller": {
+        "controller": {
+          "kind": "ibkd",
+          "beta_on": 0.4303,
+          "threshold": -0.02,
+          "smoothing_window": 50,
+          "warmup_epochs": 0,
+          "stop_policy": "loss_derivative",
+          "fixed_stop_epoch": null,
+          "stop_comparison": "strictly_greater",
+          "active": false,
+          "stop_epoch": 3,
+          "loss_history": [
+            0.2513444105623871,
+            0.2001058375162463,
+            0.18865226209163666
+          ],
+          "derivative_history": [
+            null,
+            -0.025619286523070398,
+            -0.012357620649226686
+          ],
+          "smoothed_derivative_history": [
+            null,
+            -0.025619286523070398,
+            -0.018988453586148542
+          ],
+          "beta_history": [
+            0.4303,
+            0.4303,
+            0.4303,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "intervals": 10,
+        "steps": 140,
+        "loss_sum": 0.0,
+        "samples": 2240,
+        "beta": 0.0
+      },
+      "guidance_stop_after_step": 558,
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "stability_500_passed": true,
+      "calibration_input_verified": true,
+      "last_input_hash": "8f75ff409596c6610046138dd35433ddc518728061fceb18598a84e3e05b0f2a",
+      "training_seconds": 2059.8519736928865,
+      "validation_seconds": 365.42039386741817,
+      "checkpoint_seconds": 27.467284930869937,
+      "input_wait_seconds": 322.0463749067858,
+      "elapsed_seconds": 2936.623950420879,
+      "peak_allocated_cuda_bytes": 18206948864,
+      "resume_pointer": "/app/output/cityscapes_b0_screen2000_v2/pack3/runs/ibkd_lambda050_beta_r003/resume.json",
+      "error": null,
+      "metrics": {
+        "miou": 0.45692598369807946,
+        "pixel_accuracy": 0.9011477368369614,
+        "class_iou": [
+          0.9357422653207212,
+          0.6151363383722225,
+          0.8286836052741622,
+          0.1738628012454866,
+          0.2828668222893157,
+          0.37224623088615005,
+          0.23137093907549353,
+          0.4619349200221616,
+          0.8747257472749147,
+          0.42317341025797267,
+          0.8733016353535804,
+          0.6036201555974341,
+          0.20975289445677175,
+          0.7937047465602378,
+          0.031829579260518485,
+          0.10755932923521026,
+          0.14228076414402815,
+          0.13377170548813708,
+          0.5860298001489906
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      },
+      "last_metrics": {
+        "miou": 0.45692598369807946,
+        "pixel_accuracy": 0.9011477368369614,
+        "class_iou": [
+          0.9357422653207212,
+          0.6151363383722225,
+          0.8286836052741622,
+          0.1738628012454866,
+          0.2828668222893157,
+          0.37224623088615005,
+          0.23137093907549353,
+          0.4619349200221616,
+          0.8747257472749147,
+          0.42317341025797267,
+          0.8733016353535804,
+          0.6036201555974341,
+          0.20975289445677175,
+          0.7937047465602378,
+          0.031829579260518485,
+          0.10755932923521026,
+          0.14228076414402815,
+          0.13377170548813708,
+          0.5860298001489906
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "run_id": "ibkd_lambda050_beta_r007",
+      "method": "ibkd_lambda050",
+      "candidate_id": "beta_r007",
+      "beta": 1.00403,
+      "status": "completed",
+      "completed_steps": 2000,
+      "selected_step": 2000,
+      "last_eval_step": 2000,
+      "last_loss": {
+        "step": 2000,
+        "loss": 0.5587706565856934,
+        "loss_components": {
+          "ce": 0.5587706565856934
+        },
+        "raw_guidance": null,
+        "weighted_guidance": 0.0,
+        "beta": 0.0,
+        "lr": 5.8648973535704395e-05,
+        "guidance_on": false,
+        "gradient_norms": {
+          "encoder": 7.963963234669098,
+          "decoder": 2.8404397497833704,
+          "guidance.adapters": 0.0,
+          "guidance.core": 0.0
+        }
+      },
+      "controller": {
+        "controller": {
+          "kind": "ibkd",
+          "beta_on": 1.00403,
+          "threshold": -0.02,
+          "smoothing_window": 50,
+          "warmup_epochs": 0,
+          "stop_policy": "loss_derivative",
+          "fixed_stop_epoch": null,
+          "stop_comparison": "strictly_greater",
+          "active": false,
+          "stop_epoch": 3,
+          "loss_history": [
+            0.24943821604854316,
+            0.19919072436068647,
+            0.18774306846241798
+          ],
+          "derivative_history": [
+            null,
+            -0.025123745843928347,
+            -0.012190467247398945
+          ],
+          "smoothed_derivative_history": [
+            null,
+            -0.025123745843928347,
+            -0.018657106545663646
+          ],
+          "beta_history": [
+            1.00403,
+            1.00403,
+            1.00403,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "intervals": 10,
+        "steps": 140,
+        "loss_sum": 0.0,
+        "samples": 2240,
+        "beta": 0.0
+      },
+      "guidance_stop_after_step": 558,
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "stability_500_passed": true,
+      "calibration_input_verified": true,
+      "last_input_hash": "8f75ff409596c6610046138dd35433ddc518728061fceb18598a84e3e05b0f2a",
+      "training_seconds": 2139.7610413478687,
+      "validation_seconds": 359.57331364415586,
+      "checkpoint_seconds": 28.11565244756639,
+      "input_wait_seconds": 295.9315899973735,
+      "elapsed_seconds": 2986.834569511935,
+      "peak_allocated_cuda_bytes": 18208521728,
+      "resume_pointer": "/app/output/cityscapes_b0_screen2000_v2/pack3/runs/ibkd_lambda050_beta_r007/resume.json",
+      "error": null,
+      "metrics": {
+        "miou": 0.45370411561601687,
+        "pixel_accuracy": 0.9017558565277739,
+        "class_iou": [
+          0.9368595311114073,
+          0.6161172207363688,
+          0.8273474061399695,
+          0.16320417536718237,
+          0.27328048932067783,
+          0.36085651369494165,
+          0.21543170891239305,
+          0.4605709834789106,
+          0.87358883113109,
+          0.42751449932320484,
+          0.8724034851749184,
+          0.6024012314033866,
+          0.21057132996535155,
+          0.7965833357994123,
+          0.030511238083324507,
+          0.1192245715832481,
+          0.14832902921894753,
+          0.10427042947072081,
+          0.5813121867888663
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      },
+      "last_metrics": {
+        "miou": 0.45370411561601687,
+        "pixel_accuracy": 0.9017558565277739,
+        "class_iou": [
+          0.9368595311114073,
+          0.6161172207363688,
+          0.8273474061399695,
+          0.16320417536718237,
+          0.27328048932067783,
+          0.36085651369494165,
+          0.21543170891239305,
+          0.4605709834789106,
+          0.87358883113109,
+          0.42751449932320484,
+          0.8724034851749184,
+          0.6024012314033866,
+          0.21057132996535155,
+          0.7965833357994123,
+          0.030511238083324507,
+          0.1192245715832481,
+          0.14832902921894753,
+          0.10427042947072081,
+          0.5813121867888663
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "run_id": "ibkd_lambda050_beta_r015",
+      "method": "ibkd_lambda050",
+      "candidate_id": "beta_r015",
+      "beta": 2.1515,
+      "status": "completed",
+      "completed_steps": 2000,
+      "selected_step": 2000,
+      "last_eval_step": 2000,
+      "last_loss": {
+        "step": 2000,
+        "loss": 0.5602841973304749,
+        "loss_components": {
+          "ce": 0.5602841973304749
+        },
+        "raw_guidance": null,
+        "weighted_guidance": 0.0,
+        "beta": 0.0,
+        "lr": 5.8648973535704395e-05,
+        "guidance_on": false,
+        "gradient_norms": {
+          "encoder": 7.10896255022232,
+          "decoder": 2.807049432206859,
+          "guidance.adapters": 0.0,
+          "guidance.core": 0.0
+        }
+      },
+      "controller": {
+        "controller": {
+          "kind": "ibkd",
+          "beta_on": 2.1515,
+          "threshold": -0.02,
+          "smoothing_window": 50,
+          "warmup_epochs": 0,
+          "stop_policy": "loss_derivative",
+          "fixed_stop_epoch": null,
+          "stop_comparison": "strictly_greater",
+          "active": false,
+          "stop_epoch": 3,
+          "loss_history": [
+            0.246863041033027,
+            0.19832639940964278,
+            0.18716045557170785
+          ],
+          "derivative_history": [
+            null,
+            -0.024268320811692112,
+            -0.01181142154987568
+          ],
+          "smoothed_derivative_history": [
+            null,
+            -0.024268320811692112,
+            -0.018039871180783897
+          ],
+          "beta_history": [
+            2.1515,
+            2.1515,
+            2.1515,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "intervals": 10,
+        "steps": 140,
+        "loss_sum": 0.0,
+        "samples": 2240,
+        "beta": 0.0
+      },
+      "guidance_stop_after_step": 558,
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "stability_500_passed": true,
+      "calibration_input_verified": true,
+      "last_input_hash": "8f75ff409596c6610046138dd35433ddc518728061fceb18598a84e3e05b0f2a",
+      "training_seconds": 2198.1874150754884,
+      "validation_seconds": 354.36115074623376,
+      "checkpoint_seconds": 28.045210713520646,
+      "input_wait_seconds": 246.9782727472484,
+      "elapsed_seconds": 2987.2430941797793,
+      "peak_allocated_cuda_bytes": 18208194048,
+      "resume_pointer": "/app/output/cityscapes_b0_screen2000_v2/pack3/runs/ibkd_lambda050_beta_r015/resume.json",
+      "error": null,
+      "metrics": {
+        "miou": 0.45144405169272367,
+        "pixel_accuracy": 0.9005912464214231,
+        "class_iou": [
+          0.9353134804955876,
+          0.618056954138726,
+          0.8268508263823277,
+          0.15548788329608915,
+          0.25945843820869413,
+          0.3561375353965525,
+          0.20269287773044878,
+          0.4590368845675876,
+          0.8727645273151691,
+          0.4332066938447675,
+          0.8642988719713992,
+          0.5998037452392785,
+          0.2179567419655333,
+          0.7898151308836708,
+          0.03199835314631605,
+          0.11216731843767035,
+          0.16531842278954947,
+          0.09643053864261172,
+          0.58064175770977
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      },
+      "last_metrics": {
+        "miou": 0.45144405169272367,
+        "pixel_accuracy": 0.9005912464214231,
+        "class_iou": [
+          0.9353134804955876,
+          0.618056954138726,
+          0.8268508263823277,
+          0.15548788329608915,
+          0.25945843820869413,
+          0.3561375353965525,
+          0.20269287773044878,
+          0.4590368845675876,
+          0.8727645273151691,
+          0.4332066938447675,
+          0.8642988719713992,
+          0.5998037452392785,
+          0.2179567419655333,
+          0.7898151308836708,
+          0.03199835314631605,
+          0.11216731843767035,
+          0.16531842278954947,
+          0.09643053864261172,
+          0.58064175770977
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "run_id": "ibkd_lambda050_beta_r030",
+      "method": "ibkd_lambda050",
+      "candidate_id": "beta_r030",
+      "beta": 4.303,
+      "status": "completed",
+      "completed_steps": 2000,
+      "selected_step": 2000,
+      "last_eval_step": 2000,
+      "last_loss": {
+        "step": 2000,
+        "loss": 0.5316913723945618,
+        "loss_components": {
+          "ce": 0.5316913723945618
+        },
+        "raw_guidance": null,
+        "weighted_guidance": 0.0,
+        "beta": 0.0,
+        "lr": 5.8648973535704395e-05,
+        "guidance_on": false,
+        "gradient_norms": {
+          "encoder": 8.695701986322122,
+          "decoder": 2.6956449799272892,
+          "guidance.adapters": 0.0,
+          "guidance.core": 0.0
+        }
+      },
+      "controller": {
+        "controller": {
+          "kind": "ibkd",
+          "beta_on": 4.303,
+          "threshold": -0.02,
+          "smoothing_window": 50,
+          "warmup_epochs": 0,
+          "stop_policy": "loss_derivative",
+          "fixed_stop_epoch": null,
+          "stop_comparison": "strictly_greater",
+          "active": false,
+          "stop_epoch": 3,
+          "loss_history": [
+            0.24411711329093544,
+            0.19667939817713154,
+            0.1856681086042876
+          ],
+          "derivative_history": [
+            null,
+            -0.02371885755690195,
+            -0.0115767157099153
+          ],
+          "smoothed_derivative_history": [
+            null,
+            -0.02371885755690195,
+            -0.017647786633408626
+          ],
+          "beta_history": [
+            4.303,
+            4.303,
+            4.303,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "intervals": 10,
+        "steps": 140,
+        "loss_sum": 0.0,
+        "samples": 2240,
+        "beta": 0.0
+      },
+      "guidance_stop_after_step": 558,
+      "inline_replay": {
+        "status": "passed",
+        "checkpoint_step": 2,
+        "replay_step": 3,
+        "restore": "bitwise",
+        "rtol": 2e-05,
+        "atol": 2e-06
+      },
+      "stability_500_passed": true,
+      "calibration_input_verified": true,
+      "last_input_hash": "8f75ff409596c6610046138dd35433ddc518728061fceb18598a84e3e05b0f2a",
+      "training_seconds": 2182.877588278614,
+      "validation_seconds": 345.7746151369065,
+      "checkpoint_seconds": 26.943350684829056,
+      "input_wait_seconds": 286.620319490321,
+      "elapsed_seconds": 3005.1445242529735,
+      "peak_allocated_cuda_bytes": 18206948864,
+      "resume_pointer": "/app/output/cityscapes_b0_screen2000_v2/pack3/runs/ibkd_lambda050_beta_r030/resume.json",
+      "error": null,
+      "metrics": {
+        "miou": 0.4522370350172089,
+        "pixel_accuracy": 0.8991623777391472,
+        "class_iou": [
+          0.9340935021648972,
+          0.6102242798410874,
+          0.8230946183776554,
+          0.18643682169304507,
+          0.2733301704345406,
+          0.35691918764551706,
+          0.22098051141561847,
+          0.46543181011380186,
+          0.8726460858109738,
+          0.4211302664431519,
+          0.8712222377215457,
+          0.5975055760723952,
+          0.20020493974225922,
+          0.7838944325114947,
+          0.032644397014221664,
+          0.13794135285568346,
+          0.12267727194927915,
+          0.09905495317589079,
+          0.5830712503439096
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      },
+      "last_metrics": {
+        "miou": 0.4522370350172089,
+        "pixel_accuracy": 0.8991623777391472,
+        "class_iou": [
+          0.9340935021648972,
+          0.6102242798410874,
+          0.8230946183776554,
+          0.18643682169304507,
+          0.2733301704345406,
+          0.35691918764551706,
+          0.22098051141561847,
+          0.46543181011380186,
+          0.8726460858109738,
+          0.4211302664431519,
+          0.8712222377215457,
+          0.5975055760723952,
+          0.20020493974225922,
+          0.7838944325114947,
+          0.032644397014221664,
+          0.13794135285568346,
+          0.12267727194927915,
+          0.09905495317589079,
+          0.5830712503439096
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    }
+  ],
+  "selection": {
+    "ibkd_lambda050": {
+      "status": "selected",
+      "selected_run_ids": [
+        "ibkd_lambda050_beta_r003",
+        "ibkd_lambda050_beta_r007"
+      ],
+      "ranking": [
+        {
+          "run_id": "ibkd_lambda050_beta_r003",
+          "best_step": 2000,
+          "best_miou": 0.45692598369807946
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r007",
+          "best_step": 2000,
+          "best_miou": 0.45370411561601687
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r030",
+          "best_step": 2000,
+          "best_miou": 0.4522370350172089
+        },
+        {
+          "run_id": "ibkd_lambda050_beta_r015",
+          "best_step": 2000,
+          "best_miou": 0.45144405169272367
+        }
+      ]
+    }
+  },
+  "r030_signature": {
+    "protocol_id": "cityscapes_b0_screen2000_v2",
+    "protocol_sha256": "1bdfa6c19fcda642cd69e91c21871a4aaa20d8ee911ae19352c86aa2feabe08c",
+    "grid_sha256": "5bf2eaa9f8d8ce5b07ba62287d775d49c283719c0f6d3d53540c6e3346c4909c",
+    "candidate": {
+      "method": "ibkd_lambda050",
+      "candidate_id": "beta_r030",
+      "beta": 4.303,
+      "target_ratio": 0.3,
+      "run_id": "ibkd_lambda050_beta_r030"
+    },
+    "batch_size": 16,
+    "seed": 1,
+    "manifest_sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6",
+    "plan_sha256": "351584fb15a248e8cd10e8a8ce0df24afb95a6bf07bf7076c60d935bd7c772ba",
+    "source": {
+      "b0": {
+        "src/ibkd_seg/cityscapes/b0/__init__.py": "0bab6f806d810464ac507d7094e119e2229d04e9941ca5eb1e76a5b6222576f3",
+        "src/ibkd_seg/cityscapes/b0/assets.py": "ffa09de1795c149007e38f05a889ce8c508e91c482067e73d47dcadd0cf24eba",
+        "src/ibkd_seg/cityscapes/b0/calibration.py": "0700b48c27a9375149352490d733cb6fc8a94723882a5f1662688fd9754292b3",
+        "src/ibkd_seg/cityscapes/b0/calibration_data.py": "c48213ddfd389b0b82c9c693879e0c3b3b36d180bbf1407f2c9f4fcf0db16aaa",
+        "src/ibkd_seg/cityscapes/b0/control.py": "79f2297389a6b3720299184094dbc4dcc4bc6158be325641e0ff610189b943b9",
+        "src/ibkd_seg/cityscapes/b0/data.py": "ecb1f97e6239ad02543b6c4bf3383c8f1be99ac96c9047b7068f5587db4ca59b",
+        "src/ibkd_seg/cityscapes/b0/losses.py": "a215da3f0fe9ff98c4a9f580a83fce0aacf9bcff8f4346f9a4bb84d9d0d1cd83",
+        "src/ibkd_seg/cityscapes/b0/models.py": "6bb5125de490672b85e302ba8dabb1111169710f6e29b879f1d7808eafeff135",
+        "src/ibkd_seg/cityscapes/b0/reproducibility.py": "e4d66575e7715d0030c4c39987353547444f06982a9916f02d04029170648b6c",
+        "src/ibkd_seg/cityscapes/b0/screen.py": "6d5c58e9b0735dea47df176205b0c5db9b12ff48ed7897e074c5e3f7f868f04e",
+        "src/ibkd_seg/cityscapes/b0/smoke.py": "01752ef5e396abb50dca3ad48215cd6339f7befb75cf94bd8433e9dbde3791ed",
+        "src/ibkd_seg/cityscapes/b0/training.py": "71ef5700e7eab654d130e81d2fc94d1ad2751e179c02a83ff7c875b34bebcbf6",
+        "src/ibkd_seg/cityscapes/b0/training_data.py": "a5b0b825cc20d0707bd67e588195ea074ca6c28cb3872eba878d5f08f6d183a5"
+      },
+      "shared": "7a781803ffdab5faed13653604b99399af0ac63f26c726dcfe92fe697a9f2eef"
+    },
+    "execution": {
+      "deterministic_algorithms": true,
+      "deterministic_warn_only": false,
+      "cublas_workspace_config": ":4096:8",
+      "cudnn_deterministic": true,
+      "cudnn_benchmark": false,
+      "tf32": false,
+      "sdpa_backend": "math",
+      "cpu_threads": 1,
+      "cross_entropy": "flatten_valid_pixels_2d_then_mean"
+    },
+    "environment": {
+      "python": "3.10.12",
+      "torch": "2.11.0+cu130",
+      "cuda": "13.0",
+      "numpy": "2.2.6",
+      "opencv": "4.13.0",
+      "gpu": "NVIDIA H200 NVL"
+    }
+  },
+  "r030_validation_history": [
+    {
+      "step": 400,
+      "metrics": {
+        "miou": 0.30615534238972697,
+        "pixel_accuracy": 0.8407415185714974,
+        "class_iou": [
+          0.8629360943945925,
+          0.4340548707810382,
+          0.7512641426708964,
+          0.04609516878555739,
+          0.1248285148929003,
+          0.1673149479109774,
+          3.3556622399430526e-05,
+          0.22437283649400036,
+          0.7929481263869578,
+          0.19525125053544976,
+          0.7446904443831783,
+          0.40642715614604624,
+          0.011935007931077383,
+          0.6854923375758626,
+          0.014059789438759835,
+          0.008533966662653636,
+          0.0,
+          0.00035426874225445644,
+          0.3463590250502112
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "step": 800,
+      "metrics": {
+        "miou": 0.37716508246815456,
+        "pixel_accuracy": 0.8668660245518779,
+        "class_iou": [
+          0.9132661892537693,
+          0.4859241369782982,
+          0.7608812451362602,
+          0.13859944555419898,
+          0.22861597053473012,
+          0.28947452414037117,
+          0.031700223956861125,
+          0.36538561483907445,
+          0.8264305986281988,
+          0.3283078145940869,
+          0.8096507187002854,
+          0.5314578414600953,
+          0.056662586023172354,
+          0.7429933406614516,
+          0.015237296028404639,
+          0.08387389362853356,
+          0.005752884917817275,
+          0.04805665987708251,
+          0.5038655819822451
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "step": 1200,
+      "metrics": {
+        "miou": 0.39586324037682313,
+        "pixel_accuracy": 0.8828045516103002,
+        "class_iou": [
+          0.9143606136013984,
+          0.5358263768243161,
+          0.7976176591115173,
+          0.13789699212996476,
+          0.2150496646518139,
+          0.26554465780930075,
+          0.08792829071727634,
+          0.34521660270456384,
+          0.8461204573871922,
+          0.3798653687111171,
+          0.7892383739193028,
+          0.5617175610342185,
+          0.11115623658819603,
+          0.7826449613725858,
+          0.030907649253731344,
+          0.11218310025399426,
+          0.005223984872055221,
+          0.07175922713262115,
+          0.5311437890844736
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "step": 1600,
+      "metrics": {
+        "miou": 0.4215794090508206,
+        "pixel_accuracy": 0.8923844653256495,
+        "class_iou": [
+          0.9289256262748244,
+          0.5860254608333287,
+          0.812403692660477,
+          0.1778519133110362,
+          0.21379303748569298,
+          0.304145505553076,
+          0.12699893207195997,
+          0.4082830519324537,
+          0.85903253459611,
+          0.3428379598461149,
+          0.8578047023706873,
+          0.5774668353180106,
+          0.10285219661073201,
+          0.7809195099831434,
+          0.06962510113317025,
+          0.09484183936865745,
+          0.12323670501974622,
+          0.07922096957559051,
+          0.5637431980207793
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    },
+    {
+      "step": 2000,
+      "metrics": {
+        "miou": 0.4522370350172089,
+        "pixel_accuracy": 0.8991623777391472,
+        "class_iou": [
+          0.9340935021648972,
+          0.6102242798410874,
+          0.8230946183776554,
+          0.18643682169304507,
+          0.2733301704345406,
+          0.35691918764551706,
+          0.22098051141561847,
+          0.46543181011380186,
+          0.8726460858109738,
+          0.4211302664431519,
+          0.8712222377215457,
+          0.5975055760723952,
+          0.20020493974225922,
+          0.7838944325114947,
+          0.032644397014221664,
+          0.13794135285568346,
+          0.12267727194927915,
+          0.09905495317589079,
+          0.5830712503439096
+        ],
+        "valid_pixels": 917018489,
+        "metric_scale": "0..1",
+        "miou_class_count": 19,
+        "absent_classes_have_zero_iou": true,
+        "validation_samples": 500,
+        "full_validation": true
+      }
+    }
+  ]
+}
