@@ -1,5 +1,9 @@
 # iBKD λ=0.25 · warm-up 20 · β 4개 smoke
 
+**H200 4/4 통과:** [결과 점검](reports/h200_warmup20_smoke32_lambda025/RESULTS.md)을 완료했습니다.
+다음은 [네 β를 각각 2k까지 재실행하는 이슈](H200_WARMUP20_CHECK2000_ISSUE.md)입니다.
+아래 smoke 입력값은 완료한 실행 기록으로 보존합니다.
+
 2026-09-24 사용자 결정: **먼저 짧은 smoke를 통과한 뒤, λ=0.25의 β 4개를 각각
 2,000 step까지 다시 실행**합니다. 두 λ의 10k 실행을 바로 시작하지 않습니다.
 ALG warm-up 0과 기존 warm-up 0 결과는 유지합니다.
@@ -100,5 +104,5 @@ checkpoint는 모든 설정·코드·환경이 같다면 이후 10k로 이어갈
 관련 단위 검사 **42 passed, 2 skipped**입니다. 네 β 각각의 toy model 32-step 학습,
 파일 재개·재실행, val2 평가 및 smoke checkpoint의 본실험 재개 거부를 확인했습니다.
 두 skip은 로컬에 CIRKD upstream cache가 없어 생략된 기존 입력 대조 검사입니다.
-실제 H200 smoke는 아직 실행하지 않았으며 위 이슈에서 확인합니다.
+준비 당시 H200 smoke는 미실행이었으며 이후 위 결과 문서에서 실제 4/4 통과를 확인했습니다.
 Shell의 smoke/2000/10000 명령 전달과 Python/shell 문법 검사도 통과했습니다.
