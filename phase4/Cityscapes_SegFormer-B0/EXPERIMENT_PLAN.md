@@ -1,5 +1,8 @@
 # SegFormer-B0 비교 실험 흐름
 
+현재 우선 실행은 **λ=0.25·warm-up 20의 β4개 짧은 smoke → 같은 네 β를 각각 2k 재실행**입니다.
+[지금 제출할 smoke 이슈](H200_WARMUP20_SMOKE_ISSUE.md)를 먼저 사용하고 결과 확인 뒤 후속 실행을 진행합니다.
+
 **2026-09-24 최신 변경:** iBKD λ=0.25·0.5에만 guidance warm-up 20을 적용하고 ALG는 0으로
 유지합니다. [변경 프로토콜](WARMUP20_PROTOCOL.md) 및 [이슈 2개](H200_WARMUP20_ISSUES.md)를
 준비했습니다. 기존 2k 결과·고정 명세는 warm-up 0 기록으로 보존합니다.

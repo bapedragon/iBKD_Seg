@@ -23,8 +23,14 @@ def terminal_summary(report):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('pack',choices=('lambda025','lambda050'))
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--smoke',action='store_true',help='lambda025 all four betas: 32 updates each, diagnostic val2')
+    mode.add_argument('--target-steps',type=int,choices=(2000,10000),default=10000)
     args=parser.parse_args();os.chdir(REPO)
-    output=Path(os.environ.get('B0_W20_OUTPUT_BASE','/app/output/cityscapes_b0_ibkd_warmup20_v1'))/args.pack
+    if args.smoke and args.pack!='lambda025':parser.error('Smoke is lambda025 only')
+    target_steps=32 if args.smoke else args.target_steps
+    suffix='_smoke32' if args.smoke else '_check2000' if target_steps==2000 else ''
+    output=Path(os.environ.get('B0_W20_OUTPUT_BASE','/app/output/cityscapes_b0_ibkd_warmup20_v1'+suffix))/args.pack
     output=output.resolve();output.mkdir(parents=True,exist_ok=True)
     resume_value=os.environ.get('B0_W20_RESUME_FROM');resume=None if not resume_value else Path(resume_value).resolve()
     if any(p.name!='run.log' for p in output.iterdir()) and resume!=output:raise ValueError('Nonempty output requires B0_W20_RESUME_FROM pointing to that pack directory')
@@ -35,7 +41,8 @@ def main():
     os.environ.update(PYTHONPATH=str(REPO/'src'),PYTHONUNBUFFERED='1',PYTHONHASHSEED='1',
                       CUBLAS_WORKSPACE_CONFIG=':4096:8',MAX_JOBS='2',TORCH_CUDA_ARCH_LIST='9.0')
     report=dict(status='running',pack=args.pack,runs=[],selection={},last_loss=None,selected_epoch=None,metrics=None,
-                test_used=False,target_steps_per_run=10000,guidance_warmup_epochs=20,output=str(output),resume_from=None if resume is None else str(resume))
+                test_used=False,target_steps_per_run=target_steps,diagnostic_smoke=args.smoke,guidance_warmup_epochs=20,
+                output=str(output),resume_from=None if resume is None else str(resume))
     def save():
         (output/'group_summary.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     def stage(name):
@@ -54,7 +61,7 @@ def main():
         with (output/'pip_freeze.txt').open('w') as f:subprocess.run([sys.executable,'-m','pip','freeze'],stdout=f,check=True)
         sys.path.insert(0,str(REPO/'src'))
         import numpy as np
-        from ibkd_seg.cityscapes.b0_warmup20.screen import specification,candidates,code_identity
+        from ibkd_seg.cityscapes.b0_warmup20.screen import specification,candidates,code_identity,run_scope
         from ibkd_seg.cityscapes.b0.assets import prepare as prepare_assets
         from ibkd_seg.cityscapes.b0.calibration_data import verify_preparation
         from ibkd_seg.cityscapes.b0.training_data import make_plan,plan_hash,PlannedDataset,batches,calibration_digest_update
@@ -62,9 +69,10 @@ def main():
         from ibkd_seg.cityscapes.b0.reproducibility import configure_runtime
         from ibkd_seg.cityscapes.data import save_json,sha256
         config,grid=specification();configure_runtime();inventory=candidates(config,grid,args.pack)
-        report.update(expected_runs=inventory,protocol=config,code=code_identity(),
+        report.update(expected_runs=inventory,protocol=config,code=code_identity(),execution_scope=run_scope(target_steps),
                       git_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
         if resume is not None:
+            if bool(previous.get('diagnostic_smoke',False))!=args.smoke:raise ValueError('Cannot mix smoke and full-validation checkpoints')
             if previous.get('protocol')!=config or previous.get('code')!=report['code']:
                 raise ValueError('Resume protocol/code differs from the previous pack')
             if resume!=output and (resume/'runs').exists():
@@ -124,7 +132,7 @@ def main():
             stage(run_id)
             command=[sys.executable,'-m','ibkd_seg.cityscapes.b0_warmup20.screen','--cache',str(cache),'--data',str(data),
                      '--output',str(target),'--plan',str(plan_path),'--preflight',str(output/'input_preflight.json'),
-                     '--run-id',run_id,'--deadline',str(deadline)]
+                     '--run-id',run_id,'--deadline',str(deadline),'--target-steps',str(target_steps)]
             if pointer is not None:command.extend(['--resume',str(pointer)])
             code=run(command,check=False)
             record=json.loads((target/'summary.json').read_text()) if (target/'summary.json').exists() else dict(status='failed',**candidate,error='Worker exited without summary')
@@ -133,8 +141,12 @@ def main():
         stage('selection')
         for method in config['groups'][args.pack]:
             rows=[r for r in report['runs'] if r['method']==method]
-            report['selection'][method]=rank_candidates(rows,[r['run_id'] for r in inventory if r['method']==method],
-                target=config['target_steps'],keep=config['selection']['keep_per_method'])
+            if target_steps<10000:
+                report['selection'][method]=dict(status='not_performed',selected_run_ids=[],
+                    reason='Diagnostic smoke' if args.smoke else '2k observation only; no beta elimination')
+            else:
+                report['selection'][method]=rank_candidates(rows,[r['run_id'] for r in inventory if r['method']==method],
+                    target=config['target_steps'],keep=config['selection']['keep_per_method'])
         completed=[r for r in report['runs'] if r['status']=='completed']
         if completed:
             if len({json.dumps(r['first_25_batch_hashes']) for r in completed})!=1:raise ValueError('Candidates used different initial training inputs')

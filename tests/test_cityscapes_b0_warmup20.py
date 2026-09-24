@@ -7,14 +7,16 @@ import torch
 from ibkd_seg.cityscapes.b0.control import StepController
 from ibkd_seg.cityscapes.b0.screen import code_identity as original_identity, specification as original_spec
 from ibkd_seg.cityscapes.b0.smoke import assert_tree,cpu_tree
-from ibkd_seg.cityscapes.b0.training import rank_candidates
-from ibkd_seg.cityscapes.b0_warmup20.screen import configure_engine,check_protection,specification,candidates,REPO
+from ibkd_seg.cityscapes.b0.training import rank_candidates,fit,evaluate
+from ibkd_seg.cityscapes.b0_warmup20.screen import (
+    configure_engine,check_protection,specification,candidates,REPO,run_scope,apply_scope,result,
+)
 from test_cityscapes_b0_training import engine as toy_engine,inputs
 
 
-def warm_engine(path,monkeypatch,*,warmup=20):
+def warm_engine(path,monkeypatch,*,warmup=20,beta=.4):
     e=toy_engine(path,monkeypatch)
-    e.method='ibkd_lambda025';e.controller=StepController('ibkd',e.controller.beta)
+    e.method='ibkd_lambda025';e.controller=StepController('ibkd',beta)
     e.signature['guidance_warmup_epochs']=warmup
     return configure_engine(e) if warmup==20 else e
 
@@ -104,3 +106,36 @@ def test_selection_waits_for_all_four_at10k():
     assert rank()['status']=='pending'
     rows[-1].update(completed_steps=10000,last_eval_step=10000)
     assert rank()['selected_run_ids']==[ids[-1]]
+
+
+@pytest.mark.parametrize('candidate_index',range(4))
+def test_smoke32_all_betas_replay_val2_and_checkpoint_isolation(tmp_path,monkeypatch,candidate_index):
+    torch.set_num_threads(1)
+    config,grid=specification();candidate=candidates(config,grid,'lambda025')[candidate_index]
+    e=warm_engine(tmp_path/'smoke',monkeypatch,beta=candidate['beta'])
+    e.signature=apply_scope({**e.signature,'candidate':candidate},32)
+    stream=inputs()
+    train=[(*stream[i%len(stream)],['a','b']) for i in range(32)]
+    val=[(torch.cat([x[:1],x[:1]],-1),torch.cat([y[:1],y[:1]],-1),['val']) for x,y in stream[:2]]
+    observed=[];scope=run_scope(32)
+    def emit(kind,row):
+        check_protection(e)
+        if kind=='train':observed.append(row)
+    status=fit(e,iter(train),lambda:evaluate(e.student,iter(val),e.device,expected_count=scope['validation_samples'],shape=(8,16)),
+               target=scope['target_steps'],validation_every=scope['validation_every'],emit=emit)
+    row=result(e,candidate,status,target=32)
+    assert status=='completed' and len(observed)==32
+    assert all(r['guidance_on'] and r['beta']==candidate['beta'] for r in observed)
+    assert row['inline_replay']['status']=='passed'
+    assert row['diagnostic_metrics']['validation_samples']==2 and not row['diagnostic_metrics']['full_validation']
+    assert row['selected_epoch'] is None and row['selected_step'] is None and not row['selection_performed']
+    assert row['guidance_protection_status']=='protected_so_far_boundary_not_reached'
+    assert row['warmup_protection_passed'] is None and not row['minimum_period_reached']
+    same=warm_engine(tmp_path/'smoke_resume',monkeypatch,beta=candidate['beta']);same.signature=e.signature
+    same.load(tmp_path/'smoke/resume.json')
+    assert same.progress['global_step']==32 and same.controller.controller.warmup_epochs==20
+    full=warm_engine(tmp_path/'full',monkeypatch,beta=candidate['beta'])
+    full.signature=apply_scope({**full.signature,'candidate':candidate},2000)
+    with pytest.raises(ValueError,match='signature'):full.restore(e.capture())
+    assert apply_scope(full.signature,10000)==full.signature
+    assert run_scope(2000)['validation_every']==400 and run_scope(2000)['validation_samples']==500

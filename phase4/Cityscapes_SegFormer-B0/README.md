@@ -1,6 +1,8 @@
 # Cityscapes · SegFormer-B0 비교 실험
 
 **2026-09-24 최신 결정: iBKD λ=0.25·0.5만 guidance warm-up 20으로 재실험하고 ALG는 0을 유지합니다.**
+**지금 실행할 순서:** [λ=0.25의 β 4개 smoke](H200_WARMUP20_SMOKE_ISSUE.md)를 먼저 확인한 뒤,
+같은 네 β를 각각 2,000 step까지 실행하고 결과를 확인합니다. 10k를 바로 실행하지 않습니다.
 [변경 프로토콜](WARMUP20_PROTOCOL.md)과 [H200 실행 이슈 2개](H200_WARMUP20_ISSUES.md)를 준비했습니다.
 첫 3720 step의 guidance를 보장하며, 각 λ의 기존 β 4개를 초기화부터 10k까지 비교합니다.
 새 iBKD의 2k는 경과 기록입니다. 아래 기존 warm-up 0 결과·선정 기록은 보존하며 새 실행에 재개하지 않습니다.
@@ -35,6 +37,7 @@ FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
 
 | 파일 | 내용 |
 |---|---|
+| [지금 실행할 warm-up 20 smoke](H200_WARMUP20_SMOKE_ISSUE.md) | λ=0.25의 β 4개 × 32 step·val2, 통과 후 별도 β4개·2k |
 | [iBKD warm-up 20 프로토콜](WARMUP20_PROTOCOL.md) | 최신 사용자 결정, 정확한 종료 경계·기존 결과와 분리·10k 재선별 |
 | [iBKD warm-up 20 이슈 2개](H200_WARMUP20_ISSUES.md) | λ별 β 4개를 초기화부터 10k 실행, 전체 입력값과 재개 |
 | [H200 2k 이슈 3개](H200_SCREEN2000_ISSUES.md) | 사용자 지정 6개·8개·4개 실행, 내장 재개 검사와 전체 val500 |

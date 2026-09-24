@@ -1,5 +1,9 @@
 # iBKD 두 λ · guidance warm-up 20 재실험
 
+**현재 우선 실행:** 사용자 후속 결정에 따라 [λ=0.25 β4개 smoke](H200_WARMUP20_SMOKE_ISSUE.md)를
+먼저 수행하고, 통과 후 같은 네 β를 각각 2k까지 실행해 결과를 확인합니다.
+아래 10k는 후속 선별 계획이며 지금 자동 진행하지 않습니다.
+
 2026-09-24 사용자 결정: **iBKD λ=0.25·0.5에만 20 epoch 분량의 종료 보호를 적용하고,
 ALG는 warm-up 0을 유지**합니다. 실행 ID는 `cityscapes_b0_ibkd_warmup20_v1`입니다.
 [고정 JSON](configs/b0_ibkd_warmup20_v1.json)과 [H200 실행 이슈 2개](H200_WARMUP20_ISSUES.md)를

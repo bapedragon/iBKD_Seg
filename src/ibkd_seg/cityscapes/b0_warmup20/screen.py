@@ -24,6 +24,22 @@ GRID=SPEC/'b0_beta_grid_frozen_v1.json'
 SCREEN_SHA256='748660679663782b5190e614218b918e4f2f6549216f548ec3d84d94799e8901'
 
 
+def run_scope(target):
+    if target==32:
+        return dict(id='cityscapes_b0_ibkd_warmup20_smoke32_v1',target_steps=32,
+                    validation_samples=2,validation_every=32,selection_performed=False,scientific_result=False)
+    if target not in (2000,10000,80000):raise ValueError('Unsupported target')
+    return dict(id='full_validation',target_steps=target,validation_samples=500,validation_every=400)
+
+
+def apply_scope(signature,target):
+    scope=run_scope(target)
+    # Full-validation stopping points may resume into one another. Diagnostic
+    # val2 checkpoints must never be loaded into a full-validation trajectory.
+    if target==32:signature={**signature, 'diagnostic_scope':scope}
+    return signature
+
+
 def specification():
     verify_protocols()
     if sha256(CONFIG)!=SCREEN_SHA256:raise ValueError('Screening specification changed after freezing')
@@ -74,13 +90,24 @@ def result(engine,candidate,status,error=None,*,target=10000):
     row=base_result(engine,candidate,status,error,target=target)
     row.update(guidance_warmup_epochs=20,minimum_guidance_steps=3720,
                interim_2000_metrics=next((h['metrics'] for h in engine.progress['history'] if h['step']==2000),None),
-               warmup_protection_passed=None if status=='failed' else engine.progress['global_step']>=3720,
-               warmup0_checkpoint_reused=False)
+               warmup_protection_passed=True if status!='failed' and engine.progress['global_step']>=3720 else None,
+               warmup0_checkpoint_reused=False,
+               guidance_protection_status='failed' if status=='failed' else
+                   'minimum_period_verified' if engine.progress['global_step']>=3720 else 'protected_so_far_boundary_not_reached',
+               minimum_period_reached=engine.progress['global_step']>=3720)
+    if target==32:
+        row.update(smoke_spec_id=run_scope(target)['id'],scientific_result=False,selection_performed=False,
+                   full_validation=False,validation_samples=2,diagnostic_metrics=row['metrics'],
+                   selected_epoch=None,selected_step=None,selected_epoch_reason='Diagnostic val2; no model selection',
+                   final_80k_result=False,stability_500_passed=None)
     return row
 
 
 def run(args,candidate,report,stop):
     config,grid=specification();execution=configure_runtime()
+    scope=run_scope(args.target_steps)
+    if args.target_steps==32 and candidate['method']!='ibkd_lambda025':
+        raise ValueError('Smoke32 uses only lambda025; all four frozen betas are supported')
     if not torch.cuda.is_available() or torch.cuda.device_count()!=1:raise ValueError('Exactly one CUDA GPU is required')
     device=torch.device('cuda')
     preflight=json.loads(args.preflight.read_text());plan=np.load(args.plan,allow_pickle=False)
@@ -100,6 +127,7 @@ def run(args,candidate,report,stop):
                    source=code_identity(),execution=execution,guidance_warmup_epochs=20,
                    environment=dict(python=platform.python_version(),torch=str(torch.__version__),cuda=torch.version.cuda,
                                     numpy=np.__version__,opencv=cv2.__version__,gpu=torch.cuda.get_device_name()))
+    signature=apply_scope(signature,args.target_steps)
     engine=build_engine(args.cache,candidate,device,signature,args.output,grid)
     if args.resume:
         info=engine.load(args.resume);print('[B0_RESUME] '+json.dumps(info),flush=True)
@@ -112,20 +140,22 @@ def run(args,candidate,report,stop):
     try:
         loader=batches(train,engine.progress['global_step']*16,args.target_steps*16,16,workers=4,prefetch=2)
         def validation():
-            vloader=batches(val,0,500,1,workers=4,prefetch=2)
+            count=scope['validation_samples']
+            vloader=batches(val,0,count,1,workers=4,prefetch=2)
             try:
-                return evaluate(engine.student,vloader,device,stop=should_stop,
-                    emit=lambda n:print(f'[B0_VAL] {candidate["run_id"]} step={engine.progress["global_step"]} images={n}/500',flush=True))
+                return evaluate(engine.student,vloader,device,expected_count=count,stop=should_stop,
+                    emit=lambda n:print(f'[B0_VAL] {candidate["run_id"]} step={engine.progress["global_step"]} images={n}/{count}',flush=True))
             finally:vloader.close()
         def emit(kind,row):
             check_protection(engine)
             report['stage']='validation' if kind.startswith('validation') else 'training'
             if kind=='train':
                 with (args.output/'training.jsonl').open('a') as f:f.write(json.dumps(row)+'\n')
-                if row['step']>3 and row['step']%20!=0 and row['step'] not in (2000,3719,3721):return
+                if row['step']>3 and row['step']%20!=0 and row['step'] not in (args.target_steps,3719,3721):return
             print('[B0_'+kind.upper()+'] '+json.dumps(dict(run_id=candidate['run_id'],**row)),flush=True)
             persist_summary('running')
-        status=fit(engine,loader,validation,target=args.target_steps,stop=should_stop,emit=emit)
+        status=fit(engine,loader,validation,target=args.target_steps,validation_every=scope['validation_every'],
+                   stop=should_stop,emit=emit)
     except Exception as exc:
         import traceback
         traceback.print_exc();status='failed';error=repr(exc)
@@ -139,7 +169,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('cache','data','output','plan','preflight'):parser.add_argument('--'+name,required=True,type=Path)
     parser.add_argument('--run-id',required=True);parser.add_argument('--deadline',required=True,type=float)
-    parser.add_argument('--target-steps',type=int,choices=(2000,10000,80000),default=10000)
+    parser.add_argument('--target-steps',type=int,choices=(32,2000,10000,80000),default=10000)
     parser.add_argument('--resume',type=Path)
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
     if any(args.output.iterdir()) and not args.resume:raise ValueError('Nonempty output requires explicit resume')
