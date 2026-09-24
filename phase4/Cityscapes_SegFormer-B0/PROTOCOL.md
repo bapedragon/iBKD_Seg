@@ -15,7 +15,10 @@
 여기서 채택한 것은 공개 근거를 우선순위대로 조합한 **우리의 공통 비교 조건**입니다.
 FSKD의 누락값까지 저자 설정으로 확인했다는 뜻은 아닙니다.
 
-현재 실행 revision은 [2k v2 명세](configs/b0_screen2000_v2.json)입니다.
+기존 실행 revision은 [2k v2 명세](configs/b0_screen2000_v2.json)입니다.
+2026-09-24 iBKD 두 λ에만 [warm-up 20 revision](configs/b0_ibkd_warmup20_v1.json)을 추가했습니다.
+ALG는 warm-up 0을 유지하며 teacher·student·공통 학습/평가 조건은 변경하지 않습니다.
+정확한 경계와 β 4개·10k 재선별 계획은 [변경 프로토콜](WARMUP20_PROTOCOL.md)에 있습니다.
 Smoke/calibration에서 검증한 NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 모든 비교
 조건에 동일하게 사용하도록 출처 예외를 명시했습니다. CIRKD Baidu 원본과의 동일성은
 미확인입니다. 아래 원래 v1의 출처·JSON 해시는 보존하며 이 예외를 숨기지 않습니다.
@@ -37,17 +40,19 @@ CIRKD는 이번에는 공통 설정과 구현의 출처이며, CIRKD 증류 loss
 목표 규격은 **256채널·16×16**으로 선택해 별도 비교 명세에 기록했습니다.
 이어 LG/ALG의 **처음·중간·끝인 1·5·8번째 block**과 controller의
 **1 epoch 분량(186 step)마다 관측**을 사용자 결정으로 고정했습니다.
-기존 window 50, threshold -0.02는 유지하고, 후속 사용자 결정에 따라 guidance warm-up은
-**ALG 0·iBKD 0 epoch**로 설정합니다. iBKD 두 lambda 조건에 동일하게 적용합니다.
+기존 window 50, threshold -0.02는 유지합니다. 기존 2k에서 guidance warm-up은
+**ALG 0·iBKD 0 epoch**였으며, 2026-09-24 재실험에서는 **ALG 0·iBKD 두 λ 20 epoch**입니다.
+첫 3720 step은 guidance를 유지하고, 종료 조건을 만족하면 가장 빨라야 step3721부터 끕니다.
 구체적인 종료 경계·중단 구간 처리와
 전체 8개 block 연결은 별도 비교 명세에 기록했습니다.
 후속 요청에 따라 FSKD와 C2VKD의 [재구현 프로토콜](BASELINE_METHOD_PROTOCOLS.md)을 작성했습니다.
 FSKD의 첫 연결·계수는 선정했고, 저자 Cityscapes 값의 미확인 여부는 별도로 표시했습니다.
 수치 β 후보는 25-batch 측정으로 고정했고 H200 smoke도 통과했습니다.
 2k v2 pack1은 GPU 2k·전체 val500을 완료했고 LG의 10k 후보 2개를 선정했습니다.
-Pack2 후보 기록도 확인해 ALG와 iBKD λ=0.25의 10k 후보를 각각 2개 선정했습니다.
+Pack2 후보 기록도 확인해 당시 ALG와 iBKD λ=0.25의 10k 후보를 각각 2개 선정했습니다.
 Pack2는 첨부 group header가 없어 후보별 기록으로 선별을 재계산했다는 한계를 남깁니다.
-Pack3도 4/4 완료했고 iBKD λ=0.5의 10k 후보는 β=0.4303·1.00403입니다.
+Pack3도 4/4 완료했고 당시 iBKD λ=0.5의 10k 후보는 β=0.4303·1.00403이었습니다.
+새 warm-up 20에서는 기존 iBKD 선정을 승계하지 않고 초기 β 4개씩을 다시 비교합니다.
 최종 β 선정과 10k·80k 실행은 아직 수행하지 않았습니다.
 따라서 **공통 프로토콜 확정**과 **모든 방법의 실행 준비 완료**를 구분합니다.
 

@@ -1,0 +1,126 @@
+{
+  "id": "cityscapes_b0_ibkd_warmup20_v1",
+  "purpose": "ibkd_guidance_warmup20_rescreen_all_four_betas_to_10k",
+  "protocol_sha256": {
+    "segformer_b0_common_protocol_v1.json": "07fcfd5987aa70ce7247ef68761848cef4d6fbd3df171a4a1b90cf1df8ff6532",
+    "comparison_manifest_v1.json": "cbb7994f1e8d498bdb83c00518e6d2223bf6991adb806b2c2da17c6605e66581",
+    "fskd_method_protocol_v1.json": "b0aad91e8252667cc17d0ad3b9eeacad3caa26969aac645c83a4405723dbcc2b",
+    "c2vkd_method_protocol_v1.json": "531cae0701636af486bd78a6983461d67cdc66051211d9b43ff8cf1a3b0a1725",
+    "b0_asset_sources_v1.json": "654b86ee4a41c068032eadc4cdbf2746785f2b6d837cc8af57a61a87114bcfed",
+    "b0_smoke_v2.json": "f5efa04afd498b82d9b25e23b099b415ed4f667ec9b96b71fdb69789657beed0",
+    "b0_beta_calibration_v1.json": "ad464b8a7283c5b9f6c855fe354a3cee938c58a716f41fafcffe2ce74e51f579",
+    "b0_beta_grid_frozen_v1.json": "5bf2eaa9f8d8ce5b07ba62287d775d49c283719c0f6d3d53540c6e3346c4909c",
+    "b0_screen2000_v1.json": "7da71a6980ade830ab7c70324b1a5da0387e8ee5528d02e08d53fc1251bbe2e0",
+    "b0_screen2000_v2.json": "1bdfa6c19fcda642cd69e91c21871a4aaa20d8ee911ae19352c86aa2feabe08c"
+  },
+  "groups": {
+    "lambda025": [
+      "ibkd_lambda025"
+    ],
+    "lambda050": [
+      "ibkd_lambda050"
+    ]
+  },
+  "seed": 1,
+  "adapter_seed": 100001,
+  "training_rng_seed": 200001,
+  "target_steps": 10000,
+  "schedule_horizon": 80000,
+  "batch_size": 16,
+  "crop_hw": [
+    512,
+    512
+  ],
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 6e-05,
+    "weight_decay": 0.0001,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "poly_power": 0.9,
+    "warmup": 0,
+    "uniform_lr_wd": true
+  },
+  "validation": {
+    "every_steps": 400,
+    "samples": 500,
+    "shape": [
+      1024,
+      2048
+    ],
+    "metric": "miou",
+    "earliest_step_on_tie": true,
+    "test_used": false
+  },
+  "controller": {
+    "interval": 186,
+    "window": 50,
+    "threshold": -0.02,
+    "warmup": 20,
+    "ibkd_lambdas": [
+      0.25,
+      0.5
+    ],
+    "off_skips_teacher_and_guide": true,
+    "minimum_guidance_steps": 3720,
+    "earliest_ce_only_step": 3721,
+    "unchanged_alg_warmup": 0
+  },
+  "input": {
+    "expanded_samples": 1280000,
+    "permutation_seed": 1,
+    "augmentation_seed": 1,
+    "sequence": "serial_CIRKD_random_and_numpy_draws",
+    "decode_threads": 4,
+    "prefetch_batches": 2,
+    "first_25_batches_must_match_calibration": true,
+    "ignore_only_sample": "keep_without_resampling; CE_and_logit_KD_reduce_over_batch_valid_pixels",
+    "ignore_only_batch": "fail_explicitly_no_supervised_pixels",
+    "preflight_batches": 32
+  },
+  "execution": {
+    "precision": "fp32",
+    "tf32": false,
+    "deterministic_algorithms": true,
+    "sdpa": "math",
+    "cpu_threads": 1,
+    "ibkd": "flatmax_cpu_deform_v1",
+    "checkpoint_every_steps": 100,
+    "inline_checkpoint_step": 2,
+    "inline_replay_step": 3,
+    "restore": "bitwise",
+    "replay_rtol": 2e-05,
+    "replay_atol": 2e-06,
+    "stability_step": 500,
+    "maximum_job_seconds": 32400,
+    "shutdown_reserve_seconds": 180
+  },
+  "initialization_revision_ko": "이번 seed1 선별 및 후속 재개는 smoke/calibration과 같은 NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 사용한다. CIRKD Baidu 원본과 동일하다고 주장하지 않는다. 모든 조건에 동일 적용하며 공통 v1의 가중치 출처 예외를 명시적으로 승계한다.",
+  "input_revision_ko": "CIRKD의 serial seed1 증강 선택을 명시적 계획으로 미리 만든 뒤 4개 CPU thread에서 순서대로 반환한다. Worker/prefetch/재개에 따라 증강 또는 모델 RNG가 달라지지 않는다. 최초 25 batch의 tensor hash를 완료한 calibration과 대조한다.",
+  "selection": {
+    "keep_per_method": 1,
+    "order": [
+      "best_val_miou_desc",
+      "best_step_asc",
+      "candidate_id_asc"
+    ],
+    "requires_all_four_complete": true,
+    "baseline_selection": false,
+    "interim_2000": "observe_only_no_candidate_elimination",
+    "reuses_warmup0_top_two": false
+  },
+  "expected_archives": {
+    "leftImg8bit_trainvaltest.zip": {
+      "bytes": 11598567370,
+      "sha256": "1927eb6450e29ebde0d611d30b874abe96747f5d092f6ec0cbbb6a3e1f6ce09d"
+    },
+    "gtFine_trainvaltest.zip": {
+      "bytes": 263041307,
+      "sha256": "dbacde05ea136f3036aa24bfc87b5272f0d999e34380e10cbb919f7368448332"
+    }
+  },
+  "revision_ko": "2026-09-24 사용자 결정: iBKD λ=0.25·0.5만 guidance 종료 보호를 20 epoch 분량으로 적용하고 ALG는 warm-up 0을 유지한다. 첫 3720 update는 기존 β로 증류하며 20번째 관측 끝부터 종료 조건을 판단, 가장 빨라야 step3721부터 CE-only이다. 손실 관측은 처음부터 누적한다. 초기 상태·seed·입력·β grid·threshold/window·optimizer·80k LR schedule·평가는 유지한다. 기존 warm-up0 iBKD의 상위 2개만 이어 쓰지 않고 각 λ의 β4개를 초기화부터 10k까지 재선별한다. 2k는 경과 기록이고 10k에서 λ별 β1개를 선택한다. 이전 0-epoch 결과 및 checkpoint를 이 revision에 혼합하거나 재개하지 않는다."
+}

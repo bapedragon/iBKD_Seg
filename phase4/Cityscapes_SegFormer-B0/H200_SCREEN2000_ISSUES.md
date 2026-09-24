@@ -1,5 +1,9 @@
 # SegFormer-B0 · 2,000-step 선별 이슈 3개
 
+**2026-09-24 후속 변경:** 이 문서는 기존 warm-up 0 실행 기록입니다.
+iBKD 두 λ의 새 실험에는 [warm-up 20 이슈 2개](H200_WARMUP20_ISSUES.md)를 사용합니다.
+ALG는 0을 유지하며, 아래 기존 iBKD checkpoint와 상위 2개 선정을 새 revision에 승계하지 않습니다.
+
 **2026-09-24 pack1 v2는 6/6 완료**했습니다. [결과와 LG 상위 2개](reports/h200_screen2000_v2_pack1/RESULTS.md)를
 확인했으며 완료한 pack1 2k 이슈를 다시 제출할 필요는 없습니다.
 Pack2도 [후보별 기록](reports/h200_screen2000_v2_pack2/RESULTS.md)에서 8개 후보의 2k 완료를 확인했습니다.

@@ -1,5 +1,10 @@
 # SegFormer-B0 비교 실험 흐름
 
+**2026-09-24 최신 변경:** iBKD λ=0.25·0.5에만 guidance warm-up 20을 적용하고 ALG는 0으로
+유지합니다. [변경 프로토콜](WARMUP20_PROTOCOL.md) 및 [이슈 2개](H200_WARMUP20_ISSUES.md)를
+준비했습니다. 기존 2k 결과·고정 명세는 warm-up 0 기록으로 보존합니다.
+새 iBKD는 λ별 β 4개를 초기화부터 10k까지 비교하며 2k에서는 후보를 제외하지 않습니다.
+
 작성: 2026-09-23. 계획 ID: `cityscapes_segformer_b0_comparison_plan_v1`.
 공통 조건의 기준은 [프로토콜](PROTOCOL.md)과
 [JSON 명세](configs/segformer_b0_common_protocol_v1.json)입니다. 비교 범위와 현재 확정 상태는
@@ -16,11 +21,12 @@ v2에서 모든 후보를 seed1부터 실행합니다. β·입력 순서·LR·�
 6개 모두 완료했고 LG의 10k 후보는 β=0.197479·0.460784입니다.
 Vanilla·고정 FSKD도 기존 설정으로 계속합니다.
 이어 [pack2 후보별 기록](reports/h200_screen2000_v2_pack2/RESULTS.md)을 확인했고, ALG는
-β=0.197479·0.460784, iBKD λ=0.25는 β=0.903048·3.87021을 10k에 유지합니다.
+β=0.197479·0.460784를 유지합니다. 당시 iBKD λ=0.25는 β=0.903048·3.87021을 선정했습니다.
 Pack2 원본 group header는 첨부에서 잘려 후보별 점수로 순위를 재계산했습니다.
 [Pack3 결과](reports/h200_screen2000_v2_pack3/RESULTS.md)는 4/4 완료이며
-iBKD λ=0.5 β=0.4303·1.00403을 10k에 유지합니다.
-다음 대상은 고정 baseline 2개와 네 β 조건의 상위 2개씩, 총 10개 실행입니다.
+iBKD λ=0.5는 당시 β=0.4303·1.00403을 선정했습니다.
+기존 10개 재개 계획은 새 iBKD revision에서 변경합니다. 현재 10k 대상은 기존 Vanilla·FSKD
+각 1개, LG·ALG 각 2개 및 새 iBKD 각 λ 4개로 총 **14개 실행 궤적**입니다.
 10k·80k 결과는 아직 없습니다.
 
 후속 요청에 따라 [FSKD·C2VKD 방법 명세](BASELINE_METHOD_PROTOCOLS.md)와 각각의 JSON을
@@ -64,7 +70,7 @@ FSKD 고유 손실은 FSKD에만 적용하고, LG/ALG/iBKD에 자동 추가하�
 | iBKD 연결 | 전체 8개 B0 block을 256채널·16×16로 맞춰 aggregation에 전달; λ 두 조건은 이 구현을 공유 |
 | FSKD 연결 | 방법 명세의 stage 3·4, lg/cg 정렬, 평균 incoming attention, 계수와 reduction 구현·검증 |
 | C2VKD 추가 후보 | 별도 명세의 PDD·feature 항·pool 적재 검증; CE 예외와 추가 사전학습 조건 표시 |
-| Controller | 확정된 186-step 관측·raw guidance 평균·기존 window/threshold·두 방법 warm-up 0·off 적용 시점과 재개를 구현·검증 |
+| Controller | 186-step 관측·raw guidance 평균·기존 window/threshold 유지. 기존 두 방법 warm-up 0, 새 revision은 iBKD만 20·ALG 0 |
 | 비교·재개 | 같은 seed의 student 초기 상태·입력·증강을 공유; adapter 초기화와 optimizer/RNG/controller/sampler를 포함한 재개 확인 |
 
 B0는 4개 stage에서 폭·해상도가 달라집니다. 기존 L/16의 24개 동일 폭 block을 가정한
@@ -100,7 +106,7 @@ bilinear resize(`align_corners=False`)를 사용합니다. 실제 feature 추출
 | iBKD 가중합 전 채널·공간 크기 | 첫 실험값 256채널·16×16 선택 완료 |
 | iBKD 전체 block 연결 | 전체 8개 block을 256채널·16×16로 변환 후 학습 가능한 가중합; H200 smoke v2 통과 |
 | LG/ALG block 대응 | 사용자 결정으로 처음·중간·끝인 1·5·8번째, 코드 인덱스 0·4·7 확정 |
-| ALG/iBKD controller | 1 epoch 분량(186 step)마다 관측; window 50, threshold -0.02 유지; ALG·iBKD 모두 warm-up 0 |
+| ALG/iBKD controller | 186-step 관측, window50·threshold−0.02 유지. 9/23 두 방법 warm-up 0 → 9/24 iBKD만 20으로 별도 재실험 |
 | iBKD λ와 β | 비교 λ=0.25·0.5 유지. 수치 β는 연결 후 측정·짧은 학습으로 선별 |
 | FSKD 고유 설정 | 첫 재구현값 선정 완료; 저자 Cityscapes 값과의 동일성은 미확인 |
 | C2VKD 고유 설정 | PDD 보완·공개 loss 연결·CLIP pool 대체안 작성; 기존 6개 밖의 별도 후보 |
@@ -172,8 +178,8 @@ CLS token 없이 공간 토큰을 처리하고 stage별 spatial reduction을 사
 ### Controller 확정 설정과 구현 확인
 
 ALG의 guidance warm-up은 앞선 사용자 결정대로 **0**을 유지합니다.
-후속 사용자 결정에 따라 **iBKD도 guidance warm-up 0 epoch**로 시작합니다.
-이 변경은 iBKD lambda 0.25·0.5 두 조건에 동일하게 적용합니다.
+기존 2k 실행은 **iBKD도 guidance warm-up 0 epoch**였습니다.
+2026-09-24 사용자 결정에 따라 새 revision의 **iBKD lambda 0.25·0.5만 20 epoch**로 변경합니다.
 공통 LR warm-up 0과 guidance 종료를 막는 warm-up은 서로 다른 설정입니다.
 두 controller의 window **50**과
 threshold **-0.02**는 기존 L/16 설정을 유지합니다.
@@ -183,11 +189,10 @@ threshold **-0.02**는 기존 L/16 설정을 유지합니다.
 **`ceil(2975/16)=186` optimizer step 분량마다 관측**으로 고정합니다.
 이는 2,976개 sample presentation 구간이며 고유 train 이미지가 한 번씩 등장한다는
 뜻은 아닙니다. 이 경계에서 sampler를 다시 섞거나 초기화하지 않습니다.
-Warm-up은 0이지만 기존 controller의 첫 관측에는 손실 변화량이 정의되지 않습니다.
-따라서 두 번째 관측인 **step 372 끝**에서 가장 빠른 종료 판정이 가능하며,
-종료 조건을 만족했다면 **step 373부터** guidance를 사용하지 않습니다.
-500-step 확인과 2,000-step 선별에서도 자연스러운 종료가 가능하지만,
-실제 종료 여부는 관측한 손실 변화에 따라 결정됩니다.
+기존 warm-up 0에서는 첫 관측에 손실 변화량이 없으므로 **step372 끝**에서 가장 빠른 종료 판정,
+**step373부터** guidance off가 가능합니다. 이는 ALG에 계속 적용됩니다.
+새 iBKD warm-up 20은 손실을 처음부터 관측하되 20번째 관측인 **step3720 끝**부터 판단하며,
+**step3721부터** guidance off가 가능합니다. 종료 조건을 만족하지 않으면 계속 사용합니다.
 
 관측값은 해당 구간의 **beta를 곱하기 전 raw guidance의 표본 수 가중 평균**입니다.
 ALG는 locality loss, iBKD는 `(1-lambda)*alignment + lambda*fusion`을 관측합니다.
@@ -250,6 +255,10 @@ smoke를 수행합니다. 이 점검은 구현 확인이며 최적 가중치를 
 저자 설정 재현과 구분합니다. 각 방법의 설정 출처와 실제 탐색 비용을 결과에 함께 기록합니다.
 
 ## 4. 짧은 실행부터 최종 비교까지
+
+아래 표는 완료한 **warm-up 0의 최초 선별 계획**을 보존합니다. 최신 iBKD 계획은 λ별 β4개를
+초기화부터 10k까지 실행해 1개를 선택하는 것으로 변경했습니다. 2k는 경과 기록이며
+기존 iBKD 2k checkpoint는 승계하지 않습니다. 변경 없는 방법은 아래 최초 선별 규칙을 유지합니다.
 
 모든 단계는 seed1, 동일한 데이터·student 초기화와 **80,000-step LR schedule**을
 사용합니다. 500/2k/10k는 관찰·중단 지점입니다. Schedule 분모를 500/2k/10k로 줄이지 않습니다.
@@ -332,7 +341,9 @@ FSKD/B0의 짧은 H200 smoke 학습 속도는 측정했습니다. 전체 val500�
 
 현재 완료된 것은 **공통 조건 고정, 비교 범위와 위 흐름 정리, iBKD 전체 8개 block의
 256채널·16×16 가중합 규격, LG/ALG의 1·5·8번째 block 선택, 186-step controller 관측과
-기존 window/threshold 유지, ALG·iBKD guidance warm-up 0**입니다.
+기존 window/threshold 유지, 최초 ALG·iBKD guidance warm-up 0**입니다.
+후속 결정으로 iBKD만 warm-up 20인 별도 실행 명세·진입점·경계 재개 검사를 준비했습니다.
+ALG는 0을 유지합니다. 새 iBKD의 H200 실험은 아직 시작하지 않았습니다.
 FSKD·C2VKD 방법별 재구현, 실제 가중치 식별, 7개 방법 H200 smoke와 25-batch β 측정을
 완료했습니다. 2k runner의 전체 상태 재개·전체 val·후보 선택 구현 및 로컬 검사도 완료했습니다.
 사용자 지정 묶음은 Vanilla·FSKD·LG / ALG·iBKD λ=0.25 / iBKD λ=0.5입니다.
