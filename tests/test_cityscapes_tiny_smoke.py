@@ -101,6 +101,15 @@ class TinyProtocol(unittest.TestCase):
                          "calibration": {"ce_median": 2., "guidance_median": 1., "pilot_beta": .06},
                          "losses": [{"step": 1, "loss": 2.06, "ce": 2., "guidance": 1., "grad_norm_unclipped": 1.}]})
         self.assertTrue(compare_runs(rows)["lg_alg_25step_trajectory_matches"])
+        fskd = dict(copy.deepcopy(rows[1]), run_id="fskd", method="fskd")
+        six = rows + [fskd]
+        ids = [row["run_id"] for row in six]
+        self.assertTrue(compare_runs(six, ids)["same_openmmlab_teacher"])
+        with self.assertRaises(RuntimeError):
+            compare_runs(rows, ids)
+        fskd["teacher_state_sha256"] = "wrong-teacher"
+        with self.assertRaisesRegex(RuntimeError, "Different teachers"):
+            compare_runs(six, ids)
         bad = copy.deepcopy(rows)
         bad[2]["input_sha256"] = "different"
         with self.assertRaisesRegex(RuntimeError, "input_sha256"):

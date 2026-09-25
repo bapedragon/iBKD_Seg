@@ -5,6 +5,21 @@
 25-step 연결 smoke입니다. H200에서의 통과 결과나 500/2k/10k 결과는 아직 없습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
+**현재 요청은 FSKD를 추가한 v2(6경로)**입니다. C2VKD는 사용자 결정으로 보류했습니다.
+추가한 FSKD의 고정 계수·출처·이식 범위는 [FSKD_PROTOCOL.md](FSKD_PROTOCOL.md)에 있습니다.
+아래의 5경로 설명과 `smoke25_v1.json`은 처음 제공한 v1을 보존한 것입니다.
+현재 실행은 다음 명령을 사용합니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_smoke25_fskd.sh
+```
+
+v2는 FSKD용 torchsort0.1.10 CUDA 확장을 설치하고 검사합니다. Teacher, Tiny,
+crop512, batch8, SGD 및 기존 다섯 경로의 β 측정 방식은 유지합니다.
+FSKD는 공개 DeiT-Ti 예제의 고정 계수를 사용하며 β 4개 탐색에 포함하지 않습니다.
+v2 출력은 `/app/output/cityscapes_ti16_crop512_smoke25_fskd_v2/run_<UTC>_<PID>/`입니다.
+FSKD `beta=null`은 증류 중단이 아니라 별도 고정 계수 사용을 의미합니다.
+
 ## 고정 조건
 
 - Teacher: 기존 MMSeg DeepLabV3 ResNetV1c-101-D8 Cityscapes 80k 체크포인트.

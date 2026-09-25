@@ -1,4 +1,4 @@
-"""Calibrate Tiny guidance and exercise five 25-update paths on real Cityscapes.
+"""Calibrate Tiny guidance and exercise the locked 25-update Cityscapes paths.
 
 The source/teacher/data recipe is inherited from the L/16 track. This is a
 bounded connection diagnostic, not a beta sweep or a scientific result.
@@ -23,6 +23,18 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 CONFIG = REPO / "phase4/Cityscapes_Segmenter-Ti16/configs/smoke25_v1.json"
+FSKD_CONFIG = CONFIG.with_name("smoke25_fskd_v2.json")
+
+
+def fixed_fskd_calibration(rows, protocol):
+    """Observe the fixed baseline without deriving or tuning a beta."""
+    return {"ce_median": statistics.median(row["ce"] for row in rows),
+            "guidance_median": statistics.median(row["guidance"] for row in rows),
+            "raw_components_median": {name: statistics.median(row["components"][name] for row in rows)
+                                      for name in rows[0]["components"]},
+            "beta_candidates": [], "pilot_beta": None, "optimizer_updates": 0,
+            "validation_used": False, "status": "fixed_fskd_recipe_no_beta_search",
+            "loss_coefficients": protocol["coefficients"]}
 
 
 def beta_candidates(rows, target_ratio=0.03, multipliers=(1, 2, 4, 8)):
@@ -95,8 +107,8 @@ def assert_state_close(actual, expected, *, rtol, atol):
 
 def load_config(path):
     config = json.loads(path.read_text())
-    expected = json.loads(CONFIG.read_text())
-    if config != expected:
+    locked = next((p for p in (CONFIG, FSKD_CONFIG) if p.name == path.name), None)
+    if locked is None or config != json.loads(locked.read_text()):
         raise ValueError("Use the locked Tiny smoke config; protocol edits need a new revision")
     return config
 
@@ -134,7 +146,14 @@ def measure(args, config, plan, output):
     initial_student = state_hash(model)
     initial_student_state = cpu_state(model)
     seed_all(config["seed"] + 1000)
-    guide = api.guidance(plan["method"], config)
+    is_fskd = plan["method"] == "fskd"
+    soft_rank_execution = None
+    if is_fskd:
+        from .tiny_fskd import CLSAttentionCapture, TinyFSKD, weighted_components, verify_soft_rank
+        guide = TinyFSKD(crop=config["crop_size"])
+        soft_rank_execution = verify_soft_rank(device)
+    else:
+        guide = api.guidance(plan["method"], config)
     candidate_contract = None
     if plan["method"] == "ibkd":
         candidate_contract = apply_deterministic_candidate(guide)
@@ -150,6 +169,7 @@ def measure(args, config, plan, output):
         teacher = api.teacher(args.cache_root).to(device)
         teacher_hash = state_hash(teacher)
     capture = api.FeatureCapture(model)
+    attention_capture = CLSAttentionCapture(model) if is_fskd else None
     teacher_diagnostic = None
 
     def losses(batch):
@@ -160,6 +180,8 @@ def measure(args, config, plan, output):
         if guide is None:
             logits = model(images)
             features = None
+        elif is_fskd:
+            logits, features, cls_attention = attention_capture.forward(capture, model, images)
         else:
             logits, features = capture.forward(model, images)
         ce = F.cross_entropy(logits, target, ignore_index=255)
@@ -167,15 +189,24 @@ def measure(args, config, plan, output):
         if guide is not None:
             with torch.no_grad():
                 teacher_features = teacher.extract_feat(api.teacher_input(images))
+                teacher_logits = teacher.decode_head(teacher_features) if is_fskd or teacher_diagnostic is None else None
                 if teacher_diagnostic is None:
-                    teacher_logits = teacher.decode_head(teacher_features)
-                    teacher_logits = F.interpolate(teacher_logits, target.shape[-2:], mode="bilinear", align_corners=False)
-                    teacher_ce = F.cross_entropy(teacher_logits, target, ignore_index=255)
+                    diagnostic_logits = F.interpolate(teacher_logits, target.shape[-2:], mode="bilinear", align_corners=False)
+                    teacher_ce = F.cross_entropy(diagnostic_logits, target, ignore_index=255)
                     if not torch.isfinite(teacher_ce):
                         raise RuntimeError("Nonfinite pretrained teacher output")
                     teacher_diagnostic = {"ce": float(teacher_ce),
-                                          "feature_shapes": [list(x.shape) for x in teacher_features[1:]]}
-            if plan["method"] == "ibkd":
+                                          "feature_shapes": [list(x.shape) for x in teacher_features[1:]],
+                                          "all_backbone_feature_shapes": [list(x.shape) for x in teacher_features]}
+            if is_fskd:
+                components = guide(features, cls_attention, teacher_features, logits, teacher_logits, target)
+                weighted = weighted_components(components)
+                if not all(bool(torch.isfinite(x)) for x in components.values()):
+                    raise FloatingPointError("Nonfinite FSKD loss component")
+                if torch.is_grad_enabled() and not components["attention"].requires_grad:
+                    raise RuntimeError("FSKD attention was detached from the student")
+                guided = sum(weighted.values())
+            elif plan["method"] == "ibkd":
                 alignment, fusion = guide(features, teacher_features[1:])
                 guided = (1 - plan["lambda"]) * alignment + plan["lambda"] * fusion
             else:
@@ -184,6 +215,9 @@ def measure(args, config, plan, output):
             raise FloatingPointError("Nonfinite segmentation/guidance loss")
         values = {"ce": float(ce.detach()), "guidance": float(guided.detach()),
                   "alignment": float(alignment.detach()), "fusion": float(fusion.detach())}
+        if is_fskd:
+            values.update(components={key: float(value.detach()) for key, value in components.items()},
+                          weighted_components={key: float(value.detach()) for key, value in weighted.items()})
         return ce, guided, values
 
     calibration_rows, calibration_hashes = [], []
@@ -200,7 +234,8 @@ def measure(args, config, plan, output):
                       f"seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} optimizer_updates=0", flush=True)
     if len(calibration_rows) != config["calibration_batches"]:
         raise RuntimeError("Incomplete calibration batches")
-    calibration = (beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"])
+    calibration = (fixed_fskd_calibration(calibration_rows, config["fskd"]) if is_fskd else
+                   beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"])
                    if guide is not None else {"ce_median": statistics.median(r["ce"] for r in calibration_rows),
                                               "beta_candidates": [], "pilot_beta": 0.0, "optimizer_updates": 0,
                                               "validation_used": False, "status": "vanilla_ce_only"})
@@ -215,9 +250,9 @@ def measure(args, config, plan, output):
     save_json(output / "calibration.json", {**calibration, "batches": calibration_rows,
                                            "input_hashes": calibration_hashes, "state_restored": True})
     print("[TI16_BETA_PROPOSAL] " + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
-    effective = dict(config, guidance_beta=calibration["pilot_beta"])
+    effective = dict(config, guidance_beta=calibration["pilot_beta"] if not is_fskd else 1.0)
     controller = controller_for(plan["method"], effective)
-    beta = controller.beta_for_epoch(1) if controller else 0.0
+    beta = 1.0 if is_fskd else controller.beta_for_epoch(1) if controller else 0.0
     optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root, total_steps=config["total_steps"])
     if scheduler.iter_max != 80000 or not optimizer.defaults["nesterov"]:
         raise RuntimeError("Tiny smoke must preserve the 80k Nesterov SGD schedule")
@@ -225,6 +260,8 @@ def measure(args, config, plan, output):
     modules = {"student": model, **({"guidance": guide} if guide is not None else {})}
     checked_gradients = {"encoder": model.encoder, "decoder": model.decoder,
                          **({"guidance": guide} if guide is not None else {})}
+    if is_fskd:
+        checked_gradients.update({f"fskd_alignment_{i}": adapter for i, adapter in enumerate(guide.align)})
 
     def update(batch):
         optimizer.zero_grad(set_to_none=True)
@@ -239,7 +276,8 @@ def measure(args, config, plan, output):
                 raise RuntimeError(f"No nonzero gradients in {name}")
         if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
             raise RuntimeError("Frozen teacher received gradients")
-        values.update(loss=float(loss.detach()), beta=beta, weighted_guidance=beta * values["guidance"],
+        values.update(loss=float(loss.detach()), beta=None if is_fskd else beta,
+                      guidance_multiplier=beta, weighted_guidance=beta * values["guidance"],
                       weighted_guidance_to_seg_loss=beta * values["guidance"] / values["ce"],
                       grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]["lr"])
         optimizer.step()
@@ -251,6 +289,8 @@ def measure(args, config, plan, output):
     checkpoint_path = output / "resume_probe.pt"
     config_hash = json_hash(config)
     source = source_hash()
+    if config.get("fskd"):
+        source = json_hash({"common": source, "shared_loss_primitives": sha256(Path(__file__).parent / "b0/losses.py")})
     torch.cuda.reset_peak_memory_stats()
     for index, batch in enumerate(itertools.islice(train_loader(datasets["train"], 1, 0, device), config["steps"]), 1):
         digest = batch_hash(*batch)
@@ -273,7 +313,10 @@ def measure(args, config, plan, output):
         if index == 1 or index % 5 == 0:
             print(f"[TI16_SMOKE_STEP] run={plan['id']} step={index}/{config['steps']} "
                   f"loss={row['loss']:.6g} seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} "
-                  f"beta={beta:.8g} ratio={row['weighted_guidance_to_seg_loss']:.6g} seconds={row['seconds']:.2f}", flush=True)
+                  f"guidance_multiplier={beta:.8g} ratio={row['weighted_guidance_to_seg_loss']:.6g} seconds={row['seconds']:.2f}", flush=True)
+            if is_fskd:
+                print("[TI16_FSKD_COMPONENTS] " + json.dumps({"step": index, "raw": row["components"],
+                      "weighted": row["weighted_components"]}, allow_nan=False), flush=True)
     if len(rows) != config["steps"]:
         raise RuntimeError("Incomplete smoke training")
     if state_hash(model) == initial_student:
@@ -307,6 +350,11 @@ def measure(args, config, plan, output):
     for key in ("loss", "ce", "guidance", "grad_norm_unclipped"):
         if not math.isclose(replay[key], rows[-1][key], rel_tol=tolerance["rtol"], abs_tol=tolerance["atol"]):
             raise RuntimeError(f"Replayed {key} differs")
+    if is_fskd:
+        for name in replay["components"]:
+            if not math.isclose(replay["components"][name], rows[-1]["components"][name],
+                                rel_tol=tolerance["rtol"], abs_tol=tolerance["atol"]):
+                raise RuntimeError(f"Replayed FSKD component differs: {name}")
     # Evaluate the uninterrupted endpoint, keeping approximate replay only as a diagnostic.
     for name, module in modules.items():
         module.load_state_dict(expected_modules[name], strict=True)
@@ -346,7 +394,10 @@ def measure(args, config, plan, output):
               "encoder_blocks": model.encoder.n_layers, "schedule_total_steps": scheduler.iter_max,
               "guidance_on": guide is not None, "guidance_stop_step": None,
               "controller_observation_epochs": 0, "natural_guidance_off_tested": False,
-              "controller_synthetic_diagnostics": None if guide is None else verify_controller_paths(effective),
+              "controller_synthetic_diagnostics": verify_controller_paths(effective) if controller else None,
+              "fixed_loss_coefficients": config["fskd"]["coefficients"] if is_fskd else None,
+              "method_provenance": config.get("fskd") if is_fskd else None,
+              "soft_rank_execution": soft_rank_execution,
               "ibkd_deterministic_candidate": candidate_contract, "train_peak_allocated_bytes": peak,
               "median_step_seconds_excluding_first": statistics.median(row["seconds"] for row in rows[1:]),
               "environment": {"torch": str(torch.__version__), "cuda": torch.version.cuda,
@@ -363,6 +414,7 @@ def compact_run(row):
             "teacher_frozen_verified", "calibration_state_restored", "checkpoint", "decoder_layers",
             "encoder_channels", "encoder_blocks", "schedule_total_steps", "guidance_on", "guidance_stop_step",
             "natural_guidance_off_tested", "controller_synthetic_diagnostics", "train_peak_allocated_bytes", "median_step_seconds_excluding_first",
+            "fixed_loss_coefficients", "method_provenance", "soft_rank_execution",
             "error", "summary_path", "deterministic_warning_count")
     result = {key: row[key] for key in keys if key in row}
     scores = row.get("diagnostic_metrics")
@@ -373,9 +425,10 @@ def compact_run(row):
     return result
 
 
-def compare_runs(rows):
-    if any(row["status"] != "passed" for row in rows) or len(rows) != 5:
-        raise RuntimeError("All five Tiny paths must pass before proposing a beta grid")
+def compare_runs(rows, expected_ids=("vanilla", "lg", "alg", "ibkd_lambda025", "ibkd_lambda050")):
+    if (any(row["status"] != "passed" for row in rows) or len(rows) != len(expected_ids) or
+            {row["run_id"] for row in rows} != set(expected_ids)):
+        raise RuntimeError("All expected Tiny paths must pass")
     for key in ("student_initial_state_sha256", "input_sha256"):
         if len({row[key] for row in rows}) != 1:
             raise RuntimeError(f"Cross-method mismatch: {key}")
@@ -429,6 +482,8 @@ def main():
         report.update(protocol_id=config["protocol_id"], teacher="OpenMMLab DeepLabV3-R101-D8 (frozen)",
                       student=config["student_backbone"], expected_runs=len(config["runs"]),
                       source_and_asset_verification="passed", assets=provenance["weights"])
+        if config.get("fskd"):
+            report.update(fskd_interpretation=config["fskd"]["interpretation"], c2vkd_status=config["c2vkd_status"])
         save_json(output / "provenance.json", provenance)
         save_json(output / "config.json", config)
         if args.run_id:
@@ -464,6 +519,8 @@ def main():
                            "last": partial.get("last"), "selected_step": None, "selected_epoch": None,
                            "error": failure.get("error", f"child_exit={completed.returncode}"),
                            "summary_path": str(failure_path)}
+                    if plan["method"] == "fskd":
+                        row.update(method_provenance=config["fskd"], fixed_loss_coefficients=config["fskd"]["coefficients"])
                     calibration_path = destination / "calibration.json"
                     if calibration_path.exists():
                         calibration = json.loads(calibration_path.read_text())
@@ -472,7 +529,7 @@ def main():
                 rows.append(row)
                 report["runs"] = [compact_run(value) for value in rows]
                 save_json(output / "smoke_summary.json", report)
-            report["cross_method_checks"] = compare_runs(rows)
+            report["cross_method_checks"] = compare_runs(rows, [row["id"] for row in config["runs"]])
             report["status"] = "passed"
     except Exception as error:
         failed = True

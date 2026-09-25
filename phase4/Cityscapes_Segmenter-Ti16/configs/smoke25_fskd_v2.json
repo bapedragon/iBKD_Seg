@@ -1,0 +1,139 @@
+{
+  "protocol_id": "cityscapes_segmenter_ti16_crop512_calibration_smoke25_fskd_v2",
+  "run_kind": "calibration_and_connection_smoke_not_beta_screen",
+  "scientific_result": false,
+  "full_training_authorized": false,
+  "student_backbone": "vit_tiny_patch16_384",
+  "teacher": "openmmlab_deeplabv3_r101_d8_cityscapes_80k",
+  "seed": 1,
+  "steps": 25,
+  "calibration_batches": 25,
+  "calibration_optimizer_updates": 0,
+  "beta_initial_ce_ratio": 0.03,
+  "beta_multipliers": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "beta_status": "proposed_from_training_loss_not_validation_selected",
+  "runs": [
+    {
+      "id": "vanilla",
+      "method": "vanilla"
+    },
+    {
+      "id": "lg",
+      "method": "lg"
+    },
+    {
+      "id": "alg",
+      "method": "alg"
+    },
+    {
+      "id": "ibkd_lambda025",
+      "method": "ibkd",
+      "lambda": 0.25
+    },
+    {
+      "id": "ibkd_lambda050",
+      "method": "ibkd",
+      "lambda": 0.5
+    },
+    {
+      "id": "fskd",
+      "method": "fskd",
+      "display_name": "FSKD* (DeiT-Ti recipe transfer)"
+    }
+  ],
+  "train_samples": 2975,
+  "val_samples": 500,
+  "diagnostic_validation_samples": 2,
+  "batch_size": 8,
+  "drop_last": false,
+  "image_size": 1024,
+  "crop_size": 512,
+  "window_size": 512,
+  "window_stride": 512,
+  "decoder_layers": 1,
+  "encoder_blocks": 12,
+  "encoder_channels": 192,
+  "precision": "fp32",
+  "optimizer": "upstream_timm_sgd_nesterov",
+  "learning_rate": 0.01,
+  "momentum": 0.9,
+  "weight_decay": 0.0,
+  "poly_power": 0.9,
+  "min_lr": 1e-05,
+  "total_steps": 80000,
+  "lr_warmup_steps": 0,
+  "selection_metric": "pixel_accuracy",
+  "secondary_metric": "miou_at_same_checkpoint",
+  "gradient_checkpointing": true,
+  "gradient_clipping": false,
+  "attention_query_chunk": 256,
+  "alg_window": 50,
+  "alg_threshold": -0.02,
+  "alg_warmup_epochs": 0,
+  "ibkd_warmup_epochs": 20,
+  "lg_blocks_zero_based": [
+    0,
+    6,
+    11
+  ],
+  "ibkd_aggregation_blocks": 12,
+  "controller_epoch_mean": "sample_weighted_complete_epochs_only",
+  "sampling_policy": "sorted_ids + epoch_seeded_permutation; per_sample_epoch_seeded_original_transforms",
+  "data_workers": 0,
+  "strict_determinism": false,
+  "determinism_warn_only": true,
+  "ibkd_deterministic_candidate": true,
+  "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+  "ibkd_cpu_threads": 1,
+  "resume_rtol": 2e-05,
+  "resume_atol": 2e-06,
+  "test_used": false,
+  "automatic_hyperparameter_changes": false,
+  "c2vkd_status": "deferred_by_user; no C2VKD or CLIP assets loaded",
+  "fskd": {
+    "method_id": "fskd_ti16_deit_ti_recipe_transfer_v1",
+    "author_cityscapes_recipe_verified": false,
+    "source_repository": "https://github.com/TouchNow/FSKD",
+    "source_commit": "969dddf278b2c9f2dadde504326fa9d704c5a5aa",
+    "recipe_basis": "README ImageNet DeiT-Ti: stages1,2; lg/cg; global100,patch1,attention1000000,kd1",
+    "student_blocks_zero_based": [
+      0,
+      3
+    ],
+    "teacher_stages_zero_based": [
+      0,
+      1
+    ],
+    "student_attention": "last encoder block CLS query -> patch keys; mean over heads, no renormalization",
+    "attention_teacher": "ResNet layer4 squared channel mean, resized to32x32, spatial softmax",
+    "spatial_alignment": "Linear(Ns,Nt) -> GELU",
+    "channel_alignment": "Conv3x3(192,Ct,padding1,bias) -> GELU",
+    "coefficients": {
+      "ce": 1.0,
+      "logit_kd": 1.0,
+      "global": 100.0,
+      "patch": 1.0,
+      "attention": 1000000.0
+    },
+    "global_reduction": "sum selected stages of MSEmean divided by actual batch size",
+    "patch_reduction": "sum per-image normalized-channel Gram MSE; exact chunking",
+    "logit_kd": "T1, KL(teacher||student), valid-pixel mean, ignore255, bilinear align_cornersFalse",
+    "soft_rank": {
+      "version": "0.1.10",
+      "regularization": "l2",
+      "strength": 1.0
+    },
+    "beta_search": false,
+    "controller": null,
+    "init_seed": 1001,
+    "c2vkd_included": false,
+    "interpretation": "Transferred fixed classification recipe, not author-verified Cityscapes or B0 FSKD recipe",
+    "stage_mapping_source": "custom_model/deit.py: deit_ti -> VisionTransformerDistilled.stage_info; not custom_forward/vision_transformer.py",
+    "segmentation_adaptation": "Keep common one-CLS Segmenter and segmentation decoder; pixel-logit KD replaces classification/DIST-head KD; teacher remains OpenMMLab DeepLabV3-R101"
+  }
+}

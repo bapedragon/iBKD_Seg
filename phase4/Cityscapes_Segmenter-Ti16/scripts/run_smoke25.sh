@@ -4,11 +4,16 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "${repo_root}"
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
+case "${1:-v1}" in
+  v1) revision="v1"; config_name="smoke25_v1.json" ;;
+  fskd_v2) revision="fskd_v2"; config_name="smoke25_fskd_v2.json" ;;
+  *) echo "Unknown Tiny smoke revision: $1" >&2; exit 2 ;;
+esac
 zip_dir="${CITYSCAPES_ZIP_DIR:-/app/data/chaoyang}"
 data_dir="${CITYSCAPES_CROP512_DATA_DIR:-/app/scratch/cityscapes_l16_crop512_v3/cityscapes}"
 cache_root="${CITYSCAPES_CROP512_CACHE:-/app/scratch/cityscapes_official_l16_v2/upstream}"
-output_root="${CITYSCAPES_TI16_OUTPUT:-/app/output/cityscapes_ti16_crop512_smoke25_v1/run_$(date -u +%Y%m%dT%H%M%SZ)_$$}"
-config="${repo_root}/phase4/Cityscapes_Segmenter-Ti16/configs/smoke25_v1.json"
+output_root="${CITYSCAPES_TI16_OUTPUT:-/app/output/cityscapes_ti16_crop512_smoke25_${revision}/run_$(date -u +%Y%m%dT%H%M%SZ)_$$}"
+config="${repo_root}/phase4/Cityscapes_Segmenter-Ti16/configs/${config_name}"
 mkdir -p "${output_root}"
 
 report_failure() {
@@ -33,6 +38,12 @@ trap 'report_failure "$?"' EXIT
 
 run_suite() {
   python -m pip install --disable-pip-version-check -e .
+  if [[ "${revision}" == "fskd_v2" ]]; then
+    export MAX_JOBS=2
+    export TORCH_CUDA_ARCH_LIST=9.0
+    python -m pip install --disable-pip-version-check ninja==1.13.0
+    python -m pip install --disable-pip-version-check --no-build-isolation torchsort==0.1.10
+  fi
   echo "[TI16_PIPELINE] stage=verify_uploaded_zip"
   python phase4/phase4_cityscapes/scripts/check_cityscapes_upload.py \
     --search-root "${zip_dir}" --output "${output_root}/upload_check.json"
@@ -42,7 +53,7 @@ run_suite() {
   cp "${data_dir}/preparation.json" "${output_root}/preparation.json"
   echo "[TI16_PIPELINE] stage=verify_tiny_and_openmmlab_teacher"
   python -m ibkd_seg.cityscapes.official_assets --cache-root "${cache_root}" --student tiny
-  echo "[TI16_PIPELINE] stage=calibration_and_five_path_smoke output=${output_root}"
+  echo "[TI16_PIPELINE] stage=calibration_and_training_smoke revision=${revision} output=${output_root}"
   python -u -m ibkd_seg.cityscapes.tiny_smoke \
     --cache-root "${cache_root}" --data-dir "${data_dir}" \
     --manifest "${output_root}/manifest.json" --output-dir "${output_root}/artifacts" \
