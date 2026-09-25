@@ -20,7 +20,9 @@ FSKD의 누락값까지 저자 설정으로 확인했다는 뜻은 아닙니다.
 ALG는 warm-up 0을 유지하며 teacher·student·공통 학습/평가 조건은 변경하지 않습니다.
 정확한 경계와 β 4개·10k 재선별 계획은 [변경 프로토콜](WARMUP20_PROTOCOL.md)에 있습니다.
 2026-09-25 [λ=0.25·warm-up 20의 β4개·2k](reports/h200_warmup20_check2000_lambda025/RESULTS.md)를 완료했습니다.
-네 후보 모두 guidance on을 유지했고 최종 β는 아직 선정하지 않았습니다.
+네 후보 모두 guidance on을 유지했고 최종 β는 아직 선정하지 않았습니다. 후속 사용자 결정으로
+λ=0.25의 10k 후보를 β=0.387021·1.9351로 줄였습니다. [새 실행 범위](configs/b0_top2_10k_v1.json)와
+[ALG·iBKD 각 1위 통합 이슈](H200_TOP1_10K_ISSUE.md)를 따르며, 학습 프로토콜과 checkpoint 식별은 보존합니다.
 Smoke/calibration에서 검증한 NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 모든 비교
 조건에 동일하게 사용하도록 출처 예외를 명시했습니다. CIRKD Baidu 원본과의 동일성은
 미확인입니다. 아래 원래 v1의 출처·JSON 해시는 보존하며 이 예외를 숨기지 않습니다.
