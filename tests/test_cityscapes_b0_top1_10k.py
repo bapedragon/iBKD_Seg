@@ -78,7 +78,7 @@ def test_invalid_resume_does_not_overwrite_existing_output(tmp_path, monkeypatch
     monkeypatch.setenv('B0_10K_OUTPUT', str(tmp_path))
     for name in ('B0_10K_RESUME_FROM', 'B0_10K_ALG_RESUME_FROM', 'B0_10K_IBKD_RESUME_FROM'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(job.sys, 'argv', ['run_b0_top1_10k.py'])
+    monkeypatch.setattr(job.sys, 'argv', ['run_b0_top1_10k.py', '--start', 'fresh'])
     with pytest.raises(SystemExit) as error:
         job.main()
     assert error.value.code == 1
@@ -88,7 +88,8 @@ def test_invalid_resume_does_not_overwrite_existing_output(tmp_path, monkeypatch
 
 
 @pytest.mark.parametrize('budget_exhausted', [False, True])
-def test_job_dispatch_and_time_pause_without_gpu(tmp_path, monkeypatch, capsys, budget_exhausted):
+@pytest.mark.parametrize('restore_alg', [False, True])
+def test_job_dispatch_and_time_pause_without_gpu(tmp_path, monkeypatch, capsys, budget_exhausted, restore_alg):
     import numpy as np
     import torch
     from ibkd_seg.cityscapes.b0 import assets, calibration_data, training_data, reproducibility
@@ -97,11 +98,14 @@ def test_job_dispatch_and_time_pause_without_gpu(tmp_path, monkeypatch, capsys, 
         grid = {**grid, 'calibration_tensor_sha256': job.hashlib.sha256().hexdigest()}
         monkeypatch.setattr(module, 'specification', lambda c=config, g=grid: (c, g))
     grid = base.specification()[1]
+    if restore_alg:
+        make_bundle(tmp_path / 'restored' / 'pack2', rows[0], base, base.specification()[0])
     data = tmp_path / 'data'; data.mkdir()
     for name in ('manifest.json', 'preparation.json'):
         (data / name).write_text('{}')
     monkeypatch.setenv('B0_10K_OUTPUT', str(tmp_path / 'output'))
     monkeypatch.setenv('B0_10K_DATA', str(data))
+    monkeypatch.setenv('B0_10K_SEARCH_ROOTS', str(tmp_path / 'restored'))
     for name in ('B0_10K_RESUME_FROM', 'B0_10K_ALG_RESUME_FROM', 'B0_10K_IBKD_RESUME_FROM'):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(job.sys, 'argv', ['run_b0_top1_10k.py'])
@@ -120,7 +124,7 @@ def test_job_dispatch_and_time_pause_without_gpu(tmp_path, monkeypatch, capsys, 
         if len(command) > 2 and command[2].endswith('.screen'):
             commands.append(command)
             candidate = next(r['candidate'] for r in rows if r['candidate']['run_id'] == command[command.index('--run-id') + 1])
-            target = Path(command[command.index('--output') + 1]); target.mkdir(parents=True)
+            target = Path(command[command.index('--output') + 1]); target.mkdir(parents=True, exist_ok=True)
             record = dict(**candidate, status='paused' if budget_exhausted else 'completed',
                           completed_steps=1000 if budget_exhausted else 10000,
                           last_loss={'ce': 1.}, selected_epoch=None, selected_step=10000,
@@ -139,7 +143,54 @@ def test_job_dispatch_and_time_pause_without_gpu(tmp_path, monkeypatch, capsys, 
     assert result['status'] == ('paused' if budget_exhausted else 'completed')
     assert len(commands) == (1 if budget_exhausted else 2)
     assert {c[c.index('--deadline') + 1] for c in commands} == {'34620.0'}
+    assert ('--resume' in commands[0]) == restore_alg
+    if len(commands) == 2:
+        assert '--resume' not in commands[1]
     if budget_exhausted:
         assert result['runs'][-1]['status'] == 'pending' and result['runs'][-1]['completed_steps'] == 0
     else:
         assert result['completed_runs'] == 2 and all(r['last_loss'] and r['metrics'] for r in result['runs'])
+
+
+def make_bundle(root, row, module, config, step=2000, *, warmup=None):
+    folder = root / 'runs' / row['candidate']['run_id']; folder.mkdir(parents=True)
+    signature = dict(candidate=row['candidate'], protocol_id=config['id'], source=module.code_identity(),
+                     protocol_sha256=job.hashlib.sha256(module.CONFIG.read_bytes()).hexdigest())
+    summary = dict(**row['candidate'], signature=signature, completed_steps=step,
+                   controller=dict(controller=dict(warmup_epochs=row['guidance_warmup_epochs'] if warmup is None else warmup)))
+    (folder / 'summary.json').write_text(json.dumps(summary))
+    (folder / 'resume.json').write_text(json.dumps(dict(format=1, current=dict(global_step=step))))
+    return folder
+
+
+def test_auto_discovery_selects_latest_compatible_and_ignores_warmup0(tmp_path):
+    _, profiles, rows = inputs(); row = rows[1]
+    module, config, _ = profiles[row['profile']]
+    make_bundle(tmp_path / 'old_warm0', row, module, config, warmup=0)
+    old = make_bundle(tmp_path / 'warm20_2k', row, module, config)
+    latest = make_bundle(tmp_path / 'warm20_paused10k', row, module, config, step=4800)
+    source, audit = job.discover_resume(row, module, config, [tmp_path])
+    assert source == latest and len(audit['compatible']) == 2 and len(audit['ignored']) == 1
+    assert audit['compatible'][0]['checkpoint_step'] == 4800
+    source, _ = job.discover_resume(row, module, config, [old])
+    assert source == old
+
+
+def test_auto_discovery_is_per_method_and_does_not_use_logs(tmp_path):
+    _, profiles, rows = inputs()
+    alg, ibkd = rows
+    module, config, _ = profiles[alg['profile']]
+    folder = make_bundle(tmp_path / 'pack2', alg, module, config)
+    (tmp_path / 'group_summary.json').write_text('{"status":"completed"}')
+    assert job.discover_resume(alg, module, config, [tmp_path])[0] == folder
+    module, config, _ = profiles[ibkd['profile']]
+    assert job.discover_resume(ibkd, module, config, [tmp_path])[0] is None
+
+
+def test_auto_discovery_damaged_compatible_bundle_is_not_silent_fresh(tmp_path):
+    _, profiles, rows = inputs(); row = rows[1]
+    module, config, _ = profiles[row['profile']]
+    folder = make_bundle(tmp_path / 'warm20_2k', row, module, config)
+    (folder / 'resume.json').unlink()
+    with pytest.raises(ValueError, match='Missing full-state'):
+        job.discover_resume(row, module, config, [tmp_path])

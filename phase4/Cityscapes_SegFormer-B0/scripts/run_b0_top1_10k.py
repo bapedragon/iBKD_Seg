@@ -56,6 +56,53 @@ def validate_resume(source, row, module, config):
     return summary
 
 
+def discover_resume(row, module, config, roots):
+    """Find extracted, compatible run bundles; never treat metrics as a checkpoint."""
+    run_id = row['candidate']['run_id']
+    found = set()
+    pruned = {'checkpoints', 'weights', 'assets', 'cityscapes', 'leftImg8bit', 'gtFine',
+              'gtCoarse', '.git', '__pycache__', 'node_modules', 'venv', '.venv'}
+    for root in roots:
+        root = Path(root).resolve()
+        if not root.is_dir():
+            continue
+        if root.name == run_id:
+            found.add(root)
+            continue
+        for parent, directories, _ in os.walk(root, followlinks=False):
+            parent = Path(parent)
+            for name in directories:
+                if name == run_id:
+                    found.add((parent / name).resolve())
+            depth = len(parent.relative_to(root).parts)
+            directories[:] = [d for d in directories if d not in pruned and d != run_id] if depth < 8 else []
+    eligible, ignored = [], []
+    for source in sorted(found):
+        summary_file = source / 'summary.json'
+        if not summary_file.is_file():
+            raise ValueError(f'Incomplete candidate folder (missing summary.json): {source}')
+        summary = json.loads(summary_file.read_text())
+        signature = summary.get('signature', {})
+        warmup = summary.get('controller', {}).get('controller', {}).get('warmup_epochs')
+        if (signature.get('protocol_id') != config['id'] or warmup != row['guidance_warmup_epochs']
+                or 'diagnostic_scope' in signature or summary.get('full_validation') is False
+                or summary.get('completed_steps', 0) > 10000):
+            ignored.append(dict(path=str(source), reason='Different protocol/warmup, diagnostic smoke, or beyond 10k'))
+            continue
+        validate_resume(source, row, module, config)
+        pointer = json.loads((source / 'resume.json').read_text())
+        step = pointer.get('current', {}).get('global_step')
+        if pointer.get('format') != 1 or not isinstance(step, int) or not 0 <= step <= 10000:
+            raise ValueError(f'Invalid full-state checkpoint pointer: {source}')
+        eligible.append((step, source))
+    # Prefer the furthest matching full checkpoint; lexical path breaks ties.
+    eligible.sort(key=lambda item: (-item[0], str(item[1])))
+    selected = eligible[0][1] if eligible else None
+    return selected, dict(search_roots=[str(p) for p in roots],
+                          compatible=[dict(path=str(p), checkpoint_step=s) for s, p in eligible],
+                          ignored=ignored, selected=None if selected is None else str(selected))
+
+
 def worker_command(row, cache, data, output, plan_path, preflight, deadline, resume):
     command = [sys.executable, '-m', 'ibkd_seg.cityscapes.' + row['profile'] + '.screen',
                '--cache', str(cache), '--data', str(data), '--output', str(output),
@@ -77,7 +124,7 @@ def terminal_summary(report):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--start', choices=('fresh', 'resume'), default='fresh')
+    parser.add_argument('--start', choices=('auto', 'fresh', 'resume'), default='auto')
     args = parser.parse_args()
     os.chdir(REPO)
     output = Path(os.environ.get('B0_10K_OUTPUT', '/app/output/cityscapes_b0_top1_10k_v1')).resolve()
@@ -111,7 +158,10 @@ def main():
         individual = dict(alg=os.environ.get('B0_10K_ALG_RESUME_FROM'),
                           ibkd_lambda025=os.environ.get('B0_10K_IBKD_RESUME_FROM'))
         if args.start == 'fresh' and (group is not None or any(individual.values())):
-            raise ValueError('Resume paths require --start resume')
+            raise ValueError('Resume paths require --start auto or resume')
+        if (args.start == 'auto' and group is None and not any(individual.values())
+                and (output / 'group_summary.json').is_file()):
+            group = output
         if args.start == 'resume' and group is None and not all(individual.values()):
             raise ValueError('Provide a previous combined group OR both candidate run directories')
         if group is not None and any(individual.values()):
@@ -172,6 +222,15 @@ def main():
                     source = None
             elif args.start == 'resume':
                 source = Path(individual[candidate['method']]).resolve()
+            elif args.start == 'auto':
+                explicit = individual[candidate['method']]
+                if explicit:
+                    source = Path(explicit).resolve()
+                else:
+                    roots = [Path(p) for p in os.environ.get('B0_10K_SEARCH_ROOTS', '/app/output:/app/data').split(os.pathsep) if p]
+                    module, config, _ = profiles[row['profile']]
+                    source, discovery = discover_resume(row, module, config, roots)
+                    row['resume_discovery'] = discovery
             if source is not None:
                 module, config, _ = profiles[row['profile']]
                 row['resume_source_summary'] = validate_resume(source, row, module, config)
@@ -180,6 +239,9 @@ def main():
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source, target)
             row['starts_from'] = 'full_checkpoint' if source is not None else 'initialization'
+            print('[B0_START] ' + json.dumps(dict(run_id=candidate['run_id'], starts_from=row['starts_from'],
+                  source=None if source is None else str(source),
+                  recorded_steps=None if source is None else row['resume_source_summary']['completed_steps'])), flush=True)
         # The shared input contract is identical in both frozen profiles.
         _, config, grid = profiles['b0']
         cache = Path(os.environ.get('B0_10K_CACHE', '/app/scratch/cityscapes_b0_smoke_v1/assets')).resolve()

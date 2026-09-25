@@ -26,17 +26,30 @@ ALG 첫 후보의 best는 잘린 로그의 last metric과 selected step에서 �
 | 이미지 | `pytorch/pytorch:latest` |
 | 언어 | `Python` |
 | GPU 할당량 | **7 — H200 1장 전체** |
-| 작업 시간 예산 | **9시간 40분 — 두 실행 합계** |
 
-코드 실행 명령어 — 기존 출력 복원 없이 실행할 때:
+코드 실행 명령어 — 체크포인트 자동 확인:
 
 ```bash
-bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_top1_10k.sh fresh
+bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_top1_10k.sh auto
 ```
 
-이 명령은 같은 seed1 초기화부터 **각각 총 10,000 step**을 실행합니다. 과거 2k가 자동으로
-복원된다고 가정하지 않습니다. 기존 결과와 같은 앞 2k를 반복하는 비용이 포함됩니다.
-기존 2k 전체 출력이 서버에 복원돼 있으면 아래 재개 명령을 대신 사용합니다.
+각 후보별로 서버의 `/app/output`·`/app/data` 아래에서 압축이 풀린 run 폴더를 찾습니다.
+호환되는 전체 checkpoint가 있으면 **가장 많이 진행한 step부터 총 10k까지** 이어가고,
+없으면 같은 seed1 초기화부터 총 10k를 실행합니다. 한 방법만 checkpoint가 있어도 각각 판단합니다.
+현재 출력 폴더의 같은 작업이 있으면 그 group부터 이어갑니다. 재실행할 때도 같은 명령을 씁니다.
+
+- 파일명이 같아도 warm-up 0 iBKD, smoke val2, 다른 프로토콜은 제외하고 발견 내역을 기록합니다.
+- 호환 후보를 찾았는데 checkpoint가 누락·손상됐거나 코드·환경이 다르면 오류로 알립니다.
+  이 경우에 조용히 초기화해서 재학습하지 않습니다.
+- 로그·mIoU 결과만 있거나 압축 파일만 있는 경우 전체 상태를 복원할 수 없습니다.
+  원격 서버의 과거 출력을 자동 다운로드하거나 압축 해제하지 않습니다.
+- 탐색은 두 root 아래 최대 9단계이며 데이터셋·weights·checkpoints 내부는 순회하지 않습니다.
+  다른 위치라면 `B0_10K_SEARCH_ROOTS=/실제/복원/위치`를 지정하거나 아래 개별 경로를 사용합니다.
+- `[B0_START]` 로그에 후보별 `full_checkpoint` 또는 `initialization`, 경로와 기존 step을 출력합니다.
+  실제 복원 step은 worker의 `[B0_RESUME]`에 남깁니다.
+
+전체 checkpoint가 2k이면 추가 8k입니다. 강제로 처음부터 반복하려는 경우에만 `auto` 대신
+`fresh`를 지정하고 새로운 출력 폴더를 사용합니다.
 
 ## 기존 2k에서 이어갈 때
 
@@ -71,11 +84,29 @@ bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_top1_10k.sh resume
   best val mIoU → 이른 best step → candidate ID 순으로 최종 β 하나를 고릅니다.
   두 방법 사이에서 하나를 탈락시키거나 이번 각 1위 β를 바로 최종값으로 확정하지 않습니다.
 
-## 시간과 출력 보존
+## 예상 소요시간과 기존 중단 설정
 
-설치·준비·두 학습·평가·저장이 **하나의 9시간 40분 예산**을 공유합니다.
-시간 제한은 [기존 저장 여유](JOB_RUNTIME.md)를 유지합니다. 두 후보 모두 10k를 한 작업에서
-끝낸다고 보장하지 않습니다. iBKD가 3720 이후에도 guidance를 유지하면 더 오래 걸릴 수 있습니다.
+**예상 시간은 실측 속도로 계산하며, 사용자 발언의 시간을 실행 제한으로 바꾸지 않습니다.**
+9시간 55분을 새 예상값이나 코드 제한으로 설정하지 않았습니다.
+
+2k 실측에서 학습+입력 대기+저장 평균은 ALG 1.018초/step, iBKD on 2.855초/step입니다.
+CE-only 속도는 Vanilla의 0.480초/step을 근사치로 사용했고, 전체 val500은 회당
+ALG 59.5초·iBKD 69.0초입니다. ALG는 현재 속도를 유지한다고 가정합니다.
+
+| 시작 상태 | iBKD가 3720 부근에서 off | iBKD가 10k까지 on |
+|---|---:|---:|
+| 두 후보 모두 2k에서 재개 | **약 5시간 30분~6시간 30분** | **약 9시간 30분~10시간 30분** |
+| 두 후보 모두 처음부터 | **약 8~9시간** | **약 12~13시간** |
+
+표는 ALG+iBKD 합계이며 준비·복원·환경 변동 여유를 포함한 추정입니다. Guidance off 시점은
+미확정이고 ALG도 조기에 꺼지면 더 짧아질 수 있습니다. 한 후보만 재개하면 두 경우 사이입니다.
+근거는 기존 [ALG](reports/h200_screen2000_v2_pack2/log_audit.json),
+[iBKD warm-up 20](reports/h200_warmup20_check2000_lambda025/log_audit.json),
+[Vanilla](reports/h200_screen2000_v2_pack1/log_audit.json)의 시간 기록입니다.
+
+이와 별개로 **현재 코드에는 이전에 적용된 9시간 40분 중단 예산이 남아 있습니다.**
+이는 완료 예상 시간이 아니며 이번 정정에서 변경하지 않았습니다. 두 실행이 공유합니다.
+[저장 여유](JOB_RUNTIME.md)를 두고 중단하므로 예상 총 소요가 한 작업을 넘으면 재개가 필요합니다.
 `paused`는 전체 상태 저장 후 시간 중단, `pending` run은 시간 부족으로 이번 작업에서 미완료입니다.
 
 ```text
@@ -103,6 +134,6 @@ bash phase4/Cityscapes_SegFormer-B0/scripts/run_b0_top1_10k.sh resume
 
 학습 worker와 공통 controller 소스는 보존했습니다. 새 작업 묶음의 후보 라우팅,
 잘못된 warm-up/후보/코드/smoke 재개 거부, 시간 부족 시 두 번째 실행 보류,
-최종 JSON 출력과 기존 상태 보호를 로컬에서 검사했습니다. **48 passed, 2 skipped**이며 두 skip은
+최종 JSON 출력·기존 상태 보호·자동 발견·한 방법만 재개·다른 warm-up 제외를 로컬에서 검사했습니다. **53 passed, 2 skipped**이며 두 skip은
 로컬 upstream cache 부재에 따른 기존 입력 대조 검사입니다. 기존 H200 로그의 학습 source hash와
 일치하고 Python CLI·shell 문법·문서 링크 검사도 통과했습니다. 별도 GPU smoke 이슈는 추가하지 않습니다.
