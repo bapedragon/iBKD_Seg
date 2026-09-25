@@ -17,17 +17,21 @@ from pathlib import Path
 CONFIG_DIR = Path(__file__).resolve().parents[3] / 'phase4/Cityscapes_Segmenter-Ti16/configs'
 BASE_BETA = {'lg': 0.018658411532808426, 'alg': 0.018658411532808426,
              'ibkd_025': 0.04923668244316936, 'ibkd_050': 0.07336694459440872}
+GRID_V5 = 'beta_grid500_both_lambdas_v5.json'
+GRID_V6 = 'beta_grid500_shared_lg_8betas_v6.json'
 
 
 def load_config(path):
     config = json.loads(path.read_text())
     locked = CONFIG_DIR / path.name
-    if not path.name.startswith('beta_grid500_') or config != json.loads(locked.read_text()):
+    if path.name not in (GRID_V5, GRID_V6) or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny beta-grid config')
-    if config['steps'] != 500 or len(config['runs']) != 16:
-        raise ValueError('This stage requires exactly 16 conditions of 500 updates')
+    shared = path.name == GRID_V6
+    multipliers = (.5, 1, 1.5, 2, 3, 4, 6, 8) if shared else (1, 2, 4, 8)
+    if config['steps'] != 500 or len(config['runs']) != (24 if shared else 16):
+        raise ValueError('Unexpected number of fixed 500-step conditions')
     old = json.loads((CONFIG_DIR / 'smoke25_v1.json').read_text())
-    changed = {'protocol_id', 'run_kind', 'steps', 'runs', 'calibration_batches', 'beta_status'}
+    changed = {'protocol_id', 'run_kind', 'steps', 'runs', 'calibration_batches', 'beta_status', 'beta_multipliers'}
     for key, value in old.items():
         if key not in changed and config.get(key) != value:
             raise ValueError(f'Common Tiny protocol drift: {key}')
@@ -37,14 +41,18 @@ def load_config(path):
     for method, ratio, prefix, base_key in (
             ('lg', None, 'lg', 'lg'), ('alg', None, 'alg', 'alg'),
             ('ibkd', .25, 'ibkd_l025', 'ibkd_025'), ('ibkd', .5, 'ibkd_l050', 'ibkd_050')):
-        for index, multiplier in enumerate((1, 2, 4, 8), 1):
+        if shared and method == 'alg':
+            continue
+        for index, multiplier in enumerate(multipliers, 1):
             row = dict(id=f'{prefix}_b{index}', method=method, candidate=index,
                        beta=BASE_BETA[base_key] * multiplier, initial_target_ratio=.03 * multiplier)
             if method == 'ibkd':
                 row['lambda'] = ratio
             expected.append(row)
-    if config['runs'] != expected or config['calibration_batches'] != 0:
+    if config['runs'] != expected or config['calibration_batches'] != 0 or config['beta_multipliers'] != list(multipliers):
         raise ValueError('Candidate values or fixed-beta policy changed')
+    if shared and (not config.get('lg_alg_shared_screen') or config['alg_earliest_off_step'] != 745):
+        raise ValueError('LG/ALG shared screen must end before any possible ALG shutdown')
     return config
 
 
@@ -80,6 +88,10 @@ def record_step(progress, row, count, digest, controller, *, train_samples):
 def compare_grid(rows, config):
     by_id = {row['run_id']: row for row in rows}
     controls, issues = {}, []
+    controls['all_planned_runs_present_once'] = (len(rows) == len(config['runs']) and
+        len(by_id) == len(rows) and set(by_id) == {p['id'] for p in config['runs']})
+    if not controls['all_planned_runs_present_once']:
+        issues.append('run_inventory')
     available = [r for r in rows if r.get('student_initial_state_sha256')]
     for key in ('student_initial_state_sha256', 'teacher_state_sha256'):
         controls[key] = len(available) == len(rows) and len({r.get(key) for r in available}) == 1
@@ -99,7 +111,8 @@ def compare_grid(rows, config):
     if not controls['same_observed_input_prefixes']:
         issues.append('input_prefixes')
     pairs = []
-    for candidate in range(1, 5):
+    alg_present = any(p['method'] == 'alg' for p in config['runs'])
+    for candidate in range(1, len(config['beta_multipliers']) + 1) if alg_present else ():
         a, b = by_id.get(f'lg_b{candidate}', {}), by_id.get(f'alg_b{candidate}', {})
         first = None
         for x, y in zip(a.get('losses', []), b.get('losses', [])):
@@ -118,6 +131,7 @@ def compare_grid(rows, config):
         if complete and not pair['matches']:
             issues.append(f'lg_alg_b{candidate}_review')
     return dict(identity_checks=controls, lg_alg_pairs=pairs, review_items=issues,
+                lg_alg_scope='separate_runs' if alg_present else 'shared_lg_pre_shutdown_screen_no_independent_alg_result',
                 tolerance=dict(rtol=config['resume_rtol'], atol=config['resume_atol']))
 
 
@@ -361,25 +375,33 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     from .data import save_json
     from .tiny_repeat import warning_summary
+    from .tiny_grid_report import final_line
     report = dict(status='running', runs=[], scientific_result=False, test_used=False,
                   automatic_next_stage=False, beta_ranking_performed=False)
     failed = False
+    terminal_plans = []
     started = time.monotonic()
     try:
         config = load_config(args.config)
-        from .official_api import bootstrap
-        from .official_assets import verify
-        bootstrap(args.cache_root)
-        provenance = verify(args.cache_root, student='tiny')
+        terminal_plans = [p for p in config['runs'] if not args.run_id or p['id'] == args.run_id]
         report.update(protocol_id=config['protocol_id'], expected_runs=len(config['runs']),
-                      ibkd_lambdas=config['ibkd_lambdas'], assets=provenance['weights'])
-        save_json(output / 'config.json', config); save_json(output / 'provenance.json', provenance)
+                      ibkd_lambdas=config['ibkd_lambdas'],
+                      lg_alg_shared_screen=config.get('lg_alg_shared_screen', False))
         if args.run_id:
-            plan = next(x for x in config['runs'] if x['id'] == args.run_id)
+            if not terminal_plans:
+                raise ValueError('Unknown candidate run ID')
+            plan = terminal_plans[0]
             report.update(run_id=plan['id'], method=plan['method'], candidate=plan['candidate'],
                           initial_beta=plan['beta'], initial_target_ratio=plan['initial_target_ratio'],
                           **{'lambda': plan.get('lambda')}, completed_steps=0, selected_step=None,
                           selected_epoch=None, diagnostic_metrics=None, full_validation=False)
+        from .official_api import bootstrap
+        from .official_assets import verify
+        bootstrap(args.cache_root)
+        provenance = verify(args.cache_root, student='tiny')
+        report['assets'] = provenance['weights']
+        save_json(output / 'config.json', config); save_json(output / 'provenance.json', provenance)
+        if args.run_id:
             with warnings.catch_warnings(record=True) as records:
                 warnings.simplefilter('always')
                 try:
@@ -436,8 +458,10 @@ def main():
         name = 'summary.json' if args.run_id else 'grid_summary.json'
         report.update(summary_path=str(output / name), invocation_seconds=time.monotonic() - started)
         save_json(output / name, report)
-        printable = compact(report) if args.run_id else report
-        print('[CITYSCAPES_TI16_GRID500_FINAL] ' + json.dumps(printable, allow_nan=False), flush=True)
+        terminal = dict(report, runs=[compact(report)]) if args.run_id else report
+        line = final_line(terminal, terminal_plans, child=bool(args.run_id))
+        (output / 'terminal_summary.log').write_text(line + '\n', encoding='ascii')
+        print(line, flush=True)
     if failed:
         raise SystemExit(1)
 

@@ -7,60 +7,94 @@
 Tiny의 500/2k/10k 결과는 아직 없습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 준비된 다음 단계는 500-step 후보 검사 v5(16개)**입니다.
-2026-09-26 사용자 결정에 따라 **앞으로 iBKD는 λ=0.25와 λ=0.5를 항상 함께 구성**합니다.
-LG 4개 + ALG 4개 + iBKD λ0.25 4개 + iBKD λ0.5 4개이며,
-[고정 config](configs/beta_grid500_both_lambdas_v5.json)의 16개를 순서대로 실행합니다.
+**현재 실행은 500-step 후보 검사 v6(24개)**입니다.
+2026-09-26 사용자 결정에 따라 **iBKD는 λ=0.25와 λ=0.5를 항상 함께 구성**합니다.
+LG 8개 + iBKD λ0.25 8개 + iBKD λ0.5 8개이며,
+[고정 config](configs/beta_grid500_shared_lg_8betas_v6.json)의 24개를 순서대로 실행합니다.
 
 ```bash
 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_beta_grid500.sh
 ```
 
-| 방법 | β 후보 1 | 후보 2 | 후보 3 | 후보 4 |
+LG는 **LG·ALG 공통 가이던스 구간의 사전 검사**입니다. 같은 β·초기값·입력에서 두 방법의
+학습 연산은 같고, ALG는 가장 빨라도 744step(2epoch 완료)에 종료를 결정해 745step부터
+가이던스를 끕니다. 500step에서는 ALG를 중복 실행하지 않으며 별도의 ALG 결과를 만들지 않습니다.
+2k 단계에서는 LG와 ALG를 각각 구성해야 합니다. LG 체크포인트의 controller 종류를 이름만
+바꿔 ALG로 재개하지 않습니다.
+
+| 후보 | 초기 목표 비율 | LG | iBKD λ0.25 | iBKD λ0.5 |
 |---|---:|---:|---:|---:|
-| LG·ALG 공통 | 0.018658411532808426 | 0.03731682306561685 | 0.0746336461312337 | 0.1492672922624674 |
-| iBKD λ0.25 | 0.04923668244316936 | 0.09847336488633872 | 0.19694672977267744 | 0.3938934595453549 |
-| iBKD λ0.5 | 0.07336694459440872 | 0.14673388918881744 | 0.2934677783776349 | 0.5869355567552698 |
+| 1 | 1.5% | 0.00932921 | 0.0246183 | 0.0366835 |
+| 2 | 3% | 0.0186584 | 0.0492367 | 0.0733669 |
+| 3 | 4.5% | 0.0279876 | 0.073855 | 0.11005 |
+| 4 | 6% | 0.0373168 | 0.0984734 | 0.146734 |
+| 5 | 9% | 0.0559752 | 0.14771 | 0.220101 |
+| 6 | 12% | 0.0746336 | 0.196947 | 0.293468 |
+| 7 | 18% | 0.11195 | 0.29542 | 0.440202 |
+| 8 | 24% | 0.149267 | 0.393893 | 0.586936 |
 
-#834 초기 CE/guidance로 계산한 β를 고정했습니다. LG와 ALG는 원래 정밀도의 같은 값을
-공유합니다. 3/6/12/24%는 초기 손실 크기에 대한 탐색 기준이며 학습 내내 유지되는 비율이나
-논문의 표준값은 아닙니다. 이번 실행은 추가 25-step 학습이나 calibration 없이 바로 500 update합니다.
-Vanilla/FSKD*/C2VKD*는 실행하지 않습니다. 모델·데이터·학습 조건은 v4와 동일합니다.
-매 step 입력 해시는 기록하고 전체 gradient 해시는 계산하지 않습니다.
+표는 표시용 6자리 유효숫자이며 실제 β는 JSON의 전체 정밀도를 사용합니다.
+#834 초기 CE/guidance로 계산한 β₀에 `[0.5,1,1.5,2,3,4,6,8]`을 곱합니다.
+기존 3/6/12/24% 후보에 1.5/4.5/9/18%를 추가했습니다. 초기 손실 크기에 대한 탐색 기준이며
+학습 내내 유지되는 비율이나 논문의 표준값은 아닙니다. β를 재계산하지 않습니다.
+추가 25-step 학습·calibration 없이 바로 500 update하며 Vanilla/FSKD*/C2VKD*는 실행하지 않습니다.
+모델·데이터·학습 조건은 v4와 동일하고, 매 step 입력 해시는 기록하되 전체 gradient 해시는 계산하지 않습니다.
 
-- `train2975`, 실제 batch8, 마지막 batch7을 포함한 **372 step=1epoch**입니다.
+- `train2975`, 실제 batch8, 마지막 batch7을 포함해 **372 step=1epoch**입니다.
   500step은 1epoch 완료 + 2epoch의 128 batch, 총 3,999 sample 관측입니다.
   같은 데이터를 다른 epoch에서 반복 관측한 수이며 고유 이미지 수는 아닙니다.
-- Epoch 끝의 실제 sample 수로 가중 평균한 guidance만 controller에 전달합니다.
-  ALG warm-up0, iBKD20epoch 유지. 부분 epoch를 완료한 것으로 처리하지 않습니다.
-  500step에서는 ALG도 두 번째 완료 epoch의 종료 판단에 도달하지 않습니다.
+- 완료 epoch의 실제 sample 수로 가중 평균한 guidance만 controller에 전달합니다.
+  ALG warm-up0, iBKD20epoch 조건은 유지하며 부분 epoch를 완료 처리하지 않습니다.
 - SGD LR0.01 및 **80,000-step schedule**을 유지하고 500에서 멈춥니다.
   다음 2k/10k/80k를 자동 실행하지 않습니다.
 - NaN/Inf loss·gradient·parameter/optimizer state는 해당 후보를 중단합니다.
   OOM·입력 오류 등은 별도 runtime failure입니다. 낮은 진단 mIoU나 유한한 loss 급등만으로
   자동 중단하지 않으며, 실패 후보를 영구 제외하거나 우수 후보를 자동 선정하지 않습니다.
-- 후보마다 별도 프로세스에서 새로 학습합니다. 실패해도 다음 후보를 실행해 16개 결과를 남깁니다.
+- 후보마다 별도 프로세스에서 새로 학습합니다. 실패해도 나머지 후보를 계속 실행합니다.
 - 끝에서 고정 val2장의 accuracy·mIoU·19 class IoU를 계산합니다. **전체 val500 평가가 아니며
-  성능 순위 선정용이 아닙니다.** 2k 단계에서의 전체 val 비교는 별도 구성해야 합니다.
+  성능 순위 선정용이 아닙니다.** 2k 단계의 전체 val 비교는 별도 구성해야 합니다.
 
-출력: `/app/output/cityscapes_ti16_beta_grid500_both_lambdas_v5/run_<UTC>_<PID>/`.
-마지막 `[CITYSCAPES_TI16_GRID500_FINAL]`과 `artifacts/grid_summary.json`에 16개 모두의
-β·λ·완료/실패 step·최종 loss/CE/guidance·초기/마지막25-step 중앙값·최댓값·gradient norm,
-진단 지표, 경고 원문·횟수, teacher 고정, checkpoint 및 LG/ALG 후보별 궤적 비교를 기록합니다.
-16개 모두 finite 500step 완료 및 공통 조건/제어 비교를 통과하면 `passed`,
+출력: `/app/output/cityscapes_ti16_beta_grid500_shared_lg_8betas_v6/run_<UTC>_<PID>/`.
+마지막 **`[CITYSCAPES_TI16_GRID500_FINAL]`** JSON은 24개 전체 결과를 담고,
+접두사·줄바꿈을 포함해 **50,000 ASCII bytes 이하**로 제한합니다. 따라서 문자 수도 같습니다.
+서버가 마지막 65,000자를 제공하면 후속 출력에 15,000자 여유가 있습니다.
+
+- 각 후보의 β·λ·초기 목표 비율·완료/시도 step·선택 step/epoch·최종 loss/CE/guidance·
+  alignment/fusion·가중 guidance/CE 비율·gradient norm·LR을 출력합니다.
+- 진단 accuracy·mIoU·19 class IoU·평가 클래스/픽셀 수·가이던스 종료·teacher 고정·
+  checkpoint 저장 step/검사·경고 횟수·실패 이유 요약·시간/메모리도 포함합니다.
+- 초기/마지막25 중앙값·최대·최소는 `trajectory_order`에 표시된 순서입니다.
+  클래스별 IoU 배열은 `class_iou_order`의 19개 클래스 순서입니다.
+- 출력 수치는 6자리 유효숫자이며 β는 전체 정밀도를 유지합니다. 긴 경고 원문·상태 이력·
+  파일별 SHA는 로그에서 반복하지 않고 결과 파일에 보존합니다. 드문 크기 초과 시에는
+  `run_columns`와 행 배열로 키를 공유해 모든 후보와 수치 필드를 유지합니다.
+- 평가하지 못한 수치는 null, 아직 시작하지 못한 후보는 `not_run`입니다.
+  설치 실패 시에도 24개 계획값과 미실행 상태를 출력하며 결과를 만들어내지 않습니다.
+- `artifacts/grid_summary.json`에는 원래 정밀도의 종합 결과와 경고를,
+  후보별 `summary.json`/`steps.jsonl`/`warnings.json`에는 상세 이력을 저장합니다.
+  `artifacts/terminal_summary.log`는 최종 출력 복사본입니다. Shell 실패 처리 시 출력 루트에도 남깁니다.
+
+24개 모두 finite 500step 완료 및 공통 초기값/입력 비교를 통과하면 `passed`,
 실패 후보나 비교 불일치가 있으면 `needs_review`와 전체 결과를 남깁니다.
+강제 종료로 프로세스가 로그를 쓸 기회가 없었던 경우까지 종료 JSON을 보장하는 뜻은 아닙니다.
 
-각 후보 폴더의 `resume.json`과 `checkpoints/`는 최신·이전 두 세대를 보관합니다.
+각 후보의 `resume.json`과 `checkpoints/`는 최신·이전 두 세대를 보관합니다.
 0/250/epoch 경계/500step에 모델·guidance·optimizer·scheduler·controller·RNG·입력 진행 위치·
 부분 epoch 누적값을 저장하고 bytes/SHA를 기록합니다. 완료 시 저장 상태를 엄격 비교합니다.
 중단된 동일 config/코드 실험은 `tiny_grid --run-id <id> --resume <resume.json>`으로
 새 출력 폴더에서 500까지 이어갈 수 있습니다. Dataset/asset 검증을 동일하게 수행한 환경에서 사용합니다.
-후속 2k 전환은 저장된 checkpoint를 보존한 채 **새 단계의 프로토콜과 재개 호환성을 먼저 고정**해야 하며,
+후속 2k 전환은 **새 단계의 프로토콜과 재개 호환성을 먼저 고정**해야 하며,
 현재 CLI의 config identity 검사를 임의로 우회하지 않습니다.
 
-관련 로컬 검사 57개 통과: 500step epoch/sample 처리, 부분 epoch에서 SGD momentum·dropout RNG를
-포함한 정확 재개, 한 후보 수치 실패 뒤 16개 모두 실행·마지막 JSON 보존을 확인했습니다.
-이는 이번 500step H200 결과를 미리 보장하는 의미가 아닙니다.
+v6 관련 로컬 검사 **63개 통과**. 24개 전체 지표·긴 경고/오류를 넣은 성공/부분 실패/전체 실패
+종료 로그는 각각 **36,876 / 38,945 / 41,010 bytes**였습니다.
+마지막 65,000자만 남겨도 24개 결과를 모두 읽을 수 있는지 확인했습니다.
+에폭 경계·부분 epoch 재개·후보 실패 후 나머지 실행·설치 실패 출력도 검사했습니다.
+이는 실제 H200 500step 결과를 미리 보장하는 의미가 아닙니다.
+
+이전 16개 구성은 [v5 config](configs/beta_grid500_both_lambdas_v5.json)에 보존합니다.
+기존 이슈의 고정 commit `3e3d4b93188a9b474d4ad2fc76c8cf6140423c18`은 v5 그대로 실행되므로
+24개 실행은 새 commit의 이슈 명령을 사용해야 합니다.
 
 **이전 재현성 진단 v4는 H200에서 통과했습니다.** LG-A/LG-B/ALG의 25step 입력·RNG·logits·
 gradient·update 후 state 해시가 모두 동일했고, CE scalar의 약 7.15e-7 이하 차이는 허용 오차 내였습니다.

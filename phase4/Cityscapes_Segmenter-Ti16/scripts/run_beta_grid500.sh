@@ -3,29 +3,21 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "${repo_root}"
 if [[ "$#" -ne 0 ]]; then
-  echo "This fixed 16-run grid always includes iBKD lambda0.25 and lambda0.5; no arguments accepted" >&2
+  echo "This fixed 24-run grid always includes iBKD lambda0.25 and lambda0.5; no arguments accepted" >&2
   exit 2
 fi
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 zip_dir="${CITYSCAPES_ZIP_DIR:-/app/data/chaoyang}"
 data_dir="${CITYSCAPES_CROP512_DATA_DIR:-/app/scratch/cityscapes_l16_crop512_v3/cityscapes}"
 cache_root="${CITYSCAPES_CROP512_CACHE:-/app/scratch/cityscapes_official_l16_v2/upstream}"
-output_root="${CITYSCAPES_TI16_OUTPUT:-/app/output/cityscapes_ti16_beta_grid500_both_lambdas_v5/run_$(date -u +%Y%m%dT%H%M%SZ)_$$}"
-config="${repo_root}/phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid500_both_lambdas_v5.json"
+output_root="${CITYSCAPES_TI16_OUTPUT:-/app/output/cityscapes_ti16_beta_grid500_shared_lg_8betas_v6/run_$(date -u +%Y%m%dT%H%M%SZ)_$$}"
+config="${repo_root}/phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid500_shared_lg_8betas_v6.json"
 mkdir -p "${output_root}"
 report_failure() {
   local code="$1"
   if [[ "${code}" -eq 0 ]]; then return; fi
-  python - "${output_root}" "${code}" <<'PY'
-import json,sys
-from pathlib import Path
-root=Path(sys.argv[1]); path=root/'artifacts/grid_summary.json'
-report=json.loads(path.read_text()) if path.exists() else dict(
-    status='runtime_failure',error='Pipeline setup failed; see run.log',runs=[],
-    selected_step=None,selected_epoch=None,metrics=None,scientific_result=False,test_used=False)
-report.update(pipeline_exit_code=int(sys.argv[2]),output_root=str(root))
-print('[CITYSCAPES_TI16_GRID500_FINAL] '+json.dumps(report,allow_nan=False),flush=True)
-PY
+  PYTHONPATH="${repo_root}/src${PYTHONPATH:+:${PYTHONPATH}}" python -m ibkd_seg.cityscapes.tiny_grid_report \
+    --output-root "${output_root}" --config "${config}" --exit-code "${code}"
 }
 trap 'report_failure "$?"' EXIT
 run_suite() {
@@ -36,7 +28,7 @@ run_suite() {
   cp "${data_dir}/manifest.json" "${output_root}/manifest.json"
   cp "${data_dir}/preparation.json" "${output_root}/preparation.json"
   python -m ibkd_seg.cityscapes.official_assets --cache-root "${cache_root}" --student tiny
-  echo "[TI16_GRID500] runs=16 steps_each=500 ibkd_lambdas=0.25,0.5 output=${output_root}"
+  echo "[TI16_GRID500] runs=24 steps_each=500 shared_lg_alg_screen=true ibkd_lambdas=0.25,0.5 output=${output_root}"
   python -u -m ibkd_seg.cityscapes.tiny_grid --cache-root "${cache_root}" \
     --data-dir "${data_dir}" --manifest "${output_root}/manifest.json" \
     --output-dir "${output_root}/artifacts" --config "${config}"

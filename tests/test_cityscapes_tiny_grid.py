@@ -14,7 +14,7 @@ from ibkd_seg.phase1.controllers import GuidanceController
 from ibkd_seg.cityscapes.full_checkpoint import save_checkpoint, load_checkpoint
 from ibkd_seg.cityscapes.runtime import restore_controller
 from ibkd_seg.cityscapes.tiny_grid import (BASE_BETA, CONFIG_DIR, load_config, initial_progress,
-                                         record_step, compare_grid, main)
+                                         record_step, compare_grid, main, GRID_V5, GRID_V6)
 
 
 def batch_record(step):
@@ -30,6 +30,24 @@ def append_step(progress, controller, step):
 
 
 class TinyGridTests(unittest.TestCase):
+    def test_shared_eight_beta_grid_preserves_old_candidates_and_both_lambdas(self):
+        c=load_config(CONFIG_DIR / GRID_V6)
+        old=load_config(CONFIG_DIR / GRID_V5)
+        self.assertEqual(len(c['runs']),24)
+        self.assertEqual([r['method'] for r in c['runs']],['lg']*8+['ibkd']*16)
+        self.assertEqual([r['lambda'] for r in c['runs'][8:]],[.25]*8+[.5]*8)
+        self.assertEqual(c['beta_multipliers'],[.5,1,1.5,2,3,4,6,8])
+        for r in old['runs']:
+            if r['method']!='alg':
+                self.assertTrue(any(p['method']==r['method'] and p.get('lambda')==r.get('lambda') and p['beta']==r['beta'] for p in c['runs']))
+        # The shared screen is justified by the real controller, not a 20-epoch ALG warmup.
+        p=initial_progress(); ctrl=GuidanceController(kind='alg',beta=.02,warmup_epochs=0)
+        for s in range(1,745): append_step(p,ctrl,s)
+        self.assertEqual(ctrl.stop_epoch,2)  # Constant/rising loss satisfies stop condition at epoch 2.
+        self.assertEqual(p['global_step'],744)
+        self.assertEqual(ctrl.beta_for_epoch(3),0.)
+        self.assertEqual(c['alg_earliest_off_step'],745)
+
     def test_fixed_sixteen_run_config_keeps_both_lambdas_and_shared_lg_alg_betas(self):
         c = load_config(CONFIG_DIR / 'beta_grid500_both_lambdas_v5.json')
         self.assertEqual(len(c['runs']), 16)
@@ -94,8 +112,8 @@ class TinyGridTests(unittest.TestCase):
             self.assertEqual(p,expected_p)
             self.assertEqual(len(ctrl.losses),1)
 
-    def fixture(self):
-        config=load_config(CONFIG_DIR/'beta_grid500_both_lambdas_v5.json')
+    def fixture(self, name=GRID_V5):
+        config=load_config(CONFIG_DIR/name)
         rows=[]
         for plan in config['runs']:
             losses=[dict(batch_record(i),step=i,beta=plan['beta']) for i in range(1,501)]
@@ -117,8 +135,16 @@ class TinyGridTests(unittest.TestCase):
         self.assertIn('input_prefixes',r['review_items'])
         self.assertIn('ibkd_same_adapter_initialization',r['review_items'])
 
-    def test_parent_continues_all_sixteen_after_numerical_failure_and_prints_results(self):
-        c,rows=self.fixture(); by_id={r['run_id']:r for r in rows}
+    def test_shared_screen_has_no_fabricated_alg_run_or_comparison(self):
+        c,rows=self.fixture(GRID_V6)
+        result=compare_grid(rows,c)
+        self.assertEqual(result['review_items'],[])
+        self.assertEqual(result['lg_alg_pairs'],[])
+        self.assertIn('no_independent_alg_result',result['lg_alg_scope'])
+        self.assertIn('run_inventory',compare_grid(rows[:-1],c)['review_items'])
+
+    def test_parent_continues_all_twentyfour_after_numerical_failure_and_prints_results(self):
+        c,rows=self.fixture(GRID_V6); by_id={r['run_id']:r for r in rows}
         def fake_child(command,check):
             run_id=command[command.index('--run-id')+1]
             out=Path(command[command.index('--output-dir')+1]); out.mkdir(parents=True)
@@ -134,19 +160,19 @@ class TinyGridTests(unittest.TestCase):
             root=Path(tmp); capture=io.StringIO()
             argv=['tiny_grid','--cache-root',str(root/'cache'),'--data-dir',str(root/'data'),
                   '--manifest',str(root/'manifest.json'),'--output-dir',str(root/'out'),
-                  '--config',str(CONFIG_DIR/'beta_grid500_both_lambdas_v5.json')]
+                  '--config',str(CONFIG_DIR/GRID_V6)]
             with patch('sys.argv',argv),patch('ibkd_seg.cityscapes.official_api.bootstrap'), \
                  patch('ibkd_seg.cityscapes.official_assets.verify',return_value={'weights':{}}), \
                  patch('ibkd_seg.cityscapes.full_data.prepare_labels'), \
                  patch('subprocess.run',side_effect=fake_child) as child,contextlib.redirect_stdout(capture):
                 with self.assertRaises(SystemExit) as error: main()
                 self.assertEqual(error.exception.code,1)
-            self.assertEqual(child.call_count,16)
+            self.assertEqual(child.call_count,24)
             final=json.loads(capture.getvalue().strip().splitlines()[-1].split('] ',1)[1])
             self.assertEqual(final['status'],'needs_review')
-            self.assertEqual(len(final['runs']),16)
+            self.assertEqual(len(final['runs']),24)
             self.assertEqual(final['failed_candidates'],['lg_b2'])
-            self.assertEqual(len(final['finite_candidates']),15)
+            self.assertEqual(len(final['finite_candidates']),23)
             self.assertFalse(final['beta_ranking_performed'])
             self.assertFalse(final['automatic_next_stage'])
 
