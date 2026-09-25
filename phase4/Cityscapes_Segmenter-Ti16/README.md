@@ -2,12 +2,69 @@
 
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
-25-step 연결 smoke입니다. H200 #834에서 7경로가 각각 25 update와 1-update 재개 검사를
+25-step 연결 smoke와 500-step β 후보 검사입니다. H200 #834에서 7경로가 각각 25 update와 1-update 재개 검사를
 통과했지만, LG/ALG 궤적 비교가 4-step guidance에서 실패하여 전체 상태는 failed입니다.
 Tiny의 500/2k/10k 결과는 아직 없습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 실행은 LG 두 번 + ALG 한 번의 재현성 진단 v4**입니다.
+**현재 준비된 다음 단계는 500-step 후보 검사 v5(16개)**입니다.
+2026-09-26 사용자 결정에 따라 **앞으로 iBKD는 λ=0.25와 λ=0.5를 항상 함께 구성**합니다.
+LG 4개 + ALG 4개 + iBKD λ0.25 4개 + iBKD λ0.5 4개이며,
+[고정 config](configs/beta_grid500_both_lambdas_v5.json)의 16개를 순서대로 실행합니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_beta_grid500.sh
+```
+
+| 방법 | β 후보 1 | 후보 2 | 후보 3 | 후보 4 |
+|---|---:|---:|---:|---:|
+| LG·ALG 공통 | 0.018658411532808426 | 0.03731682306561685 | 0.0746336461312337 | 0.1492672922624674 |
+| iBKD λ0.25 | 0.04923668244316936 | 0.09847336488633872 | 0.19694672977267744 | 0.3938934595453549 |
+| iBKD λ0.5 | 0.07336694459440872 | 0.14673388918881744 | 0.2934677783776349 | 0.5869355567552698 |
+
+#834 초기 CE/guidance로 계산한 β를 고정했습니다. LG와 ALG는 원래 정밀도의 같은 값을
+공유합니다. 3/6/12/24%는 초기 손실 크기에 대한 탐색 기준이며 학습 내내 유지되는 비율이나
+논문의 표준값은 아닙니다. 이번 실행은 추가 25-step 학습이나 calibration 없이 바로 500 update합니다.
+Vanilla/FSKD*/C2VKD*는 실행하지 않습니다. 모델·데이터·학습 조건은 v4와 동일합니다.
+매 step 입력 해시는 기록하고 전체 gradient 해시는 계산하지 않습니다.
+
+- `train2975`, 실제 batch8, 마지막 batch7을 포함한 **372 step=1epoch**입니다.
+  500step은 1epoch 완료 + 2epoch의 128 batch, 총 3,999 sample 관측입니다.
+  같은 데이터를 다른 epoch에서 반복 관측한 수이며 고유 이미지 수는 아닙니다.
+- Epoch 끝의 실제 sample 수로 가중 평균한 guidance만 controller에 전달합니다.
+  ALG warm-up0, iBKD20epoch 유지. 부분 epoch를 완료한 것으로 처리하지 않습니다.
+  500step에서는 ALG도 두 번째 완료 epoch의 종료 판단에 도달하지 않습니다.
+- SGD LR0.01 및 **80,000-step schedule**을 유지하고 500에서 멈춥니다.
+  다음 2k/10k/80k를 자동 실행하지 않습니다.
+- NaN/Inf loss·gradient·parameter/optimizer state는 해당 후보를 중단합니다.
+  OOM·입력 오류 등은 별도 runtime failure입니다. 낮은 진단 mIoU나 유한한 loss 급등만으로
+  자동 중단하지 않으며, 실패 후보를 영구 제외하거나 우수 후보를 자동 선정하지 않습니다.
+- 후보마다 별도 프로세스에서 새로 학습합니다. 실패해도 다음 후보를 실행해 16개 결과를 남깁니다.
+- 끝에서 고정 val2장의 accuracy·mIoU·19 class IoU를 계산합니다. **전체 val500 평가가 아니며
+  성능 순위 선정용이 아닙니다.** 2k 단계에서의 전체 val 비교는 별도 구성해야 합니다.
+
+출력: `/app/output/cityscapes_ti16_beta_grid500_both_lambdas_v5/run_<UTC>_<PID>/`.
+마지막 `[CITYSCAPES_TI16_GRID500_FINAL]`과 `artifacts/grid_summary.json`에 16개 모두의
+β·λ·완료/실패 step·최종 loss/CE/guidance·초기/마지막25-step 중앙값·최댓값·gradient norm,
+진단 지표, 경고 원문·횟수, teacher 고정, checkpoint 및 LG/ALG 후보별 궤적 비교를 기록합니다.
+16개 모두 finite 500step 완료 및 공통 조건/제어 비교를 통과하면 `passed`,
+실패 후보나 비교 불일치가 있으면 `needs_review`와 전체 결과를 남깁니다.
+
+각 후보 폴더의 `resume.json`과 `checkpoints/`는 최신·이전 두 세대를 보관합니다.
+0/250/epoch 경계/500step에 모델·guidance·optimizer·scheduler·controller·RNG·입력 진행 위치·
+부분 epoch 누적값을 저장하고 bytes/SHA를 기록합니다. 완료 시 저장 상태를 엄격 비교합니다.
+중단된 동일 config/코드 실험은 `tiny_grid --run-id <id> --resume <resume.json>`으로
+새 출력 폴더에서 500까지 이어갈 수 있습니다. Dataset/asset 검증을 동일하게 수행한 환경에서 사용합니다.
+후속 2k 전환은 저장된 checkpoint를 보존한 채 **새 단계의 프로토콜과 재개 호환성을 먼저 고정**해야 하며,
+현재 CLI의 config identity 검사를 임의로 우회하지 않습니다.
+
+관련 로컬 검사 57개 통과: 500step epoch/sample 처리, 부분 epoch에서 SGD momentum·dropout RNG를
+포함한 정확 재개, 한 후보 수치 실패 뒤 16개 모두 실행·마지막 JSON 보존을 확인했습니다.
+이는 이번 500step H200 결과를 미리 보장하는 의미가 아닙니다.
+
+**이전 재현성 진단 v4는 H200에서 통과했습니다.** LG-A/LG-B/ALG의 25step 입력·RNG·logits·
+gradient·update 후 state 해시가 모두 동일했고, CE scalar의 약 7.15e-7 이하 차이는 허용 오차 내였습니다.
+아래는 해당 v4 실행 기록입니다.
 
 ```bash
 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_repeat25_lg_alg.sh
