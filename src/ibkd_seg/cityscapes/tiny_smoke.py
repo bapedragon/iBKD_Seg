@@ -25,6 +25,7 @@ REPO = Path(__file__).resolve().parents[3]
 CONFIG = REPO / "phase4/Cityscapes_Segmenter-Ti16/configs/smoke25_v1.json"
 FSKD_CONFIG = CONFIG.with_name("smoke25_fskd_v2.json")
 C2VKD_CONFIG = CONFIG.with_name("smoke25_fskd_c2vkd_v3.json")
+REPEAT_CONFIG = CONFIG.with_name("repeat25_lg_alg_v4.json")
 
 
 def fixed_fskd_calibration(rows, protocol, method="fskd"):
@@ -108,7 +109,7 @@ def assert_state_close(actual, expected, *, rtol, atol):
 
 def load_config(path):
     config = json.loads(path.read_text())
-    locked = next((p for p in (CONFIG, FSKD_CONFIG, C2VKD_CONFIG) if p.name == path.name), None)
+    locked = next((p for p in (CONFIG, FSKD_CONFIG, C2VKD_CONFIG, REPEAT_CONFIG) if p.name == path.name), None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError("Use the locked Tiny smoke config; protocol edits need a new revision")
     return config
@@ -131,6 +132,9 @@ def measure(args, config, plan, output):
         raise RuntimeError("Tiny H200 smoke requires exactly one visible CUDA GPU")
     if os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {":4096:8", ":16:8"}:
         raise RuntimeError("Set CUBLAS_WORKSPACE_CONFIG=:4096:8 before starting Python")
+    diagnostic = config.get("diagnostic_repeat", False)
+    if diagnostic:
+        from .tiny_repeat import fixed_calibration, gradient_hash, rng_hash, tensor_hashes
     device = torch.device("cuda")
     ptu.device = device
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -232,6 +236,8 @@ def measure(args, config, plan, output):
         if is_fixed:
             values.update(components={key: float(value.detach()) for key, value in components.items()},
                           weighted_components={key: float(value.detach()) for key, value in weighted.items()})
+        if diagnostic and torch.is_grad_enabled():
+            values["trace"] = {"logits_sha256": tensor_hashes([("logits", logits)])}
         return ce, guided, values
 
     calibration_rows, calibration_hashes = [], []
@@ -248,7 +254,8 @@ def measure(args, config, plan, output):
                       f"seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} optimizer_updates=0", flush=True)
     if len(calibration_rows) != config["calibration_batches"]:
         raise RuntimeError("Incomplete calibration batches")
-    calibration = (fixed_fskd_calibration(calibration_rows, fixed_protocol, plan["method"]) if is_fixed else
+    calibration = (fixed_calibration(calibration_rows, config["diagnostic_fixed_beta"]) if diagnostic else
+                   fixed_fskd_calibration(calibration_rows, fixed_protocol, plan["method"]) if is_fixed else
                    beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"])
                    if guide is not None else {"ce_median": statistics.median(r["ce"] for r in calibration_rows),
                                               "beta_candidates": [], "pilot_beta": 0.0, "optimizer_updates": 0,
@@ -263,7 +270,7 @@ def measure(args, config, plan, output):
         raise RuntimeError("Calibration changed the initial training state")
     save_json(output / "calibration.json", {**calibration, "batches": calibration_rows,
                                            "input_hashes": calibration_hashes, "state_restored": True})
-    print("[TI16_BETA_PROPOSAL] " + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
+    print(("[TI16_FIXED_BETA] " if diagnostic else "[TI16_BETA_PROPOSAL] ") + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
     effective = dict(config, guidance_beta=calibration["pilot_beta"] if not is_fixed else 1.0)
     controller = controller_for(plan["method"], effective)
     beta = 1.0 if is_fixed else controller.beta_for_epoch(1) if controller else 0.0
@@ -281,6 +288,7 @@ def measure(args, config, plan, output):
         checked_gradients.update(c2vkd_visual=guide.visual, c2vkd_linguistic=guide.linguistic)
 
     def update(batch):
+        rng_before = rng_hash() if diagnostic else None
         optimizer.zero_grad(set_to_none=True)
         ce, guided, values = losses(batch)
         loss = training_loss(ce, guided) if is_c2vkd else ce + beta * guided
@@ -300,8 +308,14 @@ def measure(args, config, plan, output):
                       guidance_multiplier=beta, weighted_guidance=beta * values["guidance"],
                       weighted_guidance_to_seg_loss=beta * values["guidance"] / values["ce"],
                       grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]["lr"])
+        if diagnostic:
+            values["trace"].update(rng_before=rng_before, student_gradient_sha256=gradient_hash(model),
+                                   guidance_gradient_sha256=gradient_hash(guide))
         optimizer.step()
         scheduler.step_update(scheduler.last_epoch + 1)
+        if diagnostic:
+            values["trace"].update(rng_after=rng_hash(), student_after_sha256=state_hash(model),
+                                   guidance_after_sha256=state_hash(guide))
         return values
 
     rows, training_hashes = [], []
@@ -311,6 +325,12 @@ def measure(args, config, plan, output):
     source = source_hash()
     if config.get("fskd"):
         source = json_hash({"common": source, "shared_loss_primitives": sha256(Path(__file__).parent / "b0/losses.py")})
+    if diagnostic:
+        save_json(output / "diagnostic_initial.json", {
+            "student_initial_state_sha256": initial_student, "guidance_initial_state_sha256": initial_guide,
+            "teacher_state_sha256": teacher_hash, "source_sha256": source, "config_sha256": config_hash,
+            "calibration_input_sha256": json_hash(calibration_hashes),
+            "timing_scope": config["timing_scope"]})
     torch.cuda.reset_peak_memory_stats()
     for index, batch in enumerate(itertools.islice(train_loader(datasets["train"], 1, 0, device), config["steps"]), 1):
         digest = batch_hash(*batch)
@@ -328,8 +348,11 @@ def measure(args, config, plan, output):
         row = update(batch)
         torch.cuda.synchronize()
         row.update(step=index, seconds=time.perf_counter() - start)
+        if diagnostic:
+            row["trace"]["input_sha256"] = digest
         rows.append(row)
-        save_json(output / "training_progress.json", {"run_id": plan["id"], "completed_steps": index, "last": row})
+        save_json(output / "training_progress.json", {"run_id": plan["id"], "completed_steps": index, "last": row,
+                  **({"losses": rows, "input_sha256": json_hash(training_hashes)} if diagnostic else {})})
         if index == 1 or index % 5 == 0:
             print(f"[TI16_SMOKE_STEP] run={plan['id']} step={index}/{config['steps']} "
                   f"loss={row['loss']:.6g} seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} "
@@ -427,7 +450,9 @@ def measure(args, config, plan, output):
               "median_step_seconds_excluding_first": statistics.median(row["seconds"] for row in rows[1:]),
               "environment": {"torch": str(torch.__version__), "cuda": torch.version.cuda,
                               "gpu": torch.cuda.get_device_name(), "precision": "fp32", "batch_size": 8},
-              "test_used": False}
+              "test_used": False,
+              "timing_scope": config.get("timing_scope", "training_update"),
+              "calibration_input_sha256": json_hash(calibration_hashes)}
     checkpoint_path.unlink()
     save_json(output / "summary.json", result)
     return result
@@ -440,7 +465,7 @@ def compact_run(row):
             "encoder_channels", "encoder_blocks", "schedule_total_steps", "guidance_on", "guidance_stop_step",
             "natural_guidance_off_tested", "controller_synthetic_diagnostics", "train_peak_allocated_bytes", "median_step_seconds_excluding_first",
             "fixed_loss_coefficients", "method_provenance", "soft_rank_execution", "clip_pool", "comparison_group",
-            "error", "summary_path", "deterministic_warning_count")
+            "error", "summary_path", "deterministic_warning_count", "warning_summary", "timing_scope")
     result = {key: row[key] for key in keys if key in row}
     scores = row.get("diagnostic_metrics")
     result["diagnostic_metrics_percent"] = None if scores is None else {
@@ -499,6 +524,9 @@ def main():
     failed = False
     try:
         config = load_config(args.config)
+        if config.get("diagnostic_repeat"):
+            report.update(next_stage="review_LG_repeat_and_ALG_comparison_no_automatic_training",
+                          fixed_beta=config["diagnostic_fixed_beta"], timing_scope=config["timing_scope"])
         from .official_api import bootstrap
         bootstrap(args.cache_root)
         from .data import save_json
@@ -519,9 +547,16 @@ def main():
             plan = next(row for row in config["runs"] if row["id"] == args.run_id)
             with warnings.catch_warnings(record=True) as warning_records:
                 warnings.simplefilter("always")
-                row = measure(args, config, plan, output)
-            row["deterministic_warning_count"] = sum("deterministic" in str(w.message) for w in warning_records)
-            save_json(output / "warnings.json", [str(w.message) for w in warning_records])
+                try:
+                    row = measure(args, config, plan, output)
+                finally:
+                    from .tiny_repeat import warning_summary
+                    report["warning_summary"] = warning_summary(warning_records)
+                    report["deterministic_warning_count"] = sum("deterministic" in str(w.message) for w in warning_records)
+                    save_json(output / "warnings.json", [str(w.message) for w in warning_records])
+            row["deterministic_warning_count"] = report["deterministic_warning_count"]
+            if config.get("diagnostic_repeat"):
+                row["warning_summary"] = report["warning_summary"]
             save_json(output / "summary.json", row)
             report.update(status="passed", runs=[compact_run(row)])
         else:
@@ -548,6 +583,13 @@ def main():
                            "last": partial.get("last"), "selected_step": None, "selected_epoch": None,
                            "error": failure.get("error", f"child_exit={completed.returncode}"),
                            "summary_path": str(failure_path)}
+                    if config.get("diagnostic_repeat"):
+                        initial_path = destination / "diagnostic_initial.json"
+                        if initial_path.exists():
+                            row.update(json.loads(initial_path.read_text()))
+                        row.update(losses=partial.get("losses", []), input_sha256=partial.get("input_sha256"),
+                                   warning_summary=failure.get("warning_summary", []),
+                                   deterministic_warning_count=failure.get("deterministic_warning_count"))
                     if plan["method"] in {"fskd", "c2vkd"}:
                         protocol = config[plan["method"]]
                         row.update(method_provenance=protocol, fixed_loss_coefficients=protocol["coefficients"],
@@ -563,8 +605,16 @@ def main():
             report["comparison_groups"] = {
                 "primary_common_pretraining": {r["run_id"]: r["status"] for r in rows if r["method"] != "c2vkd"},
                 "supplementary_extra_pretraining": {r["run_id"]: r["status"] for r in rows if r["method"] == "c2vkd"}}
-            report["cross_method_checks"] = compare_runs(rows, [row["id"] for row in config["runs"]])
-            report["status"] = "passed"
+            if config.get("diagnostic_repeat"):
+                from .tiny_repeat import compare_repeats
+                report["repeat_comparisons"] = compare_repeats(rows, config)
+                report["status"] = report["repeat_comparisons"]["status"]
+                failed = report["status"] != "passed"
+                if failed:
+                    report["error"] = "Repeat diagnostic failed; see all pair comparisons and warning messages"
+            else:
+                report["cross_method_checks"] = compare_runs(rows, [row["id"] for row in config["runs"]])
+                report["status"] = "passed"
     except Exception as error:
         failed = True
         report.update(status="failed", error=repr(error), failed_run=args.run_id)

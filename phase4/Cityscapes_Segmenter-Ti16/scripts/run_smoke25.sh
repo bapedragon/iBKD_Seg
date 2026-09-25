@@ -8,6 +8,7 @@ case "${1:-v1}" in
   v1) revision="v1"; config_name="smoke25_v1.json" ;;
   fskd_v2) revision="fskd_v2"; config_name="smoke25_fskd_v2.json" ;;
   fskd_c2vkd_v3) revision="fskd_c2vkd_v3"; config_name="smoke25_fskd_c2vkd_v3.json" ;;
+  repeat_v4) revision="repeat_v4"; config_name="repeat25_lg_alg_v4.json" ;;
   *) echo "Unknown Tiny smoke revision: $1" >&2; exit 2 ;;
 esac
 zip_dir="${CITYSCAPES_ZIP_DIR:-/app/data/chaoyang}"

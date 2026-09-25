@@ -2,10 +2,45 @@
 
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
-25-step 연결 smoke입니다. H200에서의 통과 결과나 500/2k/10k 결과는 아직 없습니다.
+25-step 연결 smoke입니다. H200 #834에서 7경로가 각각 25 update와 1-update 재개 검사를
+통과했지만, LG/ALG 궤적 비교가 4-step guidance에서 실패하여 전체 상태는 failed입니다.
+Tiny의 500/2k/10k 결과는 아직 없습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 실행은 C2VKD*까지 추가한 v3(7경로)**입니다.
+**현재 실행은 LG 두 번 + ALG 한 번의 재현성 진단 v4**입니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_repeat25_lg_alg.sh
+```
+
+[repeat25_lg_alg_v4.json](configs/repeat25_lg_alg_v4.json)에 고정한 세 경로는
+`lg_a`, `lg_b`, `alg`이며 각각 별도 Python 프로세스에서 실행합니다.
+β는 #834 LG의 초기 제안값 `0.018658411532808426`으로 **모두 완전히 동일하게** 사용합니다.
+초기 25 batch 손실 측정은 유지하되 β를 다시 계산하거나 선택하지 않고, 상태를 복원한 뒤
+각각 25 update합니다. Tiny/teacher·crop512·batch8·seed1·SGD·증강·FP32 및
+80k schedule은 기존과 같습니다. iBKD/FSKD/C2VKD는 이번 진단에서 실행하지 않습니다.
+
+각 step에 입력, Python/NumPy/Torch CPU·CUDA RNG, logits, 전체 student/adapter gradient,
+update 후 state의 SHA-256을 기록합니다. 이러한 진단 때문에 이번 step 시간은 일반 학습
+속도 추정에 쓰지 않습니다. `warn_only=True`를 유지해 경고가 나도 관찰을 계속하고,
+경고 원문·횟수·소스 위치를 성공/실패 모두 마지막 JSON에 남깁니다.
+
+최종 `repeat_comparisons.pairs`에는 LG-A↔LG-B, LG-A↔ALG, LG-B↔ALG **모두** 기록됩니다.
+최초 scalar 차이 step·양쪽 값·허용 오차·최대 차이 및 항목별 최초 hash 차이 step을 표시합니다.
+입력/초기값/β/RNG가 동일해야 하며, scalar 비교는 기존 `rtol=2e-5, atol=2e-6`를 유지합니다.
+출력/gradient/state의 hash 일치는 별도 엄격 진단입니다. Hash가 다르지만 scalar 오차가
+허용 범위 내인 경우에도 bitwise 재현이라고 해석하지 않습니다.
+세 실행과 비교가 모두 통과해야 전체 `status=passed`입니다. 차이가 나면 전체 failed와
+세 쌍의 진단을 남기고, 이후 500/2k/10k 학습을 자동 실행하지 않습니다.
+
+각 실행의 loss·선택 step/epoch·진단 val2 accuracy/mIoU/IoU·재개 검사도 기존처럼 출력합니다.
+25step은 1epoch를 채우지 않아 자연스러운 controller 종료는 검사하지 않습니다.
+출력 위치: `/app/output/cityscapes_ti16_crop512_smoke25_repeat_v4/run_<UTC>_<PID>/`.
+경로별 `summary.json`/`training_progress.json`에 모든 step trace,
+`diagnostic_initial.json`에 초기값, `warnings.json`에 경고를 남깁니다.
+`artifacts/smoke_summary.json`과 마지막 `[CITYSCAPES_TI16_SMOKE_FINAL]`에 전체 판단이 있습니다.
+
+**아래는 이전 C2VKD* 추가 v3(7경로)의 기록**입니다.
 Vanilla, LG, ALG, iBKD λ0.25, iBKD λ0.5, FSKD*, C2VKD*를 순서대로 검사합니다.
 고정 손실과 출처는 [FSKD_PROTOCOL.md](FSKD_PROTOCOL.md),
 [C2VKD_PROTOCOL.md](C2VKD_PROTOCOL.md), 실행값은
@@ -113,6 +148,13 @@ teacher 고정·재개·입력 동일성, 시간·메모리를 함께 출력합�
 성공은 `status=passed`, 다섯 run 모두 passed 및 교차 검사 통과로 판단합니다.
 
 ## 실행 코드의 사전 검사
+
+v4 로컬 검사: 관련 단위 검사 52개 통과. 실제 공식 Tiny NPZ와 32×32 합성 입력·합성
+teacher feature로 LG-A/LG-B/ALG를 각각 25 update해 loss, RNG, logits, gradient,
+update 후 state의 모든 비교가 CPU에서 일치함을 확인했습니다. 실패 시 경고 원문과
+종료 JSON 보존, 설치 실패 시 즉시 중단도 검사했습니다. H200에서의 반복 재현성은
+이 v4 이슈의 결과로 확인해야 합니다.
+
 
 v3 추가 검사: 관련 단위 검사 총 45개, Python/shell 문법 및 설치 실패 시 종료 JSON 검사 통과.
 공식 Tiny NPZ와 byte/SHA 검증한 실제 CLIP RN101 pool을 CPU에서 연결해, hook 전후
