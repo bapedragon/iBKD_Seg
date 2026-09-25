@@ -5,20 +5,36 @@
 25-step 연결 smoke입니다. H200에서의 통과 결과나 500/2k/10k 결과는 아직 없습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 요청은 FSKD를 추가한 v2(6경로)**입니다. C2VKD는 사용자 결정으로 보류했습니다.
-추가한 FSKD의 고정 계수·출처·이식 범위는 [FSKD_PROTOCOL.md](FSKD_PROTOCOL.md)에 있습니다.
-아래의 5경로 설명과 `smoke25_v1.json`은 처음 제공한 v1을 보존한 것입니다.
-현재 실행은 다음 명령을 사용합니다.
+**현재 실행은 C2VKD*까지 추가한 v3(7경로)**입니다.
+Vanilla, LG, ALG, iBKD λ0.25, iBKD λ0.5, FSKD*, C2VKD*를 순서대로 검사합니다.
+고정 손실과 출처는 [FSKD_PROTOCOL.md](FSKD_PROTOCOL.md),
+[C2VKD_PROTOCOL.md](C2VKD_PROTOCOL.md), 실행값은
+[smoke25_fskd_c2vkd_v3.json](configs/smoke25_fskd_c2vkd_v3.json)에 있습니다.
 
 ```bash
-bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_smoke25_fskd.sh
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_smoke25_fskd_c2vkd.sh
 ```
 
-v2는 FSKD용 torchsort0.1.10 CUDA 확장을 설치하고 검사합니다. Teacher, Tiny,
-crop512, batch8, SGD 및 기존 다섯 경로의 β 측정 방식은 유지합니다.
-FSKD는 공개 DeiT-Ti 예제의 고정 계수를 사용하며 β 4개 탐색에 포함하지 않습니다.
-v2 출력은 `/app/output/cityscapes_ti16_crop512_smoke25_fskd_v2/run_<UTC>_<PID>/`입니다.
-FSKD `beta=null`은 증류 중단이 아니라 별도 고정 계수 사용을 의미합니다.
+각 경로에서 무업데이트 calibration25 batch 후 상태를 복원하고 25 update를 합니다.
+LG/ALG/iBKD의 β 4개는 **제안만 하고 최솟값 하나로** smoke합니다.
+FSKD*와 C2VKD*는 고정 계수를 쓰며 β 탐색에 포함하지 않습니다.
+FSKD*는 공개 DeiT-Ti 분류 예제를 segmentation에 이식한 구성입니다.
+C2VKD*는 원본의 미공개 pooling 가중치를 CLIP RN101으로 대체하여 추가 사전학습
+정보를 사용하므로 `supplementary_extra_pretraining` 결과로 별도 표시합니다.
+두 방법 모두 저자 Cityscapes 설정의 완전 재현이라는 뜻은 아닙니다.
+
+v3는 torchsort0.1.10 CUDA 확장을 설치하고 CLIP RN101 파일(291,791,292 bytes)을
+다운로드·해시 검증해 **attention pool만** 사용합니다. OpenMMLab teacher는 유지합니다.
+출력은 `/app/output/cityscapes_ti16_crop512_smoke25_fskd_c2vkd_v3/run_<UTC>_<PID>/`입니다.
+`artifacts/smoke_summary.json`과 마지막 `[CITYSCAPES_TI16_SMOKE_FINAL]`에
+7개 경로의 loss, 고정 계수/β 후보, 완료 step, 진단 pixel accuracy·mIoU·19 IoU,
+재개 검사, teacher/pool 고정, 시간·메모리, 비교군 구분을 기록합니다.
+**val 2장 점수는 연결 진단용이며 성능 순위를 정할 수 없습니다.**
+통과 조건은 7경로 모두 passed 및 공통 초기화·입력 교차 검사 통과입니다.
+
+이전 5경로 v1과 FSKD 추가 6경로 v2는 설정 파일과 실행 스크립트를 보존합니다.
+아래의 5경로 상세 설명·기본 `run_smoke25.sh` 명령은 **v1 기록**입니다.
+v2 전용 명령은 `run_smoke25_fskd.sh`이며, v2의 C2VKD 보류 표시는 과거 결정입니다.
 
 ## 고정 조건
 
@@ -97,6 +113,13 @@ teacher 고정·재개·입력 동일성, 시간·메모리를 함께 출력합�
 성공은 `status=passed`, 다섯 run 모두 passed 및 교차 검사 통과로 판단합니다.
 
 ## 실행 코드의 사전 검사
+
+v3 추가 검사: 관련 단위 검사 총 45개, Python/shell 문법 및 설치 실패 시 종료 JSON 검사 통과.
+공식 Tiny NPZ와 byte/SHA 검증한 실제 CLIP RN101 pool을 CPU에서 연결해, hook 전후
+logit 일치·encoder/decoder/두 adapter gradient·pool 무변화 및 momentum/RNG를 포함한
+저장/재개 후 동일 update 재현을 확인했습니다. 이 검사는 32×32 합성 입력과 합성 teacher
+feature를 썼으며 H200/crop512/실제 teacher의 전체 실행 통과를 뜻하지 않습니다.
+
 
 2026-09-26 로컬 검사: 관련 단위 검사 37개, Python 문법·shell 문법 검사 통과.
 검증한 공식 Tiny NPZ를 로딩해 32×32 합성 입력에서 12개 feature와 segmentation

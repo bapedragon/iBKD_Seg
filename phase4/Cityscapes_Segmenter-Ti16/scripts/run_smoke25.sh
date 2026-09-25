@@ -7,6 +7,7 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8
 case "${1:-v1}" in
   v1) revision="v1"; config_name="smoke25_v1.json" ;;
   fskd_v2) revision="fskd_v2"; config_name="smoke25_fskd_v2.json" ;;
+  fskd_c2vkd_v3) revision="fskd_c2vkd_v3"; config_name="smoke25_fskd_c2vkd_v3.json" ;;
   *) echo "Unknown Tiny smoke revision: $1" >&2; exit 2 ;;
 esac
 zip_dir="${CITYSCAPES_ZIP_DIR:-/app/data/chaoyang}"
@@ -38,7 +39,7 @@ trap 'report_failure "$?"' EXIT
 
 run_suite() {
   python -m pip install --disable-pip-version-check -e .
-  if [[ "${revision}" == "fskd_v2" ]]; then
+  if [[ "${revision}" == "fskd_v2" || "${revision}" == "fskd_c2vkd_v3" ]]; then
     export MAX_JOBS=2
     export TORCH_CUDA_ARCH_LIST=9.0
     python -m pip install --disable-pip-version-check ninja==1.13.0
@@ -53,6 +54,10 @@ run_suite() {
   cp "${data_dir}/preparation.json" "${output_root}/preparation.json"
   echo "[TI16_PIPELINE] stage=verify_tiny_and_openmmlab_teacher"
   python -m ibkd_seg.cityscapes.official_assets --cache-root "${cache_root}" --student tiny
+  if [[ "${revision}" == "fskd_c2vkd_v3" ]]; then
+    echo "[TI16_PIPELINE] stage=verify_c2vkd_clip_pool"
+    python -m ibkd_seg.cityscapes.tiny_c2vkd --cache-root "${cache_root}"
+  fi
   echo "[TI16_PIPELINE] stage=calibration_and_training_smoke revision=${revision} output=${output_root}"
   python -u -m ibkd_seg.cityscapes.tiny_smoke \
     --cache-root "${cache_root}" --data-dir "${data_dir}" \

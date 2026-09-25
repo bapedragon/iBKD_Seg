@@ -24,16 +24,17 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 CONFIG = REPO / "phase4/Cityscapes_Segmenter-Ti16/configs/smoke25_v1.json"
 FSKD_CONFIG = CONFIG.with_name("smoke25_fskd_v2.json")
+C2VKD_CONFIG = CONFIG.with_name("smoke25_fskd_c2vkd_v3.json")
 
 
-def fixed_fskd_calibration(rows, protocol):
+def fixed_fskd_calibration(rows, protocol, method="fskd"):
     """Observe the fixed baseline without deriving or tuning a beta."""
     return {"ce_median": statistics.median(row["ce"] for row in rows),
             "guidance_median": statistics.median(row["guidance"] for row in rows),
             "raw_components_median": {name: statistics.median(row["components"][name] for row in rows)
                                       for name in rows[0]["components"]},
             "beta_candidates": [], "pilot_beta": None, "optimizer_updates": 0,
-            "validation_used": False, "status": "fixed_fskd_recipe_no_beta_search",
+            "validation_used": False, "status": f"fixed_{method}_recipe_no_beta_search",
             "loss_coefficients": protocol["coefficients"]}
 
 
@@ -107,7 +108,7 @@ def assert_state_close(actual, expected, *, rtol, atol):
 
 def load_config(path):
     config = json.loads(path.read_text())
-    locked = next((p for p in (CONFIG, FSKD_CONFIG) if p.name == path.name), None)
+    locked = next((p for p in (CONFIG, FSKD_CONFIG, C2VKD_CONFIG) if p.name == path.name), None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError("Use the locked Tiny smoke config; protocol edits need a new revision")
     return config
@@ -147,11 +148,17 @@ def measure(args, config, plan, output):
     initial_student_state = cpu_state(model)
     seed_all(config["seed"] + 1000)
     is_fskd = plan["method"] == "fskd"
+    is_c2vkd = plan["method"] == "c2vkd"
+    is_fixed = is_fskd or is_c2vkd
+    fixed_protocol = config[plan["method"]] if is_fixed else None
     soft_rank_execution = None
     if is_fskd:
         from .tiny_fskd import CLSAttentionCapture, TinyFSKD, weighted_components, verify_soft_rank
         guide = TinyFSKD(crop=config["crop_size"])
         soft_rank_execution = verify_soft_rank(device)
+    elif is_c2vkd:
+        from .tiny_c2vkd import FinalFeatureCapture, TinyC2VKD, weighted_components, training_loss
+        guide = TinyC2VKD(args.cache_root / "weights/clip_rn101.pt")
     else:
         guide = api.guidance(plan["method"], config)
     candidate_contract = None
@@ -168,7 +175,8 @@ def measure(args, config, plan, output):
         initial_guide_state = cpu_state(guide)
         teacher = api.teacher(args.cache_root).to(device)
         teacher_hash = state_hash(teacher)
-    capture = api.FeatureCapture(model)
+    pool_initial_hash = state_hash(guide.pool) if is_c2vkd else None
+    capture = api.FeatureCapture(model) if not is_c2vkd else FinalFeatureCapture(model)
     attention_capture = CLSAttentionCapture(model) if is_fskd else None
     teacher_diagnostic = None
 
@@ -189,7 +197,7 @@ def measure(args, config, plan, output):
         if guide is not None:
             with torch.no_grad():
                 teacher_features = teacher.extract_feat(api.teacher_input(images))
-                teacher_logits = teacher.decode_head(teacher_features) if is_fskd or teacher_diagnostic is None else None
+                teacher_logits = teacher.decode_head(teacher_features) if is_fixed or teacher_diagnostic is None else None
                 if teacher_diagnostic is None:
                     diagnostic_logits = F.interpolate(teacher_logits, target.shape[-2:], mode="bilinear", align_corners=False)
                     teacher_ce = F.cross_entropy(diagnostic_logits, target, ignore_index=255)
@@ -206,6 +214,12 @@ def measure(args, config, plan, output):
                 if torch.is_grad_enabled() and not components["attention"].requires_grad:
                     raise RuntimeError("FSKD attention was detached from the student")
                 guided = sum(weighted.values())
+            elif is_c2vkd:
+                components = guide(features, teacher_features, logits, teacher_logits, target)
+                weighted = weighted_components(components)
+                if not all(bool(torch.isfinite(x)) for x in components.values()):
+                    raise FloatingPointError("Nonfinite C2VKD component")
+                guided = sum(weighted.values())
             elif plan["method"] == "ibkd":
                 alignment, fusion = guide(features, teacher_features[1:])
                 guided = (1 - plan["lambda"]) * alignment + plan["lambda"] * fusion
@@ -215,7 +229,7 @@ def measure(args, config, plan, output):
             raise FloatingPointError("Nonfinite segmentation/guidance loss")
         values = {"ce": float(ce.detach()), "guidance": float(guided.detach()),
                   "alignment": float(alignment.detach()), "fusion": float(fusion.detach())}
-        if is_fskd:
+        if is_fixed:
             values.update(components={key: float(value.detach()) for key, value in components.items()},
                           weighted_components={key: float(value.detach()) for key, value in weighted.items()})
         return ce, guided, values
@@ -234,7 +248,7 @@ def measure(args, config, plan, output):
                       f"seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} optimizer_updates=0", flush=True)
     if len(calibration_rows) != config["calibration_batches"]:
         raise RuntimeError("Incomplete calibration batches")
-    calibration = (fixed_fskd_calibration(calibration_rows, config["fskd"]) if is_fskd else
+    calibration = (fixed_fskd_calibration(calibration_rows, fixed_protocol, plan["method"]) if is_fixed else
                    beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"])
                    if guide is not None else {"ce_median": statistics.median(r["ce"] for r in calibration_rows),
                                               "beta_candidates": [], "pilot_beta": 0.0, "optimizer_updates": 0,
@@ -250,9 +264,9 @@ def measure(args, config, plan, output):
     save_json(output / "calibration.json", {**calibration, "batches": calibration_rows,
                                            "input_hashes": calibration_hashes, "state_restored": True})
     print("[TI16_BETA_PROPOSAL] " + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
-    effective = dict(config, guidance_beta=calibration["pilot_beta"] if not is_fskd else 1.0)
+    effective = dict(config, guidance_beta=calibration["pilot_beta"] if not is_fixed else 1.0)
     controller = controller_for(plan["method"], effective)
-    beta = 1.0 if is_fskd else controller.beta_for_epoch(1) if controller else 0.0
+    beta = 1.0 if is_fixed else controller.beta_for_epoch(1) if controller else 0.0
     optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root, total_steps=config["total_steps"])
     if scheduler.iter_max != 80000 or not optimizer.defaults["nesterov"]:
         raise RuntimeError("Tiny smoke must preserve the 80k Nesterov SGD schedule")
@@ -263,10 +277,13 @@ def measure(args, config, plan, output):
     if is_fskd:
         checked_gradients.update({f"fskd_alignment_{i}": adapter for i, adapter in enumerate(guide.align)})
 
+    if is_c2vkd:
+        checked_gradients.update(c2vkd_visual=guide.visual, c2vkd_linguistic=guide.linguistic)
+
     def update(batch):
         optimizer.zero_grad(set_to_none=True)
         ce, guided, values = losses(batch)
-        loss = ce + beta * guided
+        loss = training_loss(ce, guided) if is_c2vkd else ce + beta * guided
         if not torch.isfinite(loss):
             raise FloatingPointError("Nonfinite total loss")
         loss.backward()
@@ -276,7 +293,10 @@ def measure(args, config, plan, output):
                 raise RuntimeError(f"No nonzero gradients in {name}")
         if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
             raise RuntimeError("Frozen teacher received gradients")
-        values.update(loss=float(loss.detach()), beta=None if is_fskd else beta,
+        if is_c2vkd and (guide.pool.training or any(p.requires_grad or p.grad is not None for p in guide.pool.parameters())):
+            raise RuntimeError("C2VKD CLIP pool must remain frozen/eval without gradients")
+        values.update(loss=float(loss.detach()), beta=None if is_fixed else beta,
+                      standalone_ce_coefficient=0.0 if is_c2vkd else 1.0,
                       guidance_multiplier=beta, weighted_guidance=beta * values["guidance"],
                       weighted_guidance_to_seg_loss=beta * values["guidance"] / values["ce"],
                       grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]["lr"])
@@ -314,8 +334,8 @@ def measure(args, config, plan, output):
             print(f"[TI16_SMOKE_STEP] run={plan['id']} step={index}/{config['steps']} "
                   f"loss={row['loss']:.6g} seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} "
                   f"guidance_multiplier={beta:.8g} ratio={row['weighted_guidance_to_seg_loss']:.6g} seconds={row['seconds']:.2f}", flush=True)
-            if is_fskd:
-                print("[TI16_FSKD_COMPONENTS] " + json.dumps({"step": index, "raw": row["components"],
+            if is_fixed:
+                print(f"[TI16_{plan['method'].upper()}_COMPONENTS] " + json.dumps({"step": index, "raw": row["components"],
                       "weighted": row["weighted_components"]}, allow_nan=False), flush=True)
     if len(rows) != config["steps"]:
         raise RuntimeError("Incomplete smoke training")
@@ -350,17 +370,19 @@ def measure(args, config, plan, output):
     for key in ("loss", "ce", "guidance", "grad_norm_unclipped"):
         if not math.isclose(replay[key], rows[-1][key], rel_tol=tolerance["rtol"], abs_tol=tolerance["atol"]):
             raise RuntimeError(f"Replayed {key} differs")
-    if is_fskd:
+    if is_fixed:
         for name in replay["components"]:
             if not math.isclose(replay["components"][name], rows[-1]["components"][name],
                                 rel_tol=tolerance["rtol"], abs_tol=tolerance["atol"]):
-                raise RuntimeError(f"Replayed FSKD component differs: {name}")
+                raise RuntimeError(f"Replayed {plan['method']} component differs: {name}")
     # Evaluate the uninterrupted endpoint, keeping approximate replay only as a diagnostic.
     for name, module in modules.items():
         module.load_state_dict(expected_modules[name], strict=True)
     del expected_modules, expected_optimizer
     if teacher is not None and state_hash(teacher) != teacher_initial_hash:
         raise RuntimeError("Teacher parameters/BN state changed")
+    if is_c2vkd and state_hash(guide.pool) != pool_initial_hash:
+        raise RuntimeError("C2VKD frozen CLIP pool changed")
     model.eval()
     matrix = torch.zeros(19, 19, dtype=torch.int64)
     expected_pixels, val_ids = 0, []
@@ -395,8 +417,11 @@ def measure(args, config, plan, output):
               "guidance_on": guide is not None, "guidance_stop_step": None,
               "controller_observation_epochs": 0, "natural_guidance_off_tested": False,
               "controller_synthetic_diagnostics": verify_controller_paths(effective) if controller else None,
-              "fixed_loss_coefficients": config["fskd"]["coefficients"] if is_fskd else None,
-              "method_provenance": config.get("fskd") if is_fskd else None,
+              "fixed_loss_coefficients": fixed_protocol["coefficients"] if is_fixed else None,
+              "method_provenance": fixed_protocol,
+              "comparison_group": plan.get("comparison_group", "primary_common_pretraining"),
+              "clip_pool": {"asset": guide.asset, "derived_pool_state_sha256": pool_initial_hash,
+                            "frozen_no_grad_unchanged": True} if is_c2vkd else None,
               "soft_rank_execution": soft_rank_execution,
               "ibkd_deterministic_candidate": candidate_contract, "train_peak_allocated_bytes": peak,
               "median_step_seconds_excluding_first": statistics.median(row["seconds"] for row in rows[1:]),
@@ -414,7 +439,7 @@ def compact_run(row):
             "teacher_frozen_verified", "calibration_state_restored", "checkpoint", "decoder_layers",
             "encoder_channels", "encoder_blocks", "schedule_total_steps", "guidance_on", "guidance_stop_step",
             "natural_guidance_off_tested", "controller_synthetic_diagnostics", "train_peak_allocated_bytes", "median_step_seconds_excluding_first",
-            "fixed_loss_coefficients", "method_provenance", "soft_rank_execution",
+            "fixed_loss_coefficients", "method_provenance", "soft_rank_execution", "clip_pool", "comparison_group",
             "error", "summary_path", "deterministic_warning_count")
     result = {key: row[key] for key in keys if key in row}
     scores = row.get("diagnostic_metrics")
@@ -484,6 +509,10 @@ def main():
                       source_and_asset_verification="passed", assets=provenance["weights"])
         if config.get("fskd"):
             report.update(fskd_interpretation=config["fskd"]["interpretation"], c2vkd_status=config["c2vkd_status"])
+        if config.get("c2vkd"):
+            from .tiny_c2vkd import verify_pool_asset
+            provenance["clip_pool"] = verify_pool_asset(args.cache_root / "weights/clip_rn101.pt")
+            report["clip_pool_asset"] = provenance["clip_pool"]
         save_json(output / "provenance.json", provenance)
         save_json(output / "config.json", config)
         if args.run_id:
@@ -519,8 +548,10 @@ def main():
                            "last": partial.get("last"), "selected_step": None, "selected_epoch": None,
                            "error": failure.get("error", f"child_exit={completed.returncode}"),
                            "summary_path": str(failure_path)}
-                    if plan["method"] == "fskd":
-                        row.update(method_provenance=config["fskd"], fixed_loss_coefficients=config["fskd"]["coefficients"])
+                    if plan["method"] in {"fskd", "c2vkd"}:
+                        protocol = config[plan["method"]]
+                        row.update(method_provenance=protocol, fixed_loss_coefficients=protocol["coefficients"],
+                                   comparison_group=plan.get("comparison_group", "primary_common_pretraining"))
                     calibration_path = destination / "calibration.json"
                     if calibration_path.exists():
                         calibration = json.loads(calibration_path.read_text())
@@ -529,6 +560,9 @@ def main():
                 rows.append(row)
                 report["runs"] = [compact_run(value) for value in rows]
                 save_json(output / "smoke_summary.json", report)
+            report["comparison_groups"] = {
+                "primary_common_pretraining": {r["run_id"]: r["status"] for r in rows if r["method"] != "c2vkd"},
+                "supplementary_extra_pretraining": {r["run_id"]: r["status"] for r in rows if r["method"] == "c2vkd"}}
             report["cross_method_checks"] = compare_runs(rows, [row["id"] for row in config["runs"]])
             report["status"] = "passed"
     except Exception as error:
