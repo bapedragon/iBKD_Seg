@@ -1,8 +1,8 @@
 # SegFormer-B0 비교 실험 흐름
 
-현재 우선 실행은 **λ=0.25·warm-up 20의 β4개 짧은 smoke → 같은 네 β를 각각 2k 재실행**입니다.
-[H200 smoke 4/4 통과](reports/h200_warmup20_smoke32_lambda025/RESULTS.md)를 확인했으며
-현재는 [β4개·2k 이슈](H200_WARMUP20_CHECK2000_ISSUE.md)를 실행할 단계입니다.
+**2026-09-25:** λ=0.25·warm-up 20의 smoke와 [β4개·2k 재실험](reports/h200_warmup20_check2000_lambda025/RESULTS.md)을
+완료했습니다. 네 후보 모두 guidance를 유지했고 최고 mIoU는 β=0.387021의 45.3352%입니다.
+2k에서 후보를 탈락시키지 않았으며, 기존 후속 계획은 같은 네 후보의 10k 비교입니다. 새 GPU 실행은 아직 시작하지 않았습니다.
 
 **2026-09-24 최신 변경:** iBKD λ=0.25·0.5에만 guidance warm-up 20을 적용하고 ALG는 0으로
 유지합니다. [변경 프로토콜](WARMUP20_PROTOCOL.md) 및 [이슈 2개](H200_WARMUP20_ISSUES.md)를
@@ -347,7 +347,7 @@ FSKD/B0의 짧은 H200 smoke 학습 속도는 측정했습니다. 전체 val500�
 256채널·16×16 가중합 규격, LG/ALG의 1·5·8번째 block 선택, 186-step controller 관측과
 기존 window/threshold 유지, 최초 ALG·iBKD guidance warm-up 0**입니다.
 후속 결정으로 iBKD만 warm-up 20인 별도 실행 명세·진입점·경계 재개 검사를 준비했습니다.
-ALG는 0을 유지합니다. 새 iBKD의 H200 smoke는 4/4 통과했고 2k 재실험은 아직 시작하지 않았습니다.
+ALG는 0을 유지합니다. 새 iBKD λ=0.25의 H200 smoke와 2k 재실험은 4/4 완료했고 10k는 아직 미실행입니다.
 FSKD·C2VKD 방법별 재구현, 실제 가중치 식별, 7개 방법 H200 smoke와 25-batch β 측정을
 완료했습니다. 2k runner의 전체 상태 재개·전체 val·후보 선택 구현 및 로컬 검사도 완료했습니다.
 사용자 지정 묶음은 Vanilla·FSKD·LG / ALG·iBKD λ=0.25 / iBKD λ=0.5입니다.

@@ -1,9 +1,10 @@
 # Cityscapes · SegFormer-B0 비교 실험
 
 **2026-09-24 최신 결정: iBKD λ=0.25·0.5만 guidance warm-up 20으로 재실험하고 ALG는 0을 유지합니다.**
-**현재 상태:** [λ=0.25의 β 4개 H200 smoke](reports/h200_warmup20_smoke32_lambda025/RESULTS.md)가
-32-step·재개·val2 검사를 모두 통과했습니다. 다음은 [같은 네 β의 2,000-step 재실험](H200_WARMUP20_CHECK2000_ISSUE.md)입니다.
-10k를 바로 실행하지 않습니다.
+**2026-09-25 현재 상태:** [λ=0.25·warm-up 20의 β4개·2k](reports/h200_warmup20_check2000_lambda025/RESULTS.md)를
+모두 완료했고 전체 val500·재개 검사와 2k 끝까지 guidance 유지를 확인했습니다.
+최고는 β=0.387021의 **45.3352%**이며 warm-up 20의 성능 개선이나 최종 β는 아직 확정하지 않습니다.
+실행 시간은 **7시간 5분 58초**입니다. 네 β를 유지하며 10k는 아직 실행하지 않았습니다.
 새로 시작하거나 재개하는 B0 작업의 실행 예산은 사용자 지시에 따라 [9시간 40분](JOB_RUNTIME.md)입니다.
 [변경 프로토콜](WARMUP20_PROTOCOL.md)과 [H200 실행 이슈 2개](H200_WARMUP20_ISSUES.md)를 준비했습니다.
 첫 3720 step의 guidance를 보장하며, 각 λ의 기존 β 4개를 초기화부터 10k까지 비교합니다.
@@ -39,7 +40,8 @@ FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
 
 | 파일 | 내용 |
 |---|---|
-| [지금 실행할 warm-up 20·2k](H200_WARMUP20_CHECK2000_ISSUE.md) | smoke 통과 후 λ=0.25의 β 4개 × 2k·전체 val500 |
+| [최신 warm-up 20·2k 결과](reports/h200_warmup20_check2000_lambda025/RESULTS.md) | 네 β 4/4 완료, warm-up 0 비교·guidance 유지·시간 확인 |
+| [완료한 warm-up 20·2k 이슈](H200_WARMUP20_CHECK2000_ISSUE.md) | λ=0.25의 β 4개 × 2k·전체 val500 실행 기록 |
 | [완료한 warm-up 20 smoke](H200_WARMUP20_SMOKE_ISSUE.md) | λ=0.25의 β 4개 × 32 step·val2 실행 입력값 |
 | [iBKD warm-up 20 프로토콜](WARMUP20_PROTOCOL.md) | 최신 사용자 결정, 정확한 종료 경계·기존 결과와 분리·10k 재선별 |
 | [iBKD warm-up 20 이슈 2개](H200_WARMUP20_ISSUES.md) | λ별 β 4개를 초기화부터 10k 실행, 전체 입력값과 재개 |
@@ -70,7 +72,7 @@ AdamW, LR 6e-5, poly power 0.9, 80,000 step을 사용합니다.
 | FSKD* | stage 3·4, global/patch/attention=1/1/40,000, KD T=1 | 2k v2 완료; best 35.07%, last 32.73% |
 | LG | 처음·중간·끝인 1·5·8번째 block, β 후보 선별 | 2k 완료; β=0.197479·0.460784를 10k에 유지 |
 | ALG | LG와 같은 연결, 1 epoch 분량마다 종료 판단, guidance warm-up 0 | 2k 후보 기록 확인; β=0.197479·0.460784를 10k에 유지 |
-| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 186-step 관측, guidance warm-up 20 | 기존 warm-up 0 결과 보존; 새 β 4개·10k 재선별 준비 |
+| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 186-step 관측, guidance warm-up 20 | 새 β4개·2k 완료; 최고 45.3352%, 후보 탈락 없음 |
 | iBKD λ=0.5 | 위와 동일한 연결·controller, 이 λ 조건에서 β 선별 | 기존 warm-up 0 결과 보존; 새 β 4개·10k 재선별 준비 |
 
 추가 요청에 따라 **C2VKD 방법 프로토콜도 작성**했습니다. 공개된 세 feature loss와
