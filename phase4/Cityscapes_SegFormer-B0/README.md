@@ -6,7 +6,10 @@
 최고는 β=0.387021의 **45.3352%**이며 warm-up 20의 성능 개선이나 최종 β는 아직 확정하지 않습니다.
 실행 시간은 **7시간 5분 58초**입니다. 이후 사용자 결정으로 λ=0.25는 상위 두 β
 **0.387021·1.9351**만 10k에 유지합니다. 이번에는 ALG β=0.197479와 iBKD β=0.387021을
-각각 10k까지 실행하는 [통합 이슈](H200_TOP1_10K_ISSUE.md)를 준비했습니다. 10k는 아직 미실행입니다.
+각각 10k까지 실행하는 [통합 이슈](H200_TOP1_10K_ISSUE.md)는 **2/2 완료**했습니다.
+[10k 결과](reports/h200_top1_10k_v1/RESULTS.md): ALG best 60.1973%·last 60.0486%,
+iBKD best/last 60.0381%입니다. Fresh 실행으로 총 7시간 53분 36초 걸렸습니다.
+Guidance는 ALG step2418, iBKD step3720에서 종료됐으며 다음 β 두 개의 10k가 남았습니다.
 기존 코드의 중단 예산은 [9시간 40분](JOB_RUNTIME.md)이며 완료 예상 시간과 구분합니다.
 예상 소요는 실측으로 계산하며, 시간 관련 발언을 새 코드 제한으로 자동 반영하지 않습니다.
 [변경 프로토콜](WARMUP20_PROTOCOL.md)과 [H200 실행 이슈 2개](H200_WARMUP20_ISSUES.md)를 준비했습니다.
@@ -31,7 +34,8 @@ Vanilla best mIoU 45.29%, FSKD 35.07%, LG 최고 44.76%이며 최종 성능 결�
 iBKD λ=0.5는 최고 mIoU 45.6926%이며 당시 **β=0.4303·1.00403**을 선정했습니다.
 9월 24일에는 기존 6개와 iBKD 8개로 14개 궤적을 계획했습니다. 9월 25일 사용자 결정으로
 λ=0.25를 두 후보로 줄여 현재 전체 계획은 **12개 실행 궤적**이며, 이번 이슈는 그중 ALG·iBKD 각 1위 두 개입니다.
-10k·80k 결과는 아직 없습니다. Pack2의 누락된 원본 집계는 재개 준비 때 확인해야 합니다.
+10k는 위 각 1위 두 후보를 완료했고 나머지 후보와 80k는 미실행입니다.
+Pack2의 누락된 원본 집계는 해당 2k checkpoint 재개 준비 때 확인해야 합니다.
 이번 선별도 NVIDIA ImageNet MiT-B0 배포본 역변환을 사용합니다.
 CIRKD Baidu 파일과의 동일성은 미확인이며, 새 실행 명세에 이 출처를 명시했습니다.
 
@@ -43,7 +47,8 @@ FSKD, LG, ALG, iBKD λ=0.25·0.5를 비교하는 것입니다.
 
 | 파일 | 내용 |
 |---|---|
-| [이번 ALG·iBKD 각 1위 10k 이슈](H200_TOP1_10K_ISSUE.md) | ALG β=0.197479·iBKD λ=0.25 β=0.387021, checkpoint 자동 확인 |
+| [최신 ALG·iBKD 각 1위 10k 결과](reports/h200_top1_10k_v1/RESULTS.md) | 2/2 완료, guidance 종료·fresh 실행·시간·best/last 비교 |
+| [완료한 ALG·iBKD 각 1위 10k 이슈](H200_TOP1_10K_ISSUE.md) | ALG β=0.197479·iBKD λ=0.25 β=0.387021, checkpoint 자동 확인 |
 | [최신 warm-up 20·2k 결과](reports/h200_warmup20_check2000_lambda025/RESULTS.md) | 네 β 4/4 완료, warm-up 0 비교·guidance 유지·시간 확인 |
 | [완료한 warm-up 20·2k 이슈](H200_WARMUP20_CHECK2000_ISSUE.md) | λ=0.25의 β 4개 × 2k·전체 val500 실행 기록 |
 | [완료한 warm-up 20 smoke](H200_WARMUP20_SMOKE_ISSUE.md) | λ=0.25의 β 4개 × 32 step·val2 실행 입력값 |
@@ -75,8 +80,8 @@ AdamW, LR 6e-5, poly power 0.9, 80,000 step을 사용합니다.
 | Vanilla | 공통 CE만 사용, teacher 없음 | 2k v2 완료; best mIoU 45.29% |
 | FSKD* | stage 3·4, global/patch/attention=1/1/40,000, KD T=1 | 2k v2 완료; best 35.07%, last 32.73% |
 | LG | 처음·중간·끝인 1·5·8번째 block, β 후보 선별 | 2k 완료; β=0.197479·0.460784를 10k에 유지 |
-| ALG | LG와 같은 연결, 1 epoch 분량마다 종료 판단, guidance warm-up 0 | 2k 후보 기록 확인; β=0.197479·0.460784를 10k에 유지 |
-| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 186-step 관측, guidance warm-up 20 | 새 β4개·2k 완료; β=0.387021·1.9351을 10k에 유지 |
+| ALG | LG와 같은 연결, 1 epoch 분량마다 종료 판단, guidance warm-up 0 | β=0.197479 10k 완료(best 60.1973%); β=0.460784 남음 |
+| iBKD λ=0.25 | 전체 8개 block을 256채널·16×16로 맞춰 가중합, 186-step 관측, guidance warm-up 20 | β=0.387021 10k 완료(best 60.0381%); β=1.9351 남음 |
 | iBKD λ=0.5 | 위와 동일한 연결·controller, 이 λ 조건에서 β 선별 | 기존 warm-up 0 결과 보존; 새 β 4개·10k 재선별 준비 |
 
 추가 요청에 따라 **C2VKD 방법 프로토콜도 작성**했습니다. 공개된 세 feature loss와
@@ -128,8 +133,8 @@ LG·ALG는 기존 상위 2개, iBKD λ=0.25는 새 warm-up 20 상위 2개를 유
 보존했다면 선별 checkpoint에서 이어갈 수 있고, 모델·loss·β·schedule을 바꾸었다면
 초기화부터 다시 시작해야 합니다. 구체적인 기준은 [실험 흐름](EXPERIMENT_PLAN.md)에 있습니다.
 
-다음 작업은 [ALG·iBKD 각 1위 10k](H200_TOP1_10K_ISSUE.md)입니다. 기본 auto 명령은 서버에서
-각 후보의 호환 전체 checkpoint를 찾아 이어가고, 없으면 같은 seed1 초기화부터 총 10k를 실행합니다.
+다음 작업은 ALG β=0.460784·iBKD λ=0.25 β=1.9351의 10k 비교입니다.
+각 1위의 10k는 완료했으며 같은 이슈를 다시 제출할 필요는 없습니다. 이번 점검에서 새 GPU 작업은 시작하지 않았습니다.
 FSKD의 저자 비공개 설정을 확인한 것은 아니며, C2VKD 대체안은 별도 후보로 기록합니다.
 
 ## 기존 실험과의 관계

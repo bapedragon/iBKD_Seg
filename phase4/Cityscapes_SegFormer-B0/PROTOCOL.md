@@ -23,6 +23,8 @@ ALG는 warm-up 0을 유지하며 teacher·student·공통 학습/평가 조건�
 네 후보 모두 guidance on을 유지했고 최종 β는 아직 선정하지 않았습니다. 후속 사용자 결정으로
 λ=0.25의 10k 후보를 β=0.387021·1.9351로 줄였습니다. [새 실행 범위](configs/b0_top2_10k_v1.json)와
 [ALG·iBKD 각 1위 통합 이슈](H200_TOP1_10K_ISSUE.md)를 따르며, 학습 프로토콜과 checkpoint 식별은 보존합니다.
+[각 1위 10k](reports/h200_top1_10k_v1/RESULTS.md)는 2/2 완료했고 iBKD의 20구간 보호·종료를 확인했습니다.
+각 2순위 β의 10k가 남아 최종 β 선택은 보류합니다.
 Smoke/calibration에서 검증한 NVIDIA 공식 HF ImageNet-only MiT-B0 역변환을 모든 비교
 조건에 동일하게 사용하도록 출처 예외를 명시했습니다. CIRKD Baidu 원본과의 동일성은
 미확인입니다. 아래 원래 v1의 출처·JSON 해시는 보존하며 이 예외를 숨기지 않습니다.
