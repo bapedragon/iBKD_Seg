@@ -11,6 +11,19 @@ import sys
 import types
 from pathlib import Path
 
+STUDENTS = {
+    "vit_large_patch16_384": {"blocks": 24, "channels": 1024, "asset_set": "large",
+                               "weight": "vit_large_384.npz"},
+    "vit_tiny_patch16_384": {"blocks": 12, "channels": 192, "asset_set": "tiny",
+                              "weight": "vit_tiny_384.npz"},
+}
+
+
+def student_spec(backbone="vit_large_patch16_384"):
+    if backbone not in STUDENTS:
+        raise ValueError(f"Unsupported verified Segmenter backbone: {backbone}")
+    return dict(STUDENTS[backbone])
+
 
 def bootstrap(root: Path):
     # Must precede imports of timm/mmcv/mmseg and the shared phase1 modules.
@@ -45,13 +58,14 @@ def bootstrap(root: Path):
         importlib.import_module("mmseg." + name)
 
 
-def recipe(root, *, image_size=None, decoder_layers=None):
+def recipe(root, *, image_size=None, decoder_layers=None, backbone="vit_large_patch16_384"):
     import yaml
+    student_spec(backbone)
     original = yaml.safe_load((root / "segmenter/segm/config.yml").read_text())
-    net = dict(original["model"]["vit_large_patch16_384"])
+    net = dict(original["model"][backbone])
     data = original["dataset"]["cityscapes"]
     net.update(image_size=((data["crop_size"] if image_size is None else image_size),) * 2,
-               backbone="vit_large_patch16_384",
+               backbone=backbone,
                n_cls=19, dropout=0.0, drop_path_rate=0.1,
                decoder=dict(original["decoder"]["mask_transformer"], name="mask_transformer"))
     if decoder_layers is not None:
@@ -59,26 +73,29 @@ def recipe(root, *, image_size=None, decoder_layers=None):
     return net, data
 
 
-def student(root, *, recompute=True, image_size=None, decoder_layers=None):
+def student(root, *, recompute=True, image_size=None, decoder_layers=None,
+            backbone="vit_large_patch16_384"):
     from segm.model import factory
-    from .official_assets import WEIGHTS
-    net, _ = recipe(root, image_size=image_size, decoder_layers=decoder_layers)
+    from .official_assets import weight_manifest
+    spec = student_spec(backbone)
+    weights = weight_manifest(spec["asset_set"])
+    net, _ = recipe(root, image_size=image_size, decoder_layers=decoder_layers, backbone=backbone)
     original_loader = factory.load_custom_pretrained
 
     def verified_loader(model, default_cfg):
-        if default_cfg["url"] != WEIGHTS["vit_large_384.npz"]["url"]:
+        if default_cfg["url"] != weights[spec["weight"]]["url"]:
             raise RuntimeError("Upstream changed ViT initialization source")
         # Original timm 0.4.12 NPZ loader: every encoder block, cls, head,
         # norms and patch projection, with original bilinear pos interpolation.
-        model.load_pretrained(str(root / "weights/vit_large_384.npz"))
+        model.load_pretrained(str(root / "weights" / spec["weight"]))
 
     factory.load_custom_pretrained = verified_loader
     try:
         model = factory.create_segmenter(net)
     finally:
         factory.load_custom_pretrained = original_loader
-    if model.encoder.n_layers != 24 or model.encoder.d_model != 1024:
-        raise RuntimeError("Expected original L/16")
+    if model.encoder.n_layers != spec["blocks"] or model.encoder.d_model != spec["channels"]:
+        raise RuntimeError(f"Unexpected encoder structure for {backbone}")
     if decoder_layers is not None and len(model.decoder.blocks) != decoder_layers:
         raise RuntimeError("Unexpected mask-transformer decoder depth")
     if recompute:
@@ -119,7 +136,7 @@ class FeatureCapture:
         finally:
             self.enabled = False
         h, w = image.shape[-2] // 16, image.shape[-1] // 16
-        features = [x[:, 1:].transpose(1, 2).reshape(image.shape[0], 1024, h, w)
+        features = [x[:, 1:].transpose(1, 2).reshape(image.shape[0], model.encoder.d_model, h, w)
                     for x in self.features]
         self.features = [None] * len(self.features)
         return logits, features
@@ -153,7 +170,8 @@ def guidance(method, config):
     if method == "vanilla":
         return None
     channels = (512, 1024, 2048)
-    kwargs = dict(student_channels=1024, student_blocks=24)
+    spec = student_spec(config.get("student_backbone", "vit_large_patch16_384"))
+    kwargs = dict(student_channels=spec["channels"], student_blocks=spec["blocks"])
     if method in ("lg", "alg"):
         return LocalityGuidance(channels, **kwargs)
     module = IBKD(channels, **kwargs)

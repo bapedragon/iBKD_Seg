@@ -26,6 +26,22 @@ WEIGHTS = {
         "sha256": "9e428899b279f29964cec79ab21bb19193328b8c4d42c0db49ff9070e9ab3b2d",
     },
 }
+TINY_WEIGHT = {
+    "url": "https://storage.googleapis.com/vit_models/augreg/Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_384.npz",
+    "bytes": 23226422,
+    "sha256": "4b99893dc1a5a2a7d9ad119671c20559850f865e1fa17ed23401a3fefa7fedc9",
+}
+
+
+def weight_manifest(student="large"):
+    if student == "large":
+        return dict(WEIGHTS)
+    if student == "tiny":
+        return {"vit_tiny_384.npz": TINY_WEIGHT,
+                "deeplabv3_r101.pth": WEIGHTS["deeplabv3_r101.pth"]}
+    raise ValueError(f"Unsupported student asset set: {student}")
+
+
 DEPENDENCIES = ["timm==0.4.12", "addict==2.4.0", "yapf==0.40.1",
                 "importlib-metadata==8.7.0", "platformdirs==4.3.8", "tomli==2.2.1",
                 "zipp==3.23.0", "einops==0.8.1", "opencv-python-headless==4.13.0.92",
@@ -41,7 +57,7 @@ def sha(path):
     return digest.hexdigest()
 
 
-def verify(root):
+def verify(root, *, student="large"):
     report = {"sources": {}, "weights": {}}
     for name, (url, commit) in SOURCES.items():
         path = root / name
@@ -56,7 +72,7 @@ def verify(root):
             raise RuntimeError(f"Untracked upstream source files: {name}")
         hashes = {p: sha(path / p) for p in files if p.endswith((".py", ".yml", ".yaml"))}
         report["sources"][name] = {"url": url, "commit": actual, "source_hashes": hashes}
-    for name, expected in WEIGHTS.items():
+    for name, expected in weight_manifest(student).items():
         path = root / "weights" / name
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
             raise RuntimeError(f"Public checkpoint hash mismatch: {path}")
@@ -67,6 +83,7 @@ def verify(root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-root", required=True, type=Path)
+    parser.add_argument("--student", choices=("large", "tiny"), default="large")
     args = parser.parse_args()
     root = args.cache_root.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -81,7 +98,7 @@ def main():
     subprocess.run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
                     "--target", str(root / "deps"), "--no-deps", DEPENDENCIES[0]], check=True)
     (root / "weights").mkdir(exist_ok=True)
-    for name, info in WEIGHTS.items():
+    for name, info in weight_manifest(args.student).items():
         path = root / "weights" / name
         if not path.exists():
             temp = path.with_suffix(path.suffix + ".part")
@@ -92,8 +109,9 @@ def main():
             if temp.stat().st_size != info["bytes"] or sha(temp) != info["sha256"]:
                 raise RuntimeError(f"Downloaded checkpoint checksum mismatch: {name}")
             temp.replace(path)
-    report = verify(root)
-    (root / "provenance.json").write_text(json.dumps(report, indent=2) + "\n")
+    report = verify(root, student=args.student)
+    filename = "provenance.json" if args.student == "large" else "provenance_tiny.json"
+    (root / filename).write_text(json.dumps(report, indent=2) + "\n")
     print("[OFFICIAL_ASSETS_READY] sources=3 weights=2 hashes=passed", flush=True)
 
 
