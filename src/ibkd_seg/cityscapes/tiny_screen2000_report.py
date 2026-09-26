@@ -11,6 +11,9 @@ MARKER = '[CITYSCAPES_TI16_GRID2000_FINAL] '
 
 
 def final_line(report, plans):
+    legacy=report.get('protocol_id')=='cityscapes_ti16_crop512_ibkd_l025_grid2000_v1'
+    budget=report.get('job_budget_seconds',35100 if legacy else 36000)
+    reserve=report.get('save_reserve_seconds',180 if legacy else 120)
     by_id = {r['run_id']:r for r in report.get('runs', [])}
     rows = []
     for plan in plans:
@@ -39,7 +42,9 @@ def final_line(report, plans):
                   trajectory_order=['first25_median','last25_median','maximum','minimum'],
                   identity_checks=report.get('identity_checks', {}),
                   review_items=report.get('review_items', []),
-                  job_budget_seconds=35100, save_reserve_seconds=180,
+                  job_budget_seconds=budget, save_reserve_seconds=reserve,
+                  training_stop_after_seconds=report.get('training_stop_after_seconds',budget-reserve),
+                  hard_deadline_unix=report.get('hard_deadline_unix'),stop_at_unix=report.get('stop_at_unix'),
                   total_job_seconds=number(report.get('total_job_seconds')),
                   invocation_seconds=number(report.get('invocation_seconds')),
                   error=bounded_text(report.get('error'), 1024), pipeline_exit_code=report.get('pipeline_exit_code'),
@@ -67,6 +72,7 @@ def main():
     if report.get('status') in ('passed','running'):
         report['status']='runtime_failure'
     report.update(protocol_id=config['protocol_id'],pipeline_exit_code=args.exit_code,
+                  job_budget_seconds=config['job_budget_seconds'],save_reserve_seconds=config['save_reserve_seconds'],
                   start_candidate=args.start_candidate,summary_path=str(path))
     plans=[p for p in config['runs'] if p['candidate'] >= args.start_candidate]
     line=final_line(report,plans)

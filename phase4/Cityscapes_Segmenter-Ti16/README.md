@@ -2,7 +2,8 @@
 
 Small 후속 실험 준비는 [별도 S/16 폴더](../Cityscapes_Segmenter-S16/README.md)에 있습니다.
 Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정합니다.
-실행 중인 Tiny 2k 및 재개는 원래 고정 commit `6856e344bc32433f183cf1f1939f6812175ea84a`를 유지합니다.
+기존 v1의 1,995step checkpoint를 재개할 때는 원래 고정 commit
+`6856e344bc32433f183cf1f1939f6812175ea84a`와 v1 설정을 유지합니다.
 
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
@@ -10,11 +11,18 @@ Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정�
 iBKD λ0.25의 2,000-step β 후보 비교입니다.
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
-Tiny의 2k/10k 결과는 아직 없습니다. 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
+사용자 제공 2k v1 로그에서 λ0.25 후보1~7의 2,000step·전체 val500 완료,
+후보8의 1,995step 저장 후 시간 중단을 확인했습니다. 10k 결과는 아직 없습니다.
+500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 다음 실행은 iBKD λ=0.25, β 8개 × 2,000step + 후보별 전체 val500 평가**입니다.
-[고정 설정](configs/beta_grid2000_ibkd_l025_v1.json)을 사용합니다.
+**iBKD λ=0.25, β 8개 × 2,000step + 후보별 전체 val500 평가의 새 실행 기본값은 v2**입니다.
+[새 실행 설정](configs/beta_grid2000_ibkd_l025_v2.json)은 v1에서 시간 예산만 변경합니다.
+2026-09-26 사용자 결정: **10시간 기준 마지막 2분만 저장/종료에 남겨 9시간 58분에 자동 중단**합니다.
+기존 9시간45분 별도 상한과 9시간42분 중단은 새 실행에 적용하지 않습니다.
+[v1 설정](configs/beta_grid2000_ibkd_l025_v1.json)은 기존 결과 식별용으로 그대로 보존합니다.
+아래 새 실행 명령은 후보를 다시 학습하는 명령이며, 기존 완료한1~7번을 재실행하라는 뜻이 아닙니다.
+중단된8번은 원본 commit/config와 복원된 checkpoint로 별도 재개합니다.
 별도의 짧은 GPU smoke를 추가하지 않고, 이미 500step을 통과한 후보를 다음 단계에서 비교합니다.
 이후 λ0.5 8개 및 LG·ALG 각 8개도 별도 묶음으로 비교할 계획이며, 이번 이슈에서는 λ0.25만 실행합니다.
 
@@ -41,12 +49,18 @@ bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_ibkd025.sh
   예상합니다. 이번 코드는 학습 연산을 유지하면서 큰 `progress.json`의 재기록을 매 step에서
   25step/epoch 경계/마지막 step으로 줄였습니다. step별 수치·입력 해시는 계속 보존합니다.
   실제 완료 시간은 실행 결과로 확인합니다.
-- 스크립트 시작부터 **9시간 45분**을 상한 목표로 두고, 3분을 저장/종료에 남겨
-  약 9시간 42분부터 새 update·평가를 멈춥니다. 250step마다, epoch 경계, 최종/중단 시
+- **10시간(36,000초)에서 저장 여유 2분(120초)만 차감**해, 9시간58분(35,880초)에
+  새 update·평가를 멈춥니다. 진행 중인 update/이미지를 마친 뒤 저장합니다.
+  250step마다, epoch 경계, 최종/중단 시
   모델·adapter·optimizer·scheduler·controller·RNG·부분 epoch 누적값을 원자적으로 저장합니다.
   최신/이전 두 세대를 유지하고 byte/SHA 및 저장 상태 동일성을 검사합니다.
   단일 작업/저장이 비정상적으로 오래 멈추거나 외부에서 강제 종료되는 상황까지 시간 상한을
   보장하는 것은 아닙니다. 설치·압축 해제 등 준비 시간도 위 시간 예산에 포함됩니다.
+- 기본 시작점은 이 실행 스크립트 진입 시각입니다. 플랫폼의 실제 작업 시작 Unix timestamp를
+  `CITYSCAPES_TI16_JOB_STARTED`로 전달하면 그 값을 보존합니다. 실제 강제 종료 Unix timestamp를
+  알고 있으면 `CITYSCAPES_TI16_JOB_DEADLINE`으로 전달하며, 그 시각의 120초 전을 중단 기준으로 씁니다.
+  후보마다 타이머를 다시 시작하지 않습니다. 플랫폼 시각이 없을 때는 스크립트 진입 전
+  clone/컨테이너 준비 시간을 알 수 없으므로 이를 포함한 플랫폼 마감과 정확히 같다고 보장하지 않습니다.
 - 제한에 걸리면 `paused`, 아직 시작하지 않은 후보는 `not_run`으로 표시합니다.
   2,000step 전 중단 또는 전체 val 도중 중단은 최종 점수를 `null`로 남깁니다.
   평가 도중 중단한 경우 2,000step checkpoint를 유지하고, 재개 시 전체 val을 처음부터 다시 평가합니다.
@@ -58,7 +72,10 @@ accuracy·mIoU·19 class IoU·평가 시간·가이던스 상태·checkpoint 경
 50,000 ASCII bytes 이내로 출력합니다. 설치 실패도 마지막에 8개 계획값과 미실행 상태를 남깁니다.
 `class_iou_order`와 `trajectory_order`가 해당 배열의 순서를 설명합니다.
 
-출력: `/app/output/cityscapes_ti16_ibkd_l025_grid2000_v1/run_<UTC>_<PID>/`.
+v2 출력: `/app/output/cityscapes_ti16_ibkd_l025_grid2000_v2/run_<UTC>_<PID>/`.
+종료 JSON에 `job_budget_seconds=36000`, `save_reserve_seconds=120`,
+`training_stop_after_seconds=35880`과 실제 deadline을 남깁니다. 외부 마감이 더 빠르면
+`training_stop_after_seconds`도 그에 맞춰 줄어듭니다. 이전 v1 결과는 기존 경로에 남습니다.
 `artifacts/grid_summary.json`은 원래 정밀도의 종합 결과이고, 후보별 폴더에는 `summary.json`,
 `identity.json`, `resume.json`, `checkpoints/`, `steps.jsonl`, `warnings.json`이 있습니다.
 동일 조건 체크는 이번 묶음 내 초기 student/teacher/adapter와 관측한 전체 입력 prefix를 비교합니다.
@@ -79,7 +96,9 @@ accuracy·mIoU·19 class IoU·평가 시간·가이던스 상태·checkpoint 경
 작은 CPU 모델에서 실제 공유 학습 루프와 checkpoint 코드를 실행하여, 부분 epoch 중단/재개와
 연속 실행의 입력·student/adapter·SGD momentum·scheduler·controller·평가값 일치를 검사했습니다.
 2k endpoint에 저장 후 평가만 재실행하는 경로, 후보 실패 후 계속 진행, 시간 중단 후 미실행 표시,
-SIGTERM 전달, 설치/child 초기화 실패 종료 로그도 검사했습니다. H200의 2k 결과는 아직 없습니다.
+SIGTERM 전달, 설치/child 초기화 실패 종료 로그도 검사했습니다. 이는 v1 구현 당시의 검사 기록입니다.
+v2 시간 변경은 이전 중단 시각을 지나 계속 실행하고 9시간58분에 중단하는 경계,
+부모/자식의 공통 deadline, 외부 작업 시작 시각 유지 및 v1/v2 종료 보고를 별도로 검사합니다.
 
 **아래는 완료한 전체 val500 시간 측정 v2 기록**입니다.
 사용자 제공 #838 로그에서 `passed`, 500장, **107.666초**, 스크립트 전체 **448.051초**,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import signal
 import subprocess
@@ -15,12 +16,14 @@ from pathlib import Path
 from .tiny_val_timing import CONFIG_DIR, save_json
 from .tiny_screen2000_report import final_line
 
-CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
+CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v2.json'
+LEGACY_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    if path.name != CONFIG.name or config != json.loads(CONFIG.read_text()):
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG) if p.name==path.name),None)
+    if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use the committed lambda0.25 2000-step pack config')
     old=json.loads((CONFIG_DIR/'beta_grid500_shared_lg_8betas_v6.json').read_text())
     changed={'protocol_id','run_kind','steps','runs','lg_alg_shared_screen','diagnostic_validation_samples'}
@@ -30,10 +33,21 @@ def load_config(path):
     expected=[p for p in old['runs'] if p['method']=='ibkd' and p['lambda']==.25]
     if config['runs'] != expected or config['steps'] != 2000 or not config['full_validation_at_endpoint']:
         raise ValueError('Unexpected candidates or endpoint')
-    if (config['validation_samples'] != 500 or config['job_budget_seconds'] != 35100 or
-            config['save_reserve_seconds'] != 180 or config['evaluation_cpu_threads'] != 4):
+    budget,reserve=(35100,180) if locked==LEGACY_CONFIG else (36000,120)
+    if (config['validation_samples'] != 500 or config['job_budget_seconds'] != budget or
+            config['save_reserve_seconds'] != reserve or config['evaluation_cpu_threads'] != 4):
         raise ValueError('Unexpected validation or runtime budget')
     return config
+
+
+def stopping_deadlines(started, config, deadline=None):
+    """One job-wide limit, including setup; reserve the final two minutes in v2."""
+    if not math.isfinite(started) or (deadline is not None and not math.isfinite(deadline)):
+        raise ValueError('Job start/deadline must be finite Unix timestamps')
+    hard=started+config['job_budget_seconds']
+    if deadline is not None:
+        hard=min(hard,deadline)
+    return hard,hard-config['save_reserve_seconds']
 
 
 def identity_checks(rows):
@@ -144,7 +158,7 @@ def main():
     output.mkdir(parents=True,exist_ok=True)
     began=time.monotonic()
     started=float(os.environ.get('CITYSCAPES_TI16_JOB_STARTED',time.time()))
-    report=dict(status='running',protocol_id='cityscapes_ti16_crop512_ibkd_l025_grid2000_v1',runs=[],
+    report=dict(status='running',protocol_id='cityscapes_ti16_crop512_ibkd_l025_grid2000_v2',runs=[],
                 start_candidate=args.start_candidate,test_used=False,automatic_next_stage=False,
                 beta_ranking_performed=False)
     stopped={'requested':False}
@@ -156,6 +170,8 @@ def main():
     failed=False; plans=[]
     try:
         config=load_config(args.config)
+        report.update(protocol_id=config['protocol_id'],job_budget_seconds=config['job_budget_seconds'],
+                      save_reserve_seconds=config['save_reserve_seconds'])
         plans=[p for p in config['runs'] if (p['id']==args.run_id if args.run_id else p['candidate']>=args.start_candidate)]
         if not plans:
             raise ValueError('Unknown candidate')
@@ -167,8 +183,10 @@ def main():
                           selected_epoch=None,diagnostic_metrics=None,full_validation=False)
         if args.resume and not args.resume.is_file():
             raise FileNotFoundError('Restore the same 2000-step run folder and point --resume to its resume.json')
-        args.deadline=min(args.deadline or started+config['job_budget_seconds'], started+config['job_budget_seconds'])
-        args.should_stop=lambda: stopped['requested'] or time.time()>=args.deadline-config['save_reserve_seconds']
+        args.deadline,stop_at=stopping_deadlines(started,config,args.deadline)
+        report.update(hard_deadline_unix=args.deadline,stop_at_unix=stop_at,
+                      training_stop_after_seconds=stop_at-started)
+        args.should_stop=lambda: stopped['requested'] or time.time()>=stop_at
         if args.preflight_only or args.prepare_data_only:
             from .tiny_val_initial import preflight_initial, prepare_initial_data
             setup_config=dict(dataset_config={k:config[k] for k in ('run_kind','val_samples','image_size','crop_size','seed')})

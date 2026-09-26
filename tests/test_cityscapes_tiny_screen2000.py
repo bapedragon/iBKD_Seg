@@ -35,12 +35,40 @@ class TinyScreen2000Tests(unittest.TestCase):
         self.assertEqual(self.config['total_steps'],80000)
         self.assertEqual(self.config['ibkd_lambdas'],[.25,.5])
         self.assertEqual(self.config['diagnostic_validation_samples'],500)
-        self.assertEqual(self.config['job_budget_seconds'],9*3600+45*60)
+        self.assertEqual(self.config['job_budget_seconds'],10*3600)
+        self.assertEqual(self.config['save_reserve_seconds'],120)
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/screen.CONFIG.name
             bad=copy.deepcopy(self.config); bad['runs'][0]['beta']*=2
             p.write_text(json.dumps(bad))
             with self.assertRaises(ValueError): screen.load_config(p)
+
+    def test_v2_only_changes_runtime_budget_and_keeps_historical_v1(self):
+        old=screen.load_config(screen.LEGACY_CONFIG)
+        changed={k for k in old if old[k]!=self.config[k]}
+        self.assertEqual(changed,{'protocol_id','job_budget_seconds','save_reserve_seconds'})
+        self.assertEqual((old['job_budget_seconds'],old['save_reserve_seconds']),(35100,180))
+        old_final=json.loads(final_line(dict(protocol_id=old['protocol_id']),old['runs'])[len(MARKER):])
+        new_final=json.loads(final_line(dict(protocol_id=self.config['protocol_id']),self.config['runs'])[len(MARKER):])
+        self.assertEqual(old_final['training_stop_after_seconds'],34920)
+        self.assertEqual(new_final['training_stop_after_seconds'],35880)
+        self.assertEqual((new_final['job_budget_seconds'],new_final['save_reserve_seconds']),(36000,120))
+
+    def test_new_deadline_runs_past_old_cutoff_and_stops_two_minutes_before_ten_hours(self):
+        started=1000000.
+        hard,stop=screen.stopping_deadlines(started,self.config)
+        self.assertEqual(hard,started+36000)
+        self.assertEqual(stop,started+35880)
+        for elapsed in (34920,35100,35879.999):
+            self.assertLess(started+elapsed,stop)
+        self.assertGreaterEqual(started+35880,stop)
+        self.assertEqual(hard-stop,120)
+        # A child keeps the parent's absolute deadline, not a new ten-hour allowance.
+        self.assertEqual(screen.stopping_deadlines(started+5000,self.config,hard),(hard,stop))
+        self.assertEqual(screen.stopping_deadlines(started,self.config,started+35400),
+                         (started+35400,started+35280))
+        for value in (float('nan'),float('inf')):
+            with self.assertRaises(ValueError): screen.stopping_deadlines(started,self.config,value)
 
     def test_2000_endpoint_is_epoch6_partial_and_ibkd_warmup_is_preserved(self):
         progress=tiny_grid.initial_progress()
@@ -79,7 +107,7 @@ class TinyScreen2000Tests(unittest.TestCase):
             (output/'summary.json').write_text(json.dumps(row))
             return SimpleNamespace(returncode=1 if row['status']=='numerical_failure' else 0)
         args=SimpleNamespace(cache_root=root/'cache',data_dir=root/'data',manifest=root/'manifest.json',
-                             config=screen.CONFIG,deadline=time.time()+35100,start_candidate=start,resume=resume)
+                             config=screen.CONFIG,deadline=time.time()+36000,start_candidate=start,resume=resume)
         plans=self.config['runs'][start-1:]
         report=dict(status='running',protocol_id=self.config['protocol_id'],runs=[],start_candidate=start)
         with patch.object(screen,'launch_child',side_effect=child) as launch,contextlib.redirect_stdout(io.StringIO()):
@@ -166,19 +194,23 @@ class TinyScreen2000Tests(unittest.TestCase):
             for part in ('leftImg8bit','gtFine'): (data/part/'val').mkdir(parents=True)
             (data/'manifest.json').write_text(json.dumps({'splits':{'train':[{}]*2975,'val':[{}]*500}}))
             python=root/'python'
-            python.write_text('#!/bin/bash\nif [[ "$*" == *"-m pip"* ]]; then exit 9; fi\nexec /usr/bin/python3 "$@"\n')
+            python.write_text('#!/bin/bash\nprintf "%s" "$CITYSCAPES_TI16_JOB_STARTED" > "$CLOCK_CAPTURE"\n'
+                              'if [[ "$*" == *"-m pip"* ]]; then exit 9; fi\nexec /usr/bin/python3 "$@"\n')
             python.chmod(0o755)
             env=dict(os.environ,PATH=str(root)+os.pathsep+os.environ['PATH'],CITYSCAPES_TI16_OUTPUT=str(root/'out'),
-                     CITYSCAPES_CROP512_DATA_DIR=str(data),CITYSCAPES_TI16_START_CANDIDATE='1')
+                     CITYSCAPES_CROP512_DATA_DIR=str(data),CITYSCAPES_TI16_START_CANDIDATE='1',
+                     CITYSCAPES_TI16_JOB_STARTED='1000',CLOCK_CAPTURE=str(root/'clock.txt'))
             env.pop('CITYSCAPES_TI16_RESUME',None)
             result=subprocess.run(['bash',str(repo/'phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_ibkd025.sh')],
                                   cwd=repo,env=env,capture_output=True,text=True)
             self.assertEqual(result.returncode,9,result.stderr)
+            self.assertEqual((root/'clock.txt').read_text(),'1000')
             decoded=json.loads(result.stdout.strip().splitlines()[-1][len(MARKER):])
             self.assertEqual(decoded['status'],'runtime_failure')
             self.assertEqual(len(decoded['not_run_candidates']),8)
             self.assertEqual(len(decoded['runs']),8)
             self.assertTrue(all(r['miou_pct'] is None for r in decoded['runs']))
+            self.assertEqual(decoded['training_stop_after_seconds'],35880)
 
 
 class TinyScreenTrainingTests(unittest.TestCase):
