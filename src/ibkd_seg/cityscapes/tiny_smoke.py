@@ -1,4 +1,4 @@
-"""Calibrate Tiny guidance and exercise the locked 25-update Cityscapes paths.
+"""Calibrate Tiny/Small guidance and exercise the locked 25-update Cityscapes paths.
 
 The source/teacher/data recipe is inherited from the L/16 track. This is a
 bounded connection diagnostic, not a beta sweep or a scientific result.
@@ -26,6 +26,7 @@ CONFIG = REPO / "phase4/Cityscapes_Segmenter-Ti16/configs/smoke25_v1.json"
 FSKD_CONFIG = CONFIG.with_name("smoke25_fskd_v2.json")
 C2VKD_CONFIG = CONFIG.with_name("smoke25_fskd_c2vkd_v3.json")
 REPEAT_CONFIG = CONFIG.with_name("repeat25_lg_alg_v4.json")
+SMALL_CONFIG = REPO / 'phase4/Cityscapes_Segmenter-S16/configs/s16_smoke25_fskd_c2vkd_v1.json'
 
 
 def fixed_fskd_calibration(rows, protocol, method="fskd"):
@@ -39,7 +40,7 @@ def fixed_fskd_calibration(rows, protocol, method="fskd"):
             "loss_coefficients": protocol["coefficients"]}
 
 
-def beta_candidates(rows, target_ratio=0.03, multipliers=(1, 2, 4, 8)):
+def beta_candidates(rows, target_ratio=0.03, multipliers=(1, 2, 4, 8), *, pilot_multiplier=None):
     """Loss-scale heuristic only; all inputs must come from pre-update batches."""
     ce = [float(row["ce"]) for row in rows]
     guide = [float(row["guidance"]) for row in rows]
@@ -53,8 +54,10 @@ def beta_candidates(rows, target_ratio=0.03, multipliers=(1, 2, 4, 8)):
     if not math.isfinite(target_ratio) or target_ratio <= 0:
         raise ValueError("Invalid initial guidance/CE target")
     values = [target_ratio * c / g * multiple for multiple in multipliers]
-    if len(values) != 4 or not all(math.isfinite(x) and x > 0 for x in values):
-        raise ValueError("Expected four finite positive beta candidates")
+    if len(values) not in (4, 8) or not all(math.isfinite(x) and x > 0 for x in values):
+        raise ValueError("Expected four or eight finite positive beta candidates")
+    if pilot_multiplier is not None and pilot_multiplier not in multipliers:
+        raise ValueError('Pilot multiplier must be one of the proposed candidates')
     measured = []
     for beta in values:
         ratios = [beta * raw / task for raw, task in zip(guide, ce, strict=True)]
@@ -63,9 +66,25 @@ def beta_candidates(rows, target_ratio=0.03, multipliers=(1, 2, 4, 8)):
                          "weighted_guidance_to_seg_loss_max": max(ratios)})
     return {"seg_loss_type": "pixelwise_ce_ignore255_mean", "ce_median": c,
             "guidance_median": g, "beta_candidates": values,
-            "pilot_beta": values[0], "measured_ratios": measured,
+            "pilot_beta": values[0] if pilot_multiplier is None else values[list(multipliers).index(pilot_multiplier)], "measured_ratios": measured,
             "optimizer_updates": 0, "validation_used": False,
             "status": "proposed_not_stability_or_performance_selected"}
+
+
+def shared_lg_calibration(path, calibration, rows, identity):
+    """ALG uses exactly the LG beta from this invocation, not a separately rounded estimate."""
+    reference = json.loads(path.read_text())
+    if reference.get('run_id') != 'lg' or reference.get('calibration_identity') != identity:
+        raise ValueError('Shared LG calibration differs in model/adapter/teacher/input/config/code')
+    calibration = dict(calibration, beta_candidates=reference['beta_candidates'], pilot_beta=reference['pilot_beta'],
+                       beta_source='shared_LG_calibration_same_invocation', shared_lg_path=str(path))
+    calibration['measured_ratios'] = []
+    for beta in calibration['beta_candidates']:
+        ratios = [beta * row['guidance'] / row['ce'] for row in rows]
+        calibration['measured_ratios'].append(dict(beta=beta, weighted_guidance_to_seg_loss_min=min(ratios),
+                                                  weighted_guidance_to_seg_loss_median=statistics.median(ratios),
+                                                  weighted_guidance_to_seg_loss_max=max(ratios)))
+    return calibration
 
 
 def rng_state():
@@ -109,9 +128,9 @@ def assert_state_close(actual, expected, *, rtol, atol):
 
 def load_config(path):
     config = json.loads(path.read_text())
-    locked = next((p for p in (CONFIG, FSKD_CONFIG, C2VKD_CONFIG, REPEAT_CONFIG) if p.name == path.name), None)
+    locked = next((p for p in (CONFIG, FSKD_CONFIG, C2VKD_CONFIG, REPEAT_CONFIG, SMALL_CONFIG) if p.name == path.name), None)
     if locked is None or config != json.loads(locked.read_text()):
-        raise ValueError("Use the locked Tiny smoke config; protocol edits need a new revision")
+        raise ValueError("Use a locked Tiny/Small smoke config; protocol edits need a new revision")
     return config
 
 
@@ -129,9 +148,10 @@ def measure(args, config, plan, output):
     from .runtime import seed_all, state_hash, source_hash, controller_for, restore_controller
 
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
-        raise RuntimeError("Tiny H200 smoke requires exactly one visible CUDA GPU")
+        raise RuntimeError("Segmenter H200 smoke requires exactly one visible CUDA GPU")
     if os.environ.get("CUBLAS_WORKSPACE_CONFIG") not in {":4096:8", ":16:8"}:
         raise RuntimeError("Set CUBLAS_WORKSPACE_CONFIG=:4096:8 before starting Python")
+    log_tag = config.get("log_tag", "TI16")
     diagnostic = config.get("diagnostic_repeat", False)
     if diagnostic:
         from .tiny_repeat import fixed_calibration, gradient_hash, rng_hash, tensor_hashes
@@ -158,11 +178,11 @@ def measure(args, config, plan, output):
     soft_rank_execution = None
     if is_fskd:
         from .tiny_fskd import CLSAttentionCapture, TinyFSKD, weighted_components, verify_soft_rank
-        guide = TinyFSKD(crop=config["crop_size"])
+        guide = TinyFSKD(crop=config["crop_size"], student_channels=config["encoder_channels"])
         soft_rank_execution = verify_soft_rank(device)
     elif is_c2vkd:
         from .tiny_c2vkd import FinalFeatureCapture, TinyC2VKD, weighted_components, training_loss
-        guide = TinyC2VKD(args.cache_root / "weights/clip_rn101.pt")
+        guide = TinyC2VKD(args.cache_root / "weights/clip_rn101.pt", student_channels=config["encoder_channels"])
     else:
         guide = api.guidance(plan["method"], config)
     candidate_contract = None
@@ -180,7 +200,7 @@ def measure(args, config, plan, output):
         teacher = api.teacher(args.cache_root).to(device)
         teacher_hash = state_hash(teacher)
     pool_initial_hash = state_hash(guide.pool) if is_c2vkd else None
-    capture = api.FeatureCapture(model) if not is_c2vkd else FinalFeatureCapture(model)
+    capture = api.FeatureCapture(model) if not is_c2vkd else FinalFeatureCapture(model, student_channels=config["encoder_channels"])
     attention_capture = CLSAttentionCapture(model) if is_fskd else None
     teacher_diagnostic = None
 
@@ -250,16 +270,24 @@ def measure(args, config, plan, output):
             _, _, row = losses(batch)
             calibration_rows.append(row)
             if index == 1 or index % 5 == 0:
-                print(f"[TI16_CALIBRATION] run={plan['id']} batch={index}/{config['calibration_batches']} "
+                print(f"[{log_tag}_CALIBRATION] run={plan['id']} batch={index}/{config['calibration_batches']} "
                       f"seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} optimizer_updates=0", flush=True)
     if len(calibration_rows) != config["calibration_batches"]:
         raise RuntimeError("Incomplete calibration batches")
     calibration = (fixed_calibration(calibration_rows, config["diagnostic_fixed_beta"]) if diagnostic else
                    fixed_fskd_calibration(calibration_rows, fixed_protocol, plan["method"]) if is_fixed else
-                   beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"])
+                   beta_candidates(calibration_rows, config["beta_initial_ce_ratio"], config["beta_multipliers"],
+                                   pilot_multiplier=config.get('smoke_pilot_multiplier'))
                    if guide is not None else {"ce_median": statistics.median(r["ce"] for r in calibration_rows),
                                               "beta_candidates": [], "pilot_beta": 0.0, "optimizer_updates": 0,
                                               "validation_used": False, "status": "vanilla_ce_only"})
+    calibration_identity = dict(student=initial_student, adapter=initial_guide, teacher=teacher_hash,
+                                inputs=calibration_hashes, config_sha256=json_hash(config), source_sha256=source_hash())
+    if config.get('share_lg_calibration_with_alg') and plan['method'] == 'alg':
+        path = getattr(args, 'shared_calibration', None)
+        if path is None:
+            raise ValueError('Small ALG requires the LG calibration.json from the same smoke invocation')
+        calibration = shared_lg_calibration(path, calibration, calibration_rows, calibration_identity)
     model.load_state_dict(initial_student_state, strict=True)
     del initial_student_state
     if guide is not None:
@@ -269,14 +297,15 @@ def measure(args, config, plan, output):
     if state_hash(model) != initial_student or (guide is not None and state_hash(guide) != initial_guide):
         raise RuntimeError("Calibration changed the initial training state")
     save_json(output / "calibration.json", {**calibration, "batches": calibration_rows,
-                                           "input_hashes": calibration_hashes, "state_restored": True})
-    print(("[TI16_FIXED_BETA] " if diagnostic else "[TI16_BETA_PROPOSAL] ") + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
+                                           "input_hashes": calibration_hashes, "state_restored": True,
+                                           "run_id":plan['id'], "calibration_identity":calibration_identity})
+    print((f"[{log_tag}_FIXED_BETA] " if diagnostic else f"[{log_tag}_BETA_PROPOSAL] ") + json.dumps({"run": plan["id"], **calibration}, allow_nan=False), flush=True)
     effective = dict(config, guidance_beta=calibration["pilot_beta"] if not is_fixed else 1.0)
     controller = controller_for(plan["method"], effective)
     beta = 1.0 if is_fixed else controller.beta_for_epoch(1) if controller else 0.0
     optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root, total_steps=config["total_steps"])
     if scheduler.iter_max != 80000 or not optimizer.defaults["nesterov"]:
-        raise RuntimeError("Tiny smoke must preserve the 80k Nesterov SGD schedule")
+        raise RuntimeError("Segmenter smoke must preserve the 80k Nesterov SGD schedule")
     parameters = [p for group in optimizer.param_groups for p in group["params"]]
     modules = {"student": model, **({"guidance": guide} if guide is not None else {})}
     checked_gradients = {"encoder": model.encoder, "decoder": model.decoder,
@@ -354,11 +383,11 @@ def measure(args, config, plan, output):
         save_json(output / "training_progress.json", {"run_id": plan["id"], "completed_steps": index, "last": row,
                   **({"losses": rows, "input_sha256": json_hash(training_hashes)} if diagnostic else {})})
         if index == 1 or index % 5 == 0:
-            print(f"[TI16_SMOKE_STEP] run={plan['id']} step={index}/{config['steps']} "
+            print(f"[{log_tag}_SMOKE_STEP] run={plan['id']} step={index}/{config['steps']} "
                   f"loss={row['loss']:.6g} seg_loss={row['ce']:.6g} guidance={row['guidance']:.6g} "
                   f"guidance_multiplier={beta:.8g} ratio={row['weighted_guidance_to_seg_loss']:.6g} seconds={row['seconds']:.2f}", flush=True)
             if is_fixed:
-                print(f"[TI16_{plan['method'].upper()}_COMPONENTS] " + json.dumps({"step": index, "raw": row["components"],
+                print(f"[{log_tag}_{plan['method'].upper()}_COMPONENTS] " + json.dumps({"step": index, "raw": row["components"],
                       "weighted": row["weighted_components"]}, allow_nan=False), flush=True)
     if len(rows) != config["steps"]:
         raise RuntimeError("Incomplete smoke training")
@@ -478,7 +507,7 @@ def compact_run(row):
 def compare_runs(rows, expected_ids=("vanilla", "lg", "alg", "ibkd_lambda025", "ibkd_lambda050")):
     if (any(row["status"] != "passed" for row in rows) or len(rows) != len(expected_ids) or
             {row["run_id"] for row in rows} != set(expected_ids)):
-        raise RuntimeError("All expected Tiny paths must pass")
+        raise RuntimeError("All expected Segmenter paths must pass")
     for key in ("student_initial_state_sha256", "input_sha256"):
         if len({row[key] for row in rows}) != 1:
             raise RuntimeError(f"Cross-method mismatch: {key}")
@@ -512,6 +541,7 @@ def main():
         parser.add_argument("--" + flag, type=Path, required=True)
     parser.add_argument("--config", type=Path, default=CONFIG)
     parser.add_argument("--run-id", help=argparse.SUPPRESS)
+    parser.add_argument("--shared-calibration", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
     for key in ("cache_root", "data_dir", "manifest", "output_dir", "config"):
         setattr(args, key, getattr(args, key).resolve())
@@ -522,16 +552,17 @@ def main():
     report = {"status": "running", "scientific_result": False, "test_used": False, "runs": [],
               "next_stage": "review_calibration_and_smoke_before_500_2000_beta_screen"}
     failed = False
+    config = None
     try:
         config = load_config(args.config)
         if config.get("diagnostic_repeat"):
             report.update(next_stage="review_LG_repeat_and_ALG_comparison_no_automatic_training",
                           fixed_beta=config["diagnostic_fixed_beta"], timing_scope=config["timing_scope"])
-        from .official_api import bootstrap
+        from .official_api import bootstrap, student_spec
         bootstrap(args.cache_root)
         from .data import save_json
         from .official_assets import verify
-        provenance = verify(args.cache_root, student="tiny")
+        provenance = verify(args.cache_root, student=student_spec(config["student_backbone"])["asset_set"])
         report.update(protocol_id=config["protocol_id"], teacher="OpenMMLab DeepLabV3-R101-D8 (frozen)",
                       student=config["student_backbone"], expected_runs=len(config["runs"]),
                       source_and_asset_verification="passed", assets=provenance["weights"])
@@ -569,6 +600,8 @@ def main():
                            "--cache-root", str(args.cache_root), "--data-dir", str(args.data_dir),
                            "--manifest", str(args.manifest), "--output-dir", str(destination),
                            "--config", str(args.config), "--run-id", plan["id"]]
+                if config.get("share_lg_calibration_with_alg") and plan["method"] == "alg":
+                    command += ["--shared-calibration", str(output / "lg/calibration.json")]
                 completed = subprocess.run(command, check=False)
                 result_path = destination / "summary.json"
                 if completed.returncode == 0 and result_path.exists():
@@ -623,7 +656,11 @@ def main():
     finally:
         report["summary_path"] = str(output / "smoke_summary.json")
         (output / "smoke_summary.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
-        print("[CITYSCAPES_TI16_SMOKE_FINAL] " + json.dumps(report, allow_nan=False), flush=True)
+        if config is not None and config.get("log_tag") == "S16":
+            from .small_smoke_report import final_line
+            print(final_line(report, config, only_run=args.run_id), flush=True)
+        else:
+            print("[CITYSCAPES_TI16_SMOKE_FINAL] " + json.dumps(report, allow_nan=False), flush=True)
     if failed:
         raise SystemExit(1)
 

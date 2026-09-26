@@ -75,17 +75,20 @@ def attention_rank_loss(cls_attention, teacher_last, grid):
 
 
 class TinyFSKD(nn.Module):
-    def __init__(self, *, crop=512):
+    def __init__(self, *, crop=512, student_channels=192):
         super().__init__()
         if crop % 16 or crop < 32:
             raise ValueError("FSKD Tiny requires a patch16-compatible crop >=32")
         self.crop = crop
+        if student_channels not in (192, 384):
+            raise ValueError('Verified recipe transfer supports only Tiny/Small encoder widths')
+        self.student_channels = student_channels
         # README's custom_model/deit.py stage_info (not the generic timm wrapper).
         self.student_blocks = (0, 3)
         self.teacher_blocks = (0, 1)
         self.align = nn.ModuleList([
-            Alignment(192, 256, (crop // 16) ** 2, (crop // 4) ** 2),
-            Alignment(192, 512, (crop // 16) ** 2, (crop // 8) ** 2),
+            Alignment(student_channels, 256, (crop // 16) ** 2, (crop // 4) ** 2),
+            Alignment(student_channels, 512, (crop // 16) ** 2, (crop // 8) ** 2),
         ])
 
     def forward(self, features, attention, teacher, student_logits, teacher_logits, labels):
@@ -95,7 +98,7 @@ class TinyFSKD(nn.Module):
         for si, ti, adapter in zip(self.student_blocks, self.teacher_blocks, self.align, strict=True):
             s, t = features[si], teacher[ti].detach()
             expected = self.crop // (4 if ti == 0 else 8)
-            if (s.shape[1:] != (192, self.crop // 16, self.crop // 16) or
+            if (s.shape[1:] != (self.student_channels, self.crop // 16, self.crop // 16) or
                     t.shape[1:] != ((256 if ti == 0 else 512), expected, expected)):
                 raise ValueError("Unexpected Tiny/ResNet-D8 feature geometry")
             # Preserve the public code's additional /B after MSEmean.

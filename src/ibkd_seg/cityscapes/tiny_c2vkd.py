@@ -48,7 +48,8 @@ def pixel_pdd(student, teacher, labels):
 
 class FinalFeatureCapture:
     """Read the actual final encoder LayerNorm output; never alter the forward."""
-    def __init__(self, model):
+    def __init__(self, model, *, student_channels=192):
+        self.student_channels = student_channels
         self.tokens = None
         self.handle = model.encoder.norm.register_forward_hook(self._capture)
 
@@ -61,20 +62,20 @@ class FinalFeatureCapture:
         h, w = images.shape[-2] // 16, images.shape[-1] // 16
         tokens = self.tokens
         self.tokens = None
-        if tokens is None or tokens.shape[1:] != (h * w + 1, 192):
-            raise RuntimeError("Expected Tiny final norm: one CLS + patch tokens, width192")
-        return logits, tokens[:, 1:].transpose(1, 2).reshape(images.shape[0], 192, h, w)
+        if tokens is None or tokens.shape[1:] != (h * w + 1, self.student_channels):
+            raise RuntimeError(f"Expected one CLS + patch tokens, width{self.student_channels}")
+        return logits, tokens[:, 1:].transpose(1, 2).reshape(images.shape[0], self.student_channels, h, w)
 
     def close(self):
         self.handle.remove()
 
 
 class TinyC2VKD(C2VKD):
-    def __init__(self, pool_path):
+    def __init__(self, pool_path, *, student_channels=192):
         nn.Module.__init__(self)
         self.asset = verify_pool_asset(Path(pool_path))
-        self.visual = nn.Conv2d(192, 2048, 1, bias=False)
-        self.linguistic = nn.Conv2d(192, 512, 1, bias=False)
+        self.visual = nn.Conv2d(student_channels, 2048, 1, bias=False)
+        self.linguistic = nn.Conv2d(student_channels, 512, 1, bias=False)
         self.pool = AttentionPool(pool_path)
 
     def forward(self, feature, teacher, slogits, tlogits, labels):

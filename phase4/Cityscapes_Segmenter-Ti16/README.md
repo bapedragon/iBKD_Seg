@@ -1,5 +1,9 @@
 # Cityscapes · Segmenter-Ti/16
 
+Small 후속 실험 준비는 [별도 S/16 폴더](../Cityscapes_Segmenter-S16/README.md)에 있습니다.
+Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정합니다.
+실행 중인 Tiny 2k 및 재개는 원래 고정 commit `6856e344bc32433f183cf1f1939f6812175ea84a`를 유지합니다.
+
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
 25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,

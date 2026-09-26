@@ -31,6 +31,11 @@ TINY_WEIGHT = {
     "bytes": 23226422,
     "sha256": "4b99893dc1a5a2a7d9ad119671c20559850f865e1fa17ed23401a3fefa7fedc9",
 }
+SMALL_WEIGHT = {
+    "url": "https://storage.googleapis.com/vit_models/augreg/S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_384.npz",
+    "bytes": 88851254,
+    "sha256": "9e4155229ce0b767ef43ff1e3a9f4308a69b61f44969e0605df5f39047f2e7a8",
+}
 
 
 def weight_manifest(student="large", *, include_teacher=True):
@@ -38,6 +43,9 @@ def weight_manifest(student="large", *, include_teacher=True):
         result = dict(WEIGHTS)
     elif student == "tiny":
         result = {"vit_tiny_384.npz": TINY_WEIGHT,
+                  "deeplabv3_r101.pth": WEIGHTS["deeplabv3_r101.pth"]}
+    elif student == "small":
+        result = {"vit_small_384.npz": SMALL_WEIGHT,
                   "deeplabv3_r101.pth": WEIGHTS["deeplabv3_r101.pth"]}
     else:
         raise ValueError(f"Unsupported student asset set: {student}")
@@ -87,7 +95,7 @@ def verify(root, *, student="large", include_teacher=True):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-root", required=True, type=Path)
-    parser.add_argument("--student", choices=("large", "tiny"), default="large")
+    parser.add_argument("--student", choices=("large", "tiny", "small"), default="large")
     parser.add_argument("--student-only", action="store_true", help="Prepare encoder assets for evaluation without a teacher")
     args = parser.parse_args()
     root = args.cache_root.resolve()
@@ -115,7 +123,7 @@ def main():
                 raise RuntimeError(f"Downloaded checkpoint checksum mismatch: {name}")
             temp.replace(path)
     report = verify(root, student=args.student, include_teacher=not args.student_only)
-    filename = "provenance.json" if args.student == "large" else "provenance_tiny.json"
+    filename = "provenance.json" if args.student == "large" else f"provenance_{args.student}.json"
     if args.student_only:
         filename = f"provenance_{args.student}_student_only.json"
     (root / filename).write_text(json.dumps(report, indent=2) + "\n")

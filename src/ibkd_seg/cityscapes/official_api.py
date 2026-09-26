@@ -16,6 +16,8 @@ STUDENTS = {
                                "weight": "vit_large_384.npz"},
     "vit_tiny_patch16_384": {"blocks": 12, "channels": 192, "asset_set": "tiny",
                               "weight": "vit_tiny_384.npz"},
+    "vit_small_patch16_384": {"blocks": 12, "channels": 384, "asset_set": "small",
+                               "weight": "vit_small_384.npz"},
 }
 
 

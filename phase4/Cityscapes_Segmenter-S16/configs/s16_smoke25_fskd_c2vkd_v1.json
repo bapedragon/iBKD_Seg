@@ -1,0 +1,196 @@
+{
+  "protocol_id": "cityscapes_segmenter_s16_crop512_calibration_smoke25_v1",
+  "run_kind": "calibration_and_connection_smoke_not_beta_screen",
+  "scientific_result": false,
+  "full_training_authorized": false,
+  "student_backbone": "vit_small_patch16_384",
+  "teacher": "openmmlab_deeplabv3_r101_d8_cityscapes_80k",
+  "seed": 1,
+  "steps": 25,
+  "calibration_batches": 25,
+  "calibration_optimizer_updates": 0,
+  "beta_initial_ce_ratio": 0.03,
+  "beta_multipliers": [
+    0.5,
+    1,
+    1.5,
+    2,
+    3,
+    4,
+    6,
+    8
+  ],
+  "beta_status": "proposed_from_training_loss_not_validation_selected",
+  "runs": [
+    {
+      "id": "vanilla",
+      "method": "vanilla"
+    },
+    {
+      "id": "lg",
+      "method": "lg"
+    },
+    {
+      "id": "alg",
+      "method": "alg"
+    },
+    {
+      "id": "ibkd_lambda025",
+      "method": "ibkd",
+      "lambda": 0.25
+    },
+    {
+      "id": "ibkd_lambda050",
+      "method": "ibkd",
+      "lambda": 0.5
+    },
+    {
+      "id": "fskd",
+      "method": "fskd",
+      "display_name": "FSKD* (Tiny recipe transferred to S/16)"
+    },
+    {
+      "id": "c2vkd_clip_pool",
+      "method": "c2vkd",
+      "display_name": "C2VKD* (CLIP-pool)",
+      "comparison_group": "supplementary_extra_pretraining"
+    }
+  ],
+  "train_samples": 2975,
+  "val_samples": 500,
+  "diagnostic_validation_samples": 2,
+  "batch_size": 8,
+  "drop_last": false,
+  "image_size": 1024,
+  "crop_size": 512,
+  "window_size": 512,
+  "window_stride": 512,
+  "decoder_layers": 1,
+  "encoder_blocks": 12,
+  "encoder_channels": 384,
+  "precision": "fp32",
+  "optimizer": "upstream_timm_sgd_nesterov",
+  "learning_rate": 0.01,
+  "momentum": 0.9,
+  "weight_decay": 0.0,
+  "poly_power": 0.9,
+  "min_lr": 1e-05,
+  "total_steps": 80000,
+  "lr_warmup_steps": 0,
+  "selection_metric": "pixel_accuracy",
+  "secondary_metric": "miou_at_same_checkpoint",
+  "gradient_checkpointing": true,
+  "gradient_clipping": false,
+  "attention_query_chunk": 256,
+  "alg_window": 50,
+  "alg_threshold": -0.02,
+  "alg_warmup_epochs": 0,
+  "ibkd_warmup_epochs": 20,
+  "lg_blocks_zero_based": [
+    0,
+    6,
+    11
+  ],
+  "ibkd_aggregation_blocks": 12,
+  "controller_epoch_mean": "sample_weighted_complete_epochs_only",
+  "sampling_policy": "sorted_ids + epoch_seeded_permutation; per_sample_epoch_seeded_original_transforms",
+  "data_workers": 0,
+  "strict_determinism": false,
+  "determinism_warn_only": true,
+  "ibkd_deterministic_candidate": true,
+  "ibkd_deterministic_candidate_id": "flatmax_cpu_deform_v1",
+  "ibkd_cpu_threads": 1,
+  "resume_rtol": 2e-05,
+  "resume_atol": 2e-06,
+  "test_used": false,
+  "automatic_hyperparameter_changes": false,
+  "c2vkd_status": "included_by_user_as_supplementary_CLIP_pool_reconstruction",
+  "fskd": {
+    "method_id": "fskd_s16_tiny_recipe_transfer_v1",
+    "author_cityscapes_recipe_verified": false,
+    "source_repository": "https://github.com/TouchNow/FSKD",
+    "source_commit": "969dddf278b2c9f2dadde504326fa9d704c5a5aa",
+    "recipe_basis": "README ImageNet DeiT-Ti: stages1,2; lg/cg; global100,patch1,attention1000000,kd1",
+    "student_blocks_zero_based": [
+      0,
+      3
+    ],
+    "teacher_stages_zero_based": [
+      0,
+      1
+    ],
+    "student_attention": "last encoder block CLS query -> patch keys; mean over heads, no renormalization",
+    "attention_teacher": "ResNet layer4 squared channel mean, resized to32x32, spatial softmax",
+    "spatial_alignment": "Linear(Ns,Nt) -> GELU",
+    "channel_alignment": "Conv3x3(384,Ct,padding1,bias) -> GELU",
+    "coefficients": {
+      "ce": 1.0,
+      "logit_kd": 1.0,
+      "global": 100.0,
+      "patch": 1.0,
+      "attention": 1000000.0
+    },
+    "global_reduction": "sum selected stages of MSEmean divided by actual batch size",
+    "patch_reduction": "sum per-image normalized-channel Gram MSE; exact chunking",
+    "logit_kd": "T1, KL(teacher||student), valid-pixel mean, ignore255, bilinear align_cornersFalse",
+    "soft_rank": {
+      "version": "0.1.10",
+      "regularization": "l2",
+      "strength": 1.0
+    },
+    "beta_search": false,
+    "controller": null,
+    "init_seed": 1001,
+    "c2vkd_included": true,
+    "interpretation": "Existing Tiny fixed classification-recipe adaptation transferred to S/16; not an author-verified Small/Cityscapes recipe",
+    "stage_mapping_source": "custom_model/deit.py: deit_ti -> VisionTransformerDistilled.stage_info; not custom_forward/vision_transformer.py",
+    "segmentation_adaptation": "Keep common one-CLS Segmenter and segmentation decoder; pixel-logit KD replaces classification/DIST-head KD; teacher remains OpenMMLab DeepLabV3-R101"
+  },
+  "c2vkd": {
+    "method_id": "c2vkd_s16_clip_pool_transfer_v1",
+    "source_repository": "https://github.com/zhengxuJosh/C2VKD",
+    "source_commit": "fe1ab3d6f815969058451c221229a744fe872a47",
+    "author_exact_reproduction": false,
+    "interpretation": "Existing Tiny paper/public-code reconstruction transferred to S/16; substituted CLIP RN101 pool, not an author-exact reproduction",
+    "comparison_group": "supplementary_extra_pretraining",
+    "student_feature": "encoder final LayerNorm patch tokens; one CLS removed; width384, grid32x32",
+    "teacher_feature": "frozen OpenMMLab ResNet layer4; width2048",
+    "visual_adapter": "Conv1x1(384,2048,biasFalse)",
+    "linguistic_adapter": "GAP -> Conv1x1(384,512,biasFalse)",
+    "visual_grid": [
+      32,
+      32
+    ],
+    "pool_grid": [
+      16,
+      16
+    ],
+    "pool_source": "OpenAI CLIP RN101 visual.attnpool only; original pretrain_model0.pth not available",
+    "pool_positional_interpolation": "global unchanged; spatial7x7 ->16x16 bilinear align_cornersFalse",
+    "pool_frozen": true,
+    "pool_asset": {
+      "bytes": 291791292,
+      "sha256": "8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599"
+    },
+    "coefficients": {
+      "ce": 0.0,
+      "pdd": 1.0,
+      "global": 0.1,
+      "patch": 0.1,
+      "linguistic": 0.5
+    },
+    "pdd": "Eq8/9 reconstructed; target/non-target probabilities; normalize (teacher + ground_truth)/2; alpha0.5 beta0.5 T1; KL student||target; valid-pixel mean",
+    "pdd_source_gap": "Imported utils.kd_losses.get_dkd_loss is missing from the public source; not an author-verified implementation",
+    "global_linguistic": "KL teacher||student, mean over all elements as public code",
+    "patch": "cross-image all-pairs Gram MSE of channel-L2-normalized then row-centered features; denominator2047; exact chunking256",
+    "logit_resize": "bilinear align_cornersFalse, ignore255",
+    "ce_role": "diagnostic only; PDD supplies segmentation-label supervision",
+    "beta_search": false,
+    "controller": null,
+    "init_seed": 1001
+  },
+  "smoke_pilot_multiplier": 1,
+  "share_lg_calibration_with_alg": true,
+  "log_tag": "S16",
+  "automatic_next_stage": false
+}
