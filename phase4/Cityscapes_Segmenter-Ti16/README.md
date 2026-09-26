@@ -2,12 +2,54 @@
 
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
-25-step 연결 smoke와 500-step β 후보 검사입니다. H200 #834에서 7경로가 각각 25 update와 1-update 재개 검사를
-통과했지만, LG/ALG 궤적 비교가 4-step guidance에서 실패하여 전체 상태는 failed입니다.
-Tiny의 500/2k/10k 결과는 아직 없습니다.
+25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정입니다.
+초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
+사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
+Tiny의 2k/10k 결과는 아직 없습니다. 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 실행은 500-step 후보 검사 v6(24개)**입니다.
+**현재 다음 실행은 기존 500-step checkpoint의 전체 val500 평가 시간 측정**입니다.
+[고정 설정](configs/val500_timing_v1.json)을 사용합니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_val500_timing.sh
+```
+
+- 점수와 무관하게 첫 후보 `lg_b1`, β=`0.009329205766404213`, seed1, 500step/2epoch를 고정합니다.
+  새 학습·optimizer update는 0회이며 teacher와 guidance module을 생성하지 않습니다.
+- 원래 결과 경로는 아래와 같습니다. `resume.json`, `identity.json`, `summary.json`과
+  `checkpoints/`가 함께 필요합니다. 옮겨진 경우 `CITYSCAPES_TI16_EVAL_RESUME`으로 같은 run의
+  `resume.json` 경로만 지정합니다. checkpoint가 없으면 설치 전에 실패 이유를 출력하고 중단하며,
+  다른 후보·이전 step·사전학습 모델·재학습으로 대체하지 않습니다.
+
+```text
+/app/output/cityscapes_ti16_beta_grid500_shared_lg_8betas_v6/run_20260925T182606Z_36/artifacts/lg_b1/resume.json
+```
+
+- v6 commit `dac4948c71b050a223e0e989b85e059b030fb2ff`의 source SHA, 고정 학습 config,
+  데이터 manifest, checkpoint byte/SHA, 실제 저장 step과 최종 student hash를 검사합니다.
+  학습 재개가 아닌 평가 전용 가중치 로드이므로, 새 평가 코드로 optimizer/controller를 재개하지 않습니다.
+- 기존 Tiny·decoder1·FP32·원본 해상도·window/stride512·window batch1·CPU thread4를 유지합니다.
+  공식 fine val 500장을 정렬된 순서대로 딱 한 번 평가하고 test는 사용하지 않습니다.
+  가짜 데이터나 해상도 축소로 시간을 추정하지 않습니다.
+- `validation_seconds`는 첫 이미지 초기 비용·이미지 읽기·변환·전송·추론·지표 집계를 포함합니다.
+  SHA 검사에서 파일을 먼저 읽으므로 OS 파일 캐시가 어느 정도 채워진 조건의 측정입니다.
+  반복 학습 사이에 수행하는 같은 평가 코드의 시간 예산에 사용하며 cold-cache 최악 시간은 아닙니다.
+- `total_job_seconds`에는 실행 스크립트 시작부터 설치·asset 준비·데이터 감사·모델 로딩·평가까지
+  포함합니다. 큐 대기·외부 컨테이너 생성·git clone은 포함하지 않습니다.
+- 25장마다 진행 상황을 출력하고 마지막 **`[CITYSCAPES_TI16_VAL500_TIMING_FINAL]`**에
+  평가/전체 시간, 처리속도, 메모리, accuracy·mIoU·19 class IoU·유효 픽셀 수,
+  원래 500step 최종 loss/CE/guidance, 선택 step/epoch, 가중치 무변화 및 실행 상태를 출력합니다.
+  이는 500step checkpoint의 전체 val 점수이며 2k 결과나 최적 β 선정 결과가 아닙니다.
+
+출력은 `/app/output/cityscapes_ti16_val500_timing_v1/run_<UTC>_<PID>/`의 `summary.json`,
+`terminal_summary.log`, `per_image_timings.json`, `validation_ids.json`, `warnings.json`입니다.
+신규 평가 검사 7개와 기존 관련 검사를 합쳐 **로컬 검사 70개 통과**했습니다.
+검증된 endpoint 선택·손상/경로 거부·원본 manifest 일치·평가 중 gradient/가중치 무변화·
+ignore 픽셀 처리·종료 지표·checkpoint 누락 시 설치 전 중단을 확인했습니다.
+실제 H200 val500 시간은 이 이슈의 결과로 측정합니다.
+
+**아래는 완료한 500-step 후보 검사 v6(24개)의 실행 기록**입니다.
 2026-09-26 사용자 결정에 따라 **iBKD는 λ=0.25와 λ=0.5를 항상 함께 구성**합니다.
 LG 8개 + iBKD λ0.25 8개 + iBKD λ0.5 8개이며,
 [고정 config](configs/beta_grid500_shared_lg_8betas_v6.json)의 24개를 순서대로 실행합니다.

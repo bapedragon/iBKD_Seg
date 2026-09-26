@@ -1,0 +1,30 @@
+{
+  "protocol_id": "cityscapes_ti16_full_val500_timing_v1",
+  "training_config": "beta_grid500_shared_lg_8betas_v6.json",
+  "training_commit": "dac4948c71b050a223e0e989b85e059b030fb2ff",
+  "training_source_sha256": "06033bbccea10a86dab967001db0145dae58c8fb92a34c6e3d438b1f5d9e82be",
+  "run_id": "lg_b1",
+  "checkpoint_step": 500,
+  "checkpoint_epoch": 2,
+  "default_resume": "/app/output/cityscapes_ti16_beta_grid500_shared_lg_8betas_v6/run_20260925T182606Z_36/artifacts/lg_b1/resume.json",
+  "checkpoint_selection": "first_planned_LG_candidate_independent_of_validation_score",
+  "validation_samples": 500,
+  "expected_evaluated_classes": 19,
+  "evaluation_passes": 1,
+  "warmup_images": 0,
+  "precision": "fp32",
+  "window_size": 512,
+  "window_stride": 512,
+  "inference_window_batch_size": 1,
+  "original_target_hw": [
+    1024,
+    2048
+  ],
+  "data_workers": 0,
+  "cpu_threads": 4,
+  "teacher_loaded": false,
+  "guidance_loaded": false,
+  "optimizer_updates": 0,
+  "test_used": false,
+  "automatic_next_stage": false
+}
