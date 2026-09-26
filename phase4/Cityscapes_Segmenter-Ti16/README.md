@@ -8,27 +8,26 @@
 Tiny의 2k/10k 결과는 아직 없습니다. 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 다음 실행은 기존 500-step checkpoint의 전체 val500 평가 시간 측정**입니다.
-[고정 설정](configs/val500_timing_v1.json)을 사용합니다.
+**현재 다음 실행은 이전 학습 checkpoint 없이 전체 val500 평가 시간을 측정하는 v2**입니다.
+[고정 설정](configs/val500_timing_initial_v2.json)을 사용합니다.
 
 ```bash
-bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_val500_timing.sh
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_val500_timing_initial.sh
 ```
 
-- 점수와 무관하게 첫 후보 `lg_b1`, β=`0.009329205766404213`, seed1, 500step/2epoch를 고정합니다.
+- 기존 Tiny와 같은 **공개 AugReg ImageNet-21k→1k 사전학습 encoder + 학습 전 decoder**를
+  seed1로 구성합니다. 이전 Cityscapes `resume.json`이나 학습 가중치는 필요하지 않습니다.
   새 학습·optimizer update는 0회이며 teacher와 guidance module을 생성하지 않습니다.
-- 원래 결과 경로는 아래와 같습니다. `resume.json`, `identity.json`, `summary.json`과
-  `checkpoints/`가 함께 필요합니다. 옮겨진 경우 `CITYSCAPES_TI16_EVAL_RESUME`으로 같은 run의
-  `resume.json` 경로만 지정합니다. checkpoint가 없으면 설치 전에 실패 이유를 출력하고 중단하며,
-  다른 후보·이전 step·사전학습 모델·재학습으로 대체하지 않습니다.
-
-```text
-/app/output/cityscapes_ti16_beta_grid500_shared_lg_8betas_v6/run_20260925T182606Z_36/artifacts/lg_b1/resume.json
-```
-
-- v6 commit `dac4948c71b050a223e0e989b85e059b030fb2ff`의 source SHA, 고정 학습 config,
-  데이터 manifest, checkpoint byte/SHA, 실제 저장 step과 최종 student hash를 검사합니다.
-  학습 재개가 아닌 평가 전용 가중치 로드이므로, 새 평가 코드로 optimizer/controller를 재개하지 않습니다.
+  teacher 사전학습 파일도 다운로드하지 않습니다. 본 증류 실험의 OpenMMLab teacher 선택은 그대로입니다.
+- 공개 Tiny encoder NPZ는 23,226,422 bytes,
+  SHA-256 `4b99893dc1a5a2a7d9ad119671c20559850f865e1fa17ed23401a3fefa7fedc9`로 검사합니다.
+  고정 upstream 코드와 공식 가중치는 캐시에 없으면 내려받습니다.
+- 데이터는 `CITYSCAPES_CROP512_DATA_DIR`(기본
+  `/app/scratch/cityscapes_l16_crop512_v3/cityscapes`)의 manifest와 val 파일을 재사용합니다.
+  manifest가 없으면 `CITYSCAPES_ZIP_DIR`(기본 `/app/data/chaoyang`)의
+  `leftImg8bit_trainvaltest.zip`, `gtFine_trainvaltest.zip`을 기존 업로드 검사와 같은 byte/SHA로
+  확인한 뒤 train/val을 압축 해제하고 감사합니다. 기존 파일 내용이 다르면 덮어쓰지 않고 실패합니다.
+  원본 데이터 다운로드나 test 압축 해제는 하지 않습니다. val 실제 이미지/정답의 byte/SHA는 평가 전에 검사합니다.
 - 기존 Tiny·decoder1·FP32·원본 해상도·window/stride512·window batch1·CPU thread4를 유지합니다.
   공식 fine val 500장을 정렬된 순서대로 딱 한 번 평가하고 test는 사용하지 않습니다.
   가짜 데이터나 해상도 축소로 시간을 추정하지 않습니다.
@@ -39,15 +38,27 @@ bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_val500_timing.sh
   포함합니다. 큐 대기·외부 컨테이너 생성·git clone은 포함하지 않습니다.
 - 25장마다 진행 상황을 출력하고 마지막 **`[CITYSCAPES_TI16_VAL500_TIMING_FINAL]`**에
   평가/전체 시간, 처리속도, 메모리, accuracy·mIoU·19 class IoU·유효 픽셀 수,
-  원래 500step 최종 loss/CE/guidance, 선택 step/epoch, 가중치 무변화 및 실행 상태를 출력합니다.
-  이는 500step checkpoint의 전체 val 점수이며 2k 결과나 최적 β 선정 결과가 아닙니다.
+  `selected_step=0`, `selected_epoch=0`, `optimizer_updates=0`,
+  `trained_checkpoint_loaded=false`, 가중치 무변화 및 실행 상태를 출력합니다.
+  학습 loss/CE/guidance·β·λ·checkpoint는 `null`입니다.
+  **accuracy·mIoU·IoU는 학습 전 decoder의 진단값입니다. 학습한 Vanilla 성능이나 후보 순위에 쓰지 않습니다.**
+  동일 구조·입력·평가 경로의 소요 시간을 측정하여 후속 2k 작업의 시간 예산에 사용합니다.
+  실제 학습 도중의 GPU 부하·파일 캐시 상태에 따라 시간이 달라질 수 있으므로 여유를 둡니다.
 
-출력은 `/app/output/cityscapes_ti16_val500_timing_v1/run_<UTC>_<PID>/`의 `summary.json`,
-`terminal_summary.log`, `per_image_timings.json`, `validation_ids.json`, `warnings.json`입니다.
-신규 평가 검사 7개와 기존 관련 검사를 합쳐 **로컬 검사 70개 통과**했습니다.
-검증된 endpoint 선택·손상/경로 거부·원본 manifest 일치·평가 중 gradient/가중치 무변화·
-ignore 픽셀 처리·종료 지표·checkpoint 누락 시 설치 전 중단을 확인했습니다.
-실제 H200 val500 시간은 이 이슈의 결과로 측정합니다.
+출력은 `/app/output/cityscapes_ti16_val500_timing_initial_v2/run_<UTC>_<PID>/`의 `summary.json`,
+`terminal_summary.log`, `per_image_timings.json`, `validation_ids.json`, `warnings.json`,
+`asset_provenance.json`, `data_setup.json`입니다. `CITYSCAPES_TI16_VAL_OUTPUT`으로 출력 위치를 지정할 수 있습니다.
+설치 실패도 마지막 JSON으로 보고하며, 강제 종료로 출력 기회가 없었던 경우까지 보장하지는 않습니다.
+실제 H200 val500 시간은 아직 측정되지 않았으며 이 실행 결과로 확인합니다.
+새 경로 검사 6개와 기존 관련 검사 70개, 총 **로컬 검사 76개 통과**했습니다.
+checkpoint·teacher·optimizer 없이 평가하는 분기, ZIP 손상 시 추출 전 중단,
+기존 데이터 재사용, 평가 조건 일치, 초기 가중치 무변화 및 설치 실패 종료 JSON을 검사했습니다.
+이 검사는 CPU의 작은 모델과 모의 GPU 경로를 포함하며 실제 H200 평가 시간을 대신하지 않습니다.
+
+이전 checkpoint 평가 [v1 설정](configs/val500_timing_v1.json)과 `run_val500_timing.sh`는 기록용으로
+보존합니다. 사용자 제공 #837 로그는 이전 컨테이너의 `lg_b1/resume.json`이 없어 preflight에서
+실패했고, 평가 0장·학습 update 0회였습니다. 500step 학습 결과 자체가 실패한 것은 아닙니다.
+v1은 여전히 검증된 checkpoint를 요구하며, v2로 자동 전환하지 않습니다.
 
 **아래는 완료한 500-step 후보 검사 v6(24개)의 실행 기록**입니다.
 2026-09-26 사용자 결정에 따라 **iBKD는 λ=0.25와 λ=0.5를 항상 함께 구성**합니다.

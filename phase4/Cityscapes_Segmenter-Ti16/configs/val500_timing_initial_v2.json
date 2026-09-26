@@ -1,0 +1,33 @@
+{
+  "protocol_id": "cityscapes_ti16_full_val500_timing_initial_v2",
+  "initialization": "augreg_imagenet21k_to_1k_encoder_random_decoder",
+  "trained_checkpoint_loaded": false,
+  "checkpoint_selection": "none_initial_model_timing_only",
+  "score_scope": "initial encoder + untrained decoder diagnostic; not trained performance, Vanilla baseline or beta ranking",
+  "student_backbone": "vit_tiny_patch16_384",
+  "decoder_layers": 1,
+  "seed": 1,
+  "validation_samples": 500,
+  "expected_evaluated_classes": 19,
+  "evaluation_passes": 1,
+  "warmup_images": 0,
+  "precision": "fp32",
+  "window_size": 512,
+  "window_stride": 512,
+  "inference_window_batch_size": 1,
+  "original_target_hw": [1024, 2048],
+  "dataset_config": {
+    "run_kind": "initial_model_timing_only",
+    "val_samples": 500,
+    "image_size": 1024,
+    "crop_size": 512,
+    "seed": 1
+  },
+  "data_workers": 0,
+  "cpu_threads": 4,
+  "teacher_loaded": false,
+  "guidance_loaded": false,
+  "optimizer_updates": 0,
+  "test_used": false,
+  "automatic_next_stage": false
+}

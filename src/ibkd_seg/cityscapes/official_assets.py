@@ -33,13 +33,17 @@ TINY_WEIGHT = {
 }
 
 
-def weight_manifest(student="large"):
+def weight_manifest(student="large", *, include_teacher=True):
     if student == "large":
-        return dict(WEIGHTS)
-    if student == "tiny":
-        return {"vit_tiny_384.npz": TINY_WEIGHT,
-                "deeplabv3_r101.pth": WEIGHTS["deeplabv3_r101.pth"]}
-    raise ValueError(f"Unsupported student asset set: {student}")
+        result = dict(WEIGHTS)
+    elif student == "tiny":
+        result = {"vit_tiny_384.npz": TINY_WEIGHT,
+                  "deeplabv3_r101.pth": WEIGHTS["deeplabv3_r101.pth"]}
+    else:
+        raise ValueError(f"Unsupported student asset set: {student}")
+    if not include_teacher:
+        result.pop("deeplabv3_r101.pth")
+    return result
 
 
 DEPENDENCIES = ["timm==0.4.12", "addict==2.4.0", "yapf==0.40.1",
@@ -57,7 +61,7 @@ def sha(path):
     return digest.hexdigest()
 
 
-def verify(root, *, student="large"):
+def verify(root, *, student="large", include_teacher=True):
     report = {"sources": {}, "weights": {}}
     for name, (url, commit) in SOURCES.items():
         path = root / name
@@ -72,7 +76,7 @@ def verify(root, *, student="large"):
             raise RuntimeError(f"Untracked upstream source files: {name}")
         hashes = {p: sha(path / p) for p in files if p.endswith((".py", ".yml", ".yaml"))}
         report["sources"][name] = {"url": url, "commit": actual, "source_hashes": hashes}
-    for name, expected in weight_manifest(student).items():
+    for name, expected in weight_manifest(student, include_teacher=include_teacher).items():
         path = root / "weights" / name
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
             raise RuntimeError(f"Public checkpoint hash mismatch: {path}")
@@ -84,6 +88,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-root", required=True, type=Path)
     parser.add_argument("--student", choices=("large", "tiny"), default="large")
+    parser.add_argument("--student-only", action="store_true", help="Prepare encoder assets for evaluation without a teacher")
     args = parser.parse_args()
     root = args.cache_root.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -98,7 +103,7 @@ def main():
     subprocess.run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
                     "--target", str(root / "deps"), "--no-deps", DEPENDENCIES[0]], check=True)
     (root / "weights").mkdir(exist_ok=True)
-    for name, info in weight_manifest(args.student).items():
+    for name, info in weight_manifest(args.student, include_teacher=not args.student_only).items():
         path = root / "weights" / name
         if not path.exists():
             temp = path.with_suffix(path.suffix + ".part")
@@ -109,10 +114,12 @@ def main():
             if temp.stat().st_size != info["bytes"] or sha(temp) != info["sha256"]:
                 raise RuntimeError(f"Downloaded checkpoint checksum mismatch: {name}")
             temp.replace(path)
-    report = verify(root, student=args.student)
+    report = verify(root, student=args.student, include_teacher=not args.student_only)
     filename = "provenance.json" if args.student == "large" else "provenance_tiny.json"
+    if args.student_only:
+        filename = f"provenance_{args.student}_student_only.json"
     (root / filename).write_text(json.dumps(report, indent=2) + "\n")
-    print("[OFFICIAL_ASSETS_READY] sources=3 weights=2 hashes=passed", flush=True)
+    print(f"[OFFICIAL_ASSETS_READY] sources=3 weights={len(report['weights'])} hashes=passed", flush=True)
 
 
 if __name__ == "__main__":
