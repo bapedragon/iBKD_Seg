@@ -6,6 +6,7 @@ import json
 import math
 import os
 import platform
+import signal
 import statistics
 import subprocess
 import sys
@@ -19,13 +20,54 @@ BASE_BETA = {'lg': 0.018658411532808426, 'alg': 0.018658411532808426,
              'ibkd_025': 0.04923668244316936, 'ibkd_050': 0.07336694459440872}
 GRID_V5 = 'beta_grid500_both_lambdas_v5.json'
 GRID_V6 = 'beta_grid500_shared_lg_8betas_v6.json'
+HIGH_BETA100 = 'high_beta100_v1.json'
+CLASSIFICATION_RATIOS = {'lg': 21.848531468328726, 'ibkd_l025': 21.761244776056202,
+                         'ibkd_l050': 21.84707408786154}
+
+
+def validate_high_beta(config):
+    old = load_config(CONFIG_DIR / GRID_V6)
+    changed = {'protocol_id', 'run_kind', 'steps', 'runs', 'beta_multipliers',
+               'beta_status', 'checkpoint_every_steps'}
+    for key, value in old.items():
+        if key not in changed and config.get(key) != value:
+            raise ValueError(f'High-beta common protocol drift: {key}')
+    expected = []
+    for method, lam, prefix, base_key in [('lg', None, 'lg', 'lg'),
+            ('ibkd', .25, 'ibkd_l025', 'ibkd_025'), ('ibkd', .5, 'ibkd_l050', 'ibkd_050')]:
+        base = BASE_BETA[base_key]
+        matched = CLASSIFICATION_RATIOS[prefix] / .03 * base
+        for i, (suffix, beta, reference) in enumerate([
+                ('b2p5', 2.5, 'original_classification_numeric_beta'),
+                ('ratio', matched, 'matched_initial_scalar_loss_ratio')], 1):
+            row = dict(id=f'{prefix}_{suffix}', method=method, candidate=i, beta=beta,
+                       initial_target_ratio=beta / base * .03, beta_reference=reference)
+            if lam is not None:
+                row['lambda'] = lam
+            expected.append(row)
+    if config['runs'] != expected or config['steps'] != 100 or config['beta_multipliers'] != []:
+        raise ValueError('High-beta probe must use the six authorized 100-step conditions')
+    if (config['job_budget_seconds'], config['save_reserve_seconds']) != (36000, 120):
+        raise ValueError('High-beta probe must stop two minutes before ten hours')
+    if not config['check_state_each_step'] or not config['record_failed_step_details']:
+        raise ValueError('High-beta probe requires per-update finite-state and failure checks')
+    if config['classification_reference']['ratios'] != CLASSIFICATION_RATIOS:
+        raise ValueError('Classification calibration reference changed')
+    return config
+
+
+def diagnostic_scalar(value):
+    value = float(value)
+    return value if math.isfinite(value) else 'NaN' if math.isnan(value) else '+Inf' if value > 0 else '-Inf'
 
 
 def load_config(path):
     config = json.loads(path.read_text())
     locked = CONFIG_DIR / path.name
-    if path.name not in (GRID_V5, GRID_V6) or config != json.loads(locked.read_text()):
+    if path.name not in (GRID_V5, GRID_V6, HIGH_BETA100) or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny beta-grid config')
+    if path.name == HIGH_BETA100:
+        return validate_high_beta(config)
     shared = path.name == GRID_V6
     multipliers = (.5, 1, 1.5, 2, 3, 4, 6, 8) if shared else (1, 2, 4, 8)
     if config['steps'] != 500 or len(config['runs']) != (24 if shared else 16):
@@ -257,10 +299,20 @@ def run(args, config, plan, output, report):
             else:
                 guided = guide(features, tfeatures)
         loss = ce + beta * guided
+        if config.get('record_failed_step_details'):
+            report['step_observation'] = dict(
+                step=report['attempted_step'], phase='forward',
+                **{k: diagnostic_scalar(v.detach()) for k, v in
+                   dict(loss=loss, ce=ce, guidance=guided, alignment=alignment, fusion=fusion,
+                        weighted_guidance=beta * guided).items()})
         if not all(bool(torch.isfinite(v)) for v in (loss, ce, guided, alignment, fusion)):
             raise FloatingPointError('Nonfinite loss/CE/guidance before backward')
+        if config.get('record_failed_step_details'):
+            report['step_observation']['phase'] = 'backward'
         loss.backward()
         norm = torch.nn.utils.clip_grad_norm_(parameters, float('inf'), error_if_nonfinite=False)
+        if config.get('record_failed_step_details'):
+            report['step_observation'].update(phase='gradient_check', gradient_norm=diagnostic_scalar(norm))
         if not torch.isfinite(norm):
             raise FloatingPointError('Nonfinite gradient norm before optimizer update')
         if progress['next_batch'] == 0:
@@ -274,7 +326,15 @@ def run(args, config, plan, output, report):
                    weighted_guidance=beta * float(guided.detach()),
                    weighted_guidance_to_seg_loss=beta * float(guided.detach()) / max(float(ce.detach()), 1e-30),
                    grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]['lr'])
+        if config.get('record_failed_step_details'):
+            report['step_observation']['phase'] = 'optimizer_update'
         optimizer.step(); scheduler.step_update(scheduler.last_epoch + 1)
+        if config.get('check_state_each_step'):
+            tensors = parameters + [v for state in optimizer.state.values() for v in state.values() if torch.is_tensor(v)]
+            finite = all(bool(torch.isfinite(t).all()) for t in tensors)
+            report['step_observation'].update(phase='post_update_state_check', parameters_optimizer_finite=finite)
+            if not finite:
+                raise FloatingPointError('Nonfinite parameter/optimizer state after optimizer update')
         return row
 
     report['phase'] = 'training'
@@ -294,7 +354,17 @@ def run(args, config, plan, output, report):
                 digest = batch_hash(*batch)
                 report['attempted_step'] = progress['global_step'] + 1
                 start = time.perf_counter()
-                row = step(batch)
+                try:
+                    row = step(batch)
+                except Exception:
+                    if config.get('record_failed_step_details'):
+                        report['failure_observation'] = dict(report.pop('step_observation', {}), input_sha256=digest)
+                        report.update(input_hashes=progress['input_hashes'], losses=progress['rows'],
+                                      trajectory=trajectory_summary(progress['rows']),
+                                      teacher_frozen_verified=state_hash(teacher) == teacher_hash,
+                                      controller=controller.state_dict(), train_wall_seconds=time.monotonic()-began)
+                    raise
+                report.pop('step_observation', None)
                 torch.cuda.synchronize()
                 row['seconds'] = time.perf_counter() - start
                 ended_epoch = record_step(progress, row, len(batch[2]), digest, controller,
@@ -308,7 +378,7 @@ def run(args, config, plan, output, report):
                         progress['global_step'] == config['steps']):
                     save_json(output / 'progress.json', dict(report, input_hashes=progress['input_hashes'],
                                                              losses=progress['rows']))
-                if progress['global_step'] == 1 or progress['global_step'] % 25 == 0:
+                if progress['global_step'] == 1 or progress['global_step'] % config.get('console_every_steps', 25) == 0:
                     print(f"[TI16_GRID_STEP] run={plan['id']} step={progress['global_step']}/{config['steps']} "
                           f"epoch={row['epoch']} loss={row['loss']:.6g} ce={row['ce']:.6g} guidance={row['guidance']:.6g} "
                           f"beta={row['beta']:.9g} grad_norm={row['grad_norm_unclipped']:.6g} seconds={row['seconds']:.2f}", flush=True)
@@ -394,9 +464,9 @@ def run(args, config, plan, output, report):
     scores = metrics(matrix)
     if scores['valid_pixels'] != valid_pixels:
         raise RuntimeError('Validation void pixel accounting mismatch')
-    report.update(status='passed', phase='complete', stability='finite_500_updates_completed_not_long_run_guarantee',
+    report.update(status='passed', phase='complete', stability=f"finite_{config['steps']}_updates_completed_not_long_run_guarantee",
                   selected_step=config['steps'], selected_epoch=progress['rows'][-1]['epoch'],
-                  selection_rule='fixed_500_endpoint_not_best_checkpoint', validation_ids=val_ids,
+                  selection_rule=f"fixed_{config['steps']}_endpoint_not_best_checkpoint", validation_ids=val_ids,
                   validation_samples=len(val_ids), diagnostic_metrics=scores, full_validation=False,
                   natural_guidance_off_tested=controller.stop_epoch is not None,
                   guidance_stop_epoch=controller.stop_epoch,
@@ -409,7 +479,7 @@ def compact(row):
     for key in ('initial_beta', 'candidate', 'attempted_step', 'failure_stage', 'stability', 'trajectory',
                 'completed_epochs', 'next_epoch', 'next_batch', 'partial_epoch_samples', 'controller',
                 'guidance_stop_epoch', 'guidance_stop_step', 'train_wall_seconds', 'median_step_seconds',
-                'completed_epoch_records', 'initial_target_ratio'):
+                'completed_epoch_records', 'initial_target_ratio', 'failure_observation'):
         result[key] = row.get(key)
     return result
 
@@ -435,12 +505,28 @@ def main():
     failed = False
     terminal_plans = []
     started = time.monotonic()
+    stopped = {'requested': False}
+    previous_signals = {}
     try:
         config = load_config(args.config)
         terminal_plans = [p for p in config['runs'] if not args.run_id or p['id'] == args.run_id]
         report.update(protocol_id=config['protocol_id'], expected_runs=len(config['runs']),
+                      expected_steps=config['steps'],
                       ibkd_lambdas=config['ibkd_lambdas'],
                       lg_alg_shared_screen=config.get('lg_alg_shared_screen', False))
+        if args.config.name == HIGH_BETA100:
+            from .tiny_screen2000 import stopping_deadlines
+            job_started = float(os.environ.get('CITYSCAPES_TI16_JOB_STARTED', time.time()))
+            hard, stop_at = stopping_deadlines(job_started, config)
+            def request_stop(signum, frame):
+                stopped['requested'] = True
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                previous_signals[sig] = signal.getsignal(sig)
+                signal.signal(sig, request_stop)
+            args.should_stop = lambda: stopped['requested'] or time.time() >= stop_at
+            report.update(job_budget_seconds=36000, save_reserve_seconds=120,
+                          hard_deadline_unix=hard, stop_at_unix=stop_at,
+                          classification_reference=config['classification_reference'])
         if args.run_id:
             if not terminal_plans:
                 raise ValueError('Unknown candidate run ID')
@@ -469,12 +555,18 @@ def main():
             prepare_labels(args.data_dir, args.manifest, {'train': 2975, 'val': 500}, output)
             rows = []
             for plan in config['runs']:
+                if getattr(args, 'should_stop', lambda: False)():
+                    break
                 destination = output / plan['id']
                 command = [sys.executable, '-u', '-m', 'ibkd_seg.cityscapes.tiny_grid']
                 for flag in ('cache-root', 'data-dir', 'manifest', 'config'):
                     command += ['--' + flag, str(getattr(args, flag.replace('-', '_')).resolve())]
                 command += ['--output-dir', str(destination), '--run-id', plan['id']]
-                completed = subprocess.run(command, check=False)
+                if args.config.name == HIGH_BETA100:
+                    from .tiny_screen2000 import launch_child
+                    completed = launch_child(command, args.should_stop)
+                else:
+                    completed = subprocess.run(command, check=False)
                 result_path = destination / 'summary.json'
                 if result_path.exists():
                     row = json.loads(result_path.read_text())
@@ -490,12 +582,14 @@ def main():
                 rows.append(row)
                 report['runs'] = [compact(r) for r in rows]
                 save_json(output / 'grid_summary.json', report)
+                if row.get('status') == 'paused':
+                    break
             report['cross_checks'] = compare_grid(rows, config)
             report['finite_candidates'] = [r['run_id'] for r in rows if r['status'] == 'passed']
             report['failed_candidates'] = [r['run_id'] for r in rows if r['status'] != 'passed']
             failed = bool(report['failed_candidates'] or report['cross_checks']['review_items'])
             report['status'] = 'needs_review' if failed else 'passed'
-            report['selection_note'] = '500-step numerical screen only; no automatic permanent exclusion or top-beta ranking'
+            report['selection_note'] = f"{config['steps']}-step numerical screen only; no automatic permanent exclusion or top-beta ranking"
     except Exception as error:
         failed = True
         report.update(status='numerical_failure' if isinstance(error, FloatingPointError) else 'runtime_failure',
@@ -509,6 +603,8 @@ def main():
         (output / 'traceback.txt').write_text(traceback.format_exc())
         traceback.print_exc()
     finally:
+        for sig, handler in previous_signals.items():
+            signal.signal(sig, handler)
         name = 'summary.json' if args.run_id else 'grid_summary.json'
         report.update(summary_path=str(output / name), invocation_seconds=time.monotonic() - started)
         save_json(output / name, report)

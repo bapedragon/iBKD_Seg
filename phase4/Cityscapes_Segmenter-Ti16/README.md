@@ -16,6 +16,44 @@ iBKD λ0.25의 2,000-step β 후보 비교입니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
+## 추가 진단: β=2.5와 분류 비율 환산값의 100-step 검사
+
+사용자 요청에 따라 아래 **6개를 각각 새로 초기화해 최대 100 update** 검사합니다.
+기존 후보 결과를 대체하지 않는 별도 진단이며, 아직 H200 실행 결과는 없습니다.
+
+| 방법 | 숫자 β 그대로 | CIFAR-100 초기 손실 비율 환산 β |
+|---|---:|---:|
+| LG | 2.5 | 13.588629717453085 |
+| iBKD λ0.25 | 2.5 | 35.715049953558584 |
+| iBKD λ0.5 | 2.5 | 53.428435805136004 |
+
+[고정 설정](configs/high_beta100_v1.json)에 #841의 원본 로그 SHA-256, 분류 코드 commit,
+초기 25배치 무업데이트 비율, 기존 Tiny의 3% 기준 β를 기록했습니다.
+환산식은 `분류 초기비율 / 0.03 × Tiny의 3% 기준 β`입니다.
+이 비율은 손실값의 비율이며 gradient 영향력이나 최적 β를 뜻하지 않습니다.
+LG·ALG가 동일하게 가이던스를 사용하는 초기 구간이므로 ALG를 중복 실행하지 않습니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_high_beta100.sh
+```
+
+모델·OpenMMLab teacher·crop512·batch8·seed1·초기값·입력 순서·학습률 0.01·SGD·80k scheduler는
+기존 Tiny와 동일합니다. 학습률 워밍업이나 gradient clipping을 추가하지 않습니다.
+업데이트마다 parameter/optimizer 상태도 검사하며, NaN/Inf는 해당 후보를 중단하고 다음
+후보로 넘어갑니다. 값이 유한한 일시적 급등만으로 자동 중단하지 않습니다.
+실패 step의 loss/CE/guidance/gradient와 실패 단계는 `failure_observation`에 보존합니다.
+실패 직전까지 완료한 정상 step 수와 실패를 시도한 step을 구분합니다.
+
+완료 후보는 기존처럼 val 2장의 pixel accuracy·mIoU·class IoU를 연결 진단용으로만 출력합니다.
+val500 평가·후보 순위 선정·500/2000step 자동 진입은 없습니다. 모든 후보를 포함한 마지막
+`[CITYSCAPES_TI16_HIGH_BETA100_FINAL]`은 50,000 bytes 이내로 제한합니다.
+한 후보가 실패하면 종합 상태 `needs_review`와 파이프라인 오류 표시가 나올 수 있으므로
+여섯 개별 후보의 `status`, `completed_steps`, `attempted_step`, `failure_observation`을 확인합니다.
+출력은 `/app/output/cityscapes_ti16_high_beta100_v1/run_<UTC>_<PID>`에 분리하고,
+설치·준비를 포함해 실행 시작 9시간58분에 중단 요청을 보냅니다.
+
+## 기존 2,000-step 후보 비교
+
 **iBKD λ=0.25, β 8개 × 2,000step + 후보별 전체 val500 평가의 새 실행 기본값은 v2**입니다.
 [새 실행 설정](configs/beta_grid2000_ibkd_l025_v2.json)은 v1에서 시간 예산만 변경합니다.
 2026-09-26 사용자 결정: **10시간 기준 마지막 2분만 저장/종료에 남겨 9시간 58분에 자동 중단**합니다.

@@ -87,6 +87,14 @@ def terminal_row(row, plan):
         trajectory={k: [number((trajectory.get(k) or {}).get(stat)) for stat in
                         ('first25_median', 'last25_median', 'maximum', 'minimum')] for k in TRAJECTORY_KEYS},
     )
+    if row.get('failure_observation'):
+        observation = row['failure_observation']
+        result['failure_observation'] = {
+            key: bounded_text(observation[key], 96) if isinstance(observation[key], str)
+            else observation[key] if isinstance(observation[key], bool) else number(observation[key])
+            for key in ('step', 'phase', 'loss', 'ce', 'guidance', 'alignment', 'fusion',
+                        'weighted_guidance', 'gradient_norm', 'parameters_optimizer_finite', 'input_sha256')
+            if key in observation}
     return result
 
 
@@ -97,15 +105,16 @@ def final_line(report, plans, *, child=False):
     by_id = {r['run_id']: r for r in report.get('runs', []) if r.get('run_id')}
     rows = [terminal_row(by_id.get(p['id'], {}), p) for p in plans]
     checks = report.get('cross_checks') or {}
+    steps = report.get('expected_steps', 500)
     result = dict(
         status=bounded_text(report.get('status'), 48), protocol_id=bounded_text(report.get('protocol_id'), 128),
-        expected_runs=len(plans), reported_runs=len(rows), runs=rows,
+        expected_runs=len(plans), reported_runs=len(rows), expected_steps=steps, runs=rows,
         finite_candidates=[r['run_id'] for r in rows if r['status'] == 'passed'],
         failed_candidates=[r['run_id'] for r in rows if r['status'] not in ('passed', 'not_run')],
         not_run_candidates=[r['run_id'] for r in rows if r['status'] == 'not_run'],
         lg_alg_shared_screen=report.get('lg_alg_shared_screen', False),
         full_validation=False, diagnostic_validation_samples=2,
-        selection_rule='fixed_500_endpoint_not_best_checkpoint',
+        selection_rule=f'fixed_{steps}_endpoint_not_best_checkpoint',
         scientific_result=False, beta_ranking_performed=False, automatic_next_stage=False, test_used=False,
         class_iou_order=CLASS_NAMES,
         trajectory_order=['first25_median', 'last25_median', 'maximum', 'minimum'],
@@ -118,7 +127,8 @@ def final_line(report, plans, *, child=False):
         details='Full precision, warnings, traces and checkpoint hashes: grid_summary.json and each run/summary.json',
         terminal_budget_bytes=MAX_FINAL_BYTES,
     )
-    prefix = '[TI16_GRID_RUN_FINAL] ' if child else '[CITYSCAPES_TI16_GRID500_FINAL] '
+    prefix = ('[TI16_GRID_RUN_FINAL] ' if child else '[CITYSCAPES_TI16_HIGH_BETA100_FINAL] '
+              if steps == 100 else '[CITYSCAPES_TI16_GRID500_FINAL] ')
     encode = lambda obj: prefix + json.dumps(obj, separators=(',', ':'), ensure_ascii=True, allow_nan=False)
     line = encode(result)
     if len(line) + 1 > MAX_FINAL_BYTES:
@@ -147,7 +157,8 @@ def main():
     if report.get('status') in ('passed', 'running'):
         report['status'] = 'runtime_failure'
     report.update(pipeline_exit_code=args.exit_code, output_root=str(args.output_root),
-                  protocol_id=config['protocol_id'], lg_alg_shared_screen=config.get('lg_alg_shared_screen', False))
+                  protocol_id=config['protocol_id'], expected_steps=config['steps'],
+                  lg_alg_shared_screen=config.get('lg_alg_shared_screen', False))
     line = final_line(report, config['runs'])
     (args.output_root / 'terminal_summary.log').write_text(line + '\n', encoding='ascii')
     print(line, flush=True)
