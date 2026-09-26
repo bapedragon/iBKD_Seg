@@ -16,10 +16,49 @@ iBKD λ0.25의 2,000-step β 후보 비교입니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
+## 다음 진단: β=2.5의 LG·iBKD λ0.25를 500step 비교
+
+사용자 요청에 따라 **LG β=2.5와 iBKD λ=0.25·β=2.5 두 개만 각각 0→500step** 실행합니다.
+[고정 설정](configs/high_beta500_v1.json)은 아래 #842에서 100step을 통과한 두 조건을 사용합니다.
+이전 checkpoint는 필요하지 않으며, iBKD λ0.5와 비율 환산 β들은 이번 실행에 포함하지 않습니다.
+이번 두 조건만 실행하는 범위는 사용자가 명시적으로 정한 것이며, 기존 24후보 설정의 두 λ는 유지합니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_high_beta500.sh
+```
+
+- Tiny·OpenMMLab DeepLabV3-R101 teacher·crop512·batch8·seed1·FP32·SGD LR0.01·80k scheduler와
+  기존 입력 순서/초기값 설정을 유지합니다. 학습률 warm-up과 gradient clipping은 추가하지 않습니다.
+- #842와 같은 매 update 수치 검사를 유지합니다. NaN/Inf나 실행 오류가 발생하면 해당 후보를
+  중단하고 남은 후보를 실행합니다. 유한한 loss 급등이나 단일 CE 값으로 자동 탈락시키지 않습니다.
+- 학습 로그는 25step마다 출력합니다. 각 후보의 모든 step loss/CE/guidance/gradient와 입력 해시는
+  `steps.jsonl`에 저장하며, 최종 JSON에도 **100·250·500step 수치**를 `milestones`로 남깁니다.
+  실패로 도달하지 못한 milestone은 `recorded=false`와 `null` 값으로 표시합니다.
+- 0/250/epoch 경계/500step 및 시간 중단 시 학습 상태를 저장합니다. 매 step 전체 gradient 해시는
+  계산하지 않습니다. 끝에서 teacher 동결 상태와 checkpoint 저장/복원 동일성을 검사합니다.
+- **고정 500step에서 기존 val 2장**의 pixel accuracy·mIoU·19 class IoU를 진단용으로 기록합니다.
+  전체 val500 성능 비교나 β 최종 순위로 해석하지 않으며, 2k/10k 자동 진입은 없습니다.
+- 마지막 `[CITYSCAPES_TI16_HIGH_BETA500_FINAL]`에 두 조건의 완료/실패 상태, 선택 step/epoch,
+  loss·CE·guidance·β×guidance/CE·gradient·milestones·평가값·checkpoint 검사·실패 이유를 모읍니다.
+  기존 50,000-byte 상한을 유지하여 마지막 65,000자 안에서 결과를 확인할 수 있습니다.
+- 출력은 `/app/output/cityscapes_ti16_high_beta500_v1/run_<UTC>_<PID>/`입니다.
+  이전 500step 실측은 LG 약 8분, iBKD 약 17분으로, 준비/간이 평가를 포함해 약 30~40분 예상입니다.
+  10시간 예산 중 마지막 2분을 저장/종료에 남기며, 기본 기준은 스크립트 진입 시각입니다.
+  전달된 `CITYSCAPES_TI16_JOB_STARTED`가 있으면 그 시각을 보존합니다.
+  실제 H200 500step 결과는 아직 확인하지 않았습니다.
+
+로컬 검사 23개(새 500step 검사 5개, 기존 high-beta100 7개, grid/report 11개)를 통과했습니다.
+두 후보 실행·첫 후보 실패 후 계속 진행·milestone 보존·준비 실패 시 종료 JSON·기존 24후보
+보고 호환성을 검사했으며, 실제 H200 학습 안정성을 미리 보장하는 검사는 아닙니다.
+
 ## 추가 진단: β=2.5와 분류 비율 환산값의 100-step 검사
 
 사용자 요청에 따라 아래 **6개를 각각 새로 초기화해 최대 100 update** 검사합니다.
-기존 후보 결과를 대체하지 않는 별도 진단이며, 아직 H200 실행 결과는 없습니다.
+기존 후보 결과를 대체하지 않는 별도 진단입니다. 사용자 제공 **#842 로그**에서
+LG β=2.5와 iBKD λ0.25·β=2.5의 100step 완료를 확인했습니다.
+LG β≈13.59는 5step에서 NaN, iBKD λ0.5·β=2.5는 47step에서 Inf로 중단됐습니다.
+iBKD λ0.25·β≈35.72 및 λ0.5·β≈53.43은 4step 기록 뒤 `SIGSEGV(-11)`로 종료됐습니다.
+두 경우 loss가 이미 10¹⁸ 규모였으나, 직접적인 native 오류 원인은 로그만으로 확정하지 않습니다.
 
 | 방법 | 숫자 β 그대로 | CIFAR-100 초기 손실 비율 환산 β |
 |---|---:|---:|

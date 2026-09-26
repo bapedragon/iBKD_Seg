@@ -21,6 +21,8 @@ BASE_BETA = {'lg': 0.018658411532808426, 'alg': 0.018658411532808426,
 GRID_V5 = 'beta_grid500_both_lambdas_v5.json'
 GRID_V6 = 'beta_grid500_shared_lg_8betas_v6.json'
 HIGH_BETA100 = 'high_beta100_v1.json'
+HIGH_BETA500 = 'high_beta500_v1.json'
+HIGH_BETA_CONFIGS = (HIGH_BETA100, HIGH_BETA500)
 CLASSIFICATION_RATIOS = {'lg': 21.848531468328726, 'ibkd_l025': 21.761244776056202,
                          'ibkd_l050': 21.84707408786154}
 
@@ -61,13 +63,29 @@ def diagnostic_scalar(value):
     return value if math.isfinite(value) else 'NaN' if math.isnan(value) else '+Inf' if value > 0 else '-Inf'
 
 
+def validate_high_beta500(config):
+    old = load_config(CONFIG_DIR / HIGH_BETA100)
+    changed = {'protocol_id', 'run_kind', 'steps', 'runs', 'beta_status',
+               'ibkd_lambdas', 'checkpoint_every_steps', 'console_every_steps'}
+    for key, value in old.items():
+        if key not in changed and config.get(key) != value:
+            raise ValueError(f'High-beta500 common protocol drift: {key}')
+    expected = [p for p in old['runs'] if p['id'] in ('lg_b2p5', 'ibkd_l025_b2p5')]
+    if (config['runs'] != expected or config['steps'] != 500 or config['ibkd_lambdas'] != [.25]
+            or config['checkpoint_every_steps'] != 250 or config['console_every_steps'] != 25):
+        raise ValueError('High-beta500 must run only LG and iBKD lambda0.25 at beta2.5 for 500 steps')
+    return config
+
+
 def load_config(path):
     config = json.loads(path.read_text())
     locked = CONFIG_DIR / path.name
-    if path.name not in (GRID_V5, GRID_V6, HIGH_BETA100) or config != json.loads(locked.read_text()):
+    if path.name not in (GRID_V5, GRID_V6, *HIGH_BETA_CONFIGS) or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny beta-grid config')
     if path.name == HIGH_BETA100:
         return validate_high_beta(config)
+    if path.name == HIGH_BETA500:
+        return validate_high_beta500(config)
     shared = path.name == GRID_V6
     multipliers = (.5, 1, 1.5, 2, 3, 4, 6, 8) if shared else (1, 2, 4, 8)
     if config['steps'] != 500 or len(config['runs']) != (24 if shared else 16):
@@ -481,6 +499,13 @@ def compact(row):
                 'guidance_stop_epoch', 'guidance_stop_step', 'train_wall_seconds', 'median_step_seconds',
                 'completed_epoch_records', 'initial_target_ratio', 'failure_observation'):
         result[key] = row.get(key)
+    if row.get('protocol_id') == 'cityscapes_ti16_high_beta500_v1':
+        by_step = {r['step']: r for r in row.get('losses', [])}
+        fields = ('loss', 'ce', 'guidance', 'weighted_guidance',
+                  'weighted_guidance_to_seg_loss', 'grad_norm_unclipped')
+        result['milestones'] = [dict(step=step, recorded=step in by_step,
+                                    **{key: by_step.get(step, {}).get(key) for key in fields})
+                                for step in (100, 250, 500)]
     return result
 
 
@@ -514,7 +539,7 @@ def main():
                       expected_steps=config['steps'],
                       ibkd_lambdas=config['ibkd_lambdas'],
                       lg_alg_shared_screen=config.get('lg_alg_shared_screen', False))
-        if args.config.name == HIGH_BETA100:
+        if args.config.name in HIGH_BETA_CONFIGS:
             from .tiny_screen2000 import stopping_deadlines
             job_started = float(os.environ.get('CITYSCAPES_TI16_JOB_STARTED', time.time()))
             hard, stop_at = stopping_deadlines(job_started, config)
@@ -562,7 +587,7 @@ def main():
                 for flag in ('cache-root', 'data-dir', 'manifest', 'config'):
                     command += ['--' + flag, str(getattr(args, flag.replace('-', '_')).resolve())]
                 command += ['--output-dir', str(destination), '--run-id', plan['id']]
-                if args.config.name == HIGH_BETA100:
+                if args.config.name in HIGH_BETA_CONFIGS:
                     from .tiny_screen2000 import launch_child
                     completed = launch_child(command, args.should_stop)
                 else:

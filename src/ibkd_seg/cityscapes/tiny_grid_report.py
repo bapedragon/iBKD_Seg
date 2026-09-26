@@ -95,6 +95,12 @@ def terminal_row(row, plan):
             for key in ('step', 'phase', 'loss', 'ce', 'guidance', 'alignment', 'fusion',
                         'weighted_guidance', 'gradient_norm', 'parameters_optimizer_finite', 'input_sha256')
             if key in observation}
+    if row.get('milestones') is not None:
+        result['milestones'] = [dict(step=count(item.get('step')), recorded=bool(item.get('recorded')),
+                                    **{key: number(item.get(key)) for key in
+                                       ('loss', 'ce', 'guidance', 'weighted_guidance',
+                                        'weighted_guidance_to_seg_loss', 'grad_norm_unclipped')})
+                                for item in row['milestones'][:3]]
     return result
 
 
@@ -128,7 +134,9 @@ def final_line(report, plans, *, child=False):
         terminal_budget_bytes=MAX_FINAL_BYTES,
     )
     prefix = ('[TI16_GRID_RUN_FINAL] ' if child else '[CITYSCAPES_TI16_HIGH_BETA100_FINAL] '
-              if steps == 100 else '[CITYSCAPES_TI16_GRID500_FINAL] ')
+              if steps == 100 else '[CITYSCAPES_TI16_HIGH_BETA500_FINAL] '
+              if report.get('protocol_id') == 'cityscapes_ti16_high_beta500_v1'
+              else '[CITYSCAPES_TI16_GRID500_FINAL] ')
     encode = lambda obj: prefix + json.dumps(obj, separators=(',', ':'), ensure_ascii=True, allow_nan=False)
     line = encode(result)
     if len(line) + 1 > MAX_FINAL_BYTES:
