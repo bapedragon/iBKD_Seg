@@ -1,0 +1,64 @@
+{
+  "imported_date": "2026-09-27",
+  "sources": [
+    {
+      "source_id": "pack_v1",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "request": null,
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/a5fc43b0-cd07-4e8f-9947-36b564c073a8/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "bad6eab94a695be78f03574b457b04efc5e68dd9d57f8f44b8dba02af6e5a495",
+      "terminal_json_sha256": "d3661bd905b87a4cbae939768d443fbc6e1c3553f43cb4d636c8ea582978c2c3",
+      "terminal_json_marker": "[CITYSCAPES_TI16_GRID2000_FINAL]",
+      "protocol_id": "cityscapes_ti16_crop512_ibkd_l025_grid2000_v1",
+      "terminal_json_complete": true,
+      "console_prefix_complete": false,
+      "execution_commit": null,
+      "parent_status": "paused",
+      "parent_summary_path": "/app/output/cityscapes_ti16_ibkd_l025_grid2000_v1/run_20260926T034648Z_37/artifacts/grid_summary.json",
+      "reported_identity_checks": {
+        "initial_identity_present_for_passed": true,
+        "student_initial_state_sha256": true,
+        "teacher_state_sha256": true,
+        "guidance_initial_state_sha256": true,
+        "same_observed_input_prefixes": true,
+        "complete_passed_endpoints": true,
+        "run_inventory": true,
+        "planned_method_beta_lambda": true
+      },
+      "review_items": []
+    },
+    {
+      "source_id": "candidate8_fresh_v2",
+      "source_type": "user_pasted_h200_log_snapshot",
+      "request": 844,
+      "original_path": "/Users/bagcheolhyeon/.codex/attachments/30d88f7d-1415-417c-b086-012e6cef30c2/붙여넣은 텍스트.txt",
+      "bytes": 41393,
+      "sha256": "49ca5baed15ab39404cd0e572a8d4111f7501328fe2502fae62a10e89061143d",
+      "terminal_json_sha256": "5345d00d781baad2714f3ecfffc6ad76ad128bca0b4dde143a6138c214af71a1",
+      "terminal_json_marker": "[CITYSCAPES_TI16_GRID2000_FINAL]",
+      "protocol_id": "cityscapes_ti16_crop512_ibkd_l025_grid2000_v2",
+      "terminal_json_complete": true,
+      "console_prefix_complete": true,
+      "execution_commit": "cba6c3c3ca773948810cdad94f12c4328b96b8a1",
+      "parent_status": "passed",
+      "parent_summary_path": "/app/output/cityscapes_ti16_ibkd_l025_grid2000_v2/run_20260926T163709Z_37/artifacts/grid_summary.json",
+      "reported_identity_checks": {
+        "initial_identity_present_for_passed": true,
+        "student_initial_state_sha256": true,
+        "teacher_state_sha256": true,
+        "guidance_initial_state_sha256": true,
+        "same_observed_input_prefixes": true,
+        "complete_passed_endpoints": true,
+        "run_inventory": true,
+        "planned_method_beta_lambda": true
+      },
+      "review_items": []
+    }
+  ],
+  "stored_result": "beta_screen_summary.json",
+  "raw_log_stored_in_git": false,
+  "checkpoint_stored_in_git": false,
+  "merge_rule": "Keep completed candidates1-7 from pack_v1; use candidate8_fresh_v2 for candidate8; retain the paused1995 attempt as history only.",
+  "note": "Curated terminal metrics and source hashes are stored; raw logs and checkpoints stay outside Git. Missing old request/commit IDs are not inferred from a truncated log."
+}
