@@ -1,4 +1,4 @@
-"""One authorized Tiny iBKD lambda0.25 pack: eight fixed 2000-step full-val endpoints."""
+"""Authorized Tiny packs with fixed 2000-step full-val endpoints and one job deadline."""
 from __future__ import annotations
 
 import argparse
@@ -14,17 +14,32 @@ import warnings
 from pathlib import Path
 
 from .tiny_val_timing import CONFIG_DIR, save_json
-from .tiny_screen2000_report import final_line
+from .tiny_screen2000_report import final_line, select_plans
 
 CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v2.json'
 LEGACY_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
+LG_ALG_CONFIG=CONFIG_DIR/'beta_grid2000_lg_alg_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    locked=next((p for p in (CONFIG,LEGACY_CONFIG) if p.name==path.name),None)
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG) if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
-        raise ValueError('Use the committed lambda0.25 2000-step pack config')
+        raise ValueError('Use a committed Tiny 2000-step pack config')
+    if locked==LG_ALG_CONFIG:
+        original=load_config(CONFIG)
+        changed={'protocol_id','pack','runs','ibkd_lambdas','start_policy','continuation_policy'}
+        if any(config.get(k)!=v for k,v in original.items() if k not in changed):
+            raise ValueError('LG/ALG common training or evaluation protocol drift')
+        old=json.loads((CONFIG_DIR/'beta_grid500_shared_lg_8betas_v6.json').read_text())
+        expected=[]
+        for plan in (p for p in old['runs'] if p['method']=='lg'):
+            for method in ('lg','alg'):
+                expected.append(dict(plan,id=f'{method}_b{plan["candidate"]}',method=method,
+                                     run_index=len(expected)+1))
+        if config['runs']!=expected or config['ibkd_lambdas']!=[] or config['pack']!='lg_alg':
+            raise ValueError('LG/ALG pack must contain the eight fixed beta pairs in interleaved order')
+        return config
     old=json.loads((CONFIG_DIR/'beta_grid500_shared_lg_8betas_v6.json').read_text())
     changed={'protocol_id','run_kind','steps','runs','lg_alg_shared_screen','diagnostic_validation_samples'}
     for key,value in old.items():
@@ -81,9 +96,9 @@ def collect_child(destination, completed, plan):
         row=json.loads(progress.read_text()) if progress.is_file() else {}
         row.update(status='runtime_failure',error=f'child_exit={completed.returncode}; final summary missing',
                    run_id=plan['id'],method=plan['method'],candidate=plan['candidate'],
-                   initial_beta=plan['beta'],**{'lambda':plan['lambda']})
+                   initial_beta=plan['beta'],**{'lambda':plan.get('lambda')})
     for key,value in dict(run_id=plan['id'],method=plan['method'],candidate=plan['candidate'],
-                          initial_beta=plan['beta'],**{'lambda':plan['lambda']}).items():
+                          initial_beta=plan['beta'],**{'lambda':plan.get('lambda')}).items():
         row.setdefault(key,value)
     if completed.returncode != 0 and row.get('status') in ('passed','paused'):
         row.update(status='runtime_failure',error=f'child_exit={completed.returncode}')
@@ -103,6 +118,31 @@ def launch_child(command, should_stop):
                 pass
 
 
+def compare_active_lg_alg(rows, config):
+    """Compare observed scalar prefixes only while both controllers still use guidance."""
+    by_id={r['run_id']:r for r in rows}
+    pairs=[]
+    for candidate in range(1,9):
+        lg,alg=by_id.get(f'lg_b{candidate}'),by_id.get(f'alg_b{candidate}')
+        if lg is None or alg is None:
+            continue
+        compared=0;first=None
+        for a,b in zip(lg.get('losses',[]),alg.get('losses',[])):
+            if a['beta']<=0 or b['beta']<=0:
+                break
+            compared+=1
+            for key in ('step','beta','loss','ce','guidance','grad_norm_unclipped'):
+                if not math.isclose(a[key],b[key],rel_tol=config['resume_rtol'],abs_tol=config['resume_atol']):
+                    first=dict(step=b['step'],field=key,lg=a[key],alg=b[key])
+                    break
+            if first:
+                break
+        pairs.append(dict(candidate=candidate,compared_active_steps=compared,
+                          first_mismatch=first,matches=None if compared==0 else first is None,
+                          alg_stop_step=alg.get('guidance_stop_step')))
+    return pairs
+
+
 def execute_pack(args, config, plans, output, report, should_stop):
     """Sequential subprocess isolation; pause stops scheduling without inventing missing scores."""
     rows=[]
@@ -115,9 +155,11 @@ def execute_pack(args, config, plans, output, report, should_stop):
             command += ['--'+flag,str(getattr(args,flag.replace('-','_')).resolve())]
         command += ['--output-dir',str(destination),'--run-id',plan['id'],
                     '--deadline',str(args.deadline),'--start-candidate',str(args.start_candidate)]
+        if getattr(args,'start_run',None) is not None:
+            command += ['--start-run',str(args.start_run)]
         if args.resume and plan == plans[0]:
             command += ['--resume',str(args.resume.resolve())]
-        print(f'[TI16_GRID2000_START] run={plan["id"]} beta={plan["beta"]} lambda=0.25 remaining_seconds={args.deadline-time.time():.1f}',flush=True)
+        print(f'[TI16_GRID2000_START] run={plan["id"]} method={plan["method"]} beta={plan["beta"]} lambda={plan.get("lambda")} remaining_seconds={args.deadline-time.time():.1f}',flush=True)
         completed=launch_child(command,should_stop)
         row=collect_child(destination,completed,plan)
         rows.append(row)
@@ -128,9 +170,13 @@ def execute_pack(args, config, plans, output, report, should_stop):
     checks,issues=identity_checks(rows)
     checks['run_inventory']=[r.get('run_id') for r in rows]==[p['id'] for p in plans[:len(rows)]]
     checks['planned_method_beta_lambda']=all(
-        (r.get('method'),r.get('initial_beta'),r.get('lambda'))==(p['method'],p['beta'],p['lambda'])
+        (r.get('method'),r.get('initial_beta'),r.get('lambda'))==(p['method'],p['beta'],p.get('lambda'))
         for r,p in zip(rows,plans))
     issues=[k for k,v in checks.items() if not v]
+    if config.get('pack')=='lg_alg':
+        report['lg_alg_active_prefix_pairs']=compare_active_lg_alg(rows,config)
+        issues += [f'lg_alg_b{p["candidate"]}_active_prefix' for p in report['lg_alg_active_prefix_pairs']
+                   if p['matches'] is False]
     failed=any(r.get('status') not in ('passed','paused') for r in rows)
     complete=len(rows)==len(plans) and all(r['status']=='passed' for r in rows)
     report.update(identity_checks=checks,review_items=issues,
@@ -150,6 +196,8 @@ def main():
     parser.add_argument('--run-id')
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--start-candidate',type=int,default=1,choices=range(1,9))
+    parser.add_argument('--start-run',type=int,choices=range(1,17),
+                        help='LG/ALG pack only: resume the fixed execution order at index 1..16')
     parser.add_argument('--deadline',type=float)
     args=parser.parse_args()
     output=args.output_dir.resolve()
@@ -171,15 +219,16 @@ def main():
     try:
         config=load_config(args.config)
         report.update(protocol_id=config['protocol_id'],job_budget_seconds=config['job_budget_seconds'],
-                      save_reserve_seconds=config['save_reserve_seconds'])
-        plans=[p for p in config['runs'] if (p['id']==args.run_id if args.run_id else p['candidate']>=args.start_candidate)]
+                      save_reserve_seconds=config['save_reserve_seconds'],pack=config['pack'],
+                      start_run=args.start_run)
+        plans=select_plans(config,start_candidate=args.start_candidate,start_run=args.start_run,run_id=args.run_id)
         if not plans:
             raise ValueError('Unknown candidate')
         if args.run_id:
             plan=plans[0]
             report.update(run_id=plan['id'],method=plan['method'],candidate=plan['candidate'],
                           initial_beta=plan['beta'],initial_target_ratio=plan['initial_target_ratio'],
-                          **{'lambda':plan['lambda']},completed_steps=0,selected_step=None,
+                          **{'lambda':plan.get('lambda')},completed_steps=0,selected_step=None,
                           selected_epoch=None,diagnostic_metrics=None,full_validation=False)
         if args.resume and not args.resume.is_file():
             raise FileNotFoundError('Restore the same 2000-step run folder and point --resume to its resume.json')
