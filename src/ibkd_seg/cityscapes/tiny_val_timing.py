@@ -106,7 +106,11 @@ def student_state(payload, source):
     return payload['model']
 
 
-def evaluate(model, dataset, inference, config, synchronize, on_progress):
+class ValidationInterrupted(RuntimeError):
+    """A partial validation is never a comparable endpoint score."""
+
+
+def evaluate(model, dataset, inference, config, synchronize, on_progress, should_stop=None):
     import torch
     from .evaluation import confusion_update, metrics
 
@@ -119,6 +123,8 @@ def evaluate(model, dataset, inference, config, synchronize, on_progress):
     started = time.perf_counter()
     with torch.no_grad():
         for index in range(len(dataset)):
+            if should_stop is not None and should_stop():
+                raise ValidationInterrupted(f'Validation interrupted after {index}/{len(dataset)} images; retry full pass on resume')
             began = time.perf_counter()
             ims, metas, target, sample_id = dataset[index]
             if list(target.shape) != config['original_target_hw']:

@@ -2,13 +2,85 @@
 
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
-25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정입니다.
+25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,
+iBKD λ0.25의 2,000-step β 후보 비교입니다.
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
 Tiny의 2k/10k 결과는 아직 없습니다. 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-**현재 다음 실행은 이전 학습 checkpoint 없이 전체 val500 평가 시간을 측정하는 v2**입니다.
+**현재 다음 실행은 iBKD λ=0.25, β 8개 × 2,000step + 후보별 전체 val500 평가**입니다.
+[고정 설정](configs/beta_grid2000_ibkd_l025_v1.json)을 사용합니다.
+별도의 짧은 GPU smoke를 추가하지 않고, 이미 500step을 통과한 후보를 다음 단계에서 비교합니다.
+이후 λ0.5 8개 및 LG·ALG 각 8개도 별도 묶음으로 비교할 계획이며, 이번 이슈에서는 λ0.25만 실행합니다.
+
+```bash
+bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_ibkd025.sh
+```
+
+- β는 기존 후보 순서대로 `0.02461834122158468`, `0.04923668244316936`,
+  `0.07385502366475404`, `0.09847336488633872`, `0.14771004732950807`,
+  `0.19694672977267744`, `0.29542009465901614`, `0.3938934595453549`입니다.
+  β를 재측정하거나 재계산하지 않습니다.
+- 각 후보를 seed1의 동일한 공개 Tiny encoder/초기 decoder, 동일 adapter 초기값,
+  같은 OpenMMLab DeepLabV3-R101 teacher와 입력 순서로 **0→2,000step 새로 학습**합니다.
+  이전 컨테이너의 500step checkpoint는 필요하지 않습니다. Crop512·batch8·decoder1·FP32,
+  iBKD CPU 결정성 경로·학습 CPU thread1·SGD LR0.01·80,000step LR 스케줄을 유지합니다.
+- **고정 2,000step endpoint에서 전체 fine val 500장을 한 번 평가**합니다.
+  평가 경로는 시간 측정을 통과한 원본 해상도·window/stride512·window batch1·CPU thread4입니다.
+  Accuracy를 1차 비교값으로, 같은 endpoint의 mIoU와 19 class IoU를 함께 기록합니다.
+  중간 val 최고점을 선택하지 않으며, 순위나 후속 후보를 자동 확정하지 않습니다.
+- 2,000step은 5epoch 완료 + 6번째 epoch의 140batch(약 5.38epoch)입니다.
+  iBKD warm-up20epoch를 유지하므로 이번 단계는 **가이던스가 켜진 구간의 β 비교**입니다.
+  10k·80k 결과나 가이던스 종료 후 성능으로 해석하지 않습니다.
+- 기존 500step 학습 실측 ×4 + 후보마다 val107.7초 + 준비10분으로 **약 9시간 25분**을
+  예상합니다. 이번 코드는 학습 연산을 유지하면서 큰 `progress.json`의 재기록을 매 step에서
+  25step/epoch 경계/마지막 step으로 줄였습니다. step별 수치·입력 해시는 계속 보존합니다.
+  실제 완료 시간은 실행 결과로 확인합니다.
+- 스크립트 시작부터 **9시간 45분**을 상한 목표로 두고, 3분을 저장/종료에 남겨
+  약 9시간 42분부터 새 update·평가를 멈춥니다. 250step마다, epoch 경계, 최종/중단 시
+  모델·adapter·optimizer·scheduler·controller·RNG·부분 epoch 누적값을 원자적으로 저장합니다.
+  최신/이전 두 세대를 유지하고 byte/SHA 및 저장 상태 동일성을 검사합니다.
+  단일 작업/저장이 비정상적으로 오래 멈추거나 외부에서 강제 종료되는 상황까지 시간 상한을
+  보장하는 것은 아닙니다. 설치·압축 해제 등 준비 시간도 위 시간 예산에 포함됩니다.
+- 제한에 걸리면 `paused`, 아직 시작하지 않은 후보는 `not_run`으로 표시합니다.
+  2,000step 전 중단 또는 전체 val 도중 중단은 최종 점수를 `null`로 남깁니다.
+  평가 도중 중단한 경우 2,000step checkpoint를 유지하고, 재개 시 전체 val을 처음부터 다시 평가합니다.
+  NaN/Inf와 실행 오류는 별도로 표시하고 남은 후보는 시간 내에서 계속 실행합니다.
+
+중간 학습/평가 로그를 그대로 출력하고 마지막 **`[CITYSCAPES_TI16_GRID2000_FINAL]`** JSON에
+8개 후보 전체의 β·λ·완료/선택 step·선택 epoch·loss/CE/guidance·alignment/fusion·
+accuracy·mIoU·19 class IoU·평가 시간·가이던스 상태·checkpoint 경로/저장 검사·실패/중단 이유를
+50,000 ASCII bytes 이내로 출력합니다. 설치 실패도 마지막에 8개 계획값과 미실행 상태를 남깁니다.
+`class_iou_order`와 `trajectory_order`가 해당 배열의 순서를 설명합니다.
+
+출력: `/app/output/cityscapes_ti16_ibkd_l025_grid2000_v1/run_<UTC>_<PID>/`.
+`artifacts/grid_summary.json`은 원래 정밀도의 종합 결과이고, 후보별 폴더에는 `summary.json`,
+`identity.json`, `resume.json`, `checkpoints/`, `steps.jsonl`, `warnings.json`이 있습니다.
+동일 조건 체크는 이번 묶음 내 초기 student/teacher/adapter와 관측한 전체 입력 prefix를 비교합니다.
+
+중단 후 재개할 때는 **이번 2k 실행의 해당 후보 폴더를 운영진을 통해 다음 컨테이너에서
+읽을 수 있는 위치로 복원**해야 합니다. `/app/output`이 다음 작업에 자동으로 보인다고 가정하지 않습니다.
+처음 이슈와 **동일 commit**에서 다음을 지정합니다.
+
+- `CITYSCAPES_TI16_START_CANDIDATE`: 이어서 시작할 후보 번호(1~8).
+- `CITYSCAPES_TI16_RESUME`: 해당 후보의 복원된 `resume.json` 전체 경로.
+  이 pointer는 첫 후보에만 적용하고, 뒤 후보는 새로 학습합니다. 앞서 완료한 후보는 다시 실행하지 않습니다.
+- 시작 전 중단되어 checkpoint가 없으면 `CITYSCAPES_TI16_RESUME`을 지정하지 않습니다.
+  실행한 나머지 후보만 새 종합 결과에 기록하므로 앞선 이슈 결과와 함께 해석합니다.
+- config·코드·데이터·runtime·방법/β가 달라지면 재개를 거부합니다. 500step checkpoint를
+  이 경로로 임의 승격하지 않습니다. 강제 종료 직전 step까지 항상 저장됐다고 가정하지 않습니다.
+
+관련 로컬 검사 **86개 통과**(신규 2k 검사 10개 + 기존 76개).
+작은 CPU 모델에서 실제 공유 학습 루프와 checkpoint 코드를 실행하여, 부분 epoch 중단/재개와
+연속 실행의 입력·student/adapter·SGD momentum·scheduler·controller·평가값 일치를 검사했습니다.
+2k endpoint에 저장 후 평가만 재실행하는 경로, 후보 실패 후 계속 진행, 시간 중단 후 미실행 표시,
+SIGTERM 전달, 설치/child 초기화 실패 종료 로그도 검사했습니다. H200의 2k 결과는 아직 없습니다.
+
+**아래는 완료한 전체 val500 시간 측정 v2 기록**입니다.
+사용자 제공 #838 로그에서 `passed`, 500장, **107.666초**, 스크립트 전체 **448.051초**,
+데이터 준비 **309.948초**, 학습 update0·가중치 무변화·test 미사용을 확인했습니다.
+이 측정은 초기 decoder의 시간 확인용이며, mIoU0.6363%와 accuracy1.2507%는 학습 성능이 아닙니다.
 [고정 설정](configs/val500_timing_initial_v2.json)을 사용합니다.
 
 ```bash
@@ -49,7 +121,7 @@ bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_val500_timing_initial.sh
 `terminal_summary.log`, `per_image_timings.json`, `validation_ids.json`, `warnings.json`,
 `asset_provenance.json`, `data_setup.json`입니다. `CITYSCAPES_TI16_VAL_OUTPUT`으로 출력 위치를 지정할 수 있습니다.
 설치 실패도 마지막 JSON으로 보고하며, 강제 종료로 출력 기회가 없었던 경우까지 보장하지는 않습니다.
-실제 H200 val500 시간은 아직 측정되지 않았으며 이 실행 결과로 확인합니다.
+실제 H200 val500 시간은 위 #838 결과에서 확인했습니다.
 새 경로 검사 6개와 기존 관련 검사 70개, 총 **로컬 검사 76개 통과**했습니다.
 checkpoint·teacher·optimizer 없이 평가하는 분기, ZIP 손상 시 추출 전 중단,
 기존 데이터 재사용, 평가 조건 일치, 초기 가중치 무변화 및 설치 실패 종료 JSON을 검사했습니다.

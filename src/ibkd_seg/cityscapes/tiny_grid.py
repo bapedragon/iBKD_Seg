@@ -164,6 +164,8 @@ def run(args, config, plan, output, report):
 
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise RuntimeError('Expected exactly one visible H200 GPU')
+    if config.get('full_validation_at_endpoint') and 'H200' not in torch.cuda.get_device_name():
+        raise RuntimeError('The 2000-step pack requires an H200, matching the timing estimate')
     if os.environ.get('CUBLAS_WORKSPACE_CONFIG') != ':4096:8':
         raise RuntimeError('Set CUBLAS_WORKSPACE_CONFIG=:4096:8')
     device = torch.device('cuda'); ptu.device = device
@@ -209,12 +211,17 @@ def run(args, config, plan, output, report):
         torch.set_rng_state(saved['torch_rng']); torch.cuda.set_rng_state_all(saved['cuda_rng'])
         report['resume'] = resume_info
         del saved
+    if not 0 <= progress['global_step'] <= config['steps']:
+        raise ValueError('Checkpoint step is outside the configured endpoint')
     report.update(student_initial_state_sha256=initial_student, guidance_initial_state_sha256=initial_guide,
-                  teacher_state_sha256=teacher_hash, environment=environment, ibkd_deterministic_candidate=candidate)
+                  teacher_state_sha256=teacher_hash, environment=environment, ibkd_deterministic_candidate=candidate,
+                  completed_steps=progress['global_step'], last=progress['rows'][-1] if progress['rows'] else None)
     save_json(output / 'identity.json', identity)
     began = time.monotonic()
     torch.cuda.reset_peak_memory_stats()
     last_checkpoint_step = -1
+    should_stop = getattr(args, 'should_stop', lambda: False)
+    paused = False
 
     def checkpoint():
         nonlocal last_checkpoint_step
@@ -274,10 +281,16 @@ def run(args, config, plan, output, report):
     checkpoint()
     with (output / 'steps.jsonl').open('w') as log:
         while progress['global_step'] < config['steps']:
+            if should_stop():
+                paused = True
+                break
             epoch = progress['epoch']
             if progress['beta'] is None:
                 progress['beta'] = controller.beta_for_epoch(epoch)
             for batch in train_loader(datasets['train'], epoch, progress['next_batch'], device):
+                if should_stop():
+                    paused = True
+                    break
                 digest = batch_hash(*batch)
                 report['attempted_step'] = progress['global_step'] + 1
                 start = time.perf_counter()
@@ -290,8 +303,11 @@ def run(args, config, plan, output, report):
                 report.update(completed_steps=progress['global_step'], last=row,
                               completed_epochs=len(progress['completed_epochs']), controller=controller.state_dict())
                 # This compact progress record remains available after an interrupted child.
-                save_json(output / 'progress.json', dict(report, input_hashes=progress['input_hashes'],
-                                                         losses=progress['rows']))
+                if (progress['global_step'] == 1 or ended_epoch or
+                        progress['global_step'] % config.get('progress_every_steps', 1) == 0 or
+                        progress['global_step'] == config['steps']):
+                    save_json(output / 'progress.json', dict(report, input_hashes=progress['input_hashes'],
+                                                             losses=progress['rows']))
                 if progress['global_step'] == 1 or progress['global_step'] % 25 == 0:
                     print(f"[TI16_GRID_STEP] run={plan['id']} step={progress['global_step']}/{config['steps']} "
                           f"epoch={row['epoch']} loss={row['loss']:.6g} ce={row['ce']:.6g} guidance={row['guidance']:.6g} "
@@ -300,6 +316,8 @@ def run(args, config, plan, output, report):
                     checkpoint()
                 if progress['global_step'] >= config['steps']:
                     break
+            if paused:
+                break
             if progress['epoch'] == epoch and progress['global_step'] < config['steps']:
                 raise RuntimeError('Loader exhausted before a complete epoch')
     if last_checkpoint_step != progress['global_step']:
@@ -322,10 +340,46 @@ def run(args, config, plan, output, report):
                   losses=progress['rows'], trajectory=trajectory_summary(progress['rows']),
                   teacher_frozen_verified=True, train_peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   train_wall_seconds=time.monotonic() - began,
-                  median_step_seconds=statistics.median(r['seconds'] for r in progress['rows']),
+                  median_step_seconds=statistics.median(r['seconds'] for r in progress['rows']) if progress['rows'] else None,
                   final_student_sha256=state_hash(model), final_guide_sha256=state_hash(guide),
                   completed_epoch_records=progress['completed_epochs'], next_epoch=progress['epoch'],
-                  next_batch=progress['next_batch'], partial_epoch_samples=progress['samples'])
+                  next_batch=progress['next_batch'], partial_epoch_samples=progress['samples'],
+                  controller=controller.state_dict(),
+                  natural_guidance_off_tested=controller.stop_epoch is not None,
+                  guidance_stop_epoch=controller.stop_epoch,
+                  guidance_stop_step=(None if controller.stop_epoch is None else math.ceil(2975 / 8) * controller.stop_epoch + 1))
+    if paused or should_stop():
+        report.update(status='paused', phase='saved_for_resume', pause_reason='time_budget_or_signal',
+                      selected_step=None, selected_epoch=None, full_validation=False, validation_samples=0)
+        return
+    if config.get('full_validation_at_endpoint'):
+        from .tiny_val_timing import evaluate, ValidationInterrupted
+        model.eval()
+        optimizer.zero_grad(set_to_none=True)
+        torch.set_num_threads(config['evaluation_cpu_threads'])
+        report['phase'] = 'full_validation'
+        def val_progress(n, seconds):
+            report.update(validation_samples=n, partial_validation_seconds=seconds)
+            save_json(output / 'progress.json', report)
+            print(f'[TI16_GRID2000_VAL] run={plan["id"]} samples={n}/500 seconds={seconds:.3f}', flush=True)
+        try:
+            result = evaluate(model, datasets['val'], inference, config, torch.cuda.synchronize,
+                              val_progress, should_stop=should_stop)
+        except ValidationInterrupted as error:
+            report.update(status='paused', phase='validation_pending', pause_reason=str(error),
+                          selected_step=None, selected_epoch=None, full_validation=False,
+                          diagnostic_metrics=None)
+            return
+        save_json(output / 'per_image_timings.json', result.pop('per_image_timings'))
+        scores = result.pop('metrics')
+        report.update(result, diagnostic_metrics=scores, full_validation=True,
+                      student_unchanged_during_validation=state_hash(model) == report['final_student_sha256'])
+        if not report['student_unchanged_during_validation']:
+            raise RuntimeError('Validation modified student weights')
+        report.update(status='passed', phase='complete', stability='finite_2000_updates_completed_not_80k_guarantee',
+                      selected_step=config['steps'], selected_epoch=progress['rows'][-1]['epoch'],
+                      selection_rule='fixed_2000_endpoint_not_best_checkpoint')
+        return
     report['phase'] = 'diagnostic_validation'
     model.eval()
     matrix = torch.zeros(19, 19, dtype=torch.int64)
