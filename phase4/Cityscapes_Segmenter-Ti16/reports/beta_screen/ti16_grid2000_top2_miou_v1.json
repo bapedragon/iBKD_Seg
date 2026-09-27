@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "selection_id": "cityscapes_ti16_grid2000_top2_miou_v1",
+  "decision_date": "2026-09-27",
+  "status": "recommended_for_10000_step_followup",
+  "decision_source": "User explicitly corrected primary candidate-selection metric to mIoU and requested two candidates per method.",
+  "selection_metric": "miou",
+  "selection_rule": "descending_full_val500_miou_at_fixed_2000_step_endpoint",
+  "secondary_metric": "pixel_accuracy_report_only",
+  "selected_per_group": 2,
+  "total_followup_runs": 8,
+  "student": "Segmenter-Ti/16",
+  "teacher": "openmmlab_deeplabv3_r101_d8_cityscapes_80k",
+  "screen_seed": 1,
+  "screen_steps": 2000,
+  "validation_samples": 500,
+  "test_used": false,
+  "groups": [
+    {
+      "group": "lg",
+      "method": "lg",
+      "lambda_value": null,
+      "tested_candidate_count": 8,
+      "source_summary": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_lg_alg_grid2000/beta_screen_summary.json",
+      "source_summary_sha256": "b99abb7da5dc0c41024f62f67e0980986e1a47aa955c3ae6348b7ed3e1fc5ec1",
+      "ranking_by_miou": [
+        7,
+        1,
+        6,
+        3,
+        2,
+        8,
+        4,
+        5
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "candidate": 7,
+          "run_id": "lg_b7",
+          "beta": 0.11195046919685056,
+          "lambda_value": null,
+          "screen_miou_pct": 39.137,
+          "screen_pixel_accuracy_pct": 88.7807
+        },
+        {
+          "rank": 2,
+          "candidate": 1,
+          "run_id": "lg_b1",
+          "beta": 0.009329205766404213,
+          "lambda_value": null,
+          "screen_miou_pct": 39.055,
+          "screen_pixel_accuracy_pct": 87.6795
+        }
+      ],
+      "miou_gap_second_to_third_percentage_points": 0.8214
+    },
+    {
+      "group": "alg",
+      "method": "alg",
+      "lambda_value": null,
+      "tested_candidate_count": 8,
+      "source_summary": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_lg_alg_grid2000/beta_screen_summary.json",
+      "source_summary_sha256": "b99abb7da5dc0c41024f62f67e0980986e1a47aa955c3ae6348b7ed3e1fc5ec1",
+      "ranking_by_miou": [
+        7,
+        1,
+        6,
+        3,
+        2,
+        8,
+        4,
+        5
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "candidate": 7,
+          "run_id": "alg_b7",
+          "beta": 0.11195046919685056,
+          "lambda_value": null,
+          "screen_miou_pct": 39.137,
+          "screen_pixel_accuracy_pct": 88.7807
+        },
+        {
+          "rank": 2,
+          "candidate": 1,
+          "run_id": "alg_b1",
+          "beta": 0.009329205766404213,
+          "lambda_value": null,
+          "screen_miou_pct": 39.055,
+          "screen_pixel_accuracy_pct": 87.6795
+        }
+      ],
+      "miou_gap_second_to_third_percentage_points": 0.8214
+    },
+    {
+      "group": "ibkd_l025",
+      "method": "ibkd",
+      "lambda_value": 0.25,
+      "tested_candidate_count": 8,
+      "source_summary": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_ibkd_lambda0p25_grid2000/beta_screen_summary.json",
+      "source_summary_sha256": "a8e3696adab36ab1e2d59ac941307f58b6bb853bc0afe1701607df1affcf9047",
+      "ranking_by_miou": [
+        1,
+        7,
+        2,
+        5,
+        8,
+        4,
+        3,
+        6
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "candidate": 1,
+          "run_id": "ibkd_l025_b1",
+          "beta": 0.02461834122158468,
+          "lambda_value": 0.25,
+          "screen_miou_pct": 37.3437,
+          "screen_pixel_accuracy_pct": 87.3338
+        },
+        {
+          "rank": 2,
+          "candidate": 7,
+          "run_id": "ibkd_l025_b7",
+          "beta": 0.29542009465901614,
+          "lambda_value": 0.25,
+          "screen_miou_pct": 37.1969,
+          "screen_pixel_accuracy_pct": 86.6556
+        }
+      ],
+      "miou_gap_second_to_third_percentage_points": 0.0357
+    },
+    {
+      "group": "ibkd_l050",
+      "method": "ibkd",
+      "lambda_value": 0.5,
+      "tested_candidate_count": 4,
+      "source_summary": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_ibkd_lambda0p5_grid2000_4betas/beta_screen_summary.json",
+      "source_summary_sha256": "9025838f89ea395cb414c0a154cf08d478b22a4226ccdbeb73e3436e9d75fc45",
+      "ranking_by_miou": [
+        1,
+        6,
+        3,
+        8
+      ],
+      "selected": [
+        {
+          "rank": 1,
+          "candidate": 1,
+          "run_id": "ibkd_l050_b1",
+          "beta": 0.03668347229720436,
+          "lambda_value": 0.5,
+          "screen_miou_pct": 37.4001,
+          "screen_pixel_accuracy_pct": 86.5971
+        },
+        {
+          "rank": 2,
+          "candidate": 6,
+          "run_id": "ibkd_l050_b6",
+          "beta": 0.2934677783776349,
+          "lambda_value": 0.5,
+          "screen_miou_pct": 36.2344,
+          "screen_pixel_accuracy_pct": 87.5054
+        }
+      ],
+      "miou_gap_second_to_third_percentage_points": 1.1671
+    }
+  ],
+  "historical_primary_metric": "pixel_accuracy",
+  "historical_run_configs_and_terminal_reports_modified": false,
+  "training_launched": false,
+  "runnable_training_config": false,
+  "limitations": [
+    "Selection uses a single-seed early screen, not a guarantee of optimal 10000/80000-step performance.",
+    "iBKD lambda0.5 was screened on candidates1,3,6,8 only; candidates2,4,5,7 remain untested at2000.",
+    "iBKD lambda0.25 second vs third differs by0.0357 percentage points.",
+    "LG and ALG must retain separate followup runs because the ALG controller may stop guidance later."
+  ]
+}
