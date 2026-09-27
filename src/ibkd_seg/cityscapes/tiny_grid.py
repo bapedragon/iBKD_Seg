@@ -227,7 +227,7 @@ def run(args, config, plan, output, report):
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise RuntimeError('Expected exactly one visible H200 GPU')
     if config.get('full_validation_at_endpoint') and 'H200' not in torch.cuda.get_device_name():
-        raise RuntimeError('The 2000-step pack requires an H200, matching the timing estimate')
+        raise RuntimeError('The full-val pack requires an H200, matching the timing estimate')
     if os.environ.get('CUBLAS_WORKSPACE_CONFIG') != ':4096:8':
         raise RuntimeError('Set CUBLAS_WORKSPACE_CONFIG=:4096:8')
     device = torch.device('cuda'); ptu.device = device
@@ -241,7 +241,11 @@ def run(args, config, plan, output, report):
     model = api.student(args.cache_root, backbone=config['student_backbone'], image_size=config['crop_size'],
                         decoder_layers=config['decoder_layers'], recompute=config['gradient_checkpointing']).to(device).train()
     fixed = None
-    if plan['method'] in ('fskd', 'c2vkd'):
+    vanilla = plan['method'] == 'vanilla'
+    teacher = guide = capture = None
+    if vanilla:
+        pass
+    elif plan['method'] in ('fskd', 'c2vkd'):
         from .tiny_fixed import FixedRecipe
         teacher = api.teacher(args.cache_root).to(device)
         seed_all(config['seed'] + 1000)
@@ -255,11 +259,17 @@ def run(args, config, plan, output, report):
     candidate = apply_deterministic_candidate(guide) if plan['method'] == 'ibkd' else None
     if candidate is not None and not candidate['applied']:
         raise RuntimeError('iBKD deterministic candidate was not applied')
-    guide = guide.to(device).train()
-    if fixed is None:
+    if guide is not None:
+        guide = guide.to(device).train()
+    if fixed is None and not vanilla:
         teacher = api.teacher(args.cache_root).to(device)
         capture = api.FeatureCapture(model)
-    initial_student, initial_guide, teacher_hash = state_hash(model), state_hash(guide), state_hash(teacher)
+    initial_student = state_hash(model)
+    initial_guide = None if guide is None else state_hash(guide)
+    teacher_hash = None if teacher is None else state_hash(teacher)
+    guide_state = lambda: None if guide is None else guide.state_dict()
+    report.update(teacher_loaded=teacher is not None,guidance_loaded=guide is not None,
+                  target_steps=config['steps'])
     optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root, total_steps=config['total_steps'])
     if scheduler.iter_max != 80000 or not optimizer.defaults['nesterov']:
         raise RuntimeError('Unexpected 80k Nesterov SGD schedule')
@@ -280,7 +290,11 @@ def run(args, config, plan, output, report):
     progress = initial_progress()
     if args.resume:
         saved, resume_info = load_checkpoint(args.resume, identity, output)
-        model.load_state_dict(saved['model'], strict=True); guide.load_state_dict(saved['guide'], strict=True)
+        model.load_state_dict(saved['model'], strict=True)
+        if guide is not None:
+            guide.load_state_dict(saved['guide'], strict=True)
+        elif saved['guide'] is not None:
+            raise ValueError('Vanilla checkpoint must not contain guidance state')
         optimizer.load_state_dict(saved['optimizer']); scheduler.load_state_dict(saved['scheduler'])
         restore_controller(controller, saved['controller']); progress = saved['progress']
         random.setstate(saved['python_rng'])
@@ -306,7 +320,7 @@ def run(args, config, plan, output, report):
         if not all(bool(torch.isfinite(t).all()) for t in tensors):
             raise FloatingPointError('Nonfinite parameter/optimizer state; previous recovery checkpoint retained')
         rng = np.random.get_state()
-        payload = dict(signature=identity, model=model.state_dict(), guide=guide.state_dict(),
+        payload = dict(signature=identity, model=model.state_dict(), guide=guide_state(),
                        optimizer=optimizer.state_dict(), scheduler=scheduler.state_dict(), controller=controller_state(),
                        progress=progress, python_rng=random.getstate(), numpy_rng=(rng[0], rng[1].tolist(), *rng[2:]),
                        torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all())
@@ -361,7 +375,7 @@ def run(args, config, plan, output, report):
                 raise RuntimeError('Missing active-module gradient')
             if fixed is not None:
                 fixed.check_gradients()
-        if any(p.grad is not None for p in teacher.parameters()):
+        if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
             raise RuntimeError('Frozen teacher received gradients')
         if fixed is not None:
             fixed.check_frozen()
@@ -390,7 +404,7 @@ def run(args, config, plan, output, report):
                 break
             epoch = progress['epoch']
             if progress['beta'] is None:
-                progress['beta'] = 1. if fixed is not None else controller.beta_for_epoch(epoch)
+                progress['beta'] = 1. if fixed is not None else 0. if controller is None else controller.beta_for_epoch(epoch)
             for batch in train_loader(datasets['train'], epoch, progress['next_batch'], device):
                 if should_stop():
                     paused = True
@@ -405,7 +419,7 @@ def run(args, config, plan, output, report):
                         report['failure_observation'] = dict(report.pop('step_observation', {}), input_sha256=digest)
                         report.update(input_hashes=progress['input_hashes'], losses=progress['rows'],
                                       trajectory=trajectory_summary(progress['rows']),
-                                      teacher_frozen_verified=state_hash(teacher) == teacher_hash,
+                                      teacher_frozen_verified=None if teacher is None else state_hash(teacher) == teacher_hash,
                                       controller=controller_state(), train_wall_seconds=time.monotonic()-began)
                     raise
                 report.pop('step_observation', None)
@@ -439,14 +453,14 @@ def run(args, config, plan, output, report):
                 raise RuntimeError('Loader exhausted before a complete epoch')
     if last_checkpoint_step != progress['global_step']:
         checkpoint()
-    if state_hash(teacher) != teacher_hash:
+    if teacher is not None and state_hash(teacher) != teacher_hash:
         raise RuntimeError('Teacher weights/BN changed')
     if fixed is not None:
         report.update(fixed.metadata(final=True))
     # Read verified saved tensors and compare every persisted optimizer/module state.
     report['phase'] = 'checkpoint_roundtrip'
     saved, reload_info = load_checkpoint(output / 'resume.json', identity, output)
-    for actual, restored in ((model.state_dict(), saved['model']), (guide.state_dict(), saved['guide']),
+    for actual, restored in ((model.state_dict(), saved['model']), (guide_state(), saved['guide']),
                              (optimizer.state_dict(), saved['optimizer']), (scheduler.state_dict(), saved['scheduler'])):
         assert_state_close(actual, restored, rtol=0, atol=0)
     if tree_hash(saved['progress']) != tree_hash(progress) or saved['controller'] != controller_state():
@@ -457,17 +471,18 @@ def run(args, config, plan, output, report):
                                    scope='complete_training_state_saved_not_a_long_run_resume_test'),
                   input_hashes=progress['input_hashes'], input_sha256=json_hash(progress['input_hashes']),
                   losses=progress['rows'], trajectory=trajectory_summary(progress['rows']),
-                  teacher_frozen_verified=True, train_peak_allocated_bytes=torch.cuda.max_memory_allocated(),
+                  teacher_frozen_verified=None if teacher is None else True,
+                  train_peak_allocated_bytes=torch.cuda.max_memory_allocated(),
                   train_wall_seconds=time.monotonic() - began,
                   median_step_seconds=statistics.median(r['seconds'] for r in progress['rows']) if progress['rows'] else None,
-                  final_student_sha256=state_hash(model), final_guide_sha256=state_hash(guide),
+                  final_student_sha256=state_hash(model), final_guide_sha256=None if guide is None else state_hash(guide),
                   completed_epoch_records=progress['completed_epochs'], next_epoch=progress['epoch'],
                   next_batch=progress['next_batch'], partial_epoch_samples=progress['samples'],
                   controller=controller_state(),
                   natural_guidance_off_tested=controller is not None and controller.stop_epoch is not None,
                   guidance_stop_epoch=None if controller is None else controller.stop_epoch,
                   guidance_stop_step=(None if controller is None or controller.stop_epoch is None
-                                      else math.ceil(2975 / 8) * controller.stop_epoch + 1))
+                                      else math.ceil(config['train_samples'] / config['batch_size']) * controller.stop_epoch + 1))
     if paused or should_stop():
         report.update(status='paused', phase='saved_for_resume', pause_reason='time_budget_or_signal',
                       selected_step=None, selected_epoch=None, full_validation=False, validation_samples=0)
@@ -481,7 +496,8 @@ def run(args, config, plan, output, report):
         def val_progress(n, seconds):
             report.update(validation_samples=n, partial_validation_seconds=seconds)
             save_json(output / 'progress.json', report)
-            print(f'[TI16_GRID2000_VAL] run={plan["id"]} samples={n}/500 seconds={seconds:.3f}', flush=True)
+            tag=config.get('validation_log_tag','TI16_GRID2000_VAL')
+            print(f'[{tag}] run={plan["id"]} samples={n}/{config["validation_samples"]} seconds={seconds:.3f}', flush=True)
         try:
             result = evaluate(model, datasets['val'], inference, config, torch.cuda.synchronize,
                               val_progress, should_stop=should_stop)
@@ -496,9 +512,9 @@ def run(args, config, plan, output, report):
                       student_unchanged_during_validation=state_hash(model) == report['final_student_sha256'])
         if not report['student_unchanged_during_validation']:
             raise RuntimeError('Validation modified student weights')
-        report.update(status='passed', phase='complete', stability='finite_2000_updates_completed_not_80k_guarantee',
+        report.update(status='passed', phase='complete', stability=f"finite_{config['steps']}_updates_completed_not_80k_guarantee",
                       selected_step=config['steps'], selected_epoch=progress['rows'][-1]['epoch'],
-                      selection_rule='fixed_2000_endpoint_not_best_checkpoint')
+                      selection_rule=f"fixed_{config['steps']}_endpoint_not_best_checkpoint")
         return
     report['phase'] = 'diagnostic_validation'
     model.eval()
@@ -518,9 +534,10 @@ def run(args, config, plan, output, report):
                   selected_step=config['steps'], selected_epoch=progress['rows'][-1]['epoch'],
                   selection_rule=f"fixed_{config['steps']}_endpoint_not_best_checkpoint", validation_ids=val_ids,
                   validation_samples=len(val_ids), diagnostic_metrics=scores, full_validation=False,
-                  natural_guidance_off_tested=controller.stop_epoch is not None,
-                  guidance_stop_epoch=controller.stop_epoch,
-                  guidance_stop_step=(None if controller.stop_epoch is None else math.ceil(2975 / 8) * controller.stop_epoch + 1))
+                  natural_guidance_off_tested=controller is not None and controller.stop_epoch is not None,
+                  guidance_stop_epoch=None if controller is None else controller.stop_epoch,
+                  guidance_stop_step=(None if controller is None or controller.stop_epoch is None
+                                      else math.ceil(config['train_samples'] / config['batch_size']) * controller.stop_epoch + 1))
 
 
 def compact(row):

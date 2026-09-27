@@ -29,11 +29,70 @@ LG·ALG·iBKD의 후속 후보는 아래 **mIoU 기준 상위 2개씩, 총 8개*
 [고정 비교군 결과](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/RESULTS.md)에 정리했습니다.
 기존 β 후보 28개와 고정 비교군 2개를 합쳐 **총 30개의 2k 실행이 완료**됐습니다.
 실행·수치 검사는 통과했지만 특히 C2VKD*는 15개 클래스 IoU가 0으로 초기 성능이 낮습니다.
-다음 10k 실험은 별도 구성하며 자동 진입하지 않습니다.
+다음 실행은 **Vanilla 2k → ALG 1위 10k → iBKD λ0.25 1위 10k**의 3개 묶음으로 준비했습니다.
+아래 명령을 사용자가 실행해야 시작하며 자동 진입하지 않습니다.
 λ0.5의 생략 후보 2·4·5·7번은 실패한 것이 아닙니다.
 Tiny 10k 결과는 아직 없으며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
+
+## 다음 실행: Vanilla 2k + ALG·iBKD λ0.25 각 1위 10k
+
+2026-09-28 사용자 요청으로 10시간 이내 완료를 목표로 구성했습니다. **아직 H200 실행 결과는 없습니다.**
+[고정 설정](configs/followup10k_alg_ibkd025_top1_vanilla2k_v1.json)과
+[실행 스크립트](scripts/run_followup10k_alg_ibkd025_top1_vanilla2k.sh)를 사용합니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_followup10k_alg_ibkd025_top1_vanilla2k.sh
+```
+
+| 실행 순서 | 방법 | 기존 후보 번호 | β | 학습 범위 | 학습+전체 val 예상 |
+|---|---|---:|---:|---|---|
+| 1 | Vanilla | — | 0 | 0→2,000step | 약 27분 |
+| 2 | ALG | 7 | 0.11195046919685056 | 0→10,000step | 약 2시간 41분 |
+| 3 | iBKD λ0.25 | 1 | 0.02461834122158468 | 0→10,000step | 약 5시간 29분 |
+
+ALG와 iBKD는 **기존 2k 전체 val500 mIoU 1위**를 선택했습니다. 선정 기록의 SHA-256과 β를
+config에 고정하며 초기 비율을 다시 측정하지 않습니다. 짧은 Vanilla를 먼저 끝낸 뒤 긴 실행을
+진행합니다. 세 실행 모두 seed1·동일 초기 student에서 새로 시작하며 **이전 2k checkpoint가 필요 없습니다.**
+기존 checkpoint에 8,000step을 추가하는 실행이 아닙니다.
+
+- Tiny/16·decoder1·OpenMMLab DeepLabV3-R101 teacher·fine train2975·crop512·batch8·FP32·
+  SGD LR0.01·**80,000step LR schedule**을 유지합니다. 10k 종료에 맞춰 LR schedule을 줄이지 않습니다.
+  Vanilla는 teacher와 guidance를 로드하지 않고 CE로만 학습합니다.
+- **ALG warm-up=0, iBKD warm-up=20epoch**를 유지합니다. epoch당 372step으로,
+  조건을 만족할 경우 가장 이른 가이던스 종료 적용 step은 각각 745·7,441입니다.
+  이 step에 반드시 끄는 것이 아니며 실제 종료 여부·epoch·step을 기록합니다.
+- 각 실행의 **고정 마지막 step**에서 원본 해상도 전체 val500을 한 번 평가합니다.
+  1차 지표는 **mIoU**, 보조 지표는 pixel accuracy이며 19개 class IoU도 기록합니다.
+  Vanilla 2k는 기존 2k 결과와 비교하며, 이번 KD 10k와 같은 학습량의 최종 비교로 해석하지 않습니다.
+- 기존 연결 smoke·2k 검사를 통과한 경로이므로 추가 H200 smoke 없이 실행합니다.
+  새 묶음, CE 단독 학습, controller 종료 전후의 중단/재개, 기존 2k·500step 경로를 포함한
+  **로컬 검사 57개를 통과**했습니다. 이는 실제 H200 10k 학습의 안정성을 보장하는 결과는 아닙니다.
+- 기존 2k 시간에서 가이던스를 끝까지 유지한다고 계산한 학습+val 합계는 **약 8시간 37분**입니다.
+  Vanilla는 짧은 smoke의 update 속도와 기존 입력 처리 비용을 이용한 추정입니다.
+  준비·실행 편차를 포함해 **약 9시간을 예상**하지만 10시간 이내 완료가 보장되지는 않습니다.
+  스크립트 시작 기준 **9시간 58분에 중단을 요청하고 마지막 120초를 저장 여유**로 둡니다.
+  플랫폼의 시작/마감 시각은 `CITYSCAPES_TI16_JOB_STARTED` / `CITYSCAPES_TI16_JOB_DEADLINE`으로
+  전달할 수 있습니다. 별도 짧은 시간 상한은 없습니다.
+- 250step·epoch 경계·최종·시간 중단 시 optimizer·RNG·controller·진행 중 epoch 상태까지 저장합니다.
+  시간 중단이면 다음 방법을 시작하지 않습니다. 수치 오류는 해당 방법의 실패로 기록하고
+  남은 방법을 수행합니다. 미완료 평가 수치를 완료 결과로 채우지 않습니다.
+- 중간 로그를 유지하며 마지막 **`[CITYSCAPES_TI16_FOLLOWUP_FINAL]`**에 세 실행의 상태,
+  β·λ·목표/완료/선택 step·epoch, loss·CE·guidance·mIoU·accuracy·19 IoU, controller 상태와
+  종료 step, 공통 입력/초기값 검사, checkpoint 경로, 시간·경고·실패 이유를 모읍니다.
+  종료 JSON은 50,000 ASCII byte 이내이며 긴 오류를 포함한 로컬 검사에서는 약 7,300 bytes였습니다.
+
+출력: `/app/output/cityscapes_ti16_alg_ibkd025_top1_10k_vanilla2k_v1/run_<UTC>_<PID>/`.
+`artifacts/grid_summary.json`이 통합 결과이며 `artifacts/vanilla_2k/`, `artifacts/alg_b7/`,
+`artifacts/ibkd_l025_b1/`에 요약·step 이력·`resume.json`·checkpoint가 남습니다.
+**출력 폴더 전체를 보관**합니다. 서버 경로가 다음 이슈에도 남아 있다고 가정하지 않습니다.
+
+시간 중단 후에는 동일 commit·설정·데이터·실행 환경에서 해당 실행 폴더를 복원하고,
+`CITYSCAPES_TI16_START_RUN=1/2/3`으로 위 순서를 선택한 뒤 `CITYSCAPES_TI16_RESUME`에
+복원된 `resume.json`을 지정합니다. 재개 pointer는 첫 실행에만 적용되고 뒤의 실행은 새로 시작합니다.
+**다른 설정의 2k checkpoint를 이 묶음의 10k로 전환하거나 80k로 자동 진행하지 않습니다.**
+상위 후보 8개 중 이번에 준비한 것은 ALG 1위·λ0.25 1위의 두 개이며 나머지 여섯 개는 후속 계획입니다.
 
 ## 완료: FSKD*·C2VKD* 각 2,000step
 
@@ -92,7 +151,8 @@ pool 동결·중단/재개 상태 일치를 검사하고, 기존 FSKD/C2VKD 손�
 
 **2026-09-27 사용자 정정: 후속 β 후보 선정의 1차 기준은 전체 val500의 mIoU이며,
 pixel accuracy는 보조 지표입니다.** 아래는 고정 2,000step 결과에서 mIoU가 높은 두 후보입니다.
-λ0.5는 수행한 네 후보 안에서의 순위입니다. 후속 실행 설정은 아직 없으며 H200 학습을 시작하지 않았습니다.
+λ0.5는 수행한 네 후보 안에서의 순위입니다. **ALG 1위·λ0.25 1위의 10k 실행 설정만 위 묶음으로
+준비**했으며, 나머지 여섯 후보는 아직 후속 계획입니다. Tiny 10k의 H200 결과는 아직 없습니다.
 
 | 실험군 | 2k 비교 수 | mIoU 1위 β | mIoU (%) | mIoU 2위 β | mIoU (%) |
 |---|---:|---:|---:|---:|---:|

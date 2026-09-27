@@ -226,7 +226,16 @@ class TinyScreenTrainingTests(unittest.TestCase):
     def test_c2vkd_real_loop_preserves_no_extra_ce_frozen_pool_and_resume(self):
         self.check_real_loop(screen.FIXED_CONFIG,fixed_method='c2vkd')
 
-    def check_real_loop(self, config_path, *, fixed_method=None):
+    def test_vanilla_real_loop_never_loads_teacher_and_resumes_ce_only(self):
+        self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='vanilla')
+
+    def test_alg_real_loop_resume_crosses_guidance_off_with_warmup0(self):
+        self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='alg')
+
+    def test_ibkd_real_loop_resume_crosses_warmup20_and_keeps_ce_after_shutdown(self):
+        self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='ibkd')
+
+    def check_real_loop(self, config_path, *, fixed_method=None,followup_method=None):
         # Execute the shared production training loop/checkpoint code on small CPU modules.
         # No H200 speed or large-model numeric claim is inferred from this test.
         class Student(torch.nn.Module):
@@ -240,6 +249,9 @@ class TinyScreenTrainingTests(unittest.TestCase):
                 super().__init__();self.weight=torch.nn.Parameter(torch.ones(()))
             def forward(self,features,teacher):
                 z=self.weight.square()*features[0].square().mean()
+                if followup_method:
+                    z=self.weight.square()*.1
+                    if followup_method=='alg': return z
                 return z,z*.5
         class Teacher(torch.nn.Module):
             def __init__(self):
@@ -297,12 +309,15 @@ class TinyScreenTrainingTests(unittest.TestCase):
             def state_dict(self): return {'last_epoch':self.last_epoch}
             def load_state_dict(self,s): self.last_epoch=s['last_epoch']
         def optimizer(model,guide,*args,**kwargs):
-            return torch.optim.SGD(list(model.parameters())+list(guide.parameters()),lr=.001,momentum=.9,nesterov=True),Scheduler()
+            parameters=list(model.parameters())+([] if guide is None else list(guide.parameters()))
+            return torch.optim.SGD(parameters,lr=.001,momentum=.9,nesterov=True),Scheduler()
         # Import optimizer internals before replacing torch.device for the CUDA-only entry point.
         torch.optim.SGD(Student().parameters(),lr=.001)
         config=screen.load_config(config_path)
-        config.update(steps=8,train_samples=10,batch_size=4,validation_samples=3,original_target_hw=[1,19])
-        plan=next(p for p in config['runs'] if p['method']==fixed_method) if fixed_method else config['runs'][0]
+        endpoint=70 if followup_method in ('alg','ibkd') else 8
+        config.update(steps=endpoint,train_samples=10,batch_size=4,validation_samples=3,original_target_hw=[1,19])
+        selected_method=fixed_method or followup_method
+        plan=next(p for p in config['runs'] if p['method']==selected_method) if selected_method else config['runs'][0]
         modules={n:types.ModuleType(n) for n in ('segm','segm.utils','segm.utils.torch','segm.model','segm.model.utils')}
         modules['segm'].utils=modules['segm.utils']; modules['segm.utils'].torch=modules['segm.utils.torch']
         modules['segm.model.utils'].inference=lambda model,ims,*a,**k:model(ims[0])[0]
@@ -316,9 +331,10 @@ class TinyScreenTrainingTests(unittest.TestCase):
                                ('get_rng_state_all',[]),('set_rng_state_all',None),('manual_seed_all',None),
                                ('synchronize',None),('reset_peak_memory_stats',None),('max_memory_allocated',123)]:
                 stack.enter_context(patch('torch.cuda.'+name,return_value=value))
+            mocks={}
             for name,value in [('student',lambda *a,**k:Student()),('guidance',lambda *a:Guide()),
                                ('teacher',lambda *a:Teacher()),('FeatureCapture',FixedCapture if fixed_method else Capture),('optimizer_scheduler',optimizer)]:
-                stack.enter_context(patch('ibkd_seg.cityscapes.official_api.'+name,side_effect=value))
+                mocks[name]=stack.enter_context(patch('ibkd_seg.cityscapes.official_api.'+name,side_effect=value))
             if fixed_method:
                 Teacher.decode_head=lambda self,features:features[0][:,:1].expand(-1,19,-1,-1)
                 stack.enter_context(patch('ibkd_seg.cityscapes.official_api.teacher_input',side_effect=lambda x:x))
@@ -341,6 +357,17 @@ class TinyScreenTrainingTests(unittest.TestCase):
                 payload=torch.load(output/pointer['current']['file'],weights_only=True)
                 return report,payload,output/'resume.json'
             full,full_state,_=execute('full')
+            if followup_method=='vanilla':
+                mocks['teacher'].assert_not_called();mocks['guidance'].assert_not_called()
+                self.assertFalse(full['teacher_loaded']);self.assertFalse(full['guidance_loaded'])
+                self.assertIsNone(full['teacher_frozen_verified']);self.assertIsNone(full_state['guide'])
+                self.assertTrue(all(r['loss']==r['ce'] and r['guidance']==0 for r in full['losses']))
+            if followup_method in ('alg','ibkd'):
+                stop_epoch=2 if followup_method=='alg' else 20
+                self.assertEqual(full['guidance_stop_epoch'],stop_epoch)
+                self.assertEqual(full['guidance_stop_step'],stop_epoch*3+1)
+                self.assertTrue(all(r['beta']>0 for r in full['losses'][:stop_epoch*3]))
+                self.assertTrue(all(r['beta']==0 and r['loss']==r['ce'] for r in full['losses'][stop_epoch*3:]))
             for row in full['losses']:
                 if fixed_method:
                     coefficients=config[fixed_method]['coefficients']
@@ -349,27 +376,34 @@ class TinyScreenTrainingTests(unittest.TestCase):
                     self.assertIsNone(row['beta'])
                     self.assertEqual(row['guidance_multiplier'],1.)
                     continue
+                if followup_method in ('vanilla','alg'):
+                    self.assertAlmostEqual(row['loss'],row['ce']+row['beta']*row['guidance'],places=6)
+                    continue
                 expected=(1-plan['lambda'])*row['alignment']+plan['lambda']*row['fusion']
                 self.assertAlmostEqual(row['guidance'],expected,places=6)
-                self.assertAlmostEqual(row['loss'],row['ce']+plan['beta']*expected,places=6)
+                self.assertAlmostEqual(row['loss'],row['ce']+row['beta']*expected,places=6)
             if fixed_method:
                 self.assertIsNone(full['controller'])
                 self.assertFalse(full['natural_guidance_off_tested'])
                 self.assertEqual(full['fixed_loss_coefficients'],config[fixed_method]['coefficients'])
                 self.assertTrue(all(e['beta'] is None for e in full['completed_epoch_records']))
                 if fixed_method=='c2vkd': self.assertTrue(full['clip_pool']['frozen_no_grad_unchanged'])
-            paused,paused_state,pointer=execute('paused',pause_step=4)
+            pause_at=58 if followup_method=='ibkd' else 4
+            paused,paused_state,pointer=execute('paused',pause_step=pause_at)
             self.assertEqual(paused['status'],'paused')
-            self.assertEqual(paused['completed_steps'],4)
+            self.assertEqual(paused['completed_steps'],pause_at)
             self.assertIsNone(paused['selected_step'])
             self.assertFalse(paused['full_validation'])
             resumed,resumed_state,_=execute('resumed',resume=pointer)
             self.assertEqual(resumed['status'],'passed')
-            self.assertEqual(resumed['selected_step'],8)
+            self.assertEqual(resumed['selected_step'],endpoint)
+            self.assertEqual(resumed['selection_rule'],f'fixed_{endpoint}_endpoint_not_best_checkpoint')
             self.assertEqual(resumed['validation_samples'],3)
             self.assertTrue(resumed['student_unchanged_during_validation'])
             self.assertEqual(resumed['input_hashes'],full['input_hashes'])
             for section in ('model','guide'):
+                if full_state[section] is None:
+                    self.assertIsNone(resumed_state[section]);continue
                 for k,v in full_state[section].items(): torch.testing.assert_close(v,resumed_state[section][k],rtol=0,atol=0)
             self.assertEqual(full_state['scheduler'],resumed_state['scheduler'])
             self.assertEqual(full_state['controller'],resumed_state['controller'])
@@ -377,8 +411,8 @@ class TinyScreenTrainingTests(unittest.TestCase):
             self.assertEqual(paused_state['progress']['next_batch'],1)
             from ibkd_seg.cityscapes.tiny_smoke import assert_state_close
             assert_state_close(full_state['optimizer'],resumed_state['optimizer'],rtol=0,atol=0)
-            endpoint_paused,_,pointer=execute('endpoint_paused',pause_step=8)
-            self.assertEqual(endpoint_paused['completed_steps'],8)
+            endpoint_paused,_,pointer=execute('endpoint_paused',pause_step=endpoint)
+            self.assertEqual(endpoint_paused['completed_steps'],endpoint)
             self.assertEqual(endpoint_paused['status'],'paused')
             self.assertFalse(endpoint_paused['full_validation'])
             endpoint_resumed,_,_=execute('endpoint_resumed',resume=pointer)
