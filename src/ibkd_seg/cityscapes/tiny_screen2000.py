@@ -20,13 +20,32 @@ CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v2.json'
 LEGACY_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
 LG_ALG_CONFIG=CONFIG_DIR/'beta_grid2000_lg_alg_v1.json'
 IBKD050_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l050_4betas_v1.json'
+FIXED_CONFIG=CONFIG_DIR/'baseline_grid2000_fskd_c2vkd_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG) if p.name==path.name),None)
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG) if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny 2000-step pack config')
+    if locked==FIXED_CONFIG:
+        original=load_config(CONFIG)
+        changed={'protocol_id','pack','run_kind','runs','ibkd_lambdas','beta_multipliers',
+                 'beta_initial_ce_ratio','beta_status','selection_metric','secondary_metric',
+                 'start_policy','continuation_policy'}
+        if (set(config)!=set(original)|{'fskd','c2vkd'} or
+                any(config[k]!=v for k,v in original.items() if k not in changed)):
+            raise ValueError('Fixed baseline common training or evaluation protocol drift')
+        smoke=json.loads((CONFIG_DIR/'smoke25_fskd_c2vkd_v3.json').read_text())
+        expected=[dict(p,run_index=i+1,candidate=None,beta=None,initial_target_ratio=None)
+                  for i,p in enumerate(p for p in smoke['runs'] if p['method'] in ('fskd','c2vkd'))]
+        expected[0]['comparison_group']='primary_common_pretraining'
+        if (config['runs']!=expected or config['pack']!='fskd_c2vkd' or
+                any(config[k]!=smoke[k] for k in ('fskd','c2vkd')) or
+                config['beta_multipliers'] or config['beta_initial_ce_ratio'] is not None or
+                config['selection_metric']!='miou'):
+            raise ValueError('FSKD*/C2VKD* must preserve the smoke recipes, without beta tuning')
+        return config
     if locked==IBKD050_CONFIG:
         original=load_config(CONFIG)
         changed={'protocol_id','pack','runs','ibkd_lambdas','beta_multipliers','continuation_policy'}
@@ -77,7 +96,7 @@ def stopping_deadlines(started, config, deadline=None):
     return hard,hard-config['save_reserve_seconds']
 
 
-def identity_checks(rows):
+def identity_checks(rows, *, fixed_recipes=False):
     """Only compare a family present in this pack, including partial input prefixes."""
     observed=[r for r in rows if r.get('student_initial_state_sha256')]
     checks={'initial_identity_present_for_passed':all(
@@ -85,8 +104,21 @@ def identity_checks(rows):
         for r in rows if r.get('status')=='passed')}
     if not observed:
         return checks, [k for k,v in checks.items() if not v]
-    for key in ('student_initial_state_sha256','teacher_state_sha256','guidance_initial_state_sha256'):
+    keys=['student_initial_state_sha256','teacher_state_sha256']
+    if not fixed_recipes:
+        keys.append('guidance_initial_state_sha256')
+    for key in keys:
         checks[key]=all(r.get(key) for r in observed) and len({r.get(key) for r in observed})==1
+    if fixed_recipes:
+        # Different losses have different adapters; compare only within the same method.
+        checks['same_adapter_within_method']=all(
+            len({r.get('guidance_initial_state_sha256') for r in observed if r.get('method')==method})==1
+            for method in {r.get('method') for r in observed})
+        checks['fixed_recipe_no_controller']=all(r.get('controller') is None for r in observed)
+        checks['fixed_assets_verified']=all(
+            (r.get('soft_rank_execution') or {}).get('forward_backward')=='passed' if r.get('method')=='fskd'
+            else (r.get('clip_pool') or {}).get('frozen_no_grad_unchanged') is True
+            for r in rows if r.get('status')=='passed')
     reference=max((r.get('input_hashes',[]) for r in observed),key=len)
     checks['same_observed_input_prefixes']=all(
         r.get('input_hashes',[])==reference[:len(r.get('input_hashes',[]))] for r in observed)
@@ -179,7 +211,12 @@ def execute_pack(args, config, plans, output, report, should_stop):
         save_json(output/'grid_summary.json',report)
         if row['status']=='paused':
             break
-    checks,issues=identity_checks(rows)
+    checks,issues=identity_checks(rows,fixed_recipes=config.get('pack')=='fskd_c2vkd')
+    if config.get('pack')=='fskd_c2vkd':
+        checks['fixed_recipe_provenance']=all(
+            r.get('method_provenance')==config[r['method']] and
+            r.get('fixed_loss_coefficients')==config[r['method']]['coefficients']
+            for r in rows if r.get('status')=='passed')
     checks['run_inventory']=[r.get('run_id') for r in rows]==[p['id'] for p in plans[:len(rows)]]
     checks['planned_method_beta_lambda']=all(
         (r.get('method'),r.get('initial_beta'),r.get('lambda'))==(p['method'],p['beta'],p.get('lambda'))
@@ -209,7 +246,7 @@ def main():
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--start-candidate',type=int,default=1,choices=range(1,9))
     parser.add_argument('--start-run',type=int,choices=range(1,17),
-                        help='LG/ALG pack only: resume the fixed execution order at index 1..16')
+                        help='Execution order: LG/ALG 1..16 or fixed FSKD*/C2VKD* 1..2')
     parser.add_argument('--deadline',type=float)
     args=parser.parse_args()
     output=args.output_dir.resolve()
@@ -242,6 +279,8 @@ def main():
                           initial_beta=plan['beta'],initial_target_ratio=plan['initial_target_ratio'],
                           **{'lambda':plan.get('lambda')},completed_steps=0,selected_step=None,
                           selected_epoch=None,diagnostic_metrics=None,full_validation=False)
+            if config['pack']=='fskd_c2vkd':
+                report.update(comparison_group=plan['comparison_group'],display_name=plan['display_name'])
         if args.resume and not args.resume.is_file():
             raise FileNotFoundError('Restore the same 2000-step run folder and point --resume to its resume.json')
         args.deadline,stop_at=stopping_deadlines(started,config,args.deadline)

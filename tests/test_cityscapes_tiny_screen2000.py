@@ -220,7 +220,13 @@ class TinyScreenTrainingTests(unittest.TestCase):
     def test_lambda050_real_loop_pause_resume_preserves_fusion_and_state(self):
         self.check_real_loop(screen.IBKD050_CONFIG)
 
-    def check_real_loop(self, config_path):
+    def test_fskd_real_loop_preserves_fixed_loss_and_resume_without_controller(self):
+        self.check_real_loop(screen.FIXED_CONFIG,fixed_method='fskd')
+
+    def test_c2vkd_real_loop_preserves_no_extra_ce_frozen_pool_and_resume(self):
+        self.check_real_loop(screen.FIXED_CONFIG,fixed_method='c2vkd')
+
+    def check_real_loop(self, config_path, *, fixed_method=None):
         # Execute the shared production training loop/checkpoint code on small CPU modules.
         # No H200 speed or large-model numeric claim is inferred from this test.
         class Student(torch.nn.Module):
@@ -244,6 +250,37 @@ class TinyScreenTrainingTests(unittest.TestCase):
             def forward(self,model,images):
                 features=model.encoder(images)
                 return model.decoder(features),[features]
+        class FixedCapture(Capture):
+            def __init__(self,model,**kwargs): pass
+            def forward(self,model,images):
+                logits,features=super().forward(model,images)
+                return logits,features*12 if fixed_method=='fskd' else features[0]
+        class Attention:
+            def __init__(self,model): pass
+            def forward(self,capture,model,images):
+                logits,features=capture.forward(model,images)
+                return logits,features,features[0].square().mean()
+        class FSKDGuide(torch.nn.Module):
+            def __init__(self,**kwargs):
+                super().__init__()
+                self.align=torch.nn.ModuleList([torch.nn.Linear(1,1,bias=False) for _ in range(2)])
+            def forward(self,features,attention,teacher,logits,tlogits,target):
+                z=features[0].square().mean()
+                return {'global':sum(m.weight.square().mean()*z for m in self.align)*.001,
+                        'patch':z*.01,'attention':attention*1e-10,'logit_kd':logits.square().mean()*.01}
+        class C2VKDGuide(torch.nn.Module):
+            def __init__(self,*args,**kwargs):
+                super().__init__()
+                self.visual=torch.nn.Linear(1,1,bias=False)
+                self.linguistic=torch.nn.Linear(1,1,bias=False)
+                self.pool=torch.nn.Linear(1,1,bias=False).requires_grad_(False).eval()
+                self.asset={'sha256':'verified-test-pool'}
+            def train(self,mode=True):
+                super().train(mode);self.pool.eval();return self
+            def forward(self,features,teacher,logits,tlogits,target):
+                z=features.square().mean()
+                return {'global':self.visual.weight.square().mean()*z,'patch':z*.01,
+                        'pdd':logits.square().mean(),'linguistic':self.linguistic.weight.square().mean()*z}
         class Dataset:
             def __init__(self,root,manifest,config,split): self.split=split
             def __len__(self): return 10 if self.split=='train' else 3
@@ -265,7 +302,7 @@ class TinyScreenTrainingTests(unittest.TestCase):
         torch.optim.SGD(Student().parameters(),lr=.001)
         config=screen.load_config(config_path)
         config.update(steps=8,train_samples=10,batch_size=4,validation_samples=3,original_target_hw=[1,19])
-        plan=config['runs'][0]
+        plan=next(p for p in config['runs'] if p['method']==fixed_method) if fixed_method else config['runs'][0]
         modules={n:types.ModuleType(n) for n in ('segm','segm.utils','segm.utils.torch','segm.model','segm.model.utils')}
         modules['segm'].utils=modules['segm.utils']; modules['segm.utils'].torch=modules['segm.utils.torch']
         modules['segm.model.utils'].inference=lambda model,ims,*a,**k:model(ims[0])[0]
@@ -280,8 +317,16 @@ class TinyScreenTrainingTests(unittest.TestCase):
                                ('synchronize',None),('reset_peak_memory_stats',None),('max_memory_allocated',123)]:
                 stack.enter_context(patch('torch.cuda.'+name,return_value=value))
             for name,value in [('student',lambda *a,**k:Student()),('guidance',lambda *a:Guide()),
-                               ('teacher',lambda *a:Teacher()),('FeatureCapture',Capture),('optimizer_scheduler',optimizer)]:
+                               ('teacher',lambda *a:Teacher()),('FeatureCapture',FixedCapture if fixed_method else Capture),('optimizer_scheduler',optimizer)]:
                 stack.enter_context(patch('ibkd_seg.cityscapes.official_api.'+name,side_effect=value))
+            if fixed_method:
+                Teacher.decode_head=lambda self,features:features[0][:,:1].expand(-1,19,-1,-1)
+                stack.enter_context(patch('ibkd_seg.cityscapes.official_api.teacher_input',side_effect=lambda x:x))
+                stack.enter_context(patch('ibkd_seg.cityscapes.tiny_fskd.TinyFSKD',FSKDGuide))
+                stack.enter_context(patch('ibkd_seg.cityscapes.tiny_fskd.CLSAttentionCapture',Attention))
+                stack.enter_context(patch('ibkd_seg.cityscapes.tiny_fskd.verify_soft_rank',return_value={'forward_backward':'passed'}))
+                stack.enter_context(patch('ibkd_seg.cityscapes.tiny_c2vkd.TinyC2VKD',C2VKDGuide))
+                stack.enter_context(patch('ibkd_seg.cityscapes.tiny_c2vkd.FinalFeatureCapture',FixedCapture))
             stack.enter_context(patch('ibkd_seg.cityscapes.full_data.FullDataset',Dataset))
             stack.enter_context(patch('ibkd_seg.cityscapes.full_data.train_loader',loader))
             stack.enter_context(patch('ibkd_seg.cityscapes.ibkd_deterministic.apply_deterministic_candidate',return_value={'applied':True}))
@@ -297,9 +342,22 @@ class TinyScreenTrainingTests(unittest.TestCase):
                 return report,payload,output/'resume.json'
             full,full_state,_=execute('full')
             for row in full['losses']:
+                if fixed_method:
+                    coefficients=config[fixed_method]['coefficients']
+                    expected=sum(coefficients[k]*v for k,v in row['components'].items())
+                    self.assertAlmostEqual(row['loss'],coefficients['ce']*row['ce']+expected,places=6)
+                    self.assertIsNone(row['beta'])
+                    self.assertEqual(row['guidance_multiplier'],1.)
+                    continue
                 expected=(1-plan['lambda'])*row['alignment']+plan['lambda']*row['fusion']
                 self.assertAlmostEqual(row['guidance'],expected,places=6)
                 self.assertAlmostEqual(row['loss'],row['ce']+plan['beta']*expected,places=6)
+            if fixed_method:
+                self.assertIsNone(full['controller'])
+                self.assertFalse(full['natural_guidance_off_tested'])
+                self.assertEqual(full['fixed_loss_coefficients'],config[fixed_method]['coefficients'])
+                self.assertTrue(all(e['beta'] is None for e in full['completed_epoch_records']))
+                if fixed_method=='c2vkd': self.assertTrue(full['clip_pool']['frozen_no_grad_unchanged'])
             paused,paused_state,pointer=execute('paused',pause_step=4)
             self.assertEqual(paused['status'],'paused')
             self.assertEqual(paused['completed_steps'],4)

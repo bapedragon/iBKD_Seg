@@ -3,6 +3,7 @@ import copy
 import io
 import json
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -212,7 +213,7 @@ class TinyLGALG2000Tests(unittest.TestCase):
             (data/'manifest.json').write_text(json.dumps({'splits':{'train':[{}]*2975,'val':[{}]*500}}))
             python=root/'python'
             python.write_text('#!/bin/bash\nprintf "%s" "$CITYSCAPES_TI16_JOB_STARTED" > "$CLOCK_CAPTURE"\n'
-                              'if [[ "$*" == *"-m pip"* ]]; then exit 9; fi\nexec '+sys.executable+' "$@"\n')
+                              'if [[ "$*" == *"-m pip"* ]]; then exit 9; fi\nexec '+shlex.quote(sys.executable)+' "$@"\n')
             python.chmod(0o755)
             env=dict(os.environ,PATH=str(root)+os.pathsep+os.environ['PATH'],CITYSCAPES_TI16_OUTPUT=str(root/'out'),
                      CITYSCAPES_CROP512_DATA_DIR=str(data),CITYSCAPES_TI16_START_RUN='1',

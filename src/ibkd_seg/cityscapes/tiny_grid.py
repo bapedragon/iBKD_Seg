@@ -122,12 +122,13 @@ def initial_progress():
                 completed_epochs=[], rows=[], input_hashes=[])
 
 
-def record_step(progress, row, count, digest, controller, *, train_samples):
+def record_step(progress, row, count, digest, controller, *, train_samples, fixed_recipe=False):
     """Observe only complete epochs; preserve the partial epoch for continuation."""
     progress['global_step'] += 1
     progress['next_batch'] += 1
     progress['samples'] += count
-    row.update(step=progress['global_step'], epoch=progress['epoch'], beta=progress['beta'], batch_samples=count)
+    row.update(step=progress['global_step'], epoch=progress['epoch'],
+               beta=None if fixed_recipe else progress['beta'], batch_samples=count)
     progress['rows'].append(row)
     progress['input_hashes'].append(digest)
     for key in progress['sums']:
@@ -136,9 +137,10 @@ def record_step(progress, row, count, digest, controller, *, train_samples):
         raise RuntimeError('Epoch duplicated samples')
     if progress['samples'] == train_samples:
         means = {k: v / train_samples for k, v in progress['sums'].items()}
-        controller.observe(progress['epoch'], means['guidance'], beta_used=progress['beta'])
+        if controller is not None:
+            controller.observe(progress['epoch'], means['guidance'], beta_used=progress['beta'])
         progress['completed_epochs'].append(dict(epoch=progress['epoch'], end_step=progress['global_step'],
-                                                 samples=train_samples, beta=progress['beta'], **means))
+                                                 samples=train_samples, beta=None if fixed_recipe else progress['beta'], **means))
         progress.update(epoch=progress['epoch'] + 1, next_batch=0, beta=None, samples=0,
                         sums=dict(loss=0., ce=0., guidance=0.))
         return True
@@ -238,24 +240,39 @@ def run(args, config, plan, output, report):
     seed_all(config['seed'])
     model = api.student(args.cache_root, backbone=config['student_backbone'], image_size=config['crop_size'],
                         decoder_layers=config['decoder_layers'], recompute=config['gradient_checkpointing']).to(device).train()
-    seed_all(config['seed'] + 1000)
-    guide = api.guidance(plan['method'], config)
+    fixed = None
+    if plan['method'] in ('fskd', 'c2vkd'):
+        from .tiny_fixed import FixedRecipe
+        teacher = api.teacher(args.cache_root).to(device)
+        seed_all(config['seed'] + 1000)
+        fixed = FixedRecipe(plan['method'], model, teacher, config, args.cache_root, device)
+        guide = fixed.guide
+        capture = None
+        report.update(fixed.metadata())
+    else:
+        seed_all(config['seed'] + 1000)
+        guide = api.guidance(plan['method'], config)
     candidate = apply_deterministic_candidate(guide) if plan['method'] == 'ibkd' else None
     if candidate is not None and not candidate['applied']:
         raise RuntimeError('iBKD deterministic candidate was not applied')
     guide = guide.to(device).train()
-    teacher = api.teacher(args.cache_root).to(device)
-    capture = api.FeatureCapture(model)
+    if fixed is None:
+        teacher = api.teacher(args.cache_root).to(device)
+        capture = api.FeatureCapture(model)
     initial_student, initial_guide, teacher_hash = state_hash(model), state_hash(guide), state_hash(teacher)
     optimizer, scheduler = api.optimizer_scheduler(model, guide, args.cache_root, total_steps=config['total_steps'])
     if scheduler.iter_max != 80000 or not optimizer.defaults['nesterov']:
         raise RuntimeError('Unexpected 80k Nesterov SGD schedule')
     parameters = [p for group in optimizer.param_groups for p in group['params']]
     controller = controller_for(plan['method'], dict(config, guidance_beta=plan['beta']))
+    controller_state = lambda: None if controller is None else controller.state_dict()
+    source = source_hash()
+    if fixed is not None:
+        source = json_hash({'common': source, 'shared_loss_primitives': sha256(Path(__file__).parent / 'b0/losses.py')})
     environment = dict(python=platform.python_version(), torch=str(torch.__version__), cuda=torch.version.cuda,
                        cudnn=torch.backends.cudnn.version(), gpu=torch.cuda.get_device_name(),
                        precision='fp32', cpu_threads=torch.get_num_threads())
-    identity = dict(config_sha256=json_hash(config), source_sha256=source_hash(),
+    identity = dict(config_sha256=json_hash(config), source_sha256=source,
                     manifest_sha256=sha256(args.manifest), assets=report['assets'], plan=plan,
                     initial_student_sha256=initial_student, initial_guide_sha256=initial_guide,
                     teacher_sha256=teacher_hash, environment=environment)
@@ -290,7 +307,7 @@ def run(args, config, plan, output, report):
             raise FloatingPointError('Nonfinite parameter/optimizer state; previous recovery checkpoint retained')
         rng = np.random.get_state()
         payload = dict(signature=identity, model=model.state_dict(), guide=guide.state_dict(),
-                       optimizer=optimizer.state_dict(), scheduler=scheduler.state_dict(), controller=controller.state_dict(),
+                       optimizer=optimizer.state_dict(), scheduler=scheduler.state_dict(), controller=controller_state(),
                        progress=progress, python_rng=random.getstate(), numpy_rng=(rng[0], rng[1].tolist(), *rng[2:]),
                        torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all())
         pointer = save_checkpoint(output, payload)
@@ -305,18 +322,23 @@ def run(args, config, plan, output, report):
             raise RuntimeError('Invalid/all-void input batch')
         optimizer.zero_grad(set_to_none=True)
         beta = progress['beta']
-        logits, features = capture.forward(model, images) if beta > 0 else (model(images), None)
-        ce = F.cross_entropy(logits, target, ignore_index=255)
-        alignment = fusion = guided = ce.new_zeros(())
-        if beta > 0:
-            with torch.no_grad():
-                tfeatures = teacher.extract_feat(api.teacher_input(images))[1:]
-            if plan['method'] == 'ibkd':
-                alignment, fusion = guide(features, tfeatures)
-                guided = (1 - plan['lambda']) * alignment + plan['lambda'] * fusion
-            else:
-                guided = guide(features, tfeatures)
-        loss = ce + beta * guided
+        components = {}
+        if fixed is not None:
+            loss, ce, guided, components = fixed.losses(images, target)
+            alignment = fusion = ce.new_zeros(())
+        else:
+            logits, features = capture.forward(model, images) if beta > 0 else (model(images), None)
+            ce = F.cross_entropy(logits, target, ignore_index=255)
+            alignment = fusion = guided = ce.new_zeros(())
+            if beta > 0:
+                with torch.no_grad():
+                    tfeatures = teacher.extract_feat(api.teacher_input(images))[1:]
+                if plan['method'] == 'ibkd':
+                    alignment, fusion = guide(features, tfeatures)
+                    guided = (1 - plan['lambda']) * alignment + plan['lambda'] * fusion
+                else:
+                    guided = guide(features, tfeatures)
+            loss = ce + beta * guided
         if config.get('record_failed_step_details'):
             report['step_observation'] = dict(
                 step=report['attempted_step'], phase='forward',
@@ -337,13 +359,17 @@ def run(args, config, plan, output, report):
             modules = [model.encoder, model.decoder] + ([guide] if beta > 0 else [])
             if any(not any(p.grad is not None and bool(p.grad.abs().max() > 0) for p in m.parameters()) for m in modules):
                 raise RuntimeError('Missing active-module gradient')
+            if fixed is not None:
+                fixed.check_gradients()
         if any(p.grad is not None for p in teacher.parameters()):
             raise RuntimeError('Frozen teacher received gradients')
+        if fixed is not None:
+            fixed.check_frozen()
         row = dict(loss=float(loss.detach()), ce=float(ce.detach()), guidance=float(guided.detach()),
                    alignment=float(alignment.detach()), fusion=float(fusion.detach()),
                    weighted_guidance=beta * float(guided.detach()),
                    weighted_guidance_to_seg_loss=beta * float(guided.detach()) / max(float(ce.detach()), 1e-30),
-                   grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]['lr'])
+                   grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]['lr'], **components)
         if config.get('record_failed_step_details'):
             report['step_observation']['phase'] = 'optimizer_update'
         optimizer.step(); scheduler.step_update(scheduler.last_epoch + 1)
@@ -364,7 +390,7 @@ def run(args, config, plan, output, report):
                 break
             epoch = progress['epoch']
             if progress['beta'] is None:
-                progress['beta'] = controller.beta_for_epoch(epoch)
+                progress['beta'] = 1. if fixed is not None else controller.beta_for_epoch(epoch)
             for batch in train_loader(datasets['train'], epoch, progress['next_batch'], device):
                 if should_stop():
                     paused = True
@@ -380,16 +406,16 @@ def run(args, config, plan, output, report):
                         report.update(input_hashes=progress['input_hashes'], losses=progress['rows'],
                                       trajectory=trajectory_summary(progress['rows']),
                                       teacher_frozen_verified=state_hash(teacher) == teacher_hash,
-                                      controller=controller.state_dict(), train_wall_seconds=time.monotonic()-began)
+                                      controller=controller_state(), train_wall_seconds=time.monotonic()-began)
                     raise
                 report.pop('step_observation', None)
                 torch.cuda.synchronize()
                 row['seconds'] = time.perf_counter() - start
                 ended_epoch = record_step(progress, row, len(batch[2]), digest, controller,
-                                          train_samples=len(datasets['train']))
+                                          train_samples=len(datasets['train']), fixed_recipe=fixed is not None)
                 log.write(json.dumps(dict(row, input_sha256=digest), allow_nan=False) + '\n'); log.flush()
                 report.update(completed_steps=progress['global_step'], last=row,
-                              completed_epochs=len(progress['completed_epochs']), controller=controller.state_dict())
+                              completed_epochs=len(progress['completed_epochs']), controller=controller_state())
                 # This compact progress record remains available after an interrupted child.
                 if (progress['global_step'] == 1 or ended_epoch or
                         progress['global_step'] % config.get('progress_every_steps', 1) == 0 or
@@ -399,7 +425,10 @@ def run(args, config, plan, output, report):
                 if progress['global_step'] == 1 or progress['global_step'] % config.get('console_every_steps', 25) == 0:
                     print(f"[TI16_GRID_STEP] run={plan['id']} step={progress['global_step']}/{config['steps']} "
                           f"epoch={row['epoch']} loss={row['loss']:.6g} ce={row['ce']:.6g} guidance={row['guidance']:.6g} "
-                          f"beta={row['beta']:.9g} grad_norm={row['grad_norm_unclipped']:.6g} seconds={row['seconds']:.2f}", flush=True)
+                          f"beta={row['beta']} grad_norm={row['grad_norm_unclipped']:.6g} seconds={row['seconds']:.2f}", flush=True)
+                    if fixed is not None:
+                        print('[TI16_FIXED_COMPONENTS] ' + json.dumps(dict(run=plan['id'], step=row['step'],
+                              raw=row['components'], weighted=row['weighted_components']), allow_nan=False), flush=True)
                 if ended_epoch or progress['global_step'] % config['checkpoint_every_steps'] == 0:
                     checkpoint()
                 if progress['global_step'] >= config['steps']:
@@ -412,13 +441,15 @@ def run(args, config, plan, output, report):
         checkpoint()
     if state_hash(teacher) != teacher_hash:
         raise RuntimeError('Teacher weights/BN changed')
+    if fixed is not None:
+        report.update(fixed.metadata(final=True))
     # Read verified saved tensors and compare every persisted optimizer/module state.
     report['phase'] = 'checkpoint_roundtrip'
     saved, reload_info = load_checkpoint(output / 'resume.json', identity, output)
     for actual, restored in ((model.state_dict(), saved['model']), (guide.state_dict(), saved['guide']),
                              (optimizer.state_dict(), saved['optimizer']), (scheduler.state_dict(), saved['scheduler'])):
         assert_state_close(actual, restored, rtol=0, atol=0)
-    if tree_hash(saved['progress']) != tree_hash(progress) or saved['controller'] != controller.state_dict():
+    if tree_hash(saved['progress']) != tree_hash(progress) or saved['controller'] != controller_state():
         raise RuntimeError('Checkpoint progress/controller mismatch')
     del saved
     report.update(checkpoint=dict(report['checkpoint'],
@@ -432,10 +463,11 @@ def run(args, config, plan, output, report):
                   final_student_sha256=state_hash(model), final_guide_sha256=state_hash(guide),
                   completed_epoch_records=progress['completed_epochs'], next_epoch=progress['epoch'],
                   next_batch=progress['next_batch'], partial_epoch_samples=progress['samples'],
-                  controller=controller.state_dict(),
-                  natural_guidance_off_tested=controller.stop_epoch is not None,
-                  guidance_stop_epoch=controller.stop_epoch,
-                  guidance_stop_step=(None if controller.stop_epoch is None else math.ceil(2975 / 8) * controller.stop_epoch + 1))
+                  controller=controller_state(),
+                  natural_guidance_off_tested=controller is not None and controller.stop_epoch is not None,
+                  guidance_stop_epoch=None if controller is None else controller.stop_epoch,
+                  guidance_stop_step=(None if controller is None or controller.stop_epoch is None
+                                      else math.ceil(2975 / 8) * controller.stop_epoch + 1))
     if paused or should_stop():
         report.update(status='paused', phase='saved_for_resume', pause_reason='time_budget_or_signal',
                       selected_step=None, selected_epoch=None, full_validation=False, validation_samples=0)

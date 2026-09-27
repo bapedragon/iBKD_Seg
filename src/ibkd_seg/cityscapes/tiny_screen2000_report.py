@@ -11,10 +11,10 @@ MARKER = '[CITYSCAPES_TI16_GRID2000_FINAL] '
 
 
 def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
-    if config.get('pack')=='lg_alg':
+    if config.get('pack') in ('lg_alg','fskd_c2vkd'):
         first=1 if start_run is None else start_run
         if start_candidate!=1 or not 1<=first<=len(config['runs']):
-            raise ValueError('LG/ALG uses --start-run 1..16, not --start-candidate')
+            raise ValueError('This pack uses --start-run in its fixed execution order, not --start-candidate')
         plans=config['runs'][first-1:]
     else:
         if start_run is not None or not 1<=start_candidate<=8:
@@ -37,14 +37,33 @@ def final_line(report, plans):
             report.get('protocol_id')=='cityscapes_ti16_crop512_lg_alg_grid2000_v1')
     ibkd050=(report.get('pack')=='ibkd_l050_4betas' or
              report.get('protocol_id')=='cityscapes_ti16_crop512_ibkd_l050_grid2000_4betas_v1')
-    pack='lg_alg' if lg_alg else 'ibkd_l050_4betas' if ibkd050 else 'ibkd_l025'
+    fixed=(report.get('pack')=='fskd_c2vkd' or
+           report.get('protocol_id')=='cityscapes_ti16_crop512_fskd_c2vkd_grid2000_v1')
+    pack='fskd_c2vkd' if fixed else 'lg_alg' if lg_alg else 'ibkd_l050_4betas' if ibkd050 else 'ibkd_l025'
     by_id = {r['run_id']:r for r in report.get('runs', [])}
     rows = []
     for plan in plans:
         raw = by_id.get(plan['id'], {})
         row = terminal_row(raw, plan)
-        if lg_alg:
+        if lg_alg or fixed:
             row['run_index']=plan['run_index']
+        if fixed:
+            last=raw.get('last') or {}
+            provenance=raw.get('method_provenance') or {}
+            pool=raw.get('clip_pool') or {}
+            row.update(display_name=plan['display_name'],comparison_group=plan['comparison_group'],
+                       author_exact_reproduction=False,controller_applicable=False,
+                       guidance_active=None if not raw.get('completed_steps') else True,
+                       beta_search=False,standalone_ce_coefficient=number(last.get('standalone_ce_coefficient')),
+                       guidance_multiplier=number(last.get('guidance_multiplier')),
+                       fixed_loss_coefficients=raw.get('fixed_loss_coefficients'),
+                       loss_components={k:number(v) for k,v in (last.get('components') or {}).items()},
+                       weighted_loss_components={k:number(v) for k,v in (last.get('weighted_components') or {}).items()},
+                       method_id=provenance.get('method_id'),source_commit=provenance.get('source_commit'),
+                       recipe_scope=bounded_text(provenance.get('interpretation'),512),
+                       soft_rank_execution=raw.get('soft_rank_execution'),
+                       clip_pool_frozen=pool.get('frozen_no_grad_unchanged'),
+                       clip_pool_sha256=(pool.get('asset') or {}).get('sha256'))
         row.update(full_validation=raw.get('full_validation', False),
                    validation_seconds=number(raw.get('validation_seconds')),
                    student_unchanged_during_validation=raw.get('student_unchanged_during_validation'),
@@ -52,14 +71,16 @@ def final_line(report, plans):
                    checkpoint_pointer=bounded_text((raw.get('checkpoint') or {}).get('pointer'), 1024))
         rows.append(row)
     result = dict(status=report.get('status'), protocol_id=report.get('protocol_id'),
-                  pack=pack, expected_runs=len(plans), configured_pack_runs=16 if lg_alg else 4 if ibkd050 else 8,
+                  pack=pack, expected_runs=len(plans), configured_pack_runs=2 if fixed else 16 if lg_alg else 4 if ibkd050 else 8,
                   invocation_start_candidate=report.get('start_candidate', 1), runs=rows,
                   target_steps=2000, schedule_total_steps=80000, seed=1,
                   selection_rule='fixed_2000_endpoint_not_best_checkpoint',
                   planned_validation_samples=500, test_used=False, automatic_next_stage=False,
                   scientific_result=False, beta_ranking_performed=False,
-                  score_scope='full-val fixed 2000-step beta screen; not final 80000-step performance',
-                  primary_metric='pixel_accuracy', secondary_metric='miou_at_same_checkpoint',
+                  score_scope=('full-val fixed 2000-step baseline screen; not final 80000-step performance' if fixed
+                               else 'full-val fixed 2000-step beta screen; not final 80000-step performance'),
+                  primary_metric='miou' if fixed else 'pixel_accuracy',
+                  secondary_metric='pixel_accuracy_at_same_checkpoint' if fixed else 'miou_at_same_checkpoint',
                   completed_candidates=[r['run_id'] for r in rows if r['status']=='passed'],
                   paused_candidates=[r['run_id'] for r in rows if r['status']=='paused'],
                   not_run_candidates=[r['run_id'] for r in rows if r['status']=='not_run'],
@@ -84,6 +105,10 @@ def final_line(report, plans):
     if ibkd050:
         result.update(configured_candidates=[1,3,6,8],ibkd_warmup_epochs=20,
                       guidance_scope='warmup20 keeps guidance on throughout this 2000-step screen')
+    if fixed:
+        result.update(invocation_start_run=report.get('start_run') or 1,beta_search=False,
+                      recipe_scope='smoke25 fixed transfers; FSKD* primary, C2VKD* supplementary CLIP-pool',
+                      next_stage='review_both_2000_step_full_val_results_before_separate_10000_step_job')
     line = MARKER + json.dumps(result, separators=(',', ':'), ensure_ascii=True, allow_nan=False)
     if len(line)+1 > MAX_FINAL_BYTES:
         raise ValueError('2000-step terminal report exceeded 50,000 bytes')

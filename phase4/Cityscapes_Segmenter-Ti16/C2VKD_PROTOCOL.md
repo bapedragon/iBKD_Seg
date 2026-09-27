@@ -1,4 +1,4 @@
-# Tiny C2VKD* (CLIP-pool) smoke 프로토콜
+# Tiny C2VKD* (CLIP-pool) smoke 및 2k 프로토콜
 
 2026-09-26 사용자가 CLIP-pool 대체 비교군까지 포함하도록 요청하여 v3에 추가했습니다.
 저자 C2VKD의 완전 재현이 아닌 **공개 논문·코드 기반 재구성과 Tiny 이식**입니다.
@@ -60,3 +60,8 @@ FSKD*/C2VKD*의 `beta=null`은 증류가 꺼졌다는 뜻이 아니라 고정 �
 C2VKD*의 guidance/CE 비율은 **전체 PDD 포함 목적함수 대 진단 CE** 비율이므로
 LG/ALG/iBKD의 추가 guidance/CE 비율과 같은 의미로 해석하지 않습니다.
 val 2장 mIoU·accuracy는 연결 진단값입니다. 장기 성능과 안정성을 입증하지 않습니다.
+
+이후 사용자 제공 v3 H200 로그에서 C2VKD*의 25 update·val2·마지막 update 재개 및
+pool 동결 검사는 개별 통과했습니다. 2026-09-27에는 이 손실·pool을 그대로 유지하여
+FSKD*와 각 2,000step·전체 val500 비교를 실행하도록 준비했습니다. 2k 결과는 아직 없으며,
+실행과 저장·재개·최종 로그 규칙은 [README](README.md)를 따릅니다. 10k 자동 진입은 없습니다.

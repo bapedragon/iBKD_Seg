@@ -1,8 +1,10 @@
 # Segmenter-Tiny의 FSKD 이식 명세 v1
 
-2026-09-26 사용자 결정: Tiny smoke에 **FSKD만 추가하고 C2VKD는 보류**한다.
+초기 결정은 Tiny smoke에 FSKD만 추가하는 것이었으나, 후속 사용자 결정으로 v3에
+C2VKD*도 추가했다. 현재 두 방법의 25-step 개별 검사를 완료했고, 2026-09-27에는
+기존 계수를 유지한 각 2,000step·전체 val500 비교 실행을 준비했다.
 기존 OpenMMLab DeepLabV3-R101-D8 teacher와 Tiny 초기 가중치를 유지한다.
-CIRKD teacher, CLIP pool, C2VKD loss를 적재하거나 실행하지 않는다.
+FSKD 경로에서는 CIRKD teacher, CLIP pool, C2VKD loss를 적재하거나 실행하지 않는다.
 
 ## 비교 해석
 
@@ -91,4 +93,7 @@ forward/backward 검사이며, val2장 지표는 연결 진단이다.
 마지막 encoder QKV까지 FSKD attention gradient가 전달됨을 확인했다.
 전체 고정 FSKD loss의 backward와 student·adapter·optimizer·RNG 복원 후
 동일 update 재현도 통과했다. Teacher feature는 이 로컬 검사에서 합성값을 사용했다.
-**실제 Cityscapes/H200 실행 및 25-step 안정성 결과는 아직 없다.**
+이후 사용자 제공 v3 H200 로그에서 **FSKD* 25 update·val2·마지막 update 재개 검사는
+개별 통과**했다. v3 전체 상태의 실패 원인은 LG/ALG의 공통 궤적 검사였고 해당 문제는
+별도 v4 반복 검사로 확인했다. FSKD*의 2,000step·전체 val500 결과는 아직 없다.
+현재 준비한 후속 실행은 [README](README.md)를 따른다.

@@ -8,7 +8,8 @@ Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정�
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
 25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,
-iBKD λ0.25와 LG·ALG의 2,000-step β 후보 비교, iBKD λ0.5의 4개 후보 2k 비교입니다.
+iBKD λ0.25와 LG·ALG의 2,000-step β 후보 비교, iBKD λ0.5의 4개 후보 2k 비교,
+FSKD*·C2VKD*의 고정 계수 2k 실행 준비입니다. 마지막 두 방법의 **2k 결과는 아직 없습니다.**
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
 사용자 제공 2k v1의 완료된 1~7번과 #844의 8번을 합쳐 **λ0.25의 8개 모두
@@ -23,13 +24,61 @@ ALG는 8개 모두 2k까지 가이던스를 유지했고 LG와의 step 비교는
 **네 개 모두 2,000step·전체 val500 완료**했습니다.
 [λ0.5 결과 표](reports/beta_screen/ti16_crop512_ibkd_lambda0p5_grid2000_4betas/RESULTS.md)에 반영했습니다.
 이로써 계획한 **LG 8개 + ALG 8개 + λ0.25 8개 + λ0.5 4개 = 28개**의 2k 비교가 완료됐습니다.
-다음은 아래 **mIoU 기준 상위 2개씩, 총 8개**의 10k 실행 구성입니다.
+LG·ALG·iBKD의 후속 후보는 아래 **mIoU 기준 상위 2개씩, 총 8개**입니다.
+2026-09-27 추가 결정: 먼저 FSKD*·C2VKD*를 각 2k·전체 val500 평가하고 결과를 확인한 뒤
+10k 실험을 별도로 진행합니다. 현재 실행은 10k로 자동 진입하지 않습니다.
 λ0.5의 생략 후보 2·4·5·7번은 실패한 것이 아닙니다.
 Tiny 10k 결과는 아직 없으며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-## 다음 단계: mIoU 기준 10k 후보 2개씩
+## 실행 준비: FSKD*·C2VKD* 각 2,000step
+
+두 방법은 기존 25-step smoke에서 각각 통과했습니다. 당시 공통 검사의 LG/ALG 불일치는
+이후 별도 반복 검사로 확인했으며, FSKD*/C2VKD*의 25-step·val2 결과를 2k 성능으로 취급하지 않습니다.
+[고정 설정](configs/baseline_grid2000_fskd_c2vkd_v1.json)과
+[실행 스크립트](scripts/run_grid2000_fskd_c2vkd.sh)를 준비했습니다. H200 학습 결과는 아직 없습니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_fskd_c2vkd.sh
+```
+
+| 실행 순서 | 방법 | 손실 계수 | 비교군 구분 |
+|---|---|---|---|
+| 1 | FSKD* | CE 1, logit KD 1, global 100, patch 1, attention 1,000,000 | 공통 사전학습; 공개 DeiT-Ti 분류 recipe의 segmentation 이식 |
+| 2 | C2VKD* (CLIP-pool) | 별도 CE 0, PDD 1, global 0.1, patch 0.1, linguistic 0.5 | 추가 CLIP 사전학습을 사용한 보조 비교군 |
+
+- **β 후보 탐색·초기 CE 비율 재조정·가이던스 종료 controller가 없습니다.** 계수는 기존 v3
+  smoke와 같고, C2VKD의 PDD에 정답 감독이 들어 있으므로 진단 CE를 총 loss에 다시 더하지 않습니다.
+  두 방법 모두 저자의 원본 Cityscapes 설정을 완전 재현한 결과로 표기하지 않습니다.
+- Tiny/16, OpenMMLab DeepLabV3-R101 teacher, seed1, crop512, batch8, FP32,
+  SGD LR0.01와 **80k LR schedule**은 기존 2k 후보군과 같습니다. 각 방법을 0→2,000step
+  새로 학습하고, 마지막 checkpoint에서 원본 해상도 전체 val500을 평가합니다.
+- **1차 지표 mIoU**, 보조 pixel accuracy, 19개 class IoU를 함께 기록합니다. test는 사용하지 않습니다.
+- 데이터는 기존 추출본을 검사해 재사용하거나 `/app/data/chaoyang`의 검증된 ZIP에서 준비합니다.
+  torchsort0.1.10 CUDA 확장과 CLIP RN101 attention pool을 설치/검증하며 teacher를 교체하지 않습니다.
+- 하나의 이슈에서 순차 실행합니다. 스크립트 시작 기준 9시간 58분에 중단을 요청하고 마지막
+  120초는 저장 여유로 둡니다. 외부 시작 시각/종료 시각이 있으면 `CITYSCAPES_TI16_JOB_STARTED` /
+  `CITYSCAPES_TI16_JOB_DEADLINE`으로 전달할 수 있습니다.
+- 250step·epoch 경계·최종·시간 중단 시 optimizer/RNG/방법별 모듈까지 저장합니다. 같은 설정으로
+  재개하려면 해당 실행 폴더와 checkpoint를 보관하고 `CITYSCAPES_TI16_RESUME`에 `resume.json`을
+  지정합니다. `CITYSCAPES_TI16_START_RUN=2`는 C2VKD부터 실행합니다. 서버 출력 경로가 다음 이슈에도
+  남아 있다고 가정하지 않습니다. **2k→10k 전환은 후속 설정과 검증이 필요한 별도 작업**입니다.
+- 중간 로그를 유지하고 마지막 `[CITYSCAPES_TI16_GRID2000_FINAL]`에 두 방법의 loss·CE·손실 구성항,
+  고정 계수, 완료/선택 step·epoch, mIoU·accuracy·19 IoU, teacher/pool 동결, 저장·복원 검사,
+  시간·메모리·실패 상태를 모두 출력합니다. 마지막 JSON은 50,000 ASCII byte 이내로 제한합니다.
+  수치 오류는 해당 방법의 실패로 기록하고 다음 방법을 수행하며, 시간 중단 시 다음 방법은 시작하지 않습니다.
+
+출력: `/app/output/cityscapes_ti16_fskd_c2vkd_grid2000_v1/run_<UTC>_<PID>/`.
+`artifacts/grid_summary.json`이 두 결과 통합 파일이고 각 방법 폴더에 `summary.json`, `steps.jsonl`,
+`resume.json`과 checkpoint가 남습니다. JSON/로그/체크포인트를 보관한 뒤 10k 실험을 결정합니다.
+예상 시간은 두 방법 합계 약 1시간 30분~2시간이며, 25-step 연산 속도에 기존 LG 2k의
+로딩·저장 시간과 전체 val 시간을 더한 추정입니다. 설치/다운로드와 장기 실행 속도에 따라 달라집니다.
+로컬 관련 검사 56개를 통과했습니다. 작은 CPU 모듈로 실제 공통 학습 루프의 고정 손실·
+pool 동결·중단/재개 상태 일치를 검사하고, 기존 FSKD/C2VKD 손실 primitive, 설정 잠금,
+전체 평가 연결, 실패 시 다음 방법 실행, 종료 로그 길이를 확인했습니다. H200 2k 결과를 뜻하지 않습니다.
+
+## 후속 계획: mIoU 기준 10k 후보 2개씩
 
 **2026-09-27 사용자 정정: 후속 β 후보 선정의 1차 기준은 전체 val500의 mIoU이며,
 pixel accuracy는 보조 지표입니다.** 아래는 고정 2,000step 결과에서 mIoU가 높은 두 후보입니다.
