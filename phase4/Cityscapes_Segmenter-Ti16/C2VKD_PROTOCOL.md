@@ -63,5 +63,7 @@ val 2장 mIoU·accuracy는 연결 진단값입니다. 장기 성능과 안정성
 
 이후 사용자 제공 v3 H200 로그에서 C2VKD*의 25 update·val2·마지막 update 재개 및
 pool 동결 검사는 개별 통과했습니다. 2026-09-27에는 이 손실·pool을 그대로 유지하여
-FSKD*와 각 2,000step·전체 val500 비교를 실행하도록 준비했습니다. 2k 결과는 아직 없으며,
-실행과 저장·재개·최종 로그 규칙은 [README](README.md)를 따릅니다. 10k 자동 진입은 없습니다.
+FSKD*와 각 2,000step·전체 val500 비교를 실행하도록 준비했습니다. 2026-09-28 반영한 결과는
+**mIoU 14.3731%, pixel accuracy 77.1672%**입니다. 수치 검사는 통과했지만 15개 클래스 IoU가
+0으로 초기 성능이 낮습니다. [결과 기록](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/RESULTS.md)과
+[후속 계획](README.md)을 따릅니다. 10k 자동 진입은 없습니다.

@@ -9,7 +9,7 @@ Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정�
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
 25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,
 iBKD λ0.25와 LG·ALG의 2,000-step β 후보 비교, iBKD λ0.5의 4개 후보 2k 비교,
-FSKD*·C2VKD*의 고정 계수 2k 실행 준비입니다. 마지막 두 방법의 **2k 결과는 아직 없습니다.**
+FSKD*·C2VKD*의 고정 계수 2k 비교입니다. **두 방법도 2,000step·전체 val500 평가를 완료**했습니다.
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
 사용자 제공 2k v1의 완료된 1~7번과 #844의 8번을 합쳐 **λ0.25의 8개 모두
@@ -25,19 +25,28 @@ ALG는 8개 모두 2k까지 가이던스를 유지했고 LG와의 step 비교는
 [λ0.5 결과 표](reports/beta_screen/ti16_crop512_ibkd_lambda0p5_grid2000_4betas/RESULTS.md)에 반영했습니다.
 이로써 계획한 **LG 8개 + ALG 8개 + λ0.25 8개 + λ0.5 4개 = 28개**의 2k 비교가 완료됐습니다.
 LG·ALG·iBKD의 후속 후보는 아래 **mIoU 기준 상위 2개씩, 총 8개**입니다.
-2026-09-27 추가 결정: 먼저 FSKD*·C2VKD*를 각 2k·전체 val500 평가하고 결과를 확인한 뒤
-10k 실험을 별도로 진행합니다. 현재 실행은 10k로 자동 진입하지 않습니다.
+2026-09-28 반영: FSKD*·C2VKD*의 각 2k·전체 val500 결과는 각각 **mIoU 24.3009%, 14.3731%**입니다.
+[고정 비교군 결과](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/RESULTS.md)에 정리했습니다.
+기존 β 후보 28개와 고정 비교군 2개를 합쳐 **총 30개의 2k 실행이 완료**됐습니다.
+실행·수치 검사는 통과했지만 특히 C2VKD*는 15개 클래스 IoU가 0으로 초기 성능이 낮습니다.
+다음 10k 실험은 별도 구성하며 자동 진입하지 않습니다.
 λ0.5의 생략 후보 2·4·5·7번은 실패한 것이 아닙니다.
 Tiny 10k 결과는 아직 없으며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-## 실행 준비: FSKD*·C2VKD* 각 2,000step
+## 완료: FSKD*·C2VKD* 각 2,000step
+
+두 방법 모두 2,000step·전체 val500 평가를 완료했습니다. 준비 포함 **1시간 23분 36초**입니다.
+FSKD*는 mIoU 24.3009% / accuracy 80.5187%, C2VKD*는 mIoU 14.3731% / accuracy 77.1672%입니다.
+[결과 및 해석](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/RESULTS.md)과
+[수치·검사 요약](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/baseline_screen_summary.json)을
+확인합니다. **현재 2k를 다시 실행할 필요는 없으며 아래 명령은 실행 기록**입니다.
 
 두 방법은 기존 25-step smoke에서 각각 통과했습니다. 당시 공통 검사의 LG/ALG 불일치는
 이후 별도 반복 검사로 확인했으며, FSKD*/C2VKD*의 25-step·val2 결과를 2k 성능으로 취급하지 않습니다.
 [고정 설정](configs/baseline_grid2000_fskd_c2vkd_v1.json)과
-[실행 스크립트](scripts/run_grid2000_fskd_c2vkd.sh)를 준비했습니다. H200 학습 결과는 아직 없습니다.
+[실행 스크립트](scripts/run_grid2000_fskd_c2vkd.sh)를 사용한 결과입니다.
 
 ```bash
 env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_fskd_c2vkd.sh
@@ -72,11 +81,12 @@ env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes
 출력: `/app/output/cityscapes_ti16_fskd_c2vkd_grid2000_v1/run_<UTC>_<PID>/`.
 `artifacts/grid_summary.json`이 두 결과 통합 파일이고 각 방법 폴더에 `summary.json`, `steps.jsonl`,
 `resume.json`과 checkpoint가 남습니다. JSON/로그/체크포인트를 보관한 뒤 10k 실험을 결정합니다.
-예상 시간은 두 방법 합계 약 1시간 30분~2시간이며, 25-step 연산 속도에 기존 LG 2k의
-로딩·저장 시간과 전체 val 시간을 더한 추정입니다. 설치/다운로드와 장기 실행 속도에 따라 달라집니다.
+사전 예상은 두 방법 합계 약 1시간 30분~2시간이었으며 실제 준비 포함 1시간 23분 36초였습니다.
+학습+val 시간은 FSKD* 36분 58초, C2VKD* 37분 28초입니다.
 로컬 관련 검사 56개를 통과했습니다. 작은 CPU 모듈로 실제 공통 학습 루프의 고정 손실·
 pool 동결·중단/재개 상태 일치를 검사하고, 기존 FSKD/C2VKD 손실 primitive, 설정 잠금,
-전체 평가 연결, 실패 시 다음 방법 실행, 종료 로그 길이를 확인했습니다. H200 2k 결과를 뜻하지 않습니다.
+전체 평가 연결, 실패 시 다음 방법 실행, 종료 로그 길이를 확인했습니다.
+이 로컬 코드 검사와 이후 H200 2k 결과는 별개의 검증 기록입니다.
 
 ## 후속 계획: mIoU 기준 10k 후보 2개씩
 

@@ -95,5 +95,7 @@ forward/backward 검사이며, val2장 지표는 연결 진단이다.
 동일 update 재현도 통과했다. Teacher feature는 이 로컬 검사에서 합성값을 사용했다.
 이후 사용자 제공 v3 H200 로그에서 **FSKD* 25 update·val2·마지막 update 재개 검사는
 개별 통과**했다. v3 전체 상태의 실패 원인은 LG/ALG의 공통 궤적 검사였고 해당 문제는
-별도 v4 반복 검사로 확인했다. FSKD*의 2,000step·전체 val500 결과는 아직 없다.
-현재 준비한 후속 실행은 [README](README.md)를 따른다.
+별도 v4 반복 검사로 확인했다. 2026-09-28 반영한 FSKD*의 2,000step·전체 val500 결과는
+**mIoU 24.3009%, pixel accuracy 80.5187%**이며 고정 계수를 그대로 사용했다.
+[결과 기록](reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/RESULTS.md)과
+[후속 계획](README.md)을 따른다.
