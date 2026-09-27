@@ -8,7 +8,7 @@ Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정�
 2026-09-26 사용자 결정: Tiny를 먼저 검사하며 **기존 OpenMMLab teacher를 유지**합니다.
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
 25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,
-iBKD λ0.25와 LG·ALG 묶음의 2,000-step β 후보 비교입니다.
+iBKD λ0.25와 LG·ALG의 2,000-step β 후보 비교, iBKD λ0.5의 4개 후보 2k 실행 준비입니다.
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
 사용자 제공 2k v1의 완료된 1~7번과 #844의 8번을 합쳐 **λ0.25의 8개 모두
@@ -19,10 +19,65 @@ LG·ALG도 **각 8개, 총 16개 모두 2,000step·전체 val500 완료**했습�
 [LG·ALG 결과 표](reports/beta_screen/ti16_crop512_lg_alg_grid2000/RESULTS.md)에 반영했으며,
 두 방법 모두 accuracy/mIoU 1위는 β=0.11195046919685056, 2위는 β=0.009329205766404213입니다.
 ALG는 8개 모두 2k까지 가이던스를 유지했고 LG와의 step 비교는 허용오차 내에서 통과했습니다.
-남은 단계는 **iBKD λ0.5의 낮은 β 8개 2k 비교 → 네 실험군의 10k 후보 선택**입니다.
+2026-09-27 사용자 결정으로 λ0.5는 기존 후보 **1·3·6·8번 4개부터** 2k 비교합니다.
+이 결과를 확인한 뒤 네 실험군의 10k 후보를 정하며, 필요하면 생략한 인접 β를 추가합니다.
 Tiny 10k 결과는 아직 없으며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
+
+## 다음 실행: iBKD λ0.5 · 후보 1/3/6/8 · 2,000step
+
+기존 500step에서 통과한 **4개 후보만** 각각 0→2,000step 학습하고 전체 val 500장을 평가합니다.
+추가 GPU 연결 smoke나 이전 checkpoint는 필요하지 않습니다. 아직 이 네 후보의 H200 2k 결과는 없습니다.
+[고정 설정](configs/beta_grid2000_ibkd_l050_4betas_v1.json)을 사용합니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_CANDIDATE=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_grid2000_ibkd050_4betas.sh
+```
+
+| 기존 후보 번호 | β | 초기 β×guidance/CE 기준 |
+|---|---:|---:|
+| 1 | 0.03668347229720436 | 1.5% |
+| 3 | 0.11005041689161307 | 4.5% |
+| 6 | 0.2934677783776349 | 12% |
+| 8 | 0.5869355567552698 | 24% |
+
+최솟값·최댓값과 중간 범위를 남긴 탐색입니다. 500step 성능 순위로 고른 것이 아니며, 나머지
+2·4·5·7번은 실패 후보가 아니라 이번 묶음에서 생략한 후보입니다. 1~4로 다시 번호를 매기지 않습니다.
+기존 λ0.25의 8개 및 LG·ALG 각 8개 결과는 그대로 보존하고 λ0.5의 탐색 수만 4개로 기록합니다.
+
+- Tiny·OpenMMLab DeepLabV3-R101 teacher·fine train2975·crop512·batch8·seed1·decoder1·FP32·
+  SGD LR0.01·80k LR schedule·iBKD CPU 결정성 경로를 유지합니다. β를 재계산하지 않습니다.
+  λ=0.5로 `guidance = 0.5 × alignment + 0.5 × fusion`, `loss = CE + β × guidance`를 사용합니다.
+- **iBKD warm-up=20epoch**도 유지합니다. 2k는 약 5.38epoch이므로 이번에는 가이던스가 켜진
+  구간에서 β를 비교합니다. ALG의 warm-up=0과 혼동하지 않습니다.
+- 고정 2,000step에서 전체 fine val500을 한 번 평가해 pixel accuracy·mIoU·19 class IoU를 기록합니다.
+  원본 해상도·window/stride512·평가 window batch1·CPU thread4이며 test는 사용하지 않습니다.
+  학습 순서는 1→3→6→8이고, 각 후보는 같은 seed와 초기값·입력 순서로 새로 시작합니다.
+- 예상 시간은 준비·전체 val 포함 **약 5시간**입니다. 완료까지 더 걸려도 별도 5시간 상한을 두지 않고
+  기존 **10시간 예산 중 마지막 2분만 저장에 남겨 9시간58분에 중단 요청**을 보냅니다.
+  기본 기준은 스크립트 진입 시각입니다. 플랫폼 실제 시작/마감은 기존
+  `CITYSCAPES_TI16_JOB_STARTED`/`CITYSCAPES_TI16_JOB_DEADLINE`으로 전달할 수 있습니다.
+- 250step·epoch 경계·최종·시간 중단 시 checkpoint를 저장합니다. 수치 오류는 해당 후보를 기록하고
+  남은 후보를 계속 실행합니다. 시간 중단이면 이후 후보는 `not_run`으로 남깁니다.
+- 중간 로그를 유지하고 마지막 `[CITYSCAPES_TI16_GRID2000_FINAL]`에 `pack=ibkd_l050_4betas`,
+  `configured_pack_runs=4`, `configured_candidates=[1,3,6,8]`과 네 결과를 모읍니다.
+  β·λ·선택 step/epoch·loss/CE/guidance·alignment/fusion·정확도/mIoU/class IoU·가이던스 상태·
+  저장 검사·실패/중단 이유를 포함합니다. 긴 오류를 넣은 로컬 검사에서도 약 11,448 bytes로
+  마지막 65,000자 안에 들어갔습니다. 10k나 80k 학습으로 자동 진입하지 않습니다.
+
+출력: `/app/output/cityscapes_ti16_ibkd_l050_grid2000_4betas_v1/run_<UTC>_<PID>/`.
+`artifacts/grid_summary.json`과 후보별 `summary.json`, `resume.json`, `checkpoints/`, `steps.jsonl`을 보존합니다.
+시간 중단 후 재개하려면 해당 후보 폴더를 다음 컨테이너로 복원하고 **동일 commit**에서
+`CITYSCAPES_TI16_START_CANDIDATE`에 기존 번호 **1/3/6/8 중 하나**를 지정합니다.
+`CITYSCAPES_TI16_RESUME`은 그 후보의 복원된 `resume.json`이며 첫 후보에만 적용됩니다.
+예를 들어 시작 번호 3이면 3번을 재개하고 6·8번을 새로 학습합니다. checkpoint가 없으면
+RESUME을 비우고 해당 후보부터 새로 학습합니다.
+
+로컬 검사 **29개 통과**: 기존 2k/LG·ALG 검사와 새 4후보 선택·CLI·실패 후 진행·중단/재개·
+종료 로그 검사를 포함합니다. 작은 CPU 모델의 실제 공유 학습 루프에서 λ0.5 loss 구성과
+중단/재개 후 모델·optimizer·scheduler·controller·입력·평가값 일치도 확인했습니다.
+이는 실제 H200의 2k 성능이나 안정성을 미리 측정한 결과는 아닙니다.
 
 ## 완료: LG·ALG 묶음 2,000-step 후보 비교
 
@@ -177,7 +232,7 @@ val500 평가·후보 순위 선정·500/2000step 자동 진입은 없습니다.
 기존 9시간45분 별도 상한과 9시간42분 중단은 새 실행에 적용하지 않습니다.
 [v1 설정](configs/beta_grid2000_ibkd_l025_v1.json)은 기존 결과 식별용으로 그대로 보존합니다.
 아래 명령은 8개를 처음부터 다시 학습하는 실행 기록입니다. **현재 이 묶음을 다시 돌릴 필요는 없습니다.**
-LG·ALG 각 8개 묶음도 완료됐으며 위 결과 표에 기록했습니다. 다음 2k 비교 대상은 λ0.5의 8개입니다.
+LG·ALG 각 8개 묶음도 완료됐으며 위 결과 표에 기록했습니다. 다음 2k 비교는 λ0.5의 1·3·6·8번 4개부터입니다.
 LG·ALG는 2k 구간에서도 controller 동작으로 갈라질 수 있어 각각 실행했고, 이번에는 종료가 일어나지 않았습니다.
 
 ```bash

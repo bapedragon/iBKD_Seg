@@ -19,6 +19,8 @@ def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
     else:
         if start_run is not None or not 1<=start_candidate<=8:
             raise ValueError('iBKD pack uses --start-candidate 1..8')
+        if config.get('pack')=='ibkd_l050_4betas' and start_candidate not in (1,3,6,8):
+            raise ValueError('iBKD lambda0.5 uses original candidate IDs 1,3,6,8')
         plans=[p for p in config['runs'] if p['candidate']>=start_candidate]
     if run_id:
         plans=[p for p in plans if p['id']==run_id]
@@ -33,6 +35,9 @@ def final_line(report, plans):
     reserve=report.get('save_reserve_seconds',180 if legacy else 120)
     lg_alg=(report.get('pack')=='lg_alg' or
             report.get('protocol_id')=='cityscapes_ti16_crop512_lg_alg_grid2000_v1')
+    ibkd050=(report.get('pack')=='ibkd_l050_4betas' or
+             report.get('protocol_id')=='cityscapes_ti16_crop512_ibkd_l050_grid2000_4betas_v1')
+    pack='lg_alg' if lg_alg else 'ibkd_l050_4betas' if ibkd050 else 'ibkd_l025'
     by_id = {r['run_id']:r for r in report.get('runs', [])}
     rows = []
     for plan in plans:
@@ -47,7 +52,7 @@ def final_line(report, plans):
                    checkpoint_pointer=bounded_text((raw.get('checkpoint') or {}).get('pointer'), 1024))
         rows.append(row)
     result = dict(status=report.get('status'), protocol_id=report.get('protocol_id'),
-                  pack='lg_alg' if lg_alg else 'ibkd_l025', expected_runs=len(plans), configured_pack_runs=16 if lg_alg else 8,
+                  pack=pack, expected_runs=len(plans), configured_pack_runs=16 if lg_alg else 4 if ibkd050 else 8,
                   invocation_start_candidate=report.get('start_candidate', 1), runs=rows,
                   target_steps=2000, schedule_total_steps=80000, seed=1,
                   selection_rule='fixed_2000_endpoint_not_best_checkpoint',
@@ -76,6 +81,9 @@ def final_line(report, plans):
                       lg_alg_active_prefix_pairs=report.get('lg_alg_active_prefix_pairs',[]),
                       alg_warmup_epochs=0,alg_earliest_possible_off_step=745,
                       prefix_comparison_scope='observed steps with guidance on in both runs; post-shutdown divergence is expected')
+    if ibkd050:
+        result.update(configured_candidates=[1,3,6,8],ibkd_warmup_epochs=20,
+                      guidance_scope='warmup20 keeps guidance on throughout this 2000-step screen')
     line = MARKER + json.dumps(result, separators=(',', ':'), ensure_ascii=True, allow_nan=False)
     if len(line)+1 > MAX_FINAL_BYTES:
         raise ValueError('2000-step terminal report exceeded 50,000 bytes')

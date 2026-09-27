@@ -215,6 +215,12 @@ class TinyScreen2000Tests(unittest.TestCase):
 
 class TinyScreenTrainingTests(unittest.TestCase):
     def test_real_loop_pause_resume_matches_uninterrupted_and_evaluates_only_at_endpoint(self):
+        self.check_real_loop(screen.CONFIG)
+
+    def test_lambda050_real_loop_pause_resume_preserves_fusion_and_state(self):
+        self.check_real_loop(screen.IBKD050_CONFIG)
+
+    def check_real_loop(self, config_path):
         # Execute the shared production training loop/checkpoint code on small CPU modules.
         # No H200 speed or large-model numeric claim is inferred from this test.
         class Student(torch.nn.Module):
@@ -257,7 +263,7 @@ class TinyScreenTrainingTests(unittest.TestCase):
             return torch.optim.SGD(list(model.parameters())+list(guide.parameters()),lr=.001,momentum=.9,nesterov=True),Scheduler()
         # Import optimizer internals before replacing torch.device for the CUDA-only entry point.
         torch.optim.SGD(Student().parameters(),lr=.001)
-        config=screen.load_config(screen.CONFIG)
+        config=screen.load_config(config_path)
         config.update(steps=8,train_samples=10,batch_size=4,validation_samples=3,original_target_hw=[1,19])
         plan=config['runs'][0]
         modules={n:types.ModuleType(n) for n in ('segm','segm.utils','segm.utils.torch','segm.model','segm.model.utils')}
@@ -290,6 +296,10 @@ class TinyScreenTrainingTests(unittest.TestCase):
                 payload=torch.load(output/pointer['current']['file'],weights_only=True)
                 return report,payload,output/'resume.json'
             full,full_state,_=execute('full')
+            for row in full['losses']:
+                expected=(1-plan['lambda'])*row['alignment']+plan['lambda']*row['fusion']
+                self.assertAlmostEqual(row['guidance'],expected,places=6)
+                self.assertAlmostEqual(row['loss'],row['ce']+plan['beta']*expected,places=6)
             paused,paused_state,pointer=execute('paused',pause_step=4)
             self.assertEqual(paused['status'],'paused')
             self.assertEqual(paused['completed_steps'],4)

@@ -19,13 +19,25 @@ from .tiny_screen2000_report import final_line, select_plans
 CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v2.json'
 LEGACY_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
 LG_ALG_CONFIG=CONFIG_DIR/'beta_grid2000_lg_alg_v1.json'
+IBKD050_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l050_4betas_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG) if p.name==path.name),None)
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG) if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny 2000-step pack config')
+    if locked==IBKD050_CONFIG:
+        original=load_config(CONFIG)
+        changed={'protocol_id','pack','runs','ibkd_lambdas','beta_multipliers','continuation_policy'}
+        if set(config)!=set(original) or any(config[k]!=v for k,v in original.items() if k not in changed):
+            raise ValueError('iBKD lambda0.5 common training or evaluation protocol drift')
+        old=json.loads((CONFIG_DIR/'beta_grid500_shared_lg_8betas_v6.json').read_text())
+        expected=[p for p in old['runs'] if p.get('lambda')==.5 and p['candidate'] in (1,3,6,8)]
+        if (config['runs']!=expected or config['ibkd_lambdas']!=[.5]
+                or config['beta_multipliers']!=[.5,1.5,4,8] or config['pack']!='ibkd_l050_4betas'):
+            raise ValueError('iBKD lambda0.5 pack must contain the fixed original candidates 1,3,6,8')
+        return config
     if locked==LG_ALG_CONFIG:
         original=load_config(CONFIG)
         changed={'protocol_id','pack','runs','ibkd_lambdas','start_policy','continuation_policy'}
