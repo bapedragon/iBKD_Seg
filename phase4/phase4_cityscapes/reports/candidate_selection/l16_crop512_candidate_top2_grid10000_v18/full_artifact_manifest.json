@@ -1,0 +1,435 @@
+{
+  "import_date": "2026-09-28",
+  "protocol_id": "cityscapes_segmenter_l16_crop512_candidate_top2_grid10000_v18",
+  "organization_status": "moved_and_all_destination_hashes_verified",
+  "raw_files_in_git": false,
+  "all_input_files_preserved": true,
+  "file_count": 60,
+  "total_bytes": 57125411,
+  "packs": [
+    {
+      "pack": 1,
+      "issue": 810,
+      "original_directory": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810",
+      "local_directory": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810",
+      "file_count": 15,
+      "bytes": 14274924,
+      "files": [
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/bapedragon_810_result.txt",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/h200_issue_810.log",
+          "bytes": 167449,
+          "sha256": "d97e8d8f03353d9b51d88b4984a856f4e8b1a190e4ea85e15df660e2d6ed9fc2"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/beta_grid_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/beta_grid_summary.json",
+          "bytes": 123047,
+          "sha256": "d825842546f02cfbc6a51ecfa8e2271c3b812db7a98ca37f58986f62f023752b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/config.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/config.json",
+          "bytes": 3239,
+          "sha256": "1633df08c1e5ebe68d2260b4c92107d498ad9992d2728c3fd4763d1d35d4ff2b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/execution_plan.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/execution_plan.json",
+          "bytes": 323,
+          "sha256": "9ad4a3973a66135a94e1dd9f38eec9335c2283170179efb5641e5aa206b299a0"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/ibkd_lambda_0p25_beta_0p25/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/ibkd_lambda_0p25_beta_0p25/steps.jsonl",
+          "bytes": 3640861,
+          "sha256": "aa124d9ec847b9464bcc2740a569a92b1434de5fbf2a7780b186d332faa3018c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/ibkd_lambda_0p25_beta_0p25/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/ibkd_lambda_0p25_beta_0p25/summary.json",
+          "bytes": 40477,
+          "sha256": "2aba47fde8f1f7cebec4c1873334b7a86eb0d6cef4bcd4ea2b9202896c83a5f9"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/labels.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/labels.json",
+          "bytes": 500106,
+          "sha256": "088a20656cf87ecd5eade7c79115390bf5744d559bceea0fee2102a30f1985dd"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/lg_beta_0p05/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/lg_beta_0p05/steps.jsonl",
+          "bytes": 3681933,
+          "sha256": "bfa82a594789316be708aa9e1c0c0dd694df39aeab590fefd03a95b94c397ebf"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/lg_beta_0p05/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/lg_beta_0p05/summary.json",
+          "bytes": 39681,
+          "sha256": "6d081804003a40bfc4e57065c433edfd21ff5c9b484b5e76032ea15b40ae71df"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/provenance.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/provenance.json",
+          "bytes": 121622,
+          "sha256": "7a6ad66898374543f17973c53279f61e923d00df8786cb2f7df8c3dc182f0771"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/artifacts/stability_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/stability_summary.json",
+          "bytes": 123047,
+          "sha256": "d825842546f02cfbc6a51ecfa8e2271c3b812db7a98ca37f58986f62f023752b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/manifest.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/manifest.json",
+          "bytes": 1843036,
+          "sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/preparation.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/preparation.json",
+          "bytes": 3821096,
+          "sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/run.log",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/run.log",
+          "bytes": 167449,
+          "sha256": "d97e8d8f03353d9b51d88b4984a856f4e8b1a190e4ea85e15df660e2d6ed9fc2"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_810/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack1/upload_check.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/upload_check.json",
+          "bytes": 1558,
+          "sha256": "5f971925d599f349c44fa385b4ec03378698a322c41080520e0597945fec8ee2"
+        }
+      ],
+      "result_txt_and_run_log_identical": true,
+      "terminal_json_matches_artifact": true,
+      "run_ids": [
+        "ibkd_lambda_0p25_beta_0p25",
+        "lg_beta_0p05"
+      ]
+    },
+    {
+      "pack": 2,
+      "issue": 812,
+      "original_directory": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812",
+      "local_directory": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812",
+      "file_count": 15,
+      "bytes": 14265218,
+      "files": [
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/bapedragon_812_result.txt",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/h200_issue_812.log",
+          "bytes": 167516,
+          "sha256": "245b10f3e564816bbb56f905c6b34ef276480ce6330b5cab3cf2871677366190"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/beta_grid_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/beta_grid_summary.json",
+          "bytes": 123071,
+          "sha256": "7e2b966a6d364afe1ff843ce9500f4589fbc443c0b8a3fe19da913090258493a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/config.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/config.json",
+          "bytes": 3239,
+          "sha256": "1633df08c1e5ebe68d2260b4c92107d498ad9992d2728c3fd4763d1d35d4ff2b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/execution_plan.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/execution_plan.json",
+          "bytes": 320,
+          "sha256": "6f6a2c743dd753696a2f04eed874c9ca3eda2f148fe66483d692c9f0b5dbb43c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/ibkd_lambda_0p25_beta_0p5/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/ibkd_lambda_0p25_beta_0p5/steps.jsonl",
+          "bytes": 3632606,
+          "sha256": "3cb5821fbad9c2bad5b6b0e7c37055bff71e82d9e8300f52ab1d36a41d18fa88"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/ibkd_lambda_0p25_beta_0p5/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/ibkd_lambda_0p25_beta_0p5/summary.json",
+          "bytes": 40458,
+          "sha256": "2cdaa227fa19954a5e50fe418d3fbb431730a30e8062b810ef4a51baab4664cb"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/labels.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/labels.json",
+          "bytes": 500106,
+          "sha256": "088a20656cf87ecd5eade7c79115390bf5744d559bceea0fee2102a30f1985dd"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/lg_beta_0p02/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/lg_beta_0p02/steps.jsonl",
+          "bytes": 3680285,
+          "sha256": "a21ff18d5700fb64a376db8bd6411b919166412adee8aa62ea9e0f3b87b1eada"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/lg_beta_0p02/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/lg_beta_0p02/summary.json",
+          "bytes": 39718,
+          "sha256": "2f08f239ee5b657278e1f0eda7b3f0269926629b4731e3cad4cd197997375de2"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/provenance.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/provenance.json",
+          "bytes": 121622,
+          "sha256": "7a6ad66898374543f17973c53279f61e923d00df8786cb2f7df8c3dc182f0771"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/artifacts/stability_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/stability_summary.json",
+          "bytes": 123071,
+          "sha256": "7e2b966a6d364afe1ff843ce9500f4589fbc443c0b8a3fe19da913090258493a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/manifest.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/manifest.json",
+          "bytes": 1843036,
+          "sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/preparation.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/preparation.json",
+          "bytes": 3821096,
+          "sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/run.log",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/run.log",
+          "bytes": 167516,
+          "sha256": "245b10f3e564816bbb56f905c6b34ef276480ce6330b5cab3cf2871677366190"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_812/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack2/upload_check.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/upload_check.json",
+          "bytes": 1558,
+          "sha256": "ab6afdf22cb44744af234bca0b6be6673ee55e8e736e475210ff8d114e08fd15"
+        }
+      ],
+      "result_txt_and_run_log_identical": true,
+      "terminal_json_matches_artifact": true,
+      "run_ids": [
+        "ibkd_lambda_0p25_beta_0p5",
+        "lg_beta_0p02"
+      ]
+    },
+    {
+      "pack": 3,
+      "issue": 813,
+      "original_directory": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813",
+      "local_directory": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813",
+      "file_count": 15,
+      "bytes": 14311505,
+      "files": [
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/bapedragon_813_result.txt",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/h200_issue_813.log",
+          "bytes": 168853,
+          "sha256": "de691a442f0a1bd6d70e1380c8229dce2d45ed65bd0f18469046d39a44711ced"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/alg_beta_0p05/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/alg_beta_0p05/steps.jsonl",
+          "bytes": 3681954,
+          "sha256": "c1b5f587179e7efb123c5ab7e937235bd85807ebef6a29f151a284f88e2e4f29"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/alg_beta_0p05/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/alg_beta_0p05/summary.json",
+          "bytes": 39684,
+          "sha256": "681b82368324cfb79b1f511be16dbbab3ae5974c500d7a7995fd881d44b3b15a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/beta_grid_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/beta_grid_summary.json",
+          "bytes": 123065,
+          "sha256": "b66cbee2f8cbcc86cc8e4981411a784ef6f65ee749f0bf792a9a81eed6a36edf"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/config.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/config.json",
+          "bytes": 3239,
+          "sha256": "1633df08c1e5ebe68d2260b4c92107d498ad9992d2728c3fd4763d1d35d4ff2b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/execution_plan.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/execution_plan.json",
+          "bytes": 320,
+          "sha256": "67e28b6c7724f7e71e278ad4d210d95b8b508ee1595e2bc41521db0741f42cef"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/ibkd_lambda_0p5_beta_0p1/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/ibkd_lambda_0p5_beta_0p1/steps.jsonl",
+          "bytes": 3674567,
+          "sha256": "3e7e60d1737943c7859a47a68f6f7938cf8ec62c85cb5f79dd49e23e1aece85a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/ibkd_lambda_0p5_beta_0p1/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/ibkd_lambda_0p5_beta_0p1/summary.json",
+          "bytes": 40487,
+          "sha256": "8f696907043acb554b8a8be099ee712f0e679d60eb64c07803bced35d09e1ea3"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/labels.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/labels.json",
+          "bytes": 500106,
+          "sha256": "088a20656cf87ecd5eade7c79115390bf5744d559bceea0fee2102a30f1985dd"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/provenance.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/provenance.json",
+          "bytes": 121622,
+          "sha256": "7a6ad66898374543f17973c53279f61e923d00df8786cb2f7df8c3dc182f0771"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/artifacts/stability_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/stability_summary.json",
+          "bytes": 123065,
+          "sha256": "b66cbee2f8cbcc86cc8e4981411a784ef6f65ee749f0bf792a9a81eed6a36edf"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/manifest.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/manifest.json",
+          "bytes": 1843036,
+          "sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/preparation.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/preparation.json",
+          "bytes": 3821096,
+          "sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/run.log",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/run.log",
+          "bytes": 168853,
+          "sha256": "de691a442f0a1bd6d70e1380c8229dce2d45ed65bd0f18469046d39a44711ced"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_813/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack3/upload_check.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/upload_check.json",
+          "bytes": 1558,
+          "sha256": "23ca2f030dcfa8f180213053baa992d651907e185f73581e1b9abe56af65bed8"
+        }
+      ],
+      "result_txt_and_run_log_identical": true,
+      "terminal_json_matches_artifact": true,
+      "run_ids": [
+        "alg_beta_0p05",
+        "ibkd_lambda_0p5_beta_0p1"
+      ]
+    },
+    {
+      "pack": 4,
+      "issue": 814,
+      "original_directory": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814",
+      "local_directory": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814",
+      "file_count": 15,
+      "bytes": 14273764,
+      "files": [
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/bapedragon_814_result.txt",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/h200_issue_814.log",
+          "bytes": 167966,
+          "sha256": "3afb8e63876386edd0ef3629808a87ba05ee36fa4b6a3a3d0b8b444e2c57276a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/alg_beta_0p02/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/alg_beta_0p02/steps.jsonl",
+          "bytes": 3680302,
+          "sha256": "74f9bfc38b47458bed97484730116429e8362afa2873426e1d4913f48b8ec1f7"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/alg_beta_0p02/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/alg_beta_0p02/summary.json",
+          "bytes": 39724,
+          "sha256": "a9a012a8093221a7cab3583dcccede78d26de0f59cff84fb09b58649b3b652ad"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/beta_grid_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/beta_grid_summary.json",
+          "bytes": 123139,
+          "sha256": "fcee09090234326e9bda8352507c00135835fecfc2e2b3459a3ac9d8c1882730"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/config.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/config.json",
+          "bytes": 3239,
+          "sha256": "1633df08c1e5ebe68d2260b4c92107d498ad9992d2728c3fd4763d1d35d4ff2b"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/execution_plan.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/execution_plan.json",
+          "bytes": 323,
+          "sha256": "d62120921d7ada7160b575179b2d26c8b751b30b02ffae4eb856683f9218e68d"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/ibkd_lambda_0p5_beta_0p25/steps.jsonl",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/ibkd_lambda_0p5_beta_0p25/steps.jsonl",
+          "bytes": 3640069,
+          "sha256": "cbaef23bd4373130deb58e5c56b92c88cbe1e022c7a32f66c6a8c93ea3fccb7f"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/ibkd_lambda_0p5_beta_0p25/summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/ibkd_lambda_0p5_beta_0p25/summary.json",
+          "bytes": 40479,
+          "sha256": "6b432560615995ef4e4b1d2d98a8034ab7901231717d142ddfba916c2041bca2"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/labels.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/labels.json",
+          "bytes": 500106,
+          "sha256": "088a20656cf87ecd5eade7c79115390bf5744d559bceea0fee2102a30f1985dd"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/provenance.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/provenance.json",
+          "bytes": 121622,
+          "sha256": "7a6ad66898374543f17973c53279f61e923d00df8786cb2f7df8c3dc182f0771"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/artifacts/stability_summary.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/stability_summary.json",
+          "bytes": 123139,
+          "sha256": "fcee09090234326e9bda8352507c00135835fecfc2e2b3459a3ac9d8c1882730"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/manifest.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/manifest.json",
+          "bytes": 1843036,
+          "sha256": "d0fdc7bfe937c00088ac2a4d0742b0a3e857d5d81c5b7e92b914d277bacb39e6"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/preparation.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/preparation.json",
+          "bytes": 3821096,
+          "sha256": "03234ad65d7fced2ecc8900b84003beb61f73f2940fc664edf52138001932a8c"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/run.log",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/run.log",
+          "bytes": 167966,
+          "sha256": "3afb8e63876386edd0ef3629808a87ba05ee36fa4b6a3a3d0b8b444e2c57276a"
+        },
+        {
+          "original_path": "/Users/bagcheolhyeon/Downloads/bapedragon_810/bapedragon_814/cityscapes_l16_crop512_candidate_top2_grid10000_v18_pack4/upload_check.json",
+          "local_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/upload_check.json",
+          "bytes": 1558,
+          "sha256": "c114c2ca5bf1c64a4819b04c368435c60f88bc1fad15c218ce918426c9fb16aa"
+        }
+      ],
+      "result_txt_and_run_log_identical": true,
+      "terminal_json_matches_artifact": true,
+      "run_ids": [
+        "alg_beta_0p02",
+        "ibkd_lambda_0p5_beta_0p25"
+      ]
+    }
+  ]
+}

@@ -35,6 +35,21 @@
     "lg_alg_exact_match_by_beta": {
       "0p05": true,
       "0p02": true
+    },
+    "full_artifact_import": {
+      "audited_date": "2026-09-28",
+      "status": "passed",
+      "report": "RAW_IMPORT_AUDIT.md",
+      "details": "raw_import_audit.json",
+      "file_manifest": "full_artifact_manifest.json",
+      "files_verified_after_move": 60,
+      "step_records_checked": 80000,
+      "all_existing_metrics_match": true,
+      "intermediate_validation_available": false,
+      "model_checkpoint_files_found": 0,
+      "lg_alg_scalar_logs_bitwise_equal": false,
+      "lg_alg_ce_loss_max_absolute_difference": 4.76837158203125e-07,
+      "lg_alg_final_reported_student_hashes_match": true
     }
   },
   "global_ranking": [

@@ -19,8 +19,10 @@
 - 모든 실행에서 teacher frozen, student parameter와 optimizer state 유한값 확인
 - student 초기 state hash, teacher state hash, 전체 입력 stream hash가 8개에서 동일
 - 같은 beta의 LG와 ALG는 최종 metric과 student state hash까지 동일
-- 원본 첨부 로그는 앞부분이 잘린 console snapshot이지만 각 pack의 마지막
-  machine-readable JSON은 완전하며 파싱과 protocol ID 검사를 통과함
+- 최초 정리는 앞부분이 잘린 console snapshot의 완전한 마지막 JSON을 기준으로 수행함
+- 2026-09-28에 issue 810·812·813·814의 전체 파일 60개를 추가 수령해 정리함
+- 80,000개 step 기록의 연속성과 입력 stream 해시, 최종 혼동행렬의 metric을
+  다시 확인했고 기존 표와 일치함. [원본 정리 및 종료 전후 분석](RAW_IMPORT_AUDIT.md) 참조
 
 ## 전체 결과
 
@@ -36,8 +38,9 @@
 | 8 | iBKD | 0.50 | 0.25 | 94.002% | 65.165% | step 7,441 | 5.38시간 | 안정 |
 
 동률 표시는 실제 동률입니다. ALG controller가 10,000 step까지 guidance를 끄지 않은
-두 beta에서는 해당 LG와 ALG가 같은 update를 수행해 최종 student state까지
-byte-identical했습니다.
+두 beta에서는 해당 LG와 ALG의 최종 student state hash가 같았습니다.
+전체 scalar 로그의 CE·loss에는 최대 `4.7684e-7` 차이가 있어, 모든 로그가 bitwise
+동일했다는 뜻은 아닙니다. 가중치 파일이 없어 최종 state hash 자체를 다시 계산할 수는 없습니다.
 
 iBKD `lambda=0.25, beta=0.5`는 pixel accuracy와 mIoU 모두 전체 1위였습니다.
 2,000-step 중간값만 보면 이 조합이 최상위가 아니었으므로, 2,000-step 결과는
@@ -66,5 +69,10 @@ ImageNet 초기 state에서 새로 시작합니다. 표준 logit KD는 네 방�
 - `candidate_results.csv`: 여덟 후보의 핵심 수치와 선택 여부
 - `candidate_summary.json`: 실행별 metric, class IoU, state hash, controller와 감사 결과
 - `source_manifest.json`: pack별 사용자 제공 H200 로그 snapshot의 SHA-256과 terminal JSON hash
+- `full_artifact_manifest.json`: 전체 원본 60개의 기존·정리 경로, 크기, SHA-256
+- `raw_import_audit.json`: 전체 step 기록 및 최종 metric 검산, iBKD 종료 전후 CE 분석
+- `RAW_IMPORT_AUDIT.md`: 원본 폴더 안내와 분석 해석. 이 실행은 중간 mIoU와 모델
+  체크포인트가 없어 guidance 종료 전후 mIoU 비교는 할 수 없음
 
-저장소 정책에 따라 원시 실행 로그와 체크포인트는 Git에 포함하지 않았습니다.
+원본은 `phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/`
+아래 pack별로 보관하며 Git에는 포함하지 않았습니다. 제공된 파일에 모델 체크포인트는 없습니다.

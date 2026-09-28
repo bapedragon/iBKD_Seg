@@ -70,5 +70,21 @@
   },
   "stored_result": "candidate_summary.json",
   "raw_logs_stored_in_git": false,
-  "note": "Git stores parsed terminal JSON metrics, per-class IoU, state hashes and source hashes; raw execution output remains excluded by repository policy."
+  "note": "Initial sources preserve the original terminal-log snapshot provenance. Complete output directories were added on 2026-09-28; see full_artifact_import. Git stores curated results and file hashes, while raw files remain in ignored local storage.",
+  "full_artifact_import": {
+    "imported_date": "2026-09-28",
+    "source_type": "user_provided_complete_h200_output_directories",
+    "issues": [
+      810,
+      812,
+      813,
+      814
+    ],
+    "organization_status": "moved_and_all_destination_hashes_verified",
+    "file_manifest": "full_artifact_manifest.json",
+    "audit": "raw_import_audit.json",
+    "report": "RAW_IMPORT_AUDIT.md",
+    "source_files_preserved": 60,
+    "raw_files_stored_in_git": false
+  }
 }
