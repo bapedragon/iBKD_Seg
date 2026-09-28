@@ -1,6 +1,10 @@
 # Cityscapes · Segmenter-Ti/16
 
 **2026-09-29 확인: L/16 첫 step CE 비율에 맞춘 ALG 후보 4개·2,000step·전체 val500 완료.**
+**다음 사용자 승인 실행 준비 완료:** 새 ALG 1위(초기 13.7901%, β=0.08804125116886172)와
+iBKD λ0.25(L 초기 14.6835%, β=0.24648659785043606)를 각각 **0→10,000step** 실행합니다.
+[새 10k 묶음 안내](experiments/l16_ratio_match_v1/README.md#새-10k-묶음-alg-1위와-ibkd-λ025)에
+선정 근거·고정 조건·실행·보관 경로를 정리했습니다. 코드는 준비·로컬 검증됐으며 H200은 아직 실행하지 않았습니다.
 [새 프로토콜·후보·실행 안내](experiments/l16_ratio_match_v1/README.md)와
 [이번 결과·L/Tiny 비교](experiments/l16_ratio_match_v1/results/alg_grid2000/RESULTS.md)를 확인합니다.
 준비 포함 **2시간 14분 14초**, 초기 비율·계획 검사는 모두 통과했습니다. 새 Tiny 순위는

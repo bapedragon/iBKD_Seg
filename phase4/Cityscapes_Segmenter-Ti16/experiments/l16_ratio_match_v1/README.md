@@ -88,3 +88,64 @@ env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes
 - 향후 iBKD도 λ0.25와 λ0.5를 각각 수행합니다. L에서는 β 후보를 그대로 두고 λ만 바꿔서
   두 λ의 초기 비율이 달랐습니다. 각 λ에서 L이 실제 사용한 비율을 따로 맞춥니다.
   L의 λ0.25·β0.1은 2k 평가가 없으므로 전체 네 후보 순위에는 추가 확인이 필요합니다.
+
+## 새 10k 묶음: ALG 1위와 iBKD λ0.25
+
+2026-09-29 사용자 요청으로 **두 실행만** 준비했습니다. H200 실행 결과는 아직 없습니다.
+ALG는 이번 새 2k mIoU 1위이며, iBKD는 L에서 β0.5로 쓴 첫 step 비율을 사용자가 직접
+선택했습니다. **iBKD 새 β의 Tiny 2k 선별은 생략하고 바로 10k**로 진행하는 요청입니다.
+
+| 실행 순서 | 실행 ID | 방법 | β | 첫 step 목표 비율 | 선정 근거 |
+|---|---|---|---:|---:|---|
+| 1 | alg_l16r3_10k | ALG | 0.08804125116886172 | 13.790086% | 새 2k mIoU 1위, 38.2174% |
+| 2 | ibkd_l025_l16b05_10k | iBKD λ0.25 | 0.24648659785043606 | 14.683469% | L β0.5 첫 step 비율을 사용자가 선택 |
+
+ALG는 기존 새 후보 3의 β를 그대로 사용합니다. iBKD의 비율은 보관된 **L λ0.25·β0.5
+10k 실행의 첫 step** CE=3.346544027328491, guidance=0.98277747631073에서
+`0.5 × guidance / CE`로 산출했습니다. 이 값에 Tiny의 첫 step CE=3.79216,
+guidance=2.25903을 대입해 Tiny β를 계산했습니다. 학습 중 비율을 고정하는 것은 아닙니다.
+[출처와 산출 근거](followup10k_reference.json),
+[고정 설정](../../configs/followup10k_alg_top1_ibkd025_l16ratio_v1.json)에 정확한 값을 보존합니다.
+L 원시 요약의 hash는 로컬에서 검증했으며, 서버에는 참조 JSON만 있으면 됩니다.
+
+- 기존 학습·평가 경로를 유지하므로 별도의 H200 smoke를 추가하지 않습니다. ALG는 같은 β의
+  2k를 완료했고, iBKD 새 β는 기존 2k 완료 β0.1969467298~0.2954200947 사이입니다.
+  이것이 새 β의 10k 안정성이나 성능을 보장하지는 않으며, 비유한 loss/gradient 등은 계속 검사합니다.
+- 두 실행 모두 seed1·동일 초기 상태·**처음부터 0→10,000step**입니다. 이전 2k checkpoint가
+  필요하지 않으며 2k부터 이어가는 실험이 아닙니다. 80k LR schedule을 그대로 유지합니다.
+- OpenMMLab teacher, Tiny/16·decoder1·crop512·batch8·FP32·SGD LR0.01, ALG warm-up0,
+  iBKD warm-up20epoch를 유지합니다. 종료 조건 충족 시 ALG는 가장 빨리 745step,
+  iBKD는 7,441step부터 가이던스가 꺼질 수 있습니다. 특정 step에 강제로 끄지 않습니다.
+- 첫 optimizer update 전에 두 후보의 실제 초기 비율을 각각 검사합니다. 목표와 허용오차
+  (rtol=0.0001, atol=1e-8) 이상 다르면 해당 실행을 실패로 보고하며 β를 자동 보정하지 않습니다.
+- **각 고정 10,000step에서 전체 val500을 한 번** 평가합니다. mIoU 우선, 같은 checkpoint의
+  accuracy·19 IoU를 함께 출력합니다. 중간 mIoU·test·best checkpoint는 사용하지 않습니다.
+- ALG를 먼저 실행해 완료 결과를 확보한 뒤 iBKD를 실행합니다. 기존 ALG10k 학습 약 2시간
+  38분, iBKD10k 약 4시간 24분~4시간 46분과 준비·평가를 참고하면 **약 7시간 30분~9시간 30분**입니다.
+  새 β의 가이던스 종료 시점과 서버 속도에 따라 초과할 수 있습니다. 총 10시간 예산,
+  시작 후 9시간 58분 중단 요청·120초 저장 여유를 유지합니다. 운영진의 실제 종료 Unix 시각을
+  `CITYSCAPES_TI16_JOB_DEADLINE`으로 받으면 더 이른 시각을 적용합니다.
+- 학습 경로의 의미 있는 검사를 포함한 **로컬 검사 45개·셸 문법 검사 통과**: 두 실행의
+  고정값·80k LR·초기 비율 거부·controller 종료·중단/재개·실패 시 결과 보존·최종 로그를 확인했습니다.
+  작은 CPU 모듈·모의 CLI 기반 검사이며 이번 H200 두 실행의 결과는 아닙니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_followup10k_alg_top1_ibkd025_l16ratio.sh
+```
+
+이슈는 사용자가 제출하며 채팅에서 고정 commit checkout을 포함한 한 줄 명령으로 전달합니다.
+이슈 입력용 MD나 GitHub 이슈는 만들지 않습니다. 중간 로그는 유지하고 마지막
+`[CITYSCAPES_TI16_FOLLOWUP_FINAL]`에 `pack=alg_top1_ibkd025_l16ratio_10k`와 함께 **두 실행 모두**의
+step·epoch·loss·CE·guidance·목표/실측 비율·mIoU·accuracy·19 IoU·종료 시점·경고·오류·시간을 출력합니다.
+실패/미실행의 metric은 null로 남깁니다. 테스트 결과 두 실행의 종료 JSON은 약 6.6KB이며,
+코드에서 50KB 상한을 적용해 마지막 65,000자에 들어가도록 합니다.
+
+출력은 `/app/output/cityscapes_ti16_alg_top1_ibkd025_l16ratio_10k_v1/run_<UTC>_<PID>/`입니다.
+`artifacts/grid_summary.json`과 두 실행 ID의 전체 폴더를 보관합니다. 시간 중단 후에는 같은
+commit·config·endpoint의 중단 폴더가 남아 있을 때만 재개하며, 두 번째 실행만 진행할 때는
+`CITYSCAPES_TI16_START_RUN=2`를 사용합니다. 해당 실행의 `resume.json`이 있으면
+`CITYSCAPES_TI16_RESUME`에 지정합니다. 원본 checkpoint가 없으면 해당 실행을 처음부터 다시 시작합니다.
+
+기존 Tiny ALG 10k는 **β=0.11195046919685056, 첫 step 약 17.535%, mIoU 48.3442%** 하나뿐입니다.
+이번 1위(β0.0880412512, 13.790%)와도 같지 않고, 새 2위(β0.0176082490, 2.758%)의 ALG10k 결과는 없습니다.
+이전 실행을 새 두 β의 결과로 대체하거나 동일 조건 반복으로 기록하지 않습니다.

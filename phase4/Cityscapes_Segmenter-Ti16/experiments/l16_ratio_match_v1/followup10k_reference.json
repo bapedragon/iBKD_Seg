@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-29",
+  "ratio_formula": "beta*first_step_guidance/first_step_ce_before_optimizer_update",
+  "alg_selection": {
+    "path": "phase4/Cityscapes_Segmenter-Ti16/experiments/l16_ratio_match_v1/results/alg_grid2000/beta_screen_summary.json",
+    "sha256": "a6d9bcbbf2dc7038abd3fd6d731f9a53daea4b3967e4f371e227afe1d1aa4b47",
+    "run_id": "alg_l16r3",
+    "beta": 0.08804125116886172,
+    "candidate": 3,
+    "miou_pct": 38.2174,
+    "target_ratio": 0.1379008642087187,
+    "selection_rule": "highest_fixed2000_full_val500_miou_among_new_four_candidates"
+  },
+  "ibkd_reference": {
+    "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/ibkd_lambda_0p25_beta_0p5/summary.json",
+    "source_sha256": "2cdaa227fa19954a5e50fe418d3fbb431730a30e8062b810ef4a51baab4664cb",
+    "source_endpoint": 10000,
+    "l16_beta": 0.5,
+    "lambda_value": 0.25,
+    "ce": 3.346544027328491,
+    "guidance": 0.98277747631073,
+    "target_ratio": 0.14683468501911065,
+    "selection_rule": "user_requested_l16_beta0p5_first_step_ratio_direct10k_no_new_tiny2k_screen"
+  },
+  "tiny_calibration": {
+    "path": "phase4/Cityscapes_Segmenter-Ti16/reports/initial_ce_ratio/first_step_ratios.json",
+    "sha256": "8c502cb71b7b8e8dc4b71051ec60965abe33615ca37689c027fd52bd8cc39f57",
+    "ce": 3.79216,
+    "guidance": 2.25903,
+    "precision": "six significant digits from prior Tiny first-step log"
+  },
+  "runtime_ratio_tolerance": {
+    "rtol": 0.0001,
+    "atol": 1e-08
+  }
+}

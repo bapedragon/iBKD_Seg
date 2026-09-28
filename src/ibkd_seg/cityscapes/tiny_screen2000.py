@@ -26,12 +26,13 @@ FOLLOWUP_CONFIG=CONFIG_DIR/'followup10k_alg_ibkd025_top1_vanilla2k_v1.json'
 VANILLA_CONFIG=CONFIG_DIR/'vanilla10k_v1.json'
 IBKD025_B7_CONFIG=CONFIG_DIR/'ibkd025_b7_10k_v1.json'
 ALG_RATIO_CONFIG=CONFIG_DIR/'alg_l16_ratio_grid2000_v1.json'
+RATIO10K_CONFIG=CONFIG_DIR/'followup10k_alg_top1_ibkd025_l16ratio_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
     locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,
-                            FOLLOWUP_CONFIG,VANILLA_CONFIG,IBKD025_B7_CONFIG,ALG_RATIO_CONFIG)
+                            FOLLOWUP_CONFIG,VANILLA_CONFIG,IBKD025_B7_CONFIG,ALG_RATIO_CONFIG,RATIO10K_CONFIG)
                  if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny endpoint pack config')
@@ -46,6 +47,9 @@ def load_config(path):
         return validate_ibkd025_b7_config(config)
     if locked==ALG_RATIO_CONFIG:
         from .tiny_ratio2000 import validate_config
+        return validate_config(config)
+    if locked==RATIO10K_CONFIG:
+        from .tiny_ratio10k import validate_config
         return validate_config(config)
     if locked==FIXED_CONFIG:
         original=load_config(CONFIG)

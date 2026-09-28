@@ -5,11 +5,13 @@ import json
 from .tiny_grid_report import CLASS_NAMES,MAX_FINAL_BYTES,bounded_text,number,terminal_row
 from .tiny_followup import (PACK,PROTOCOL,VANILLA_PACK,VANILLA_PROTOCOL,
                             IBKD025_B7_PACK,IBKD025_B7_PROTOCOL)
+from .tiny_ratio10k import PACK as RATIO10K_PACK,PROTOCOL as RATIO10K_PROTOCOL,ratio_fields
 
 MARKER='[CITYSCAPES_TI16_FOLLOWUP_FINAL] '
 
 
 def final_line(report,plans):
+    ratio_pair=report.get('pack')==RATIO10K_PACK or report.get('protocol_id')==RATIO10K_PROTOCOL
     vanilla_only=report.get('pack')==VANILLA_PACK or report.get('protocol_id')==VANILLA_PROTOCOL
     ibkd_only=report.get('pack')==IBKD025_B7_PACK or report.get('protocol_id')==IBKD025_B7_PROTOCOL
     by_id={r['run_id']:r for r in report.get('runs',[])}
@@ -41,6 +43,8 @@ def final_line(report,plans):
                        initial_ratio_first_step_percent=number(None if ratio is None else 100*ratio),
                        first_step_ce=number(first.get('ce')),first_step_guidance=number(first.get('guidance')),
                        first_step_ratio_basis='100*beta*guidance/ce_before_first_optimizer_update')
+        if ratio_pair:
+            row.update(ratio_fields(raw,plan))
         rows.append(row)
     result=dict(status=report.get('status'),protocol_id=VANILLA_PROTOCOL if vanilla_only else
                 IBKD025_B7_PROTOCOL if ibkd_only else PROTOCOL,
@@ -78,6 +82,12 @@ def final_line(report,plans):
                 error=bounded_text(report.get('error'),1024),pipeline_exit_code=report.get('pipeline_exit_code'),
                 summary_path=bounded_text(report.get('summary_path'),1024),
                 display_significant_digits=6,beta_full_precision=True)
+    if ratio_pair:
+        result.update(protocol_id=RATIO10K_PROTOCOL,pack=RATIO10K_PACK,configured_pack_runs=2,
+                      planned_steps={'alg_l16r3_10k':10000,'ibkd_l025_l16b05_10k':10000},
+                      selection_rule='fixed_10000_endpoint_not_best_checkpoint',
+                      first_step_ratio_tolerance=dict(rtol=1e-4,atol=1e-8),
+                      score_scope='new first-step-ratio track: ALG new2k rank1 and user-selected iBKD lambda0.25 L16 beta0.5 ratio, fixed10k full val500; not final80k')
     line=MARKER+json.dumps(result,separators=(',',':'),ensure_ascii=True,allow_nan=False)
     if len(line)+1>MAX_FINAL_BYTES:
         raise ValueError('Followup terminal report exceeded 50,000 bytes')
