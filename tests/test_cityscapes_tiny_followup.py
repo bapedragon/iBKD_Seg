@@ -127,6 +127,49 @@ class TinyFollowupTests(unittest.TestCase):
             rows=copy.deepcopy(report['runs']);rows[index][field]=value
             self.assertTrue(followup.identity_checks(rows,plans)[1],field)
 
+    def test_ibkd025_b7_10k_only_rank2_and_first_step_ratio_in_final_tail(self):
+        self.config_path=screen.IBKD025_B7_CONFIG
+        self.config=screen.load_config(self.config_path)
+        c=self.config;plan=c['runs'][0]
+        self.assertEqual(len(c['runs']),1)
+        self.assertEqual((plan['id'],plan['beta'],plan['lambda'],plan['target_steps']),
+                         ('ibkd_l025_b7',.29542009465901614,.25,10000))
+        self.assertEqual(c['selection_reference']['selected']['ibkd_l025']['rank'],2)
+        self.assertEqual((c['total_steps'],c['ibkd_warmup_epochs'],c['selection_metric']),(80000,20,'miou'))
+        self.assertEqual(screen.stopping_deadlines(1000,c),(37000,36880))
+        for kwargs in (dict(start_run=2),dict(start_candidate=7),dict(run_id='ibkd_l025_b1')):
+            with self.assertRaises(ValueError):select_plans(c,**kwargs)
+        for field,value in [('total_steps',10000),('ibkd_warmup_epochs',0),('selection_metric','pixel_accuracy'),
+                            ('runs',screen.load_config(screen.FOLLOWUP_CONFIG)['runs'])]:
+            bad=copy.deepcopy(c);bad[field]=value
+            with self.subTest(field=field),self.assertRaises(ValueError):followup.validate_ibkd025_b7_config(bad)
+        with tempfile.TemporaryDirectory() as tmp:
+            report,plans,launch=self.execute(Path(tmp))
+        self.assertEqual(launch.call_count,1);self.assertEqual(report['status'],'passed')
+        first=dict(step=1,ce=3.79216,guidance=2.25903,
+                   weighted_guidance_to_seg_loss=plan['beta']*2.25903/3.79216)
+        report['runs'][0]['losses']=[first]
+        line=final_line(report,plans);d=json.loads(line[len(MARKER):])
+        self.assertIn(line,('earlier\n'*100000+line+'\n[3] 완료\n')[-65000:])
+        self.assertEqual((d['protocol_id'],d['pack']),(followup.IBKD025_B7_PROTOCOL,followup.IBKD025_B7_PACK))
+        self.assertEqual(d['configured_pack_runs'],1)
+        self.assertEqual(d['planned_steps'],{'ibkd_l025_b7':10000})
+        self.assertEqual(d['completed_runs'],['ibkd_l025_b7'])
+        self.assertEqual(d['ibkd_earliest_possible_off_step'],7441)
+        self.assertIsNone(d['alg_earliest_possible_off_step'])
+        row=d['runs'][0]
+        self.assertEqual((row['selected_step'],row['selected_epoch'],row['miou_pct']),(10000,27,40.))
+        self.assertEqual((row['initial_ratio'],row['initial_ratio_basis']),(.18,'historical_25batch_median_target'))
+        self.assertAlmostEqual(row['initial_ratio_first_step_percent'],17.5985,places=4)
+        self.assertEqual((row['first_step_ce'],row['first_step_guidance']),(3.79216,2.25903))
+        self.assertEqual(len(row['class_iou_pct']),19)
+        self.assertEqual((row['stop_step'],row['controller_warmup_epochs']),(7441,20))
+        self.assertLess(len(line.encode('ascii'))+1,50000)
+        empty=json.loads(final_line(dict(protocol_id=c['protocol_id'],status='failed'),plans)[len(MARKER):])
+        self.assertIsNone(empty['runs'][0]['initial_ratio_first_step_percent'])
+        self.assertIsNone(empty['runs'][0]['miou_pct'])
+        self.assertEqual(empty['not_run_runs'],['ibkd_l025_b7'])
+
     def test_failure_continues_but_pause_stops_and_resume_targets_first_remaining(self):
         with tempfile.TemporaryDirectory() as tmp:
             report,plans,launch=self.execute(Path(tmp),'numerical_failure')
@@ -148,6 +191,7 @@ class TinyFollowupTests(unittest.TestCase):
         from ibkd_seg.cityscapes import official_api,official_assets,tiny_grid
         cases=[(screen.FOLLOWUP_CONFIG,p) for p in self.config['runs']]
         cases += [(screen.VANILLA_CONFIG,p) for p in screen.load_config(screen.VANILLA_CONFIG)['runs']]
+        cases += [(screen.IBKD025_B7_CONFIG,p) for p in screen.load_config(screen.IBKD025_B7_CONFIG)['runs']]
         for config_path,plan in cases:
             with self.subTest(method=plan['method']),tempfile.TemporaryDirectory() as tmp:
                 root=Path(tmp)
@@ -188,6 +232,9 @@ class TinyFollowupTests(unittest.TestCase):
 
     def test_vanilla_launcher_setup_failure_reports_only_unrun_vanilla10k(self):
         self.check_launcher_failure('run_vanilla10k.sh',['vanilla_10k'])
+
+    def test_ibkd025_b7_launcher_setup_failure_reports_only_unrun_candidate7(self):
+        self.check_launcher_failure('run_ibkd025_b7_10k.sh',['ibkd_l025_b7'])
 
     def check_launcher_failure(self,script,planned_ids):
         repo=screen.CONFIG.parents[3]

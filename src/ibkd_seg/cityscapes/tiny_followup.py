@@ -9,8 +9,10 @@ PACK='alg_ibkd025_top1_10k_vanilla2k'
 PROTOCOL='cityscapes_ti16_alg_ibkd025_top1_10k_vanilla2k_v1'
 VANILLA_PACK='vanilla_10k'
 VANILLA_PROTOCOL='cityscapes_ti16_vanilla_10k_v1'
-PACKS=(PACK,VANILLA_PACK)
-PROTOCOLS=(PROTOCOL,VANILLA_PROTOCOL)
+IBKD025_B7_PACK='ibkd_l025_b7_10k'
+IBKD025_B7_PROTOCOL='cityscapes_ti16_ibkd_l025_b7_10k_v1'
+PACKS=(PACK,VANILLA_PACK,IBKD025_B7_PACK)
+PROTOCOLS=(PROTOCOL,VANILLA_PROTOCOL,IBKD025_B7_PROTOCOL)
 
 
 def validate_config(config):
@@ -52,6 +54,26 @@ def validate_vanilla_config(config):
             config['beta_initial_ce_ratio'] is not None or
             config['selection_rule']!='fixed_10000_endpoint_not_best_checkpoint'):
         raise ValueError('Vanilla10k must preserve the shared protocol and contain only CE-only Vanilla')
+    return config
+
+
+def validate_ibkd025_b7_config(config):
+    from .tiny_screen2000 import CONFIG,CONFIG_DIR,FOLLOWUP_CONFIG,load_config
+    original=load_config(FOLLOWUP_CONFIG)
+    ref=CONFIG_DIR.parent/'reports/beta_screen/ti16_grid2000_top2_miou_v1.json'
+    group=next(g for g in json.loads(ref.read_text())['groups'] if g['group']=='ibkd_l025')
+    selected=next(p for p in group['selected'] if p['rank']==2)
+    source=next(p for p in load_config(CONFIG)['runs'] if p['id']==selected['run_id'])
+    expected=dict(original,protocol_id=IBKD025_B7_PROTOCOL,pack=IBKD025_B7_PACK,
+                  run_kind='fixed_endpoint_10k_ibkd_lambda025_rank2_full_val',
+                  beta_status='fixed_full_val500_miou_rank2_from_grid2000_no_reestimation',
+                  selection_rule='fixed_10000_endpoint_not_best_checkpoint',
+                  runs=[dict(source,run_index=1,target_steps=10000)],
+                  selection_reference=dict(path=str(ref.relative_to(Path(__file__).resolve().parents[3])),
+                      sha256=hashlib.sha256(ref.read_bytes()).hexdigest(),selected={'ibkd_l025':selected}))
+    if (config!=expected or selected['candidate']!=7 or selected['lambda_value']!=.25 or
+            selected['beta']!=source['beta']):
+        raise ValueError('iBKD lambda0.25 candidate7 10k must preserve the shared protocol and selected rank2 beta')
     return config
 
 

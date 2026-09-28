@@ -235,7 +235,9 @@ class TinyScreenTrainingTests(unittest.TestCase):
         self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='alg')
 
     def test_ibkd_real_loop_resume_crosses_warmup20_and_keeps_ce_after_shutdown(self):
-        self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='ibkd')
+        for config in (screen.FOLLOWUP_CONFIG,screen.IBKD025_B7_CONFIG):
+            with self.subTest(config=config.name):
+                self.check_real_loop(config,followup_method='ibkd')
 
     def check_real_loop(self, config_path, *, fixed_method=None,followup_method=None):
         # Execute the shared production training loop/checkpoint code on small CPU modules.

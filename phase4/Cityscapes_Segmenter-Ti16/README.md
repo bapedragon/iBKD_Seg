@@ -49,6 +49,42 @@ Vanilla를 포함해 2k 완료 결과는 31개이며, 상위 후보 8개 중 10k
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
+## 다음 실행: iBKD λ0.25 · 후보 7 단독 10,000step
+
+2026-09-28 사용자 요청으로 [고정 설정](configs/ibkd025_b7_10k_v1.json)과
+[실행 스크립트](scripts/run_ibkd025_b7_10k.sh)를 준비했습니다. **H200 실행 결과는 아직 없습니다.**
+대상은 2k 전체 val500 mIoU 2위 **후보 7, β=0.29542009465901614, λ=0.25**입니다.
+초기 비율은 L/16과 같은 첫 step 계산으로 **약 17.598%**입니다. β 자체는 변경하지 않으며,
+config의 `initial_target_ratio=0.18`은 과거 25batch 중앙값 기준 목표값으로 보존합니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_ibkd025_b7_10k.sh
+```
+
+- **seed1·0→10,000step 새 학습** 하나만 실행합니다. 이전 2k checkpoint는 필요 없습니다.
+  완료한 후보 1(β=0.02461834122158468, mIoU 43.8013%)과 같은 학습량으로 비교합니다.
+  후보 선정 기록의 SHA-256과 2위 β를 검증하며 자동으로 후보나 λ를 추가하지 않습니다.
+- Tiny/16·decoder1·OpenMMLab DeepLabV3-R101 teacher·fine train2975·crop512·batch8·FP32·
+  SGD LR0.01·**80k poly LR schedule**, iBKD **warm-up 20epoch**를 그대로 유지합니다.
+  가이던스는 조건 충족 시 가장 빨리 7,441step부터 꺼질 수 있으며, 실제 종료 step을 기록합니다.
+- **고정 10,000step에서 전체 val500**을 한 번 평가합니다. mIoU를 우선 비교하고,
+  pixel accuracy와 19 class IoU도 기록합니다. Test는 사용하지 않습니다.
+- 예상 **약 5~6시간**입니다. 기존 후보 1의 학습+val은 4시간 47분이었으며,
+  이번 후보의 가이던스 종료 시점과 준비 시간에 따라 달라집니다.
+  총 10시간 예산, **9시간 58분 중단 요청·120초 저장 여유**를 유지합니다.
+- 기존 2k/10k 공통 학습 경로를 사용하므로 별도 H200 smoke 없이 진행합니다.
+  250step·epoch 경계·최종·시간 중단 시 학습 상태를 저장하며, 동일 commit·설정·환경의
+  이 실행에서 중단된 전체 폴더가 있을 때만 `CITYSCAPES_TI16_RESUME`으로 재개합니다.
+- 중간 로그를 유지하고 마지막 **`[CITYSCAPES_TI16_FOLLOWUP_FINAL]`**에
+  `pack=ibkd_l025_b7_10k`, 완료/선택 step·epoch, loss·CE·guidance, mIoU·accuracy·19 IoU,
+  가이던스 종료 시점, checkpoint 검사·경고·오류·시간·저장 경로를 출력합니다.
+  **`initial_ratio_first_step_percent`**는 이번 실행 첫 batch에서 실제 관측한 비율입니다.
+  과거 목표값 `initial_ratio`와 구분하며, 첫 step을 실행하지 못했으면 실측값은 `null`입니다.
+
+출력: `/app/output/cityscapes_ti16_ibkd_l025_b7_10k_v1/run_<UTC>_<PID>/`.
+통합 요약은 `artifacts/grid_summary.json`, 개별 결과·재개 상태는 `artifacts/ibkd_l025_b7/`에 있습니다.
+서버 출력 폴더의 지속 보존을 가정하지 않으므로 완료 후 전체 결과 폴더를 보관합니다.
+
 ## 완료: Vanilla 단독 10,000step
 
 2026-09-28 사용자 제공 로그에서 **10,000step·전체 val500 완료**를 확인했습니다.

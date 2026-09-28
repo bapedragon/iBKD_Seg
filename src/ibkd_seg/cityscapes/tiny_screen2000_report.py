@@ -11,7 +11,8 @@ MARKER = '[CITYSCAPES_TI16_GRID2000_FINAL] '
 
 
 def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
-    if config.get('pack') in ('lg_alg','fskd_c2vkd','alg_ibkd025_top1_10k_vanilla2k','vanilla_10k'):
+    from .tiny_followup import PACKS
+    if config.get('pack') in ('lg_alg','fskd_c2vkd')+PACKS:
         first=1 if start_run is None else start_run
         if start_candidate!=1 or not 1<=first<=len(config['runs']):
             raise ValueError('This pack uses --start-run in its fixed execution order, not --start-candidate')

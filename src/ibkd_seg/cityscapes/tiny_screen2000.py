@@ -24,11 +24,13 @@ IBKD050_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l050_4betas_v1.json'
 FIXED_CONFIG=CONFIG_DIR/'baseline_grid2000_fskd_c2vkd_v1.json'
 FOLLOWUP_CONFIG=CONFIG_DIR/'followup10k_alg_ibkd025_top1_vanilla2k_v1.json'
 VANILLA_CONFIG=CONFIG_DIR/'vanilla10k_v1.json'
+IBKD025_B7_CONFIG=CONFIG_DIR/'ibkd025_b7_10k_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,FOLLOWUP_CONFIG,VANILLA_CONFIG)
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,
+                            FOLLOWUP_CONFIG,VANILLA_CONFIG,IBKD025_B7_CONFIG)
                  if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny endpoint pack config')
@@ -38,6 +40,9 @@ def load_config(path):
     if locked==VANILLA_CONFIG:
         from .tiny_followup import validate_vanilla_config
         return validate_vanilla_config(config)
+    if locked==IBKD025_B7_CONFIG:
+        from .tiny_followup import validate_ibkd025_b7_config
+        return validate_ibkd025_b7_config(config)
     if locked==FIXED_CONFIG:
         original=load_config(CONFIG)
         changed={'protocol_id','pack','run_kind','runs','ibkd_lambdas','beta_multipliers',
@@ -260,7 +265,7 @@ def main():
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--start-candidate',type=int,default=1,choices=range(1,9))
     parser.add_argument('--start-run',type=int,choices=range(1,17),
-                        help='Execution order: LG/ALG1..16, fixed baselines1..2, mixed2k/10k1..3, Vanilla10k1')
+                        help='Execution order: LG/ALG1..16, fixed baselines1..2, mixed2k/10k1..3, standalone10k1')
     parser.add_argument('--deadline',type=float)
     args=parser.parse_args()
     output=args.output_dir.resolve()

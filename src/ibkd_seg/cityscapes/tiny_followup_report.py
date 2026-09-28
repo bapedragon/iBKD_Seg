@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import json
 from .tiny_grid_report import CLASS_NAMES,MAX_FINAL_BYTES,bounded_text,number,terminal_row
-from .tiny_followup import PACK,PROTOCOL,VANILLA_PACK,VANILLA_PROTOCOL
+from .tiny_followup import (PACK,PROTOCOL,VANILLA_PACK,VANILLA_PROTOCOL,
+                            IBKD025_B7_PACK,IBKD025_B7_PROTOCOL)
 
 MARKER='[CITYSCAPES_TI16_FOLLOWUP_FINAL] '
 
 
 def final_line(report,plans):
     vanilla_only=report.get('pack')==VANILLA_PACK or report.get('protocol_id')==VANILLA_PROTOCOL
+    ibkd_only=report.get('pack')==IBKD025_B7_PACK or report.get('protocol_id')==IBKD025_B7_PROTOCOL
     by_id={r['run_id']:r for r in report.get('runs',[])}
     rows=[]
     for plan in plans:
@@ -31,19 +33,31 @@ def final_line(report,plans):
                    controller_smoothed_derivatives=[number(v) for v in controller.get('smoothed_derivative_history',[])[:28]],
                    pause_reason=bounded_text(raw.get('pause_reason'),256),
                    checkpoint_pointer=bounded_text((raw.get('checkpoint') or {}).get('pointer'),1024))
+        if ibkd_only:
+            # Preserve the historical calibration target; report the observed first batch separately.
+            first=next((v for v in raw.get('losses',[]) if v.get('step')==1),{})
+            ratio=first.get('weighted_guidance_to_seg_loss')
+            row.update(initial_ratio_basis='historical_25batch_median_target',
+                       initial_ratio_first_step_percent=number(None if ratio is None else 100*ratio),
+                       first_step_ce=number(first.get('ce')),first_step_guidance=number(first.get('guidance')),
+                       first_step_ratio_basis='100*beta*guidance/ce_before_first_optimizer_update')
         rows.append(row)
-    result=dict(status=report.get('status'),protocol_id=VANILLA_PROTOCOL if vanilla_only else PROTOCOL,
-                pack=VANILLA_PACK if vanilla_only else PACK,
-                expected_runs=len(plans),configured_pack_runs=1 if vanilla_only else 3,
+    result=dict(status=report.get('status'),protocol_id=VANILLA_PROTOCOL if vanilla_only else
+                IBKD025_B7_PROTOCOL if ibkd_only else PROTOCOL,
+                pack=VANILLA_PACK if vanilla_only else IBKD025_B7_PACK if ibkd_only else PACK,
+                expected_runs=len(plans),configured_pack_runs=1 if vanilla_only or ibkd_only else 3,
                 invocation_start_run=report.get('start_run') or 1,
                 runs=rows,primary_metric='miou',secondary_metric='pixel_accuracy_at_same_checkpoint',
                 planned_steps={'vanilla_10k':10000} if vanilla_only else
+                              {'ibkd_l025_b7':10000} if ibkd_only else
                               {'vanilla_2k':2000,'alg_b7':10000,'ibkd_l025_b1':10000},
                 schedule_total_steps=80000,seed=1,planned_validation_samples=500,
-                selection_rule='fixed_10000_endpoint_not_best_checkpoint' if vanilla_only else
+                selection_rule='fixed_10000_endpoint_not_best_checkpoint' if vanilla_only or ibkd_only else
                                'fixed_per_run_endpoint_not_best_checkpoint',
                 score_scope='Vanilla fixed10000 full val500; same training budget as earlier ALG/iBKD10k; not final80k'
                             if vanilla_only else
+                            'iBKD lambda0.25 candidate7 fixed10000 full val500; same training budget as candidate1; not final80k'
+                            if ibkd_only else
                             'mixed endpoints: compare Vanilla2k with earlier2k, not directly with KD10k; not final80k',
                 automatic_next_stage=False,automatic_hyperparameter_changes=False,
                 beta_ranking_performed=False,scientific_result=False,test_used=False,
@@ -51,8 +65,8 @@ def final_line(report,plans):
                 paused_runs=[r['run_id'] for r in rows if r['status']=='paused'],
                 not_run_runs=[r['run_id'] for r in rows if r['status']=='not_run'],
                 failed_runs=[r['run_id'] for r in rows if r['status'] not in ('passed','paused','not_run')],
-                alg_warmup_epochs=None if vanilla_only else 0,ibkd_warmup_epochs=None if vanilla_only else 20,
-                alg_earliest_possible_off_step=None if vanilla_only else 745,
+                alg_warmup_epochs=None if vanilla_only or ibkd_only else 0,ibkd_warmup_epochs=None if vanilla_only else 20,
+                alg_earliest_possible_off_step=None if vanilla_only or ibkd_only else 745,
                 ibkd_earliest_possible_off_step=None if vanilla_only else 7441,
                 class_iou_order=CLASS_NAMES,trajectory_order=['first25_median','last25_median','maximum','minimum'],
                 identity_checks=report.get('identity_checks',{}),review_items=report.get('review_items',[]),
