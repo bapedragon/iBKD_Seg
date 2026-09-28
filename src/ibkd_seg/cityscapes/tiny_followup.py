@@ -1,4 +1,4 @@
-"""Locked mixed-length Tiny followup contract, independent of GPU dependencies."""
+"""Locked Tiny followup contracts, independent of GPU dependencies."""
 from __future__ import annotations
 
 import hashlib
@@ -7,6 +7,10 @@ from pathlib import Path
 
 PACK='alg_ibkd025_top1_10k_vanilla2k'
 PROTOCOL='cityscapes_ti16_alg_ibkd025_top1_10k_vanilla2k_v1'
+VANILLA_PACK='vanilla_10k'
+VANILLA_PROTOCOL='cityscapes_ti16_vanilla_10k_v1'
+PACKS=(PACK,VANILLA_PACK)
+PROTOCOLS=(PROTOCOL,VANILLA_PROTOCOL)
 
 
 def validate_config(config):
@@ -32,6 +36,22 @@ def validate_config(config):
             config['pack']!=PACK or config['protocol_id']!=PROTOCOL or config['steps']!=10000 or
             config['selection_metric']!='miou' or config['ibkd_lambdas']!=[.25] or config['beta_multipliers']):
         raise ValueError('Expected Vanilla2k + ALG rank1 10k + iBKD lambda0.25 rank1 10k')
+    return config
+
+
+def validate_vanilla_config(config):
+    from .tiny_screen2000 import FOLLOWUP_CONFIG,load_config
+    original=load_config(FOLLOWUP_CONFIG)
+    changed={'protocol_id','run_kind','pack','runs','ibkd_lambdas','beta_initial_ce_ratio',
+             'beta_status','selection_rule'}
+    expected=[dict(original['runs'][0],id='vanilla_10k',target_steps=10000)]
+    if (set(config)!=set(original)-{'selection_reference'} or
+            any(config[k]!=v for k,v in original.items() if k not in changed|{'selection_reference'}) or
+            config['runs']!=expected or config['protocol_id']!=VANILLA_PROTOCOL or
+            config['pack']!=VANILLA_PACK or config['ibkd_lambdas'] or
+            config['beta_initial_ce_ratio'] is not None or
+            config['selection_rule']!='fixed_10000_endpoint_not_best_checkpoint'):
+        raise ValueError('Vanilla10k must preserve the shared protocol and contain only CE-only Vanilla')
     return config
 
 

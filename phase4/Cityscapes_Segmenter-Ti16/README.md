@@ -34,10 +34,44 @@ LG·ALG·iBKD의 후속 후보는 아래 **mIoU 기준 상위 2개씩, 총 8개*
 준비 포함 **7시간 59분 57초**, mIoU는 각각 **36.6126%, 48.3442%, 43.8013%**입니다.
 [첫 10k 묶음 결과](reports/followup10k/ti16_alg_ibkd025_top1_10k_vanilla2k/RESULTS.md)에 반영했습니다.
 Vanilla를 포함해 2k 완료 결과는 31개이며, 상위 후보 8개 중 10k 완료는 2개입니다.
+다음 실행으로 **Vanilla 단독 10k**를 준비했습니다. 아직 이 실행의 H200 결과는 없습니다.
 λ0.5의 생략 후보 2·4·5·7번은 실패한 것이 아닙니다.
 나머지 여섯 후보의 10k는 후속 계획이며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
+
+## 다음 실행: Vanilla 단독 10,000step
+
+2026-09-28 사용자 요청에 따라 [고정 설정](configs/vanilla10k_v1.json)과
+[실행 스크립트](scripts/run_vanilla10k.sh)를 준비했습니다. **Vanilla 한 개만 0→10,000step**
+새로 학습합니다. 이전 2k checkpoint 없이 실행할 수 있고 seed1 초기값·데이터 순서 규칙을 유지합니다.
+
+```bash
+env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_vanilla10k.sh
+```
+
+- Tiny/16·decoder1·fine train2975·crop512·batch8·FP32·SGD LR0.01·80k poly LR schedule 등은
+  완료한 ALG·iBKD 10k와 같습니다. Teacher·guidance 모듈을 로드하지 않고 **CE만 학습**합니다.
+  β 탐색과 guidance 종료 controller는 없으며 LR schedule을 10k로 줄이지 않습니다.
+- **고정 10,000step checkpoint에서 전체 val500**을 한 번 평가합니다. mIoU가 1차 지표이고
+  pixel accuracy·19 class IoU도 함께 기록합니다. Test는 사용하지 않습니다.
+  완료 후 ALG 48.3442%·iBKD λ0.25 43.8013%와 같은 학습량으로 비교할 수 있습니다.
+- 기존 Vanilla 2k 학습 1,384.2초를 5배 하고 전체 val 약 99초를 더하면 약 1시간 57분입니다.
+  준비·실행 편차 포함 **약 2시간~2시간 15분 예상**이며 완료 시간을 보장하는 수치는 아닙니다.
+  기존처럼 10시간 예산 중 **9시간 58분에 중단 요청, 마지막 120초 저장 여유**를 유지합니다.
+- 기존 Vanilla 2k 실행이 완료된 공통 학습 경로를 사용하므로 추가 H200 smoke는 없습니다.
+  단독 실행 설정·보고, CE 전용 학습·중단/재개, 기존 후보 실행 경로를 포함한 **로컬 검사 59개를 통과**했습니다.
+- 250step·epoch 경계·최종·시간 중단 시 optimizer/RNG를 포함해 저장합니다. 이 10k 설정으로
+  중단된 경우에는 동일 commit·설정·환경에서 전체 실행 폴더를 복원하고 `CITYSCAPES_TI16_RESUME`을
+  지정해 재개할 수 있습니다. 기존 2k 설정의 checkpoint 전환은 포함하지 않습니다.
+- 중간 로그를 유지하고 마지막 **`[CITYSCAPES_TI16_FOLLOWUP_FINAL]`**에 `pack=vanilla_10k`,
+  목표/완료/선택 step·epoch, loss·CE, mIoU·accuracy·19 IoU, teacher/guidance 미사용 상태,
+  평가 중 student 불변·checkpoint 검사, 시간·경고·오류·저장 경로를 출력합니다.
+  다른 방법이나 80k 학습으로 자동 진행하지 않습니다.
+
+출력: `/app/output/cityscapes_ti16_vanilla_10k_v1/run_<UTC>_<PID>/`.
+통합 요약은 `artifacts/grid_summary.json`, 개별 결과와 재개 상태는 `artifacts/vanilla_10k/`에 있습니다.
+서버 출력 폴더의 지속 보존을 가정하지 않으므로 로그·요약·checkpoint를 포함한 전체 폴더를 보관합니다.
 
 ## 완료: Vanilla 2k + ALG·iBKD λ0.25 각 1위 10k
 

@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .tiny_val_timing import CONFIG_DIR, save_json
 from .tiny_screen2000_report import final_line, select_plans
+from .tiny_followup import PACKS as FOLLOWUP_PACKS
 
 CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v2.json'
 LEGACY_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l025_v1.json'
@@ -22,17 +23,21 @@ LG_ALG_CONFIG=CONFIG_DIR/'beta_grid2000_lg_alg_v1.json'
 IBKD050_CONFIG=CONFIG_DIR/'beta_grid2000_ibkd_l050_4betas_v1.json'
 FIXED_CONFIG=CONFIG_DIR/'baseline_grid2000_fskd_c2vkd_v1.json'
 FOLLOWUP_CONFIG=CONFIG_DIR/'followup10k_alg_ibkd025_top1_vanilla2k_v1.json'
+VANILLA_CONFIG=CONFIG_DIR/'vanilla10k_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
-    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,FOLLOWUP_CONFIG)
+    locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,FOLLOWUP_CONFIG,VANILLA_CONFIG)
                  if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny endpoint pack config')
     if locked==FOLLOWUP_CONFIG:
         from .tiny_followup import validate_config
         return validate_config(config)
+    if locked==VANILLA_CONFIG:
+        from .tiny_followup import validate_vanilla_config
+        return validate_vanilla_config(config)
     if locked==FIXED_CONFIG:
         original=load_config(CONFIG)
         changed={'protocol_id','pack','run_kind','runs','ibkd_lambdas','beta_multipliers',
@@ -216,7 +221,7 @@ def execute_pack(args, config, plans, output, report, should_stop):
         save_json(output/'grid_summary.json',report)
         if row['status']=='paused':
             break
-    if config.get('pack')=='alg_ibkd025_top1_10k_vanilla2k':
+    if config.get('pack') in FOLLOWUP_PACKS:
         from .tiny_followup import identity_checks as mixed_identity_checks
         checks,issues=mixed_identity_checks(rows,plans)
     else:
@@ -255,7 +260,7 @@ def main():
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--start-candidate',type=int,default=1,choices=range(1,9))
     parser.add_argument('--start-run',type=int,choices=range(1,17),
-                        help='Execution order: LG/ALG1..16, fixed baselines1..2, mixed2k/10k1..3')
+                        help='Execution order: LG/ALG1..16, fixed baselines1..2, mixed2k/10k1..3, Vanilla10k1')
     parser.add_argument('--deadline',type=float)
     args=parser.parse_args()
     output=args.output_dir.resolve()
@@ -320,7 +325,7 @@ def main():
             with warnings.catch_warnings(record=True) as records:
                 warnings.simplefilter('always')
                 try:
-                    if config['pack']=='alg_ibkd025_top1_10k_vanilla2k':
+                    if config['pack'] in FOLLOWUP_PACKS:
                         from .tiny_followup import effective_config
                         run_config=effective_config(config,plan)
                         save_json(output/'effective_config.json',run_config)

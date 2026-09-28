@@ -227,7 +227,9 @@ class TinyScreenTrainingTests(unittest.TestCase):
         self.check_real_loop(screen.FIXED_CONFIG,fixed_method='c2vkd')
 
     def test_vanilla_real_loop_never_loads_teacher_and_resumes_ce_only(self):
-        self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='vanilla')
+        for config in (screen.FOLLOWUP_CONFIG,screen.VANILLA_CONFIG):
+            with self.subTest(config=config.name):
+                self.check_real_loop(config,followup_method='vanilla')
 
     def test_alg_real_loop_resume_crosses_guidance_off_with_warmup0(self):
         self.check_real_loop(screen.FOLLOWUP_CONFIG,followup_method='alg')

@@ -11,7 +11,7 @@ MARKER = '[CITYSCAPES_TI16_GRID2000_FINAL] '
 
 
 def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
-    if config.get('pack') in ('lg_alg','fskd_c2vkd','alg_ibkd025_top1_10k_vanilla2k'):
+    if config.get('pack') in ('lg_alg','fskd_c2vkd','alg_ibkd025_top1_10k_vanilla2k','vanilla_10k'):
         first=1 if start_run is None else start_run
         if start_candidate!=1 or not 1<=first<=len(config['runs']):
             raise ValueError('This pack uses --start-run in its fixed execution order, not --start-candidate')
@@ -30,8 +30,8 @@ def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
 
 
 def final_line(report, plans):
-    if (report.get('pack')=='alg_ibkd025_top1_10k_vanilla2k' or
-            report.get('protocol_id')=='cityscapes_ti16_alg_ibkd025_top1_10k_vanilla2k_v1'):
+    from .tiny_followup import PACKS,PROTOCOLS
+    if report.get('pack') in PACKS or report.get('protocol_id') in PROTOCOLS:
         from .tiny_followup_report import final_line as followup_final_line
         return followup_final_line(report,plans)
     legacy=report.get('protocol_id')=='cityscapes_ti16_crop512_ibkd_l025_grid2000_v1'
