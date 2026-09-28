@@ -1,0 +1,802 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-28",
+  "status": "reexpressed_without_retraining",
+  "scope": "Existing Tiny beta values re-expressed on the same first-forward-batch statistic as L16.",
+  "primary_display_formula": "100 * beta * guidance_at_first_training_step / ce_at_first_training_step",
+  "measurement_time": "First forward pass before the first optimizer update; not step 2000 or an epoch average.",
+  "tiny_ratios_are_approximate": true,
+  "historical_target_meaning": "beta * median(guidance of 25 pre-update batches) / median(CE of those batches)",
+  "historical_fields_preserved": [
+    "initial_ratio in archived terminal JSON",
+    "initial_target_ratio in pinned configs"
+  ],
+  "betas_metrics_rankings_and_training_configs_changed": false,
+  "training_launched": false,
+  "limits": [
+    "First-step observations do not establish the same gradient influence or optimal beta across models.",
+    "Rescaling across beta assumes the recorded shared initial student/adapter/input condition; available first-step lines agree.",
+    "Tiny source losses are rounded; this does not recover their original full precision."
+  ],
+  "sources": {
+    "f5f0a780-3aa0-4d47-92de-20516621bf42": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/f5f0a780-3aa0-4d47-92de-20516621bf42/붙여넣은 텍스트.txt",
+      "bytes": 65644,
+      "sha256": "fdc743906bdebbff907327cd16cd314cbf6c94b9d7a628abc7a88fd276ae7b04"
+    },
+    "9e27f838-120f-449e-8f41-e863ba84378d": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/9e27f838-120f-449e-8f41-e863ba84378d/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "63ee84a1776254894cb5935857f8321b461a1c220d534748ace4f906c7d06fb6"
+    },
+    "a5fc43b0-cd07-4e8f-9947-36b564c073a8": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/a5fc43b0-cd07-4e8f-9947-36b564c073a8/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "bad6eab94a695be78f03574b457b04efc5e68dd9d57f8f44b8dba02af6e5a495"
+    },
+    "30d88f7d-1415-417c-b086-012e6cef30c2": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/30d88f7d-1415-417c-b086-012e6cef30c2/붙여넣은 텍스트.txt",
+      "bytes": 41393,
+      "sha256": "49ca5baed15ab39404cd0e572a8d4111f7501328fe2502fae62a10e89061143d"
+    },
+    "5f72fb86-4bd8-4cc6-9198-22e590ac2d41": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/5f72fb86-4bd8-4cc6-9198-22e590ac2d41/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "4c4b74a14deb448f34f3c5c42c96fe81b7867730505288a35a06b85644a09a4e"
+    },
+    "a38509b1-7814-4787-8034-bb67d5dbdacc": {
+      "path": "/Users/bagcheolhyeon/.codex/attachments/a38509b1-7814-4787-8034-bb67d5dbdacc/붙여넣은 텍스트.txt",
+      "bytes": 65004,
+      "sha256": "9bbe7233d718445a2a5f7a7b46173af3537c6922d294ac83e01480895c8954da"
+    }
+  },
+  "group_first_step_measurements": {
+    "lg_alg": {
+      "ce": 3.79216,
+      "guidance": 5.93974,
+      "source_precision": "six significant digits in console; ratios are approximate",
+      "observations": [
+        {
+          "source_id": "f5f0a780-3aa0-4d47-92de-20516621bf42",
+          "line": 208,
+          "run_id": "lg_a",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 5.93974
+        },
+        {
+          "source_id": "f5f0a780-3aa0-4d47-92de-20516621bf42",
+          "line": 226,
+          "run_id": "lg_b",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 5.93974
+        },
+        {
+          "source_id": "9e27f838-120f-449e-8f41-e863ba84378d",
+          "line": 18,
+          "run_id": "lg_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 5.93974
+        },
+        {
+          "source_id": "9e27f838-120f-449e-8f41-e863ba84378d",
+          "line": 126,
+          "run_id": "alg_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 5.93974
+        }
+      ]
+    },
+    "ibkd_l025": {
+      "ce": 3.79216,
+      "guidance": 2.25903,
+      "source_precision": "six significant digits in console; ratios are approximate",
+      "observations": [
+        {
+          "source_id": "a5fc43b0-cd07-4e8f-9947-36b564c073a8",
+          "line": 7,
+          "run_id": "ibkd_l025_b6",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 2.25903
+        },
+        {
+          "source_id": "a5fc43b0-cd07-4e8f-9947-36b564c073a8",
+          "line": 115,
+          "run_id": "ibkd_l025_b7",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 2.25903
+        },
+        {
+          "source_id": "a5fc43b0-cd07-4e8f-9947-36b564c073a8",
+          "line": 223,
+          "run_id": "ibkd_l025_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 2.25903
+        },
+        {
+          "source_id": "30d88f7d-1415-417c-b086-012e6cef30c2",
+          "line": 235,
+          "run_id": "ibkd_l025_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 2.25903
+        }
+      ]
+    },
+    "ibkd_l050": {
+      "ce": 3.79216,
+      "guidance": 1.51569,
+      "source_precision": "six significant digits in console; ratios are approximate",
+      "observations": [
+        {
+          "source_id": "5f72fb86-4bd8-4cc6-9198-22e590ac2d41",
+          "line": 6,
+          "run_id": "ibkd_l050_b4",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "5f72fb86-4bd8-4cc6-9198-22e590ac2d41",
+          "line": 32,
+          "run_id": "ibkd_l050_b5",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "5f72fb86-4bd8-4cc6-9198-22e590ac2d41",
+          "line": 58,
+          "run_id": "ibkd_l050_b6",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "5f72fb86-4bd8-4cc6-9198-22e590ac2d41",
+          "line": 84,
+          "run_id": "ibkd_l050_b7",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "5f72fb86-4bd8-4cc6-9198-22e590ac2d41",
+          "line": 110,
+          "run_id": "ibkd_l050_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "a38509b1-7814-4787-8034-bb67d5dbdacc",
+          "line": 32,
+          "run_id": "ibkd_l050_b3",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "a38509b1-7814-4787-8034-bb67d5dbdacc",
+          "line": 140,
+          "run_id": "ibkd_l050_b6",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        },
+        {
+          "source_id": "a38509b1-7814-4787-8034-bb67d5dbdacc",
+          "line": 248,
+          "run_id": "ibkd_l050_b8",
+          "step": 1,
+          "ce": 3.79216,
+          "guidance": 1.51569
+        }
+      ]
+    }
+  },
+  "beta_config": {
+    "path": "phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid500_shared_lg_8betas_v6.json",
+    "sha256": "9ff587323a47f7e1285fc7d415b6a313dbc98e8d70522e930ee18e9ad9b56e7a"
+  },
+  "selection_source": {
+    "path": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_grid2000_top2_miou_v1.json",
+    "sha256": "a2089bbec9edafa6bc86a2bab677129ff3afe788c8ec34dff517f4be49085726"
+  },
+  "tiny_candidates": [
+    {
+      "run_id": "lg_b1",
+      "method": "lg",
+      "candidate": 1,
+      "lambda": null,
+      "beta": 0.009329205766404213,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.014612531290594742,
+      "initial_ratio_first_step_percent_approx": 1.4612531290594744,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b1",
+      "method": "alg",
+      "candidate": 1,
+      "lambda": null,
+      "beta": 0.009329205766404213,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.014612531290594742,
+      "initial_ratio_first_step_percent_approx": 1.4612531290594744,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b2",
+      "method": "lg",
+      "candidate": 2,
+      "lambda": null,
+      "beta": 0.018658411532808426,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.029225062581189485,
+      "initial_ratio_first_step_percent_approx": 2.9225062581189487,
+      "historical_calibration_target_25batch": 0.03,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b2",
+      "method": "alg",
+      "candidate": 2,
+      "lambda": null,
+      "beta": 0.018658411532808426,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.029225062581189485,
+      "initial_ratio_first_step_percent_approx": 2.9225062581189487,
+      "historical_calibration_target_25batch": 0.03,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b3",
+      "method": "lg",
+      "candidate": 3,
+      "lambda": null,
+      "beta": 0.02798761729921264,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.04383759387178423,
+      "initial_ratio_first_step_percent_approx": 4.383759387178423,
+      "historical_calibration_target_25batch": 0.045,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b3",
+      "method": "alg",
+      "candidate": 3,
+      "lambda": null,
+      "beta": 0.02798761729921264,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.04383759387178423,
+      "initial_ratio_first_step_percent_approx": 4.383759387178423,
+      "historical_calibration_target_25batch": 0.045,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b4",
+      "method": "lg",
+      "candidate": 4,
+      "lambda": null,
+      "beta": 0.03731682306561685,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.05845012516237897,
+      "initial_ratio_first_step_percent_approx": 5.845012516237897,
+      "historical_calibration_target_25batch": 0.06,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b4",
+      "method": "alg",
+      "candidate": 4,
+      "lambda": null,
+      "beta": 0.03731682306561685,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.05845012516237897,
+      "initial_ratio_first_step_percent_approx": 5.845012516237897,
+      "historical_calibration_target_25batch": 0.06,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b5",
+      "method": "lg",
+      "candidate": 5,
+      "lambda": null,
+      "beta": 0.05597523459842528,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.08767518774356846,
+      "initial_ratio_first_step_percent_approx": 8.767518774356846,
+      "historical_calibration_target_25batch": 0.09,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b5",
+      "method": "alg",
+      "candidate": 5,
+      "lambda": null,
+      "beta": 0.05597523459842528,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.08767518774356846,
+      "initial_ratio_first_step_percent_approx": 8.767518774356846,
+      "historical_calibration_target_25batch": 0.09,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b6",
+      "method": "lg",
+      "candidate": 6,
+      "lambda": null,
+      "beta": 0.0746336461312337,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.11690025032475794,
+      "initial_ratio_first_step_percent_approx": 11.690025032475795,
+      "historical_calibration_target_25batch": 0.12,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b6",
+      "method": "alg",
+      "candidate": 6,
+      "lambda": null,
+      "beta": 0.0746336461312337,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.11690025032475794,
+      "initial_ratio_first_step_percent_approx": 11.690025032475795,
+      "historical_calibration_target_25batch": 0.12,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b7",
+      "method": "lg",
+      "candidate": 7,
+      "lambda": null,
+      "beta": 0.11195046919685056,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.17535037548713692,
+      "initial_ratio_first_step_percent_approx": 17.535037548713692,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b7",
+      "method": "alg",
+      "candidate": 7,
+      "lambda": null,
+      "beta": 0.11195046919685056,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.17535037548713692,
+      "initial_ratio_first_step_percent_approx": 17.535037548713692,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "lg_b8",
+      "method": "lg",
+      "candidate": 8,
+      "lambda": null,
+      "beta": 0.1492672922624674,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.23380050064951588,
+      "initial_ratio_first_step_percent_approx": 23.38005006495159,
+      "historical_calibration_target_25batch": 0.24,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "alg_b8",
+      "method": "alg",
+      "candidate": 8,
+      "lambda": null,
+      "beta": 0.1492672922624674,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.23380050064951588,
+      "initial_ratio_first_step_percent_approx": 23.38005006495159,
+      "historical_calibration_target_25batch": 0.24,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b1",
+      "method": "ibkd",
+      "candidate": 1,
+      "lambda": 0.25,
+      "beta": 0.02461834122158468,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.014665407411553427,
+      "initial_ratio_first_step_percent_approx": 1.4665407411553426,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b2",
+      "method": "ibkd",
+      "candidate": 2,
+      "lambda": 0.25,
+      "beta": 0.04923668244316936,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.029330814823106854,
+      "initial_ratio_first_step_percent_approx": 2.933081482310685,
+      "historical_calibration_target_25batch": 0.03,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b3",
+      "method": "ibkd",
+      "candidate": 3,
+      "lambda": 0.25,
+      "beta": 0.07385502366475404,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.04399622223466027,
+      "initial_ratio_first_step_percent_approx": 4.399622223466027,
+      "historical_calibration_target_25batch": 0.045,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b4",
+      "method": "ibkd",
+      "candidate": 4,
+      "lambda": 0.25,
+      "beta": 0.09847336488633872,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.05866162964621371,
+      "initial_ratio_first_step_percent_approx": 5.86616296462137,
+      "historical_calibration_target_25batch": 0.06,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b5",
+      "method": "ibkd",
+      "candidate": 5,
+      "lambda": 0.25,
+      "beta": 0.14771004732950807,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.08799244446932054,
+      "initial_ratio_first_step_percent_approx": 8.799244446932054,
+      "historical_calibration_target_25batch": 0.09,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b6",
+      "method": "ibkd",
+      "candidate": 6,
+      "lambda": 0.25,
+      "beta": 0.19694672977267744,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.11732325929242741,
+      "initial_ratio_first_step_percent_approx": 11.73232592924274,
+      "historical_calibration_target_25batch": 0.12,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b7",
+      "method": "ibkd",
+      "candidate": 7,
+      "lambda": 0.25,
+      "beta": 0.29542009465901614,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.1759848889386411,
+      "initial_ratio_first_step_percent_approx": 17.598488893864108,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l025_b8",
+      "method": "ibkd",
+      "candidate": 8,
+      "lambda": 0.25,
+      "beta": 0.3938934595453549,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.23464651858485483,
+      "initial_ratio_first_step_percent_approx": 23.46465185848548,
+      "historical_calibration_target_25batch": 0.24,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b1",
+      "method": "ibkd",
+      "candidate": 1,
+      "lambda": 0.5,
+      "beta": 0.03668347229720436,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0146620322260004,
+      "initial_ratio_first_step_percent_approx": 1.4662032226000399,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b2",
+      "method": "ibkd",
+      "candidate": 2,
+      "lambda": 0.5,
+      "beta": 0.07336694459440872,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0293240644520008,
+      "initial_ratio_first_step_percent_approx": 2.9324064452000798,
+      "historical_calibration_target_25batch": 0.03,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b3",
+      "method": "ibkd",
+      "candidate": 3,
+      "lambda": 0.5,
+      "beta": 0.11005041689161307,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0439860966780012,
+      "initial_ratio_first_step_percent_approx": 4.39860966780012,
+      "historical_calibration_target_25batch": 0.045,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b4",
+      "method": "ibkd",
+      "candidate": 4,
+      "lambda": 0.5,
+      "beta": 0.14673388918881744,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0586481289040016,
+      "initial_ratio_first_step_percent_approx": 5.8648128904001595,
+      "historical_calibration_target_25batch": 0.06,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b5",
+      "method": "ibkd",
+      "candidate": 5,
+      "lambda": 0.5,
+      "beta": 0.22010083378322615,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0879721933560024,
+      "initial_ratio_first_step_percent_approx": 8.79721933560024,
+      "historical_calibration_target_25batch": 0.09,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b6",
+      "method": "ibkd",
+      "candidate": 6,
+      "lambda": 0.5,
+      "beta": 0.2934677783776349,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.1172962578080032,
+      "initial_ratio_first_step_percent_approx": 11.729625780800319,
+      "historical_calibration_target_25batch": 0.12,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b7",
+      "method": "ibkd",
+      "candidate": 7,
+      "lambda": 0.5,
+      "beta": 0.4402016675664523,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.1759443867120048,
+      "initial_ratio_first_step_percent_approx": 17.59443867120048,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    },
+    {
+      "run_id": "ibkd_l050_b8",
+      "method": "ibkd",
+      "candidate": 8,
+      "lambda": 0.5,
+      "beta": 0.5869355567552698,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.2345925156160064,
+      "initial_ratio_first_step_percent_approx": 23.459251561600638,
+      "historical_calibration_target_25batch": 0.24,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line"
+    }
+  ],
+  "tiny_selected_for_10000": [
+    {
+      "run_id": "lg_b7",
+      "method": "lg",
+      "candidate": 7,
+      "lambda": null,
+      "beta": 0.11195046919685056,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.17535037548713692,
+      "initial_ratio_first_step_percent_approx": 17.535037548713692,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 1,
+      "screen_miou_pct": 39.137
+    },
+    {
+      "run_id": "lg_b1",
+      "method": "lg",
+      "candidate": 1,
+      "lambda": null,
+      "beta": 0.009329205766404213,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.014612531290594742,
+      "initial_ratio_first_step_percent_approx": 1.4612531290594744,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 2,
+      "screen_miou_pct": 39.055
+    },
+    {
+      "run_id": "alg_b7",
+      "method": "alg",
+      "candidate": 7,
+      "lambda": null,
+      "beta": 0.11195046919685056,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.17535037548713692,
+      "initial_ratio_first_step_percent_approx": 17.535037548713692,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 1,
+      "screen_miou_pct": 39.137
+    },
+    {
+      "run_id": "alg_b1",
+      "method": "alg",
+      "candidate": 1,
+      "lambda": null,
+      "beta": 0.009329205766404213,
+      "reference_group": "lg_alg",
+      "initial_ratio_first_step_approx": 0.014612531290594742,
+      "initial_ratio_first_step_percent_approx": 1.4612531290594744,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 2,
+      "screen_miou_pct": 39.055
+    },
+    {
+      "run_id": "ibkd_l025_b1",
+      "method": "ibkd",
+      "candidate": 1,
+      "lambda": 0.25,
+      "beta": 0.02461834122158468,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.014665407411553427,
+      "initial_ratio_first_step_percent_approx": 1.4665407411553426,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 1,
+      "screen_miou_pct": 37.3437
+    },
+    {
+      "run_id": "ibkd_l025_b7",
+      "method": "ibkd",
+      "candidate": 7,
+      "lambda": 0.25,
+      "beta": 0.29542009465901614,
+      "reference_group": "ibkd_l025",
+      "initial_ratio_first_step_approx": 0.1759848889386411,
+      "initial_ratio_first_step_percent_approx": 17.598488893864108,
+      "historical_calibration_target_25batch": 0.18,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 2,
+      "screen_miou_pct": 37.1969
+    },
+    {
+      "run_id": "ibkd_l050_b1",
+      "method": "ibkd",
+      "candidate": 1,
+      "lambda": 0.5,
+      "beta": 0.03668347229720436,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.0146620322260004,
+      "initial_ratio_first_step_percent_approx": 1.4662032226000399,
+      "historical_calibration_target_25batch": 0.015,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 1,
+      "screen_miou_pct": 37.4001
+    },
+    {
+      "run_id": "ibkd_l050_b6",
+      "method": "ibkd",
+      "candidate": 6,
+      "lambda": 0.5,
+      "beta": 0.2934677783776349,
+      "reference_group": "ibkd_l050",
+      "initial_ratio_first_step_approx": 0.1172962578080032,
+      "initial_ratio_first_step_percent_approx": 11.729625780800319,
+      "historical_calibration_target_25batch": 0.12,
+      "evidence_scope": "rescaled from matching group first-step observations; not every candidate has a visible first-step line",
+      "rank_at_2000": 2,
+      "screen_miou_pct": 36.2344
+    }
+  ],
+  "l16_10000_candidates": [
+    {
+      "run_id": "ibkd_lambda_0p25_beta_0p25",
+      "method": "ibkd",
+      "lambda": 0.25,
+      "beta": 0.25,
+      "ce": 3.3465442657470703,
+      "guidance": 0.98277747631073,
+      "initial_ratio_first_step_percent": 7.341733727906766,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/ibkd_lambda_0p25_beta_0p25/summary.json",
+      "source_sha256": "2aba47fde8f1f7cebec4c1873334b7a86eb0d6cef4bcd4ea2b9202896c83a5f9"
+    },
+    {
+      "run_id": "lg_beta_0p05",
+      "method": "lg",
+      "lambda": null,
+      "beta": 0.05,
+      "ce": 3.3465442657470703,
+      "guidance": 4.614913463592529,
+      "initial_ratio_first_step_percent": 6.895043210435935,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack1_issue810/output/artifacts/lg_beta_0p05/summary.json",
+      "source_sha256": "6d081804003a40bfc4e57065c433edfd21ff5c9b484b5e76032ea15b40ae71df"
+    },
+    {
+      "run_id": "ibkd_lambda_0p25_beta_0p5",
+      "method": "ibkd",
+      "lambda": 0.25,
+      "beta": 0.5,
+      "ce": 3.346544027328491,
+      "guidance": 0.98277747631073,
+      "initial_ratio_first_step_percent": 14.683468501911063,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/ibkd_lambda_0p25_beta_0p5/summary.json",
+      "source_sha256": "2cdaa227fa19954a5e50fe418d3fbb431730a30e8062b810ef4a51baab4664cb"
+    },
+    {
+      "run_id": "lg_beta_0p02",
+      "method": "lg",
+      "lambda": null,
+      "beta": 0.02,
+      "ce": 3.346544027328491,
+      "guidance": 4.614913463592529,
+      "initial_ratio_first_step_percent": 2.7580174806644115,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack2_issue812/output/artifacts/lg_beta_0p02/summary.json",
+      "source_sha256": "2f08f239ee5b657278e1f0eda7b3f0269926629b4731e3cad4cd197997375de2"
+    },
+    {
+      "run_id": "alg_beta_0p05",
+      "method": "alg",
+      "lambda": null,
+      "beta": 0.05,
+      "ce": 3.3465445041656494,
+      "guidance": 4.614913463592529,
+      "initial_ratio_first_step_percent": 6.8950427192109105,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/alg_beta_0p05/summary.json",
+      "source_sha256": "681b82368324cfb79b1f511be16dbbab3ae5974c500d7a7995fd881d44b3b15a"
+    },
+    {
+      "run_id": "ibkd_lambda_0p5_beta_0p1",
+      "method": "ibkd",
+      "lambda": 0.5,
+      "beta": 0.1,
+      "ce": 3.3465442657470703,
+      "guidance": 0.6647433638572693,
+      "initial_ratio_first_step_percent": 1.986357600767831,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack3_issue813/output/artifacts/ibkd_lambda_0p5_beta_0p1/summary.json",
+      "source_sha256": "8f696907043acb554b8a8be099ee712f0e679d60eb64c07803bced35d09e1ea3"
+    },
+    {
+      "run_id": "alg_beta_0p02",
+      "method": "alg",
+      "lambda": null,
+      "beta": 0.02,
+      "ce": 3.3465442657470703,
+      "guidance": 4.614913463592529,
+      "initial_ratio_first_step_percent": 2.758017284174374,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/alg_beta_0p02/summary.json",
+      "source_sha256": "a9a012a8093221a7cab3583dcccede78d26de0f59cff84fb09b58649b3b652ad"
+    },
+    {
+      "run_id": "ibkd_lambda_0p5_beta_0p25",
+      "method": "ibkd",
+      "lambda": 0.5,
+      "beta": 0.25,
+      "ce": 3.346544027328491,
+      "guidance": 0.6647433638572693,
+      "initial_ratio_first_step_percent": 4.965894355705866,
+      "source_path": "phase4/phase4_cityscapes/results/raw/cityscapes/l16_crop512_candidate_top2_grid10000_v18/pack4_issue814/output/artifacts/ibkd_lambda_0p5_beta_0p25/summary.json",
+      "source_sha256": "6b432560615995ef4e4b1d2d98a8034ab7901231717d142ddfba916c2041bca2"
+    }
+  ]
+}
