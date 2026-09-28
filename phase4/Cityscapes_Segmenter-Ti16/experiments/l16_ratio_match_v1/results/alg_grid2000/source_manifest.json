@@ -1,0 +1,33 @@
+{
+  "imported_date": "2026-09-29",
+  "source_type": "user_pasted_h200_log_tail",
+  "original_path": "/Users/bagcheolhyeon/.codex/attachments/4e22c6b5-2f98-4c04-81ba-0b2fa7f0d99b/붙여넣은 텍스트.txt",
+  "bytes": 65004,
+  "characters": 65000,
+  "sha256": "225e19ca44488d6cdc08d25ba98509ad2389ae4dfefe65ba137a96a33155076b",
+  "terminal_json_marker": "[CITYSCAPES_TI16_L16_RATIO2000_FINAL]",
+  "terminal_line_numbers": [
+    109,
+    217,
+    325,
+    326
+  ],
+  "parent_terminal_line": 326,
+  "parent_terminal_line_bytes_with_newline": 10532,
+  "parent_terminal_line_sha256": "c297fef8fcbbb788883472e9af133c9b13f64ca95e104eab61bb7abb3a8e3f98",
+  "terminal_json_complete": true,
+  "console_prefix_complete": false,
+  "candidate1_intermediate_console_available": false,
+  "requested_execution_commit": "8dfad06b5e9ea146ec1feeb00ae2d35c77ad962e",
+  "execution_commit": null,
+  "issue_number": null,
+  "execution_commit_note": "Checkout and issue number are absent from the attached tail; do not infer them.",
+  "config_path": "phase4/Cityscapes_Segmenter-Ti16/configs/alg_l16_ratio_grid2000_v1.json",
+  "config_sha256": "ac35682b1271484ad80102cc62ad9ad8b9de467c0aba99f42ff8b0741509bb4b",
+  "reference_path": "phase4/Cityscapes_Segmenter-Ti16/experiments/l16_ratio_match_v1/alg_reference.json",
+  "reference_sha256": "db0766e26c7a87c575521a60aa215826dc5ab740a6cfd029aa8b869b1b9f1815",
+  "parent_summary_path": "/app/output/cityscapes_ti16_alg_l16_ratio_grid2000_v1/run_20260928T133626Z_37/artifacts/grid_summary.json",
+  "raw_log_stored_in_git": false,
+  "checkpoint_stored_in_git": false,
+  "stored_result": "beta_screen_summary.json"
+}
