@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-09-28",
+  "status": "preserved_previous_tiny_pilot_new_l16_ratio_track_takes_priority",
+  "original_candidate_basis": "beta*median(guidance_over_25_initial_batches)/median(ce_over_25_initial_batches)",
+  "historical_target_ratios": [
+    0.015,
+    0.03,
+    0.045,
+    0.06,
+    0.09,
+    0.12,
+    0.18,
+    0.24
+  ],
+  "current_display_basis": "beta*first_training_batch_guidance/first_training_batch_ce",
+  "display_conversion_changed_training": false,
+  "old_json_fields_preserved": [
+    "initial_target_ratio",
+    "initial_ratio"
+  ],
+  "completed": {
+    "beta_screen500": 24,
+    "beta_screen2000": 28,
+    "fixed_baselines2000": 2,
+    "vanilla2000": 1,
+    "selected_kd10000": [
+      "alg_b7",
+      "ibkd_l025_b1",
+      "ibkd_l025_b7"
+    ],
+    "vanilla10000": true
+  },
+  "previous_selected_candidates_not_run10000": [
+    "lg_b7",
+    "lg_b1",
+    "alg_b1",
+    "ibkd_l050_b1",
+    "ibkd_l050_b6"
+  ],
+  "new_track": "experiments/l16_ratio_match_v1/README.md",
+  "new_track_results_exist": false,
+  "preserved_files": [
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/initial_ce_ratio/first_step_ratios.json",
+      "sha256": "8c502cb71b7b8e8dc4b71051ec60965abe33615ca37689c027fd52bd8cc39f57"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_grid2000_top2_miou_v1.json",
+      "sha256": "a2089bbec9edafa6bc86a2bab677129ff3afe788c8ec34dff517f4be49085726"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_ibkd_lambda0p25_grid2000/beta_screen_summary.json",
+      "sha256": "a8e3696adab36ab1e2d59ac941307f58b6bb853bc0afe1701607df1affcf9047"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_ibkd_lambda0p5_grid2000_4betas/beta_screen_summary.json",
+      "sha256": "9025838f89ea395cb414c0a154cf08d478b22a4226ccdbeb73e3436e9d75fc45"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/beta_screen/ti16_crop512_lg_alg_grid2000/beta_screen_summary.json",
+      "sha256": "b99abb7da5dc0c41024f62f67e0980986e1a47aa955c3ae6348b7ed3e1fc5ec1"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/followup10k/ti16_alg_ibkd025_top1_10k_vanilla2k/followup_summary.json",
+      "sha256": "88ea428359c55b2d991260670db1c3a6100d279fb27c52f9047b577a03d45b77"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/followup10k/ti16_ibkd_lambda0p25_b7_10k/followup_summary.json",
+      "sha256": "74685b20e0bb00be63a360fdedd46f11f059f903976ccfbae51e2f0810c15d78"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/followup10k/ti16_vanilla_10k/followup_summary.json",
+      "sha256": "b64ac4da9c024a31a1ad7300264e1111d2fa12583328f43ca4cb9f90a7e4f1ea"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/reports/baseline_screen/ti16_crop512_fskd_c2vkd_grid2000/baseline_screen_summary.json",
+      "sha256": "ec7a24127b79f479f7d3808ba336ab221b62d05420b9ab4018a47d2a7a67efc7"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid500_shared_lg_8betas_v6.json",
+      "sha256": "9ff587323a47f7e1285fc7d415b6a313dbc98e8d70522e930ee18e9ad9b56e7a"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid2000_ibkd_l025_v2.json",
+      "sha256": "667d2d71a41128c63c448dde261b38794db03c7518d0f118722b7a38c14930ed"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid2000_lg_alg_v1.json",
+      "sha256": "f34f6a67eb60060cb863d9074426e9b9de511b44bb622c612eef5ea3319dabbb"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/beta_grid2000_ibkd_l050_4betas_v1.json",
+      "sha256": "652e1895dc0c9db1f28b9364313918159f33fb5f7e5a73d7876b35757542c7c5"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/followup10k_alg_ibkd025_top1_vanilla2k_v1.json",
+      "sha256": "bb3e9cfdeee38141e41ddd81480a63e2992cef6456b7703634a02e4e72f31dd2"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/vanilla10k_v1.json",
+      "sha256": "501b87972586879420a7cfed20a90020541ef73225918c8ac9d679195e2b12d2"
+    },
+    {
+      "path": "phase4/Cityscapes_Segmenter-Ti16/configs/ibkd025_b7_10k_v1.json",
+      "sha256": "8d8a503a63823d86ab8df0ec042588b29a20f5ba5729f694444e4b59a73ae299"
+    }
+  ]
+}

@@ -25,12 +25,13 @@ FIXED_CONFIG=CONFIG_DIR/'baseline_grid2000_fskd_c2vkd_v1.json'
 FOLLOWUP_CONFIG=CONFIG_DIR/'followup10k_alg_ibkd025_top1_vanilla2k_v1.json'
 VANILLA_CONFIG=CONFIG_DIR/'vanilla10k_v1.json'
 IBKD025_B7_CONFIG=CONFIG_DIR/'ibkd025_b7_10k_v1.json'
+ALG_RATIO_CONFIG=CONFIG_DIR/'alg_l16_ratio_grid2000_v1.json'
 
 
 def load_config(path):
     config=json.loads(path.read_text())
     locked=next((p for p in (CONFIG,LEGACY_CONFIG,LG_ALG_CONFIG,IBKD050_CONFIG,FIXED_CONFIG,
-                            FOLLOWUP_CONFIG,VANILLA_CONFIG,IBKD025_B7_CONFIG)
+                            FOLLOWUP_CONFIG,VANILLA_CONFIG,IBKD025_B7_CONFIG,ALG_RATIO_CONFIG)
                  if p.name==path.name),None)
     if locked is None or config != json.loads(locked.read_text()):
         raise ValueError('Use a committed Tiny endpoint pack config')
@@ -43,6 +44,9 @@ def load_config(path):
     if locked==IBKD025_B7_CONFIG:
         from .tiny_followup import validate_ibkd025_b7_config
         return validate_ibkd025_b7_config(config)
+    if locked==ALG_RATIO_CONFIG:
+        from .tiny_ratio2000 import validate_config
+        return validate_config(config)
     if locked==FIXED_CONFIG:
         original=load_config(CONFIG)
         changed={'protocol_id','pack','run_kind','runs','ibkd_lambdas','beta_multipliers',
@@ -237,6 +241,10 @@ def execute_pack(args, config, plans, output, report, should_stop):
             r.get('fixed_loss_coefficients')==config[r['method']]['coefficients']
             for r in rows if r.get('status')=='passed')
     checks['run_inventory']=[r.get('run_id') for r in rows]==[p['id'] for p in plans[:len(rows)]]
+    if config.get('first_step_ratio_check'):
+        from .tiny_ratio2000 import ratio_matches
+        checks['first_step_ratio_matches_l16_target']=all(
+            ratio_matches(r,p) for r,p in zip(rows,plans) if r.get('status')=='passed')
     checks['planned_method_beta_lambda']=all(
         (r.get('method'),r.get('initial_beta'),r.get('lambda'))==(p['method'],p['beta'],p.get('lambda'))
         for r,p in zip(rows,plans))

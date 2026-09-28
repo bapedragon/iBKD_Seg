@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from .tiny_ratio2000 import PACK as RATIO_PACK,PROTOCOL as RATIO_PROTOCOL
 
 PACK='alg_ibkd025_top1_10k_vanilla2k'
 PROTOCOL='cityscapes_ti16_alg_ibkd025_top1_10k_vanilla2k_v1'
@@ -11,8 +12,8 @@ VANILLA_PACK='vanilla_10k'
 VANILLA_PROTOCOL='cityscapes_ti16_vanilla_10k_v1'
 IBKD025_B7_PACK='ibkd_l025_b7_10k'
 IBKD025_B7_PROTOCOL='cityscapes_ti16_ibkd_l025_b7_10k_v1'
-PACKS=(PACK,VANILLA_PACK,IBKD025_B7_PACK)
-PROTOCOLS=(PROTOCOL,VANILLA_PROTOCOL,IBKD025_B7_PROTOCOL)
+PACKS=(PACK,VANILLA_PACK,IBKD025_B7_PACK,RATIO_PACK)
+PROTOCOLS=(PROTOCOL,VANILLA_PROTOCOL,IBKD025_B7_PROTOCOL,RATIO_PROTOCOL)
 
 
 def validate_config(config):

@@ -386,6 +386,10 @@ def run(args, config, plan, output, report):
                    grad_norm_unclipped=float(norm), lr=optimizer.param_groups[0]['lr'], **components)
         if config.get('record_failed_step_details'):
             report['step_observation']['phase'] = 'optimizer_update'
+        if config.get('first_step_ratio_check') and progress['global_step']==0:
+            from .tiny_ratio2000 import check_first_step
+            report['first_step_ratio_observation']=dict(ce=row['ce'],guidance=row['guidance'])
+            check_first_step(row,plan,config['first_step_ratio_check'])
         optimizer.step(); scheduler.step_update(scheduler.last_epoch + 1)
         if config.get('check_state_each_step'):
             tensors = parameters + [v for state in optimizer.state.values() for v in state.values() if torch.is_tensor(v)]

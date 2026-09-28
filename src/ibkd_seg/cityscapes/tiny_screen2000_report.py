@@ -31,6 +31,10 @@ def select_plans(config, *, start_candidate=1, start_run=None, run_id=None):
 
 
 def final_line(report, plans):
+    from .tiny_ratio2000 import PACK as RATIO_PACK,PROTOCOL as RATIO_PROTOCOL
+    if report.get('pack')==RATIO_PACK or report.get('protocol_id')==RATIO_PROTOCOL:
+        from .tiny_ratio2000 import final_line as ratio_final_line
+        return ratio_final_line(report,plans)
     from .tiny_followup import PACKS,PROTOCOLS
     if report.get('pack') in PACKS or report.get('protocol_id') in PROTOCOLS:
         from .tiny_followup_report import final_line as followup_final_line
