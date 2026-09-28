@@ -9,7 +9,7 @@ Tiny 10k까지 먼저 진행한 뒤 시작하며, Small의 β는 새로 측정�
 이 폴더는 L/16 결과를 변경하지 않는 별도 실험입니다. 현재 구현 범위는 초기 손실 측정과
 25-step 연결 smoke, 500-step β 후보 검사, 전체 val 평가 시간 측정,
 iBKD λ0.25와 LG·ALG의 2,000-step β 후보 비교, iBKD λ0.5의 4개 후보 2k 비교,
-FSKD*·C2VKD*의 고정 계수 2k 비교, Vanilla 2k와 ALG·iBKD λ0.25 각 1위의 10k 비교입니다.
+FSKD*·C2VKD*의 고정 계수 2k 비교, Vanilla 2k·10k와 ALG·iBKD λ0.25 각 1위의 10k 비교입니다.
 **이 실행들은 모두 해당 step·전체 val500 평가를 완료**했습니다.
 초기 #834의 LG/ALG 궤적 문제는 후속 v4 반복 검사에서 확인했고,
 사용자 제공 v6 종료 로그에서 **24개 모두 500step 완료·공통 조건·저장 상태 비교 통과**를 확인했습니다.
@@ -34,17 +34,30 @@ LG·ALG·iBKD의 후속 후보는 아래 **mIoU 기준 상위 2개씩, 총 8개*
 준비 포함 **7시간 59분 57초**, mIoU는 각각 **36.6126%, 48.3442%, 43.8013%**입니다.
 [첫 10k 묶음 결과](reports/followup10k/ti16_alg_ibkd025_top1_10k_vanilla2k/RESULTS.md)에 반영했습니다.
 Vanilla를 포함해 2k 완료 결과는 31개이며, 상위 후보 8개 중 10k 완료는 2개입니다.
-다음 실행으로 **Vanilla 단독 10k**를 준비했습니다. 아직 이 실행의 H200 결과는 없습니다.
+**Vanilla 단독 10k도 완료**했습니다. mIoU **46.1775%**, accuracy **87.2847%**, 준비 포함
+**1시간 56분 49초**입니다. [Vanilla 10k 및 동일 학습량 비교](reports/followup10k/ti16_vanilla_10k/RESULTS.md)에
+반영했습니다. 현재 10k mIoU는 **ALG 48.3442 > Vanilla 46.1775 > iBKD λ0.25 43.8013**입니다.
 λ0.5의 생략 후보 2·4·5·7번은 실패한 것이 아닙니다.
 나머지 여섯 후보의 10k는 후속 계획이며, β=2.5의 후속 실험은 사용자 결정에 따라 보류합니다.
 500step 점수는 val2 진단이므로 후보 순위 선정에 쓰지 않습니다.
 이슈는 사용자가 제출하며 이슈 입력용 MD 파일이나 GitHub 이슈는 생성하지 않습니다.
 
-## 다음 실행: Vanilla 단독 10,000step
+## 완료: Vanilla 단독 10,000step
 
-2026-09-28 사용자 요청에 따라 [고정 설정](configs/vanilla10k_v1.json)과
-[실행 스크립트](scripts/run_vanilla10k.sh)를 준비했습니다. **Vanilla 한 개만 0→10,000step**
-새로 학습합니다. 이전 2k checkpoint 없이 실행할 수 있고 seed1 초기값·데이터 순서 규칙을 유지합니다.
+2026-09-28 사용자 제공 로그에서 **10,000step·전체 val500 완료**를 확인했습니다.
+준비 포함 **1시간 56분 49초**, 실패·시간 중단 없음입니다.
+[고정 설정](configs/vanilla10k_v1.json)과 [실행 스크립트](scripts/run_vanilla10k.sh)로
+seed1·**0→10,000step 새 학습**을 수행했습니다. 아래 명령은 실행 기록이며 다시 돌릴 필요는 없습니다.
+
+| 방법 | Step | mIoU (%) | Pixel accuracy (%) | Vanilla 대비 mIoU (%p) |
+|---|---:|---:|---:|---:|
+| ALG · 후보 7 | 10,000 | 48.3442 | 90.2803 | +2.1667 |
+| Vanilla | 10,000 | 46.1775 | 87.2847 | 기준 |
+| iBKD λ0.25 · 후보 1 | 10,000 | 43.8013 | 86.2812 | −2.3762 |
+
+이 단일 seed·후보의 10k에서는 iBKD가 Vanilla보다 낮습니다. iBKD의 다른 β·λ 후보와
+최종 80k 결과는 아직 없으며, 가이던스 종료가 차이의 원인이라고 단정할 수는 없습니다.
+[상세 결과와 검사 범위](reports/followup10k/ti16_vanilla_10k/RESULTS.md)를 확인합니다.
 
 ```bash
 env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes_Segmenter-Ti16/scripts/run_vanilla10k.sh
@@ -55,9 +68,9 @@ env -u CITYSCAPES_TI16_RESUME CITYSCAPES_TI16_START_RUN=1 bash phase4/Cityscapes
   β 탐색과 guidance 종료 controller는 없으며 LR schedule을 10k로 줄이지 않습니다.
 - **고정 10,000step checkpoint에서 전체 val500**을 한 번 평가합니다. mIoU가 1차 지표이고
   pixel accuracy·19 class IoU도 함께 기록합니다. Test는 사용하지 않습니다.
-  완료 후 ALG 48.3442%·iBKD λ0.25 43.8013%와 같은 학습량으로 비교할 수 있습니다.
+  완료한 ALG 48.3442%·iBKD λ0.25 43.8013%와 같은 학습량의 비교입니다.
 - 기존 Vanilla 2k 학습 1,384.2초를 5배 하고 전체 val 약 99초를 더하면 약 1시간 57분입니다.
-  준비·실행 편차 포함 **약 2시간~2시간 15분 예상**이며 완료 시간을 보장하는 수치는 아닙니다.
+  준비·실행 편차 포함 사전 예상은 **약 2시간~2시간 15분**, 실제는 **1시간 56분 49초**였습니다.
   기존처럼 10시간 예산 중 **9시간 58분에 중단 요청, 마지막 120초 저장 여유**를 유지합니다.
 - 기존 Vanilla 2k 실행이 완료된 공통 학습 경로를 사용하므로 추가 H200 smoke는 없습니다.
   단독 실행 설정·보고, CE 전용 학습·중단/재개, 기존 후보 실행 경로를 포함한 **로컬 검사 59개를 통과**했습니다.

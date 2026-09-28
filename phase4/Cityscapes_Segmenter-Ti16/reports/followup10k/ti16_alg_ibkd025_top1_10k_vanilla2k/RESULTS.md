@@ -5,6 +5,10 @@
 실패·시간 중단·미실행 후보가 없고 부모 종료 상태는 `passed`입니다.
 콘솔 앞부분은 잘렸지만 세 결과가 모인 마지막 JSON은 온전합니다.
 
+**후속 반영:** [Vanilla 단독 10k 결과](../ti16_vanilla_10k/RESULTS.md)가 추가됐습니다.
+Vanilla mIoU는 46.1775%이며 동일 10k 기준 ALG보다 2.1667%p 낮고 iBKD보다 2.3762%p 높습니다.
+아래 본문은 이 3개 묶음 완료 당시의 기록입니다.
+
 ## 결과
 
 | 방법 | β | Step | mIoU (%) | Pixel accuracy (%) | 마지막 train loss / CE | 학습+val 시간 |
