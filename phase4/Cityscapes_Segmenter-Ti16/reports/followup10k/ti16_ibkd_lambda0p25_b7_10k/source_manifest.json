@@ -1,0 +1,29 @@
+{
+  "imported_date": "2026-09-28",
+  "source_type": "user_pasted_h200_log_snapshot",
+  "request": null,
+  "original_path": "/Users/bagcheolhyeon/.codex/attachments/d5643f25-8188-47d7-8299-cbd4b7f4705d/붙여넣은 텍스트.txt",
+  "bytes": 65004,
+  "characters": 65000,
+  "sha256": "1d69ff204d868600348cc0cac6a8b304b2b784513fa6b9ece68de04de4320e27",
+  "terminal_json_sha256": "fffccb27947dd47e0a3b9045db2411918438679ce8b5f8134cce8b8120f6f8d4",
+  "terminal_json_marker": "[CITYSCAPES_TI16_FOLLOWUP_FINAL]",
+  "terminal_line_ascii_bytes": 4348,
+  "terminal_lines": [
+    386,
+    387
+  ],
+  "terminal_json_complete": true,
+  "console_prefix_complete": false,
+  "training_console_from_first_to_last_step_complete": false,
+  "requested_execution_commit": "0dad8f077449e4d64cb32f85d0031f0b4c94390d",
+  "execution_commit": null,
+  "execution_commit_note": "Checkout and issue number are absent from the truncated tail. Do not infer issue856 for this successful rerun.",
+  "config_path": "phase4/Cityscapes_Segmenter-Ti16/configs/ibkd025_b7_10k_v1.json",
+  "config_sha256": "8d8a503a63823d86ab8df0ec042588b29a20f5ba5729f694444e4b59a73ae299",
+  "parent_status": "passed",
+  "parent_summary_path": "/app/output/cityscapes_ti16_ibkd_l025_b7_10k_v1/run_20260928T082550Z_36/artifacts/grid_summary.json",
+  "raw_log_stored_in_git": false,
+  "checkpoint_stored_in_git": false,
+  "stored_result": "followup_summary.json"
+}
